@@ -80,3 +80,7 @@ crashlytics-build.properties
 ehthumbs.db
 Thumbs.db
 *.Zone.Identifier
+
+# Project-specific exclusions
+Python/
+Unity/
