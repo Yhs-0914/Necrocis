@@ -1,59 +1,55 @@
 using UnityEngine;
+using UnityEngine.InputSystem; // [필수] 네임스페이스 추가
 
 public class PlayerAttack : MonoBehaviour
 {
     [Header("공격 설정")]
-    [SerializeField] private Transform firePoint; // 투사체 발사 위치
+    [SerializeField] private Transform firePoint;
 
-    [Header("근거리 공격 (Q)")]
+    [Header("근거리 공격")]
     [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(1, 1, 2);
     [SerializeField] private float meleeAttackOffset = 1f;
 
     private float nextAttackTime = 0f;
-
-    // 외부 스크립트 참조
     private PlayerMovement playerMovement;
 
     void Start()
     {
-        // 2단계에서 만든 이동 스크립트 가져오기
         playerMovement = GetComponent<PlayerMovement>();
     }
 
-    void Update()
+    // Update에서는 쿨타임 계산만 하고, 입력 감지는 제거함
+    /* void Update() 
     {
-        // 쿨타임 체크
-        if (Time.time < nextAttackTime) return;
+       // 기존의 Input.GetKeyDown(KeyCode.Q) 삭제!
+       // Input System이 알아서 OnFire를 호출해줍니다.
+    } 
+    */
 
-        // 공격 입력 (기존 Q/W 방식 유지)
-        if (Input.GetKeyDown(KeyCode.Q))
+    // ==========================================
+    // [NEW] 주신 코드에서 뽑아온 입력 로직 이식
+    // ==========================================
+    void OnFire(InputValue value)
+    {
+        // 1. 키를 눌렀는지(isPressed) & 쿨타임이 지났는지 확인
+        if (value.isPressed && Time.time >= nextAttackTime)
         {
-            MeleeAttack();
-            UpdateCooldown();
-        }
-        else if (Input.GetKeyDown(KeyCode.W))
-        {
+            // 2. 공격 실행 (원거리/근거리 중 선택)
+            // 일단 기본 공격을 '원거리(W)'로 가정하고 연결합니다. 
+            // 근거리를 원하시면 MeleeAttack();으로 바꾸세요.
             RangedAttack();
-            UpdateCooldown();
-        }
-    }
 
-    // 쿨타임 계산 (공격 속도 스탯 적용)
-    void UpdateCooldown()
-    {
-        // 기본 1초 / 공격속도 스탯 (예: 공속 2면 0.5초 쿨타임)
-        float attackSpeed = PlayerStats.Instance.GetAttackSpeed();
-        nextAttackTime = Time.time + (1f / attackSpeed);
+            // 3. 쿨타임 갱신
+            float attackSpeed = PlayerStats.Instance.GetAttackSpeed();
+            nextAttackTime = Time.time + (1f / attackSpeed);
+        }
     }
 
     private void MeleeAttack()
     {
-        Debug.Log("근거리 공격 실행! (Q)");
-
-        // 데미지 가져오기
+        // (기존 코드와 동일)
+        Debug.Log("근거리 공격!");
         float damage = PlayerStats.Instance.GetAttack();
-
-        // 히트 박스 생성
         Vector3 boxCenter = transform.position + transform.forward * meleeAttackOffset;
         Collider[] hitColliders = Physics.OverlapBox(boxCenter, meleeAttackBoxSize / 2, transform.rotation);
 
@@ -61,7 +57,6 @@ public class PlayerAttack : MonoBehaviour
         {
             if (hitCollider.CompareTag("Enemy"))
             {
-                // Health(3단계) 또는 Enemy(1단계) 스크립트 찾기
                 Health h = hitCollider.GetComponent<Health>();
                 if (h != null) h.TakeDamage(damage);
                 else
@@ -75,25 +70,24 @@ public class PlayerAttack : MonoBehaviour
 
     private void RangedAttack()
     {
-        Debug.Log("원거리 공격 실행! (W)");
-
-        // 풀링 시스템에서 투사체 가져오기
+        // (기존 코드와 동일)
+        Debug.Log("원거리 공격!");
         GameObject projectile = ObjectPooler.Instance.GetPooledObject();
 
         if (projectile != null)
         {
-            if (firePoint == null) firePoint = transform; // 방어 코드
+            if (firePoint == null) firePoint = transform;
 
             projectile.transform.position = firePoint.position;
 
-            // [중요] 2단계 PlayerMovement가 기억하는 '마지막 이동 방향'으로 발사
+            // [핵심] 조준 로직은 이미 PlayerMovement에 있는 걸 그대로 씀
+            // 주신 코드의 lastFacingDirection 역할 = lastMoveDirection
             Vector3 shootDir = playerMovement.lastMoveDirection;
-            if (shootDir == Vector3.zero) shootDir = transform.forward; // 정지 상태면 앞쪽
+            if (shootDir == Vector3.zero) shootDir = transform.forward;
 
             projectile.transform.rotation = Quaternion.LookRotation(shootDir);
             projectile.SetActive(true);
 
-            // 데미지 주입
             Projectile projScript = projectile.GetComponent<Projectile>();
             if (projScript != null)
             {
