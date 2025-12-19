@@ -4,13 +4,18 @@ using System.Collections;
 public class Projectile : MonoBehaviour
 {
     [SerializeField] private float speed = 15f;
-    [SerializeField] private float damage = 10f;
     [SerializeField] private float lifeTime = 3f;
 
-    // Start 대신 OnEnable을 사용합니다. 오브젝트가 활성화될 때마다 호출됩니다.
+    // 데미지는 외부(PlayerAttack)에서 주입받습니다.
+    private float damage = 10f;
+
+    public void SetDamage(float newDamage)
+    {
+        this.damage = newDamage;
+    }
+
     private void OnEnable()
     {
-        // lifeTime이 지나면 비활성화하는 코루틴을 시작합니다.
         StartCoroutine(DeactivateAfterTime());
     }
 
@@ -23,18 +28,26 @@ public class Projectile : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
+            // 1. 3단계 방식(Health 컴포넌트) 체크
             Health enemyHealth = other.GetComponent<Health>();
             if (enemyHealth != null)
             {
                 enemyHealth.TakeDamage(damage);
             }
+            // 2. 1단계 방식(Enemy 컴포넌트) 체크 (호환성 유지)
+            else
+            {
+                Enemy enemyScript = other.GetComponent<Enemy>();
+                if (enemyScript != null)
+                {
+                    enemyScript.TakeDamage(damage);
+                }
+            }
 
-            // 적과 부딪히면 즉시 비활성화 (풀로 반환)
             gameObject.SetActive(false);
         }
     }
 
-    // 일정 시간 후 비활성화하는 코루틴
     private IEnumerator DeactivateAfterTime()
     {
         yield return new WaitForSeconds(lifeTime);
