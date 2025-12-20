@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
@@ -81,7 +82,7 @@
                     "name": "Sprint",
                     "type": "Button",
                     "id": "641cd816-40e6-41b4-8c3d-04687c349290",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -94,6 +95,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Fire",
+                    "type": "Button",
+                    "id": "222fae9e-4e26-4023-902d-7d9efd749b74",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -287,7 +297,7 @@
                 {
                     "name": "",
                     "id": "b3c1c7f0-bd20-4ee7-a0f1-899b24bca6d7",
-                    "path": "<Keyboard>/enter",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -492,6 +502,17 @@
                     "action": "Rotate",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "6b785d53-0a39-407e-baf6-bb69bc74a06d",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
