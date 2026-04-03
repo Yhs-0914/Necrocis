@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -91,6 +91,7 @@ public class ReadmeEditor : Editor
             return null;
         }
     }
+    // 유니티 콜백: OnHeaderGUI 이벤트에 반응합니다.
 
     protected override void OnHeaderGUI()
     {
@@ -119,6 +120,7 @@ public class ReadmeEditor : Editor
         }
         GUILayout.EndHorizontal();
     }
+    // 유니티 콜백: OnInspectorGUI 이벤트에 반응합니다.
 
     public override void OnInspectorGUI()
     {

@@ -29,12 +29,14 @@ namespace Necrocis
             CharacterStatType.Magic,
             CharacterStatType.Cooldown
         };
+        // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
 
         private void Start()
         {
             BuildUI();
             uiRoot.SetActive(false);
         }
+        // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
         private void Update()
         {
@@ -52,6 +54,7 @@ namespace Necrocis
             if (isShowing)
                 RefreshStats();
         }
+        // Show: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Show()
         {
@@ -59,12 +62,14 @@ namespace Necrocis
             uiRoot.SetActive(true);
             isShowing = true;
         }
+        // Hide: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Hide()
         {
             uiRoot.SetActive(false);
             isShowing = false;
         }
+        // RefreshStats: 변경 사항을 런타임 객체에 반영합니다.
 
         private void RefreshStats()
         {
@@ -119,6 +124,7 @@ namespace Necrocis
 
             contentText.text = sb.ToString();
         }
+        // GetStatName: 필요한 값을 반환합니다.
 
         private string GetStatName(CharacterStatType type)
         {
@@ -135,6 +141,7 @@ namespace Necrocis
                 default:                             return type.ToString();
             }
         }
+        // GetJobName: 필요한 값을 반환합니다.
 
         private string GetJobName(JobType job)
         {

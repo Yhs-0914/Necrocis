@@ -43,7 +43,8 @@ namespace Necrocis
 
         // 방향
         public enum Direction { Down, Up, Left, Right }
-        private Direction currentDirection = Direction.Down;
+        private Direction currentDirection = Direction.Up;
+        private Vector3 lastMoveDirection = Vector3.forward;
         private bool isMoving = false;
 
         // 애니메이션
@@ -68,6 +69,7 @@ namespace Necrocis
         public float MaxHealth => playerStats != null ? playerStats.MaxHealth : 0f;
         public float AttackPower => playerStats != null ? playerStats.AttackPower : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
+        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
 
         private void Awake()
         {
@@ -115,8 +117,11 @@ namespace Necrocis
             rb = GetComponent<Rigidbody>();
             characterController = GetComponent<CharacterController>();
             EnsurePlayerStats();
+            EnsureClassSkillController();
+            lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
         }
+        // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
 
         private void Start()
         {
@@ -134,6 +139,7 @@ namespace Necrocis
 
             Debug.Log($"[Player] 시작 위치: {transform.position}");
         }
+        // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
         private void Update()
         {
@@ -141,6 +147,7 @@ namespace Necrocis
             UpdateAnimation();
             ApplyLockedRotation();
         }
+        // 유니티 생명주기: 물리 스텝 기반 로직을 실행합니다.
 
         private void FixedUpdate()
         {
@@ -175,6 +182,10 @@ namespace Necrocis
             Vector2 moveInput = input.MoveAction.ReadValue<Vector2>();
             movement = new Vector3(moveInput.x, 0, moveInput.y).normalized;
             isMoving = movement.sqrMagnitude > 0.01f;
+            if (isMoving)
+            {
+                lastMoveDirection = movement;
+            }
 
             // 방향 결정 (마지막 입력 방향 유지)
             if (isMoving)
@@ -311,6 +322,7 @@ namespace Necrocis
                 rb.angularVelocity = Vector3.zero;
             }
         }
+        // TryMoveWithHeight: 작업을 시도하고 성공 여부를 반환합니다.
 
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
@@ -363,6 +375,7 @@ namespace Necrocis
 
             return false;
         }
+        // ApplyMove: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyMove(Vector3 moveVector)
         {
@@ -397,6 +410,7 @@ namespace Necrocis
             ApplyLockedY();
             ApplyLockedRotation();
         }
+        // LockY: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void LockY(float y)
         {
@@ -405,11 +419,13 @@ namespace Necrocis
             groundOffsetY = y;
             ApplyLockedY();
         }
+        // UnlockY: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void UnlockY()
         {
             lockYPosition = false;
         }
+        // ApplyLockedY: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyLockedY()
         {
@@ -446,6 +462,7 @@ namespace Necrocis
             fallback.y = desiredY;
             transform.position = fallback;
         }
+        // ApplyLockedRotation: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyLockedRotation()
         {
@@ -466,12 +483,41 @@ namespace Necrocis
             return currentDirection;
         }
 
+        public Vector3 GetLogicalFacingDirection()
+        {
+            if (movement.sqrMagnitude > 0.0001f)
+            {
+                return movement.normalized;
+            }
+
+            if (lastMoveDirection.sqrMagnitude > 0.0001f)
+            {
+                return lastMoveDirection.normalized;
+            }
+
+            return DirectionToVector(currentDirection);
+        }
+
+        public static Vector3 DirectionToVector(Direction direction)
+        {
+            return direction switch
+            {
+                Direction.Up => Vector3.forward,
+                Direction.Down => Vector3.back,
+                Direction.Left => Vector3.left,
+                Direction.Right => Vector3.right,
+                _ => Vector3.forward
+            };
+        }
+        // RefreshBaseStats: 변경 사항을 런타임 객체에 반영합니다.
+
         public void RefreshBaseStats(bool resetCurrentHealth = false)
         {
             EnsurePlayerStats();
             playerStats.ConfigureBaseStats(baseMoveSpeed, baseMaxHealth, baseAttackPower, resetCurrentHealth);
             playerStatsConfigured = true;
         }
+        // TakeDamage: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void TakeDamage(float damage)
         {
@@ -483,42 +529,50 @@ namespace Necrocis
             else
                 playerStats?.TakeDamage(damage);
         }
+        // Heal: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void Heal(float amount)
         {
             EnsurePlayerStats();
             playerStats.Heal(amount);
         }
+        // AddStatModifier: 상태 또는 컬렉션을 갱신합니다.
 
         public void AddStatModifier(CharacterStatModifier modifier)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifier(modifier);
         }
+        // AddStatModifiers: 상태 또는 컬렉션을 갱신합니다.
 
         public void AddStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifiers(modifiers, source);
         }
+        // ApplyOrReplaceStatModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyOrReplaceStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyOrReplaceSourceModifiers(modifiers, source);
         }
+        // RemoveStatModifiersFromSource: 상태 또는 컬렉션을 갱신합니다.
 
         public int RemoveStatModifiersFromSource(object source)
         {
             EnsurePlayerStats();
             return playerStats.RemoveModifiersFromSource(source);
         }
+        // FaceDirection: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void FaceDirection(Direction direction)
         {
             currentDirection = direction;
+            lastMoveDirection = DirectionToVector(direction);
             UpdateAnimationState();
         }
+        // EnsurePlayerStats: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void EnsurePlayerStats()
         {
@@ -544,6 +598,15 @@ namespace Necrocis
             }
         }
 
+        private void EnsureClassSkillController()
+        {
+            if (GetComponent<PlayerClassSkillController>() == null)
+            {
+                gameObject.AddComponent<PlayerClassSkillController>();
+            }
+        }
+        // HandlePlayerHealthChanged: 이벤트와 후속 처리를 담당합니다.
+
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
             if (args.CurrentValue < args.PreviousValue)
@@ -562,6 +625,7 @@ namespace Necrocis
                 Die();
             }
         }
+        // Die: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Die()
         {
@@ -580,6 +644,10 @@ namespace Necrocis
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
                 attack.enabled = false;
+
+            PlayerClassSkillController classSkillController = GetComponent<PlayerClassSkillController>();
+            if (classSkillController != null)
+                classSkillController.enabled = false;
 
             enabled = false;
             Debug.Log("[Player] HP가 0이 되어 사망했습니다.");

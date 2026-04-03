@@ -31,6 +31,8 @@ namespace Necrocis
         private Rigidbody body;
         private BoxCollider boxCollider;
         private CharacterStats stats;
+        private EnemyStatusEffectController statusEffectController;
+        private EnemySkillBridge enemySkillBridge;
 
         // 이동
         private Vector3 anchorPosition;
@@ -55,6 +57,7 @@ namespace Necrocis
         public bool IsDead => stats != null && stats.IsDead;
         public EnemySpawnRuleConfig Config => config;
         public CharacterStats Stats => stats;
+        public EnemyStatusEffectController StatusEffects => statusEffectController;
 
         // ─────────────────────────────────
         // 풀링 API (기존 유지)
@@ -86,6 +89,7 @@ namespace Necrocis
             controller.poolArchetypeId = poolArchetypeId;
             return controller;
         }
+        // Configure: 관련 설정과 상태를 구성합니다.
 
         public void Configure(EnemySpawner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition)
         {
@@ -106,6 +110,9 @@ namespace Necrocis
             transform.localScale = Vector3.one;
 
             EnsureComponents();
+            statusEffectController?.Initialize(this);
+            statusEffectController?.ResetEffects();
+            enemySkillBridge?.Bind(this, statusEffectController);
             gameObject.tag = "Enemy";
             ConfigureStats();
             ApplyPhysicsSetup();
@@ -128,6 +135,7 @@ namespace Necrocis
             currentState = null;
             ChangeState(EnemyIdleState.Instance);
         }
+        // ReleaseToPool: 상태 전환 관련 흐름을 처리합니다.
 
         public void ReleaseToPool()
         {
@@ -138,6 +146,7 @@ namespace Necrocis
             currentState = null;
 
             PrepareForPool();
+            statusEffectController?.ResetEffects();
             EnsurePoolRoot();
             gameObject.SetActive(false);
             transform.SetParent(poolRoot, false);
@@ -169,12 +178,14 @@ namespace Necrocis
 
             SyncHeight();
         }
+        // 유니티 콜백: OnDisable 이벤트에 반응합니다.
 
         private void OnDisable()
         {
             ActiveEnemies.Remove(this);
             NotifyOwnerReleased();
         }
+        // 유니티 콜백: OnDestroy 이벤트에 반응합니다.
 
         private void OnDestroy()
         {
@@ -210,6 +221,7 @@ namespace Necrocis
             float playerToAnchor = GetPlanarDistance(playerTransform.position, anchorPosition);
             return playerToAnchor <= config.leashRadius;
         }
+        // IsPlayerInAttackRange: 조건 충족 여부를 확인합니다.
 
         public bool IsPlayerInAttackRange()
         {
@@ -217,11 +229,13 @@ namespace Necrocis
             float dist = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
             return dist <= config.attackRange;
         }
+        // IsOutOfLeash: 조건 충족 여부를 확인합니다.
 
         public bool IsOutOfLeash()
         {
             return GetPlanarDistance(GetCurrentPosition(), anchorPosition) > config.leashRadius;
         }
+        // IsIdleTimerExpired: 조건 충족 여부를 확인합니다.
 
         public bool IsIdleTimerExpired(float deltaTime)
         {
@@ -239,6 +253,7 @@ namespace Necrocis
             float max = Mathf.Max(config.idleDelayRange.x, config.idleDelayRange.y);
             idleTimer = Random.Range(min, max);
         }
+        // PickWanderDestination: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void PickWanderDestination()
         {
@@ -247,6 +262,7 @@ namespace Necrocis
                 SetDestination(wanderDest);
             }
         }
+        // SetChaseDestination: 관련 설정과 상태를 구성합니다.
 
         public void SetChaseDestination()
         {
@@ -255,6 +271,7 @@ namespace Necrocis
             chase.y = GetCurrentPosition().y;
             SetDestination(chase);
         }
+        // SetReturnDestination: 관련 설정과 상태를 구성합니다.
 
         public void SetReturnDestination()
         {
@@ -266,6 +283,15 @@ namespace Necrocis
         /// </summary>
         public bool MoveTowardDestination(float deltaTime)
         {
+            if (statusEffectController != null && statusEffectController.IsStunned)
+            {
+                if (usingMoveAnimation)
+                {
+                    SetIdleAnimation();
+                }
+                return false;
+            }
+
             if (!hasDestination) return false;
 
             Vector3 currentPosition = GetCurrentPosition();
@@ -318,9 +344,15 @@ namespace Necrocis
 
             return true; // 아직 이동 중
         }
+        // TryPerformAttack: 작업을 시도하고 성공 여부를 반환합니다.
 
         public void TryPerformAttack(float deltaTime)
         {
+            if (statusEffectController != null && statusEffectController.IsStunned)
+            {
+                return;
+            }
+
             attackTimer -= deltaTime;
             if (attackTimer > 0f) return;
 
@@ -336,6 +368,7 @@ namespace Necrocis
                 }
             }
         }
+        // TakeDamage: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void TakeDamage(float damage)
         {
@@ -345,18 +378,29 @@ namespace Necrocis
                 return;
             }
 
-            stats.ApplyDamage(damage);
+            float incomingDamageMultiplier = statusEffectController != null
+                ? statusEffectController.GetIncomingDamageMultiplier()
+                : 1f;
+            float finalDamage = Mathf.Max(0f, damage * incomingDamageMultiplier);
+            if (finalDamage <= 0f)
+            {
+                return;
+            }
+
+            stats.ApplyDamage(finalDamage);
             if (stats.IsDead)
             {
                 ChangeState(EnemyDeadState.Instance);
             }
         }
+        // GrantExp: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void GrantExp()
         {
             if (config == null) return;
             LevelUpManager.AddExp(config.expReward);
         }
+        // ApplyKnockback: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyKnockback(Vector3 worldDirection, float distance)
         {
@@ -374,6 +418,7 @@ namespace Necrocis
                 hasDestination = false;
             }
         }
+        // DisableCollider: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void DisableCollider()
         {
@@ -389,6 +434,7 @@ namespace Necrocis
             usingMoveAnimation = false;
             ApplyAnimation(GetIdleFrames());
         }
+        // SetMoveAnimation: 관련 설정과 상태를 구성합니다.
 
         public void SetMoveAnimation()
         {
@@ -405,6 +451,7 @@ namespace Necrocis
             destination = targetPosition;
             hasDestination = true;
         }
+        // TryPickWanderDestination: 작업을 시도하고 성공 여부를 반환합니다.
 
         private bool TryPickWanderDestination(out Vector3 wanderDestination)
         {
@@ -432,6 +479,7 @@ namespace Necrocis
             wanderDestination.y = biome.GetGroundHeight(anchorPosition) + config.heightOffset;
             return true;
         }
+        // TryMove: 작업을 시도하고 성공 여부를 반환합니다.
 
         private bool TryMove(Vector3 currentPosition, Vector3 step)
         {
@@ -481,6 +529,7 @@ namespace Necrocis
 
             return false;
         }
+        // GetSeparationVector: 필요한 값을 반환합니다.
 
         private Vector3 GetSeparationVector(Vector3 currentPosition)
         {
@@ -507,6 +556,7 @@ namespace Necrocis
 
             return separation;
         }
+        // ApplyAnimation: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyAnimation(Sprite[] frames)
         {
@@ -531,6 +581,7 @@ namespace Necrocis
             animatedSprite.SetFrames(frames, config.animationSpeed);
             animatedSprite.Play();
         }
+        // GetIdleFrames: 필요한 값을 반환합니다.
 
         private Sprite[] GetIdleFrames()
         {
@@ -538,6 +589,7 @@ namespace Necrocis
                 return config.idleSprites;
             return config.moveSprites;
         }
+        // SyncHeight: 변경 사항을 런타임 객체에 반영합니다.
 
         private void SyncHeight()
         {
@@ -549,6 +601,7 @@ namespace Necrocis
             position.y = biome.GetGroundHeight(position) + config.heightOffset;
             SetPosition(position);
         }
+        // EnsurePlayerTransform: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void EnsurePlayerTransform()
         {
@@ -556,6 +609,7 @@ namespace Necrocis
             if (PlayerController.Instance != null)
                 playerTransform = PlayerController.Instance.transform;
         }
+        // EnsureComponents: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void EnsureComponents()
         {
@@ -578,7 +632,10 @@ namespace Necrocis
             body = GetOrAddComponent<Rigidbody>(gameObject);
             boxCollider = GetOrAddComponent<BoxCollider>(gameObject);
             stats = GetOrAddComponent<CharacterStats>(gameObject);
+            statusEffectController = GetOrAddComponent<EnemyStatusEffectController>(gameObject);
+            enemySkillBridge = GetOrAddComponent<EnemySkillBridge>(gameObject);
         }
+        // ConfigureStats: 관련 설정과 상태를 구성합니다.
 
         private void ConfigureStats()
         {
@@ -603,6 +660,7 @@ namespace Necrocis
             stats.ClearModifiers();
             stats.ConfigureBaseStats(baseStats, true);
         }
+        // ApplyVisualSetup: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyVisualSetup()
         {
@@ -626,6 +684,7 @@ namespace Necrocis
                 ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
             }
         }
+        // ApplyPhysicsSetup: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyPhysicsSetup()
         {
@@ -640,11 +699,13 @@ namespace Necrocis
             boxCollider.size = config.colliderSize;
             boxCollider.center = config.colliderCenter;
         }
+        // GetCurrentPosition: 필요한 값을 반환합니다.
 
         private Vector3 GetCurrentPosition()
         {
             return body != null ? body.position : transform.position;
         }
+        // MoveToPosition: 해당 작업 흐름을 수행합니다.
 
         private void MoveToPosition(Vector3 position)
         {
@@ -655,6 +716,7 @@ namespace Necrocis
             }
             transform.position = position;
         }
+        // SetPosition: 관련 설정과 상태를 구성합니다.
 
         private void SetPosition(Vector3 position)
         {
@@ -673,6 +735,7 @@ namespace Necrocis
                 component = target.AddComponent<T>();
             return component;
         }
+        // NotifyOwnerReleased: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void NotifyOwnerReleased()
         {
@@ -680,6 +743,7 @@ namespace Necrocis
             owner.NotifyEnemyReleased(this);
             notifiedOwner = true;
         }
+        // PrepareForPool: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void PrepareForPool()
         {
@@ -703,6 +767,7 @@ namespace Necrocis
             if (boxCollider != null && config != null)
                 boxCollider.enabled = config.addCollider;
         }
+        // GetPlanarDistance: 필요한 값을 반환합니다.
 
         private static float GetPlanarDistance(Vector3 a, Vector3 b)
         {
@@ -710,6 +775,7 @@ namespace Necrocis
             b.y = 0f;
             return Vector3.Distance(a, b);
         }
+        // EnsurePoolRoot: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private static void EnsurePoolRoot()
         {
@@ -718,12 +784,14 @@ namespace Necrocis
             if (root == null) root = new GameObject(PoolRootName);
             poolRoot = root.transform;
         }
+        // GetPoolArchetypeId: 필요한 값을 반환합니다.
 
         public static int GetPoolArchetypeId(EnemySpawnRuleConfig config)
         {
             if (config == null) return 0;
             return unchecked((config.poissonSalt * 397) ^ Animator.StringToHash(config.name ?? "Enemy"));
         }
+        // GetOrCreatePool: 필요한 값을 반환합니다.
 
         private static Stack<EnemyController> GetOrCreatePool(int poolArchetypeId)
         {

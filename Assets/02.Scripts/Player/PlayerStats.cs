@@ -52,6 +52,7 @@ namespace Necrocis
                 return runtimeStats;
             }
         }
+        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
 
         private void Awake()
         {
@@ -68,6 +69,7 @@ namespace Necrocis
 
             EnsureInitialized();
         }
+        // EnsureInitialized: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void EnsureInitialized()
         {
@@ -87,6 +89,7 @@ namespace Necrocis
 
             initialized = true;
         }
+        // ConfigureBaseStats: 관련 설정과 상태를 구성합니다.
 
         public void ConfigureBaseStats(float moveSpeed, float maxHealth, float attackPower, bool resetCurrentHealth = false)
         {
@@ -131,6 +134,7 @@ namespace Necrocis
                     choice);
             }
         }
+        // ResetStats: 상태 또는 컬렉션을 갱신합니다.
 
         public void ResetStats()
         {
@@ -176,6 +180,7 @@ namespace Necrocis
             EnsureInitialized();
             RuntimeStats.AddModifier(modifier);
         }
+        // ApplyModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
@@ -184,6 +189,7 @@ namespace Necrocis
             foreach (CharacterStatModifierData modifier in modifiers)
                 RuntimeStats.AddModifier(modifier.ToModifier(source));
         }
+        // ApplyOrReplaceSourceModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyOrReplaceSourceModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
@@ -191,6 +197,7 @@ namespace Necrocis
             RuntimeStats.RemoveModifiersFromSource(source);
             ApplyModifiers(modifiers, source);
         }
+        // RemoveModifiersFromSource: 상태 또는 컬렉션을 갱신합니다.
 
         public int RemoveModifiersFromSource(object source)
         {

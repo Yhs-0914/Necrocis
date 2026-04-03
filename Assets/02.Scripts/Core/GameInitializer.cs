@@ -19,6 +19,7 @@ namespace Necrocis
         [SerializeField] private PlayerController player;
         [SerializeField] private DontStarveCamera mainCamera;
         [SerializeField] private HubRoom hubRoom;
+        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
 
         private void Awake()
         {
@@ -131,6 +132,9 @@ namespace Necrocis
         {
             if (playerObj.GetComponent<PlayerAttack>() == null)
                 playerObj.AddComponent<PlayerAttack>();
+
+            if (playerObj.GetComponent<PlayerClassSkillController>() == null)
+                playerObj.AddComponent<PlayerClassSkillController>();
 
             if (playerObj.GetComponent<Health>() == null)
                 playerObj.AddComponent<Health>();

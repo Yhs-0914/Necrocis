@@ -1,36 +1,56 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Necrocis
 {
     /// <summary>
-    /// 플레이어 공격 (Q=근거리, E=원거리)
-    /// PlayerController의 방향을 사용하여 공격 방향 결정
+    /// Basic player attack controller.
+    /// Q = melee, W = ranged.
     /// </summary>
     public class PlayerAttack : MonoBehaviour
     {
-        [Header("근거리 공격 (Q)")]
+        [Header("Melee Attack (Q)")]
         [SerializeField] private float meleeAttackDamage = 20f;
-        [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3, 3, 3);
+        [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3f, 3f, 3f);
         [SerializeField] private float meleeAttackOffset = 2f;
 
-        [Header("원거리 공격 (E)")]
+        [Header("Ranged Attack")]
+        [SerializeField] private Transform firePoint;
         [SerializeField] private Transform projectileSpawnPoint;
+        [SerializeField] private float projectileSpawnOffset = 0.65f;
+        [SerializeField] private float projectileSpawnHeight = 1f;
+        [SerializeField] private float projectileSpawnExtraHeight = 2f;
+        [SerializeField] private LayerMask rangedTargetMask = ~0;
 
-        [Header("공통 설정")]
+        [Header("Shared")]
         [SerializeField] private float attackCooldown = 0.3f;
 
+        private PlayerController playerController;
         private float lastAttackTime = float.NegativeInfinity;
 
-        void Update()
+        private void Awake()
+        {
+            playerController = GetComponent<PlayerController>();
+            if (rangedTargetMask.value == 0)
+            {
+                rangedTargetMask = ~0;
+                Debug.LogWarning("[PlayerAttack] rangedTargetMask was Nothing. Fallback to Everything.");
+            }
+
+            ResolveRootFirePoint();
+        }
+
+        private void Update()
         {
             HandleAttackInput();
         }
 
         private void HandleAttackInput()
         {
-            var input = InputManager.Instance;
-            if (input == null) return;
+            InputManager input = InputManager.Instance;
+            if (input == null)
+            {
+                return;
+            }
 
             bool canAttack = Time.time >= lastAttackTime + attackCooldown;
 
@@ -43,87 +63,182 @@ namespace Necrocis
             if (input.MeleeAttackAction.WasPressedThisFrame())
             {
                 MeleeAttack();
+                return;
             }
-            else if (input.RangedAttackAction.WasPressedThisFrame())
+
+            if (input.RangedAttackAction.WasPressedThisFrame())
             {
-                if (!canAttack) return;
+                if (!canAttack)
+                {
+                    return;
+                }
+
                 lastAttackTime = Time.time;
+                Debug.Log("W pressed: fire bullet");
                 RangedAttack();
             }
         }
 
         private Vector3 GetAttackDirection()
         {
-            if (PlayerController.Instance == null)
-                return Vector3.forward;
-
-            switch (PlayerController.Instance.GetCurrentDirection())
+            PlayerController controller = playerController != null ? playerController : PlayerController.Instance;
+            if (controller == null)
             {
-                case PlayerController.Direction.Up:    return Vector3.forward;
-                case PlayerController.Direction.Down:  return Vector3.back;
-                case PlayerController.Direction.Left:  return Vector3.left;
-                case PlayerController.Direction.Right: return Vector3.right;
-                default: return Vector3.forward;
+                return Vector3.forward;
             }
+
+            Vector3 direction = controller.GetLogicalFacingDirection();
+            direction.y = 0f;
+            return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
         }
 
         private void MeleeAttack()
         {
             Vector3 direction = GetAttackDirection();
             Vector3 boxCenter = transform.position + direction * meleeAttackOffset;
-            // Y를 높여서 높이 차이와 관계없이 적을 감지
             Vector3 tallBoxSize = new Vector3(meleeAttackBoxSize.x, 20f, meleeAttackBoxSize.z);
             Quaternion rotation = Quaternion.LookRotation(direction);
-            Collider[] hitColliders = Physics.OverlapBox(boxCenter, tallBoxSize / 2, rotation, ~0, QueryTriggerInteraction.Collide);
 
-            Debug.Log($"[PlayerAttack] 근거리 공격! 플레이어={transform.position}, 방향={direction}, 판정위치={boxCenter}, 히트수={hitColliders.Length}");
+            Collider[] hitColliders = Physics.OverlapBox(
+                boxCenter,
+                tallBoxSize / 2f,
+                rotation,
+                ~0,
+                QueryTriggerInteraction.Collide);
 
-            foreach (var hitCollider in hitColliders)
+            Debug.Log($"[PlayerAttack] Melee hit scan count: {hitColliders.Length}");
+
+            foreach (Collider hitCollider in hitColliders)
             {
                 EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
-                if (enemy != null && !enemy.IsDead)
+                if (enemy == null || enemy.IsDead)
                 {
-                    float damage = meleeAttackDamage;
-                    if (PlayerStats.Instance != null)
-                        damage = PlayerStats.Instance.GetAttack();
-                    enemy.TakeDamage(damage);
-                    Debug.Log($"[PlayerAttack] {hitCollider.gameObject.name}에게 {damage} 데미지!");
+                    continue;
                 }
+
+                float damage = PlayerStats.Instance != null
+                    ? PlayerStats.Instance.GetAttack()
+                    : meleeAttackDamage;
+
+                enemy.TakeDamage(damage);
+                Debug.Log($"[PlayerAttack] Melee hit {hitCollider.gameObject.name} for {damage}");
             }
         }
 
         private void RangedAttack()
         {
-            if (ObjectPooler.Instance == null)
+            ObjectPooler pooler = ResolveObjectPooler();
+            if (pooler == null)
             {
-                Debug.LogWarning("[PlayerAttack] ObjectPooler.Instance가 null입니다. 씬에 ObjectPooler가 있는지 확인하세요.");
+                Debug.LogWarning("[PlayerAttack] ObjectPooler.Instance is null");
                 return;
             }
 
-            GameObject projectile = ObjectPooler.Instance.GetPooledObject();
+            GameObject projectile = pooler.GetPooledObject();
             if (projectile == null)
             {
-                Debug.LogWarning("[PlayerAttack] 풀에서 사용 가능한 투사체가 없습니다.");
+                LogPoolUnavailableReason(pooler);
                 return;
             }
 
-            Debug.Log($"[PlayerAttack] 원거리 공격! 방향={GetAttackDirection()}");
-
-            Vector3 spawnPos = projectileSpawnPoint != null
-                ? projectileSpawnPoint.position
-                : transform.position;
+            Vector3 direction = GetAttackDirection();
+            Vector3 spawnOrigin = firePoint != null ? firePoint.position : transform.position;
+            Vector3 spawnPos = spawnOrigin + direction * projectileSpawnOffset;
+            spawnPos.y += projectileSpawnHeight + projectileSpawnExtraHeight;
 
             projectile.transform.position = spawnPos;
             projectile.SetActive(true);
 
             Projectile proj = projectile.GetComponent<Projectile>();
-            if (proj != null)
+            if (proj == null)
             {
-                float damage = 10f;
-                if (PlayerStats.Instance != null)
-                    damage = PlayerStats.Instance.GetAttack();
-                proj.Launch(GetAttackDirection(), damage);
+                Debug.LogWarning("[PlayerAttack] Pooled projectile has no Projectile component.");
+                return;
             }
+
+            float damage = PlayerStats.Instance != null
+                ? PlayerStats.Instance.GetAttack()
+                : 10f;
+
+            proj.Launch(direction, damage, rangedTargetMask);
+            Debug.Log($"[PlayerAttack] Bullet fired toward {direction}");
+        }
+
+        private static ObjectPooler ResolveObjectPooler()
+        {
+            ObjectPooler pooler = ObjectPooler.Instance;
+            if (pooler != null)
+            {
+                return pooler;
+            }
+
+            pooler = FindFirstObjectByType<ObjectPooler>();
+            if (pooler != null)
+            {
+                ObjectPooler.Instance = pooler;
+            }
+
+            return pooler;
+        }
+
+        private static void LogPoolUnavailableReason(ObjectPooler pooler)
+        {
+            if (pooler == null)
+            {
+                Debug.LogWarning("[PlayerAttack] ObjectPooler.Instance is null");
+                return;
+            }
+
+            string status = pooler.GetDebugStatus();
+            Debug.LogWarning($"[PlayerAttack] {status}");
+        }
+
+        private void ResolveRootFirePoint()
+        {
+            if (IsValidRootSpawnPoint(firePoint))
+            {
+                return;
+            }
+
+            if (IsValidRootSpawnPoint(projectileSpawnPoint))
+            {
+                firePoint = projectileSpawnPoint;
+                return;
+            }
+
+            Transform found = transform.Find("FirePoint");
+            if (IsValidRootSpawnPoint(found))
+            {
+                firePoint = found;
+                return;
+            }
+
+            GameObject pointObject = new GameObject("FirePoint");
+            firePoint = pointObject.transform;
+            firePoint.SetParent(transform, false);
+            firePoint.localPosition = Vector3.zero;
+            firePoint.localRotation = Quaternion.identity;
+        }
+
+        private bool IsValidRootSpawnPoint(Transform point)
+        {
+            if (point == null || !point.IsChildOf(transform))
+            {
+                return false;
+            }
+
+            Transform cursor = point;
+            while (cursor != null && cursor != transform)
+            {
+                if (cursor.GetComponent<SpriteRenderer>() != null)
+                {
+                    return false;
+                }
+
+                cursor = cursor.parent;
+            }
+
+            return true;
         }
 
         private void OnDrawGizmosSelected()

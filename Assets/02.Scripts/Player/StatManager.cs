@@ -25,6 +25,7 @@ namespace Necrocis
         {
             InitializeStatData();
         }
+        // InitializeStatData: 관련 설정과 상태를 구성합니다.
 
         private static void InitializeStatData()
         {
@@ -73,6 +74,7 @@ namespace Necrocis
                 }
             };
         }
+        // GetStatEffect: 필요한 값을 반환합니다.
 
         public static StatEffect GetStatEffect(StatChoice choice)
         {
