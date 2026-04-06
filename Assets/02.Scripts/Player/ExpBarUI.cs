@@ -10,13 +10,13 @@ namespace Necrocis
     public class ExpBarUI : MonoBehaviour
     {
         [Header("바 색상")]
-        [SerializeField] private Color barColor = new Color(0.3f, 0.7f, 1f, 1f);
-        [SerializeField] private Color bgColor = new Color(0.15f, 0.15f, 0.15f, 0.8f);
+        [SerializeField] private Color barColor = new Color(0.3f, 0.7f, 1f, 1f);   // 경험치 채움 색상 (하늘색)
+        [SerializeField] private Color bgColor = new Color(0.15f, 0.15f, 0.15f, 0.8f); // 배경 색상 (어두운 회색)
 
-        private Image fillImage;
-        private Text levelText;
-        private Text expText;
-        private int lastLevel;
+        private Image fillImage;  // 경험치 채움 이미지 (Filled 모드)
+        private Text levelText;   // 레벨 텍스트 (바 왼쪽)
+        private Text expText;     // 경험치 수치 텍스트 (바 중앙)
+        private int lastLevel;    // 마지막으로 표시한 레벨
 
         private void Start()
         {
@@ -25,6 +25,7 @@ namespace Necrocis
             UpdateDisplay();
         }
 
+        // LevelUpManager 이벤트 구독 (경험치 획득, 레벨업)
         private void OnEnable()
         {
             LevelUpManager.OnExpGained += OnExpGained;
@@ -40,13 +41,14 @@ namespace Necrocis
         private void OnExpGained(int amount) => UpdateDisplay();
         private void OnLevelUp() => UpdateDisplay();
 
+        // 경험치 바와 텍스트를 현재 상태로 갱신
         private void UpdateDisplay()
         {
             int level = LevelUpManager.GetCurrentLevel();
             float progress = LevelUpManager.GetExpProgress();
 
             if (fillImage != null)
-                fillImage.fillAmount = progress;
+                fillImage.fillAmount = progress; // 0~1 비율로 채움
 
             if (levelText != null)
                 levelText.text = $"Lv.{level}";
@@ -55,8 +57,10 @@ namespace Necrocis
                 expText.text = $"{LevelUpManager.GetCurrentExp()} / {LevelUpManager.GetExpRequired()}";
         }
 
+        // UI를 코드로 동적 생성 (Canvas → 바 → 텍스트)
         private void BuildUI()
         {
+            // 전용 Canvas 생성 (ScreenSpaceOverlay, sortingOrder=50으로 항상 위에 표시)
             GameObject canvasObj = new GameObject("ExpBarCanvas");
             canvasObj.transform.SetParent(transform);
             Canvas canvas = canvasObj.AddComponent<Canvas>();
@@ -67,7 +71,7 @@ namespace Necrocis
             scaler.referenceResolution = new Vector2(1920, 1080);
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // 바 컨테이너 (화면 하단)
+            // 바 컨테이너 — 화면 하단 중앙 (앵커 20%~80%)
             GameObject barRoot = CreateUIElement("ExpBar", canvasObj.transform);
             RectTransform barRect = barRoot.GetComponent<RectTransform>();
             barRect.anchorMin = new Vector2(0.2f, 0f);
@@ -76,11 +80,11 @@ namespace Necrocis
             barRect.anchoredPosition = new Vector2(0, 20);
             barRect.sizeDelta = new Vector2(0, 25);
 
-            // 배경
+            // 배경 이미지
             Image bgImage = barRoot.AddComponent<Image>();
             bgImage.color = bgColor;
 
-            // 채움
+            // 채움 이미지 — Filled 모드로 좌→우 방향 채움
             GameObject fill = CreateUIElement("Fill", barRoot.transform);
             RectTransform fillRect = fill.GetComponent<RectTransform>();
             fillRect.anchorMin = Vector2.zero;
@@ -93,7 +97,7 @@ namespace Necrocis
             fillImage.fillMethod = Image.FillMethod.Horizontal;
             fillImage.fillAmount = 0f;
 
-            // 레벨 텍스트 (바 왼쪽)
+            // 레벨 텍스트 — 바 왼쪽 (앵커 10%~20%)
             GameObject lvlObj = CreateUIElement("Level", canvasObj.transform);
             RectTransform lvlRect = lvlObj.GetComponent<RectTransform>();
             lvlRect.anchorMin = new Vector2(0.1f, 0f);
@@ -109,7 +113,7 @@ namespace Necrocis
             levelText.color = Color.white;
             levelText.alignment = TextAnchor.MiddleCenter;
 
-            // EXP 텍스트 (바 위)
+            // EXP 텍스트 — 바 중앙에 겹쳐서 표시
             GameObject expObj = CreateUIElement("ExpText", barRoot.transform);
             RectTransform expRect = expObj.GetComponent<RectTransform>();
             expRect.anchorMin = Vector2.zero;
@@ -125,6 +129,7 @@ namespace Necrocis
             expText.alignment = TextAnchor.MiddleCenter;
         }
 
+        // UI 요소 생성 헬퍼 (RectTransform 포함)
         private GameObject CreateUIElement(string name, Transform parent)
         {
             GameObject obj = new GameObject(name, typeof(RectTransform));

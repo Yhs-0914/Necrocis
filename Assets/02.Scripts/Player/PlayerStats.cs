@@ -14,8 +14,8 @@ namespace Necrocis
     {
         public static PlayerStats Instance { get; private set; }
 
-        private CharacterStats runtimeStats;
-        private bool initialized;
+        private CharacterStats runtimeStats; // 실제 스탯 데이터를 관리하는 CharacterStats 컴포넌트
+        private bool initialized;             // 기본 스탯 초기화 완료 여부
 
         // 기본 스탯
         private const float BASE_MAX_HEALTH = 150f;
@@ -27,10 +27,11 @@ namespace Necrocis
         private const float BASE_MAGIC = 20f;
         private const float BASE_COOLDOWN = 10f;
 
+        // CharacterStats의 이벤트를 외부에 전달 (중계 패턴)
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged
         {
-            add => RuntimeStats.StatChanged += value;
-            remove => RuntimeStats.StatChanged -= value;
+            add => RuntimeStats.StatChanged += value;     // 구독 시 CharacterStats에 연결
+            remove => RuntimeStats.StatChanged -= value;  // 해제 시 CharacterStats에서 분리
         }
 
         public event Action<CharacterStats, CharacterHealthChangedEventArgs> HealthChanged
@@ -39,6 +40,8 @@ namespace Necrocis
             remove => RuntimeStats.HealthChanged -= value;
         }
 
+        // CharacterStats 컴포넌트에 대한 지연 초기화 접근자
+        // 없으면 자동으로 추가하여 항상 유효한 참조 보장
         public CharacterStats RuntimeStats
         {
             get
@@ -111,25 +114,29 @@ namespace Necrocis
         // 레벨업 연동
         // ─────────────────────────────────
 
+        // 레벨업 선택지를 실제 모디파이어로 변환하여 적용
+        // StatManager에서 선택지의 효과(고정값/퍼센트)를 가져와서 CharacterStats에 추가
         public void ApplyStatChoice(StatChoice choice)
         {
             EnsureInitialized();
             StatEffect effect = StatManager.GetStatEffect(choice);
 
+            // 고정값 모디파이어 적용 (예: 공격력 +3)
             foreach (var stat in effect.flatStats)
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
                     stat.Value,
                     CharacterStatModifierMode.Flat,
-                    choice);
+                    choice); // source를 choice로 설정하여 추적 가능
             }
 
+            // 퍼센트 모디파이어 적용 (예: 이동속도 +3% → 0.03으로 변환)
             foreach (var stat in effect.percentStats)
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value / 100f,
+                    stat.Value / 100f, // UI에선 3%로 표시, 내부적으론 0.03
                     CharacterStatModifierMode.PercentAdd,
                     choice);
             }
@@ -191,6 +198,8 @@ namespace Necrocis
         }
         // ApplyOrReplaceSourceModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
+        // 특정 출처의 모디파이어를 새 것으로 교체 (기존 제거 → 새로 적용)
+        // 장비 교체 시 유용: 이전 장비 효과 제거 후 새 장비 효과 적용
         public void ApplyOrReplaceSourceModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsureInitialized();

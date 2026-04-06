@@ -9,20 +9,21 @@ namespace Necrocis
     {
         private const int HitBufferSize = 8;
 
-        [SerializeField] private float speed = 15f;
-        [SerializeField] private float lifeTime = 3f;
+        [SerializeField] private float speed = 15f;    // 투사체 이동 속도
+        [SerializeField] private float lifeTime = 3f;  // 수명 (초) — 이후 자동 비활성화
         [SerializeField] private LayerMask targetMask = ~0;
         [SerializeField] private float hitCheckRadius = 0.35f;
         [SerializeField] private float hitCheckHeightOffset = 0.75f;
         [SerializeField] private float hitCheckVerticalHalfHeight = 2.5f;
 
-        private Vector3 moveDirection;
+        private Vector3 moveDirection; // 이동 방향 (정규화)
         private float flightHeight;
-        private float damage;
+        private float damage;          // 적에게 가할 데미지
         private float deactivateTime;
         private bool hasImpacted;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
 
+        // 외부에서 호출: 방향과 데미지를 설정하여 발사
         public void Launch(Vector3 direction, float damage)
         {
             Launch(direction, damage, targetMask);
@@ -38,6 +39,7 @@ namespace Necrocis
             hasImpacted = false;
         }
 
+        // 풀에서 활성화될 때 수명 타이머 시작
         private void OnEnable()
         {
             // Object pooling rule: return to pool by disabling, do not destroy.
@@ -45,6 +47,7 @@ namespace Necrocis
             hasImpacted = false;
         }
 
+        // 매 프레임 방향으로 이동 + 히트 감지
         private void Update()
         {
             Vector3 nextPosition = transform.position + moveDirection * speed * Time.deltaTime;
@@ -52,12 +55,14 @@ namespace Necrocis
             transform.position = nextPosition;
             TryDetectHitByOverlap();
 
+            // 수명 만료 시 자동 비활성화 (풀로 반환)
             if (Time.time >= deactivateTime)
             {
                 gameObject.SetActive(false);
             }
         }
 
+        // 트리거 충돌: 적에게 데미지 후 풀로 반환 (비활성화)
         private void OnTriggerEnter(Collider other)
         {
             HandleHit(other);

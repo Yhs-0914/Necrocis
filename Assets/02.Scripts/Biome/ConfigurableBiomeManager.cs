@@ -16,6 +16,11 @@ namespace Necrocis
         private readonly List<BiomeObjectRuleConfig> runtimeRules = new List<BiomeObjectRuleConfig>();
         private readonly List<EnemySpawnRuleConfig> runtimeEnemyRules = new List<EnemySpawnRuleConfig>();
 
+        /// <summary>
+        /// 현재 바이옴 설정 반환 (엘리트 몹 분열 시 적 설정 검색용)
+        /// </summary>
+        public BiomeConfig GetBiomeConfig() => config;
+
         protected override void Awake()
         {
             if (config == null)
@@ -63,9 +68,21 @@ namespace Necrocis
                 detailValue = (detailNoise.GetNoise(worldX, worldY) + 1f) * 0.5f;
             }
 
+            // variantTile 체크 (높은 노이즈 값일 때만 사용)
             bool useVariant = region.variantTile != null && detailValue >= region.variantThreshold;
             TileBase tile = useVariant ? region.variantTile : region.primaryTile;
             BiomeTileType type = useVariant ? region.variantType : region.primaryType;
+
+            // tileVariants가 있으면 해시 기반으로 변형 선택 (같은 리전 내 시각적 다양성)
+            if (!useVariant && region.tileVariants != null && region.tileVariants.Length > 0)
+            {
+                int totalTiles = 1 + region.tileVariants.Length; // primaryTile + variants
+                int hash = BiomeDeterministic.HashRange(seed, worldX, worldY, 777, totalTiles);
+                if (hash > 0)
+                {
+                    tile = region.tileVariants[hash - 1];
+                }
+            }
 
             return new TileSample(type, tile, IsTileWalkable(type));
         }
@@ -109,6 +126,12 @@ namespace Necrocis
                 return;
             }
 
+            // 엘리트 스포너 설정
+            EliteSpawner eliteSpawner = GetComponent<EliteSpawner>();
+            if (eliteSpawner == null)
+                eliteSpawner = gameObject.AddComponent<EliteSpawner>();
+            eliteSpawner.ClearConfigs();
+
             int allMask = 0;
             for (int i = 0; i < config.regions.Count; i++)
             {
@@ -147,6 +170,13 @@ namespace Necrocis
                 {
                     EnemySpawnRuleConfig ruleConfig = config.enemySpawnRules[i];
                     if (ruleConfig == null) continue;
+
+                    // 엘리트 몹은 EliteSpawner에 등록 (포아송 분포가 아닌 타이머 기반 스폰)
+                    if (ruleConfig.isElite)
+                    {
+                        eliteSpawner.RegisterEliteConfig(ruleConfig);
+                        continue;
+                    }
 
                     int mask = BuildRegionMask(ruleConfig.allowedRegions, allMask);
                     int salt = ruleConfig.poissonSalt != 0 ? ruleConfig.poissonSalt : 600 + i;

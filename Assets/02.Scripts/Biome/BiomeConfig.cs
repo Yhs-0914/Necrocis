@@ -65,6 +65,9 @@ namespace Necrocis
 
         [Range(0f, 1f)]
         public float variantThreshold = 0.5f;
+
+        [Tooltip("같은 리전 내 시각적 변형 타일들 (해시 기반 선택)")]
+        public TileBase[] tileVariants;
     }
 
     [System.Serializable]
@@ -190,7 +193,66 @@ namespace Necrocis
         public Vector3 colliderSize = new Vector3(0.7f, 1.1f, 0.7f);
         public Vector3 colliderCenter = new Vector3(0f, 0.55f, 0f);
 
+        [Header("Sprites - Idle / Move")]
         public Sprite[] idleSprites;
         public Sprite[] moveSprites;
+
+        [Header("Sprites - Attack")]
+        public Sprite[] attackSprites;         // 기본 공격 (좌우는 flipX로 처리)
+        public Sprite[] attackSpritesUp;       // 상방 공격 (NK세포 등 방향별 공격용)
+        public Sprite[] attackSpritesDown;     // 하방 공격
+        public float attackAnimationSpeed = 0.12f;
+
+        [Header("Ranged Attack (원거리 공격)")]
+        public bool isRanged = false;
+        public float projectileSpeed = 8f;
+        public float projectileLifeTime = 3f;
+        public Sprite projectileSprite;
+        public Vector3 projectileScale = new Vector3(0.4f, 0.4f, 0.4f);
+        public float projectileSpawnOffset = 0.5f;
+
+        [Header("Attack Collider (대식세포 등 공격 시 콜라이더 확장)")]
+        public bool expandColliderOnAttack = false;
+        public Vector3 attackColliderSize = new Vector3(2f, 2f, 2f);
+        public Vector3 attackColliderCenter = new Vector3(0f, 0.55f, 0f);
+
+        [Header("Sprites - Death")]
+        public Sprite[] deathSprites;
+        public float deathAnimationSpeed = 0.15f;
+
+        [Header("Elite")]
+        public bool isElite = false;
+        public Color tintColor = Color.white;
+
+        [Tooltip("이 엘리트를 소환하기 위해 잡아야 하는 일반 적 이름")]
+        public string killTriggerEnemyName = "";
+        [Tooltip("소환에 필요한 킬 수")]
+        public int killTriggerCount = 10;
+
+        [Header("Elite - Split on Death (육아종)")]
+        public bool splitsOnDeath = false;
+        public int splitCount = 2;
+        public string splitEnemyName = "";
+
+        [Header("Elite - Split VFX (분열 이펙트)")]
+        public Sprite[] splitVfxSprites;
+        public float splitVfxScale = 3f;
+        public float splitVfxSpeed = 0.08f;
+        public float splitVfxDuration = 0.6f;
+
+        [Header("Elite - Charge (항체)")]
+        public bool chargesAtPlayer = false;
+        public float chargeSpeed = 6f;
+        public float chargeAccelTime = 0.3f;
+
+        [Header("Elite - Aggro Debris (항체 잔해)")]
+        public bool leavesDebrisOnDeath = false;
+        public float debrisDuration = 5f;
+        public float debrisAggroRadius = 8f;
+
+        [Header("Elite - Debris VFX (충격파 이펙트)")]
+        public Sprite[] debrisVfxSprites;
+        public float debrisVfxScale = 15f;
+        public float debrisVfxSpeed = 0.12f;
     }
 }

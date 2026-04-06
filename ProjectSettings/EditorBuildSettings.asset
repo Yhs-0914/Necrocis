@@ -11,6 +11,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/01. Scenes/Intestine.unity
     guid: 7bcc7499b47d2b44f8c3075fc259056c
+  - enabled: 1
+    path: Assets/01. Scenes/Liver.unity
+    guid: 6dcb8e2d3eca342248037d77a665b3b6
+  - enabled: 1
+    path: Assets/01. Scenes/Stomach.unity
+    guid: 787ca0d2b2f804e7289c6009fd153517
+  - enabled: 1
+    path: Assets/01. Scenes/Lung.unity
+    guid: 8aac19d01ca444fb5a286f8f208316c7
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

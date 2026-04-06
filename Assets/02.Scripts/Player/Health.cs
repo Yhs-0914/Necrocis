@@ -13,18 +13,19 @@ namespace Necrocis
         [Tooltip("피격 후 무적 시간(초)")]
         [SerializeField] private float invincibilityDuration = 0.2f;
 
-        private bool isInvincible;
+        private bool isInvincible; // 현재 무적 상태인지
 
+        // PlayerStats의 CharacterStats를 참조 (PlayerStats가 아직 없으면 null 반환)
         private CharacterStats Stats => PlayerStats.Instance?.RuntimeStats;
 
         public float CurrentHealth => Stats?.CurrentHealth ?? 0f;
         public float MaxHealth => Stats?.MaxHealth ?? 0f;
         public bool IsDead => Stats?.IsDead ?? false;
 
-        public event Action<float, float> OnHealthChanged;
-        public event Action OnDeath;
+        public event Action<float, float> OnHealthChanged; // HP 변경 시 (현재HP, 최대HP)
+        public event Action OnDeath;                         // 사망 시
 
-        private bool subscribed;
+        private bool subscribed; // CharacterStats 이벤트 구독 완료 여부
 
         private void OnEnable()
         {
@@ -37,6 +38,8 @@ namespace Necrocis
                 TrySubscribe();
         }
 
+        // PlayerStats가 준비되면 HP 변경 이벤트 구독
+        // OnEnable 시점에 PlayerStats가 없을 수 있어서 Update에서도 재시도
         private void TrySubscribe()
         {
             if (subscribed || Stats == null) return;
@@ -59,12 +62,13 @@ namespace Necrocis
                 OnDeath?.Invoke();
         }
 
+        // 데미지 처리: 무적/사망 체크 → 방어력 감소 → 실제 데미지 적용 → 무적 시작
         public void TakeDamage(float damageAmount)
         {
             if (isInvincible || IsDead || damageAmount <= 0f) return;
 
             float defense = Stats?.Defense ?? 0f;
-            float actualDamage = Mathf.Max(1f, damageAmount - defense);
+            float actualDamage = Mathf.Max(1f, damageAmount - defense); // 최소 1 데미지 보장
             Stats?.ApplyDamage(actualDamage);
 
             StartCoroutine(InvincibilityCoroutine());
@@ -82,6 +86,7 @@ namespace Necrocis
             Stats?.ResetHealthToMax();
         }
 
+        // 외부에서 호출 가능한 임시 무적 부여 (레벨업 후 등)
         public void GrantTemporaryInvincibility(float duration)
         {
             StartCoroutine(InvincibilityCoroutine(duration));

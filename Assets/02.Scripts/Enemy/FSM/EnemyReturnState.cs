@@ -1,5 +1,8 @@
 namespace Necrocis
 {
+    /// <summary>
+    /// 복귀 상태: 앵커 위치로 돌아감, 도착 시 Idle로 전환
+    /// </summary>
     public class EnemyReturnState : IEnemyState
     {
         public static readonly EnemyReturnState Instance = new EnemyReturnState();

@@ -1,5 +1,8 @@
 namespace Necrocis
 {
+    /// <summary>
+    /// 배회 상태: 앵커 주변 랜덤 위치로 이동, 도착 시 Idle로 복귀
+    /// </summary>
     public class EnemyWanderState : IEnemyState
     {
         public static readonly EnemyWanderState Instance = new EnemyWanderState();

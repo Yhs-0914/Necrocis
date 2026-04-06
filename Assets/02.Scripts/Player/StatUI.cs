@@ -10,14 +10,15 @@ namespace Necrocis
     public class StatUI : MonoBehaviour
     {
         [Header("UI 설정")]
-        [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.85f);
-        [SerializeField] private Color positiveColor = new Color(0.4f, 1f, 0.4f);
-        [SerializeField] private Color negativeColor = new Color(1f, 0.4f, 0.4f);
+        [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.85f);  // 패널 배경색
+        [SerializeField] private Color positiveColor = new Color(0.4f, 1f, 0.4f);  // 증가 표시 색상 (초록)
+        [SerializeField] private Color negativeColor = new Color(1f, 0.4f, 0.4f);  // 감소 표시 색상 (빨강)
 
-        private GameObject uiRoot;
-        private Text contentText;
-        private bool isShowing;
+        private GameObject uiRoot;     // UI Canvas 루트
+        private Text contentText;      // 모든 스탯 정보를 표시하는 단일 Text
+        private bool isShowing;        // 현재 표시 중 여부
 
+        // 표시할 스탯 순서 정의
         private static readonly CharacterStatType[] displayStats = new CharacterStatType[]
         {
             CharacterStatType.MaxHealth,
@@ -38,6 +39,7 @@ namespace Necrocis
         }
         // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
+        // O키로 토글, 열려 있으면 매 프레임 스탯 갱신
         private void Update()
         {
             var input = InputManager.Instance;
@@ -52,7 +54,7 @@ namespace Necrocis
             }
 
             if (isShowing)
-                RefreshStats();
+                RefreshStats(); // 실시간 갱신 (레벨업 중에도 변경사항 반영)
         }
         // Show: 이 컴포넌트의 핵심 로직을 실행합니다.
 
@@ -71,6 +73,8 @@ namespace Necrocis
         }
         // RefreshStats: 변경 사항을 런타임 객체에 반영합니다.
 
+        // 모든 스탯 정보를 StringBuilder로 조합하여 Text에 표시
+        // 기본값 대비 증감분을 색상으로 표시 (초록: 증가, 빨강: 감소)
         private void RefreshStats()
         {
             if (PlayerStats.Instance == null) return;
@@ -126,6 +130,7 @@ namespace Necrocis
         }
         // GetStatName: 필요한 값을 반환합니다.
 
+        // 스탯 타입 → 한글 이름 변환
         private string GetStatName(CharacterStatType type)
         {
             switch (type)
@@ -143,6 +148,7 @@ namespace Necrocis
         }
         // GetJobName: 필요한 값을 반환합니다.
 
+        // 직업 타입 → 한글 이름 변환
         private string GetJobName(JobType job)
         {
             switch (job)

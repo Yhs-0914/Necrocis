@@ -8,12 +8,12 @@ namespace Necrocis
     /// </summary>
     public class ObjectPooler : MonoBehaviour
     {
-        public static ObjectPooler Instance;
+        public static ObjectPooler Instance; // 싱글톤 (씬에 하나만 존재)
 
-        [SerializeField] private GameObject objectToPool;
-        [SerializeField] private int amountToPool = 10;
+        [SerializeField] private GameObject objectToPool;  // 풀링할 프리팹
+        [SerializeField] private int amountToPool = 10;    // 초기 풀 크기
 
-        private List<GameObject> pooledObjects;
+        private List<GameObject> pooledObjects; // 풀에 생성된 오브젝트 목록
         private bool initialized;
         private string lastInitializationError;
 
@@ -57,6 +57,7 @@ namespace Necrocis
             InitializePool();
         }
 
+        // 시작 시 프리팹을 미리 생성하여 비활성화 상태로 풀에 보관
         private void Start()
         {
             if (!initialized)
@@ -117,6 +118,8 @@ namespace Necrocis
             return true;
         }
 
+        // 비활성화된 오브젝트를 찾아 반환 (없으면 null)
+        // 사용 후 SetActive(false)로 반환하면 재사용 가능
         public GameObject GetPooledObject()
         {
             if (!initialized && !InitializePool())
@@ -155,7 +158,7 @@ namespace Necrocis
             }
 
             Debug.LogWarning("[ObjectPooler] no inactive pooled projectile available.");
-            return null;
+            return null; // 모든 오브젝트가 사용 중
         }
 
         public string GetDebugStatus()

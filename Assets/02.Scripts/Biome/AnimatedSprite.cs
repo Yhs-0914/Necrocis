@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Necrocis
@@ -17,6 +18,10 @@ namespace Necrocis
         private int currentFrame = 0;
         private float timer = 0f;
         private bool isPlaying = false;
+
+        private Action onCompleteCallback; // 원샷 애니메이션 완료 콜백
+
+        public bool IsPlaying => isPlaying;
 
         private void Awake()
         {
@@ -56,6 +61,9 @@ namespace Necrocis
                     {
                         currentFrame = frames.Length - 1;
                         isPlaying = false;
+                        Action callback = onCompleteCallback;
+                        onCompleteCallback = null;
+                        callback?.Invoke();
                         return;
                     }
                 }
@@ -74,8 +82,29 @@ namespace Necrocis
         {
             frames = newFrames;
             frameRate = newFrameRate;
+            loop = true;
             currentFrame = 0;
             timer = 0f;
+            onCompleteCallback = null;
+
+            if (spriteRenderer != null && frames != null && frames.Length > 0)
+            {
+                spriteRenderer.sprite = frames[0];
+            }
+        }
+
+        /// <summary>
+        /// 원샷(1회) 재생. 완료 시 콜백 호출.
+        /// </summary>
+        public void PlayOneShot(Sprite[] newFrames, float newFrameRate, Action onComplete = null)
+        {
+            frames = newFrames;
+            frameRate = newFrameRate;
+            loop = false;
+            onCompleteCallback = onComplete;
+            currentFrame = 0;
+            timer = 0f;
+            isPlaying = true;
 
             if (spriteRenderer != null && frames != null && frames.Length > 0)
             {
@@ -104,6 +133,7 @@ namespace Necrocis
         public void Stop()
         {
             isPlaying = false;
+            onCompleteCallback = null;
         }
 
         /// <summary>

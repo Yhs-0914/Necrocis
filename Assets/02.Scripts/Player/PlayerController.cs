@@ -41,27 +41,28 @@ namespace Necrocis
         [SerializeField] private float groundOffsetY = -2f;
         [SerializeField] private bool useDynamicGroundHeight = true;
 
-        // 방향
+        // 4방향 열거형 (스프라이트 애니메이션 및 공격 방향용)
         public enum Direction { Down, Up, Left, Right }
-        private Direction currentDirection = Direction.Up;
+        private Direction currentDirection = Direction.Up;      // 현재 바라보는 방향
         private Vector3 lastMoveDirection = Vector3.forward;
-        private bool isMoving = false;
+        private bool isMoving = false;                       // 이동 중 여부
 
-        // 애니메이션
-        private Sprite[] currentAnimation;
-        private int currentFrame = 0;
-        private float frameTimer = 0f;
-        private float currentFrameRate;
+        // 스프라이트 애니메이션 상태
+        private Sprite[] currentAnimation;   // 현재 재생 중인 스프라이트 배열
+        private int currentFrame = 0;        // 현재 프레임 인덱스
+        private float frameTimer = 0f;       // 프레임 전환 타이머
+        private float currentFrameRate;      // 현재 프레임 속도
 
-        // 이동
-        private Vector3 movement;
-        private Rigidbody rb;
-        private CharacterController characterController;
-        private PlayerStats playerStats;
-        private bool playerStatsConfigured;
-        private bool playerStatsEventsBound;
-        private bool deathHandled;
+        // 이동 및 물리
+        private Vector3 movement;                  // 이동 벡터
+        private Rigidbody rb;                      // 물리 컴포넌트 (있으면 사용)
+        private CharacterController characterController; // CharacterController (있으면 우선 사용)
+        private PlayerStats playerStats;           // 스탯 컴포넌트 참조
+        private bool playerStatsConfigured;        // 기본 스탯 설정 완료 여부
+        private bool playerStatsEventsBound;       // HP 변경 이벤트 구독 여부
+        private bool deathHandled;                 // 사망 처리 완료 여부 (중복 방지)
 
+        // 외부 접근용 프로퍼티 (PlayerStats가 없으면 안전한 기본값 반환)
         public PlayerStats Stats => playerStats;
         public CharacterStats RuntimeStats => playerStats != null ? playerStats.RuntimeStats : null;
         public float MoveSpeed => playerStats != null ? playerStats.MoveSpeed : 0f;
@@ -324,6 +325,9 @@ namespace Necrocis
         }
         // TryMoveWithHeight: 작업을 시도하고 성공 여부를 반환합니다.
 
+        // 높이 기반 이동 제약 처리
+        // BiomeManager가 있으면 CanMove()로 이동 가능 여부 확인
+        // 대각선 이동이 불가하면 X/Z 축 개별로 시도 (벽 슬라이딩 효과)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
             BiomeManager biome = BiomeManager.Active;
@@ -341,6 +345,7 @@ namespace Necrocis
                 return true;
             }
 
+            // 대각선 이동 불가 시 → 축별 분리 이동 시도
             Vector3 moveX = new Vector3(moveVector.x, 0f, 0f);
             Vector3 moveZ = new Vector3(0f, 0f, moveVector.z);
 
@@ -377,6 +382,7 @@ namespace Necrocis
         }
         // ApplyMove: 변경 사항을 런타임 객체에 반영합니다.
 
+        // 실제 이동 적용: CharacterController > Rigidbody > Transform 우선순위
         private void ApplyMove(Vector3 moveVector)
         {
             if (characterController != null)
@@ -574,6 +580,7 @@ namespace Necrocis
         }
         // EnsurePlayerStats: 이 컴포넌트의 핵심 로직을 실행합니다.
 
+        // PlayerStats 컴포넌트 보장: 없으면 생성, 미설정이면 기본값으로 초기화, 이벤트 구독
         private void EnsurePlayerStats()
         {
             if (playerStats == null)
@@ -605,8 +612,8 @@ namespace Necrocis
                 gameObject.AddComponent<PlayerClassSkillController>();
             }
         }
-        // HandlePlayerHealthChanged: 이벤트와 후속 처리를 담당합니다.
 
+        // HP 변경 콜백: 데미지/회복 로그 출력 + HP 0이면 사망 처리
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
             if (args.CurrentValue < args.PreviousValue)
@@ -627,6 +634,7 @@ namespace Necrocis
         }
         // Die: 이 컴포넌트의 핵심 로직을 실행합니다.
 
+        // 사망 처리: 이동/공격 비활성화, 대기 애니메이션 전환
         private void Die()
         {
             deathHandled = true;

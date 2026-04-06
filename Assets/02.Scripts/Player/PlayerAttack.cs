@@ -9,9 +9,9 @@ namespace Necrocis
     public class PlayerAttack : MonoBehaviour
     {
         [Header("Melee Attack (Q)")]
-        [SerializeField] private float meleeAttackDamage = 20f;
-        [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3f, 3f, 3f);
-        [SerializeField] private float meleeAttackOffset = 2f;
+        [SerializeField] private float meleeAttackDamage = 20f;                        // 기본 근거리 데미지 (PlayerStats가 없을 때 사용)
+        [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3f, 3f, 3f); // 공격 판정 박스 크기
+        [SerializeField] private float meleeAttackOffset = 2f;                         // 플레이어로부터 판정 박스까지 거리
 
         [Header("Ranged Attack")]
         [SerializeField] private Transform firePoint;
@@ -25,7 +25,7 @@ namespace Necrocis
         [SerializeField] private float attackCooldown = 0.3f;
 
         private PlayerController playerController;
-        private float lastAttackTime = float.NegativeInfinity;
+        private float lastAttackTime = float.NegativeInfinity; // 마지막 공격 시간 (초기값을 -∞로 설정하여 첫 공격 즉시 가능)
 
         private void Awake()
         {
@@ -44,6 +44,7 @@ namespace Necrocis
             HandleAttackInput();
         }
 
+        // 입력 처리: P=디버그 레벨업, Q=근거리(쿨타임없음), E=원거리(쿨타임있음)
         private void HandleAttackInput()
         {
             InputManager input = InputManager.Instance;
@@ -52,7 +53,7 @@ namespace Necrocis
                 return;
             }
 
-            bool canAttack = Time.time >= lastAttackTime + attackCooldown;
+            bool canAttack = Time.time >= lastAttackTime + attackCooldown; // 원거리 공격 쿨다운 체크
 
             if (input.DebugLevelUpAction.WasPressedThisFrame())
             {
@@ -79,6 +80,7 @@ namespace Necrocis
             }
         }
 
+        // PlayerController의 현재 방향을 3D 벡터로 변환
         private Vector3 GetAttackDirection()
         {
             PlayerController controller = playerController != null ? playerController : PlayerController.Instance;
@@ -92,10 +94,12 @@ namespace Necrocis
             return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
         }
 
+        // 근거리 공격: 방향 앞에 OverlapBox를 생성하여 범위 내 적에게 데미지
         private void MeleeAttack()
         {
             Vector3 direction = GetAttackDirection();
-            Vector3 boxCenter = transform.position + direction * meleeAttackOffset;
+            Vector3 boxCenter = transform.position + direction * meleeAttackOffset; // 판정 중심점
+            // Y를 높여서 높이 차이와 관계없이 적을 감지
             Vector3 tallBoxSize = new Vector3(meleeAttackBoxSize.x, 20f, meleeAttackBoxSize.z);
             Quaternion rotation = Quaternion.LookRotation(direction);
 
@@ -108,6 +112,7 @@ namespace Necrocis
 
             Debug.Log($"[PlayerAttack] Melee hit scan count: {hitColliders.Length}");
 
+            // 히트된 콜라이더에서 EnemyController를 찾아 데미지 적용
             foreach (Collider hitCollider in hitColliders)
             {
                 EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
@@ -125,6 +130,7 @@ namespace Necrocis
             }
         }
 
+        // 원거리 공격: 오브젝트 풀에서 투사체를 가져와 발사
         private void RangedAttack()
         {
             ObjectPooler pooler = ResolveObjectPooler();
@@ -241,6 +247,7 @@ namespace Necrocis
             return true;
         }
 
+        // Scene 뷰에서 근거리 공격 판정 범위를 빨간 와이어프레임으로 표시
         private void OnDrawGizmosSelected()
         {
             Vector3 direction = GetAttackDirection();

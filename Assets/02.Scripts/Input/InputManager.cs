@@ -8,6 +8,7 @@ namespace Necrocis
     /// </summary>
     public class InputManager : MonoBehaviour
     {
+        // 싱글톤 — null이면 자동 생성 (씬에 없어도 동작 보장)
         public static InputManager Instance
         {
             get
@@ -23,23 +24,25 @@ namespace Necrocis
 
         private static InputManager instance;
 
-        public InputAction MoveAction { get; private set; }
+        // ─── InputAction 정의 ───
+        public InputAction MoveAction { get; private set; }         // 이동 (방향키, 2DVector 컴포지트)
 
-        public InputAction MeleeAttackAction { get; private set; }
-        public InputAction RangedAttackAction { get; private set; }
+        public InputAction MeleeAttackAction { get; private set; }  // 근거리 공격 (Q)
+        public InputAction RangedAttackAction { get; private set; } // 원거리 공격 (E)
         public InputAction Skill1Action { get; private set; }
         public InputAction Skill2Action { get; private set; }
 
-        public InputAction Digit1Action { get; private set; }
-        public InputAction Digit2Action { get; private set; }
-        public InputAction Digit3Action { get; private set; }
-        public InputAction Digit4Action { get; private set; }
+        public InputAction Digit1Action { get; private set; }       // 숫자키 1 (레벨업/직업 선택)
+        public InputAction Digit2Action { get; private set; }       // 숫자키 2
+        public InputAction Digit3Action { get; private set; }       // 숫자키 3
+        public InputAction Digit4Action { get; private set; }       // 숫자키 4
 
-        public InputAction StatWindowAction { get; private set; }
-        public InputAction DebugLevelUpAction { get; private set; }
+        public InputAction StatWindowAction { get; private set; }   // 스탯창 토글 (O)
+        public InputAction DebugLevelUpAction { get; private set; } // 디버그 레벨업 (P)
 
-        private const string RebindKey = "InputRebinds";
+        private const string RebindKey = "InputRebinds"; // PlayerPrefs 키 (리바인딩 저장용)
 
+        // 싱글톤 초기화: 액션 생성 → 리바인딩 로드 → 전체 활성화
         private void Awake()
         {
             if (instance != null && instance != this)
@@ -49,14 +52,15 @@ namespace Necrocis
             }
 
             instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 유지
 
             CreateActions();
-            LoadRebinds();
+            LoadRebinds();  // 저장된 키 바인딩 복원
             EnableAll();
             Debug.Log("[InputManager] Initialized");
         }
 
+        // 모든 InputAction을 코드로 정의 (.inputactions 에셋 없이 동작)
         private void CreateActions()
         {
             MoveAction = new InputAction("Move", InputActionType.Value);
@@ -80,6 +84,7 @@ namespace Necrocis
             DebugLevelUpAction = new InputAction("DebugLevelUp", InputActionType.Button, "<Keyboard>/p");
         }
 
+        // 모든 액션 활성화 (Enable 해야 입력을 받을 수 있음)
         private void EnableAll()
         {
             MoveAction.Enable();
@@ -95,6 +100,7 @@ namespace Necrocis
             DebugLevelUpAction.Enable();
         }
 
+        // 비활성화 시 모든 액션 Disable (메모리 누수 방지)
         private void OnDisable()
         {
             MoveAction?.Disable();
@@ -110,6 +116,11 @@ namespace Necrocis
             DebugLevelUpAction?.Disable();
         }
 
+        // ─────────────────────────────────
+        // 리바인딩
+        // ─────────────────────────────────
+
+        // 현재 리바인딩 상태를 PlayerPrefs에 JSON으로 저장
         public void SaveRebinds()
         {
             string json = BuildRebindJson();
@@ -117,6 +128,7 @@ namespace Necrocis
             PlayerPrefs.Save();
         }
 
+        // PlayerPrefs에서 리바인딩 JSON을 읽어 각 액션에 적용
         public void LoadRebinds()
         {
             string json = PlayerPrefs.GetString(RebindKey, string.Empty);
@@ -128,6 +140,7 @@ namespace Necrocis
             ApplyRebindJson(json);
         }
 
+        // 모든 리바인딩을 기본값으로 초기화
         public void ResetToDefaults()
         {
             RemoveAllOverrides();
@@ -135,6 +148,7 @@ namespace Necrocis
             PlayerPrefs.Save();
         }
 
+        // 모든 액션의 바인딩 오버라이드를 JSON으로 직렬화
         private string BuildRebindJson()
         {
             InputAction[] actions = GetAllActions();
@@ -155,6 +169,7 @@ namespace Necrocis
             return sb.ToString();
         }
 
+        // JSON에서 각 액션의 바인딩 오버라이드를 파싱하여 적용
         private void ApplyRebindJson(string json)
         {
             InputAction[] actions = GetAllActions();
@@ -204,6 +219,7 @@ namespace Necrocis
             }
         }
 
+        // 모든 액션에서 바인딩 오버라이드 제거
         private void RemoveAllOverrides()
         {
             foreach (InputAction action in GetAllActions())
@@ -212,6 +228,7 @@ namespace Necrocis
             }
         }
 
+        // 관리 중인 모든 InputAction 배열 반환 (리바인딩 일괄 처리용)
         private InputAction[] GetAllActions()
         {
             return new[]

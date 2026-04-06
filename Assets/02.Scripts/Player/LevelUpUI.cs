@@ -13,24 +13,24 @@ namespace Necrocis
     /// </summary>
     public class LevelUpUI : MonoBehaviour
     {
-        public static LevelUpUI Instance { get; private set; }
+        public static LevelUpUI Instance { get; private set; } // 싱글톤
 
         [Header("UI 설정")]
-        [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.85f);
-        [SerializeField] private Color buttonColor = new Color(0.2f, 0.2f, 0.3f, 1f);
-        [SerializeField] private Color buttonHoverColor = new Color(0.3f, 0.3f, 0.5f, 1f);
+        [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.85f);       // 배경 패널 색상
+        [SerializeField] private Color buttonColor = new Color(0.2f, 0.2f, 0.3f, 1f);   // 버튼 기본 색상
+        [SerializeField] private Color buttonHoverColor = new Color(0.3f, 0.3f, 0.5f, 1f); // 버튼 호버 색상
         [SerializeField] private int fontSize = 20;
 
-        private GameObject uiRoot;
-        private Transform buttonContainer;
-        private Text titleText;
-        private Text levelText;
-        private Text guideText;
-        private List<GameObject> choiceButtons = new List<GameObject>();
-        private List<StatChoice> currentChoices = new List<StatChoice>();
-        private List<JobType> currentJobs = new List<JobType>();
-        private bool isShowing;
-        private bool isJobSelection;
+        private GameObject uiRoot;              // UI Canvas 루트
+        private Transform buttonContainer;      // 선택 버튼들의 부모 Transform
+        private Text titleText;                 // "LEVEL UP!" 또는 "직업 선택!" 타이틀
+        private Text levelText;                 // 현재 레벨 표시
+        private Text guideText;                 // 안내 문구
+        private List<GameObject> choiceButtons = new List<GameObject>();  // 생성된 버튼 목록 (정리용)
+        private List<StatChoice> currentChoices = new List<StatChoice>(); // 현재 표시 중인 스탯 선택지
+        private List<JobType> currentJobs = new List<JobType>();          // 현재 표시 중인 직업 선택지
+        private bool isShowing;      // UI 표시 중 여부
+        private bool isJobSelection; // 직업 선택 모드 여부 (스탯 선택과 구분)
 
         private void Awake()
         {
@@ -42,6 +42,7 @@ namespace Necrocis
             Instance = this;
         }
 
+        // LevelUpManager 이벤트 구독 (레벨업 → 스탯 선택, 레벨10 → 직업 선택)
         private void OnEnable()
         {
             LevelUpManager.OnLevelUp += ShowLevelUpChoices;
@@ -56,11 +57,12 @@ namespace Necrocis
 
         private void Start()
         {
-            EnsureEventSystem();
+            EnsureEventSystem(); // EventSystem이 없으면 UI 클릭이 안 되므로 보장
             BuildUI();
             uiRoot.SetActive(false);
         }
 
+        // UI 클릭 처리를 위한 EventSystem 보장
         private void EnsureEventSystem()
         {
             if (FindFirstObjectByType<EventSystem>() == null)
@@ -71,6 +73,7 @@ namespace Necrocis
             }
         }
 
+        // 숫자키 입력으로 선택 처리 (직업 선택: 1~3, 스탯 선택: 1~4)
         private void Update()
         {
             if (!isShowing) return;
@@ -100,6 +103,7 @@ namespace Necrocis
             }
         }
 
+        // 레벨업 시 호출: 랜덤 스탯 선택지 4개를 표시하고 게임 일시정지
         private void ShowLevelUpChoices()
         {
             List<StatChoice> choices = LevelUpManager.GetRandomChoices();
@@ -107,7 +111,7 @@ namespace Necrocis
 
             currentChoices = choices;
             titleText.text = "LEVEL UP!";
-            titleText.color = new Color(1f, 0.85f, 0.2f);
+            titleText.color = new Color(1f, 0.85f, 0.2f); // 금색
             guideText.text = "숫자키(1~4)로 능력을 선택하세요";
             levelText.text = $"Lv.{LevelUpManager.GetCurrentLevel()}";
             ClearButtons();
@@ -119,16 +123,17 @@ namespace Necrocis
 
             uiRoot.SetActive(true);
             isShowing = true;
-            Time.timeScale = 0f;
+            Time.timeScale = 0f; // 게임 일시정지
         }
 
+        // 레벨 10 도달 시 호출: 직업 3종 (전사/마법사/궁수) 선택 UI 표시
         private void ShowJobSelection()
         {
             currentJobs = new List<JobType> { JobType.Warrior, JobType.Mage, JobType.Archer };
             isJobSelection = true;
 
             titleText.text = "직업 선택!";
-            titleText.color = new Color(0.4f, 0.8f, 1f);
+            titleText.color = new Color(0.4f, 0.8f, 1f); // 하늘색
             levelText.text = $"Lv.{LevelUpManager.GetCurrentLevel()}";
             guideText.text = "숫자키(1~3)로 직업을 선택하세요";
             ClearButtons();
@@ -143,21 +148,22 @@ namespace Necrocis
             Time.timeScale = 0f;
         }
 
+        // 직업 선택 처리: LevelUpManager에 직업 설정 → 대기 레벨업 있으면 계속 진행
         private void SelectJob(JobType job)
         {
             LevelUpManager.SetJob(job);
             isJobSelection = false;
-            titleText.color = new Color(1f, 0.85f, 0.2f);
+            titleText.color = new Color(1f, 0.85f, 0.2f); // 이후 레벨업은 금색 타이틀
 
             if (LevelUpManager.HasPendingLevelUp())
             {
-                LevelUpManager.ProcessNextPendingLevelUp();
+                LevelUpManager.ProcessNextPendingLevelUp(); // 다음 대기 레벨업 처리
             }
             else
             {
                 uiRoot.SetActive(false);
                 isShowing = false;
-                Time.timeScale = 1f;
+                Time.timeScale = 1f; // 게임 재개
                 GrantPostLevelUpInvincibility();
             }
         }
@@ -217,12 +223,13 @@ namespace Necrocis
             }
         }
 
+        // 스탯 선택 처리: 실제 스탯 적용 → 선택 기록 → 대기 레벨업 확인
         private void SelectChoice(StatChoice choice)
         {
             if (PlayerStats.Instance != null)
-                PlayerStats.Instance.ApplyStatChoice(choice);
+                PlayerStats.Instance.ApplyStatChoice(choice); // 실제 스탯 모디파이어 적용
 
-            LevelUpManager.RecordSelection(choice);
+            LevelUpManager.RecordSelection(choice); // 선택 기록 (직업별 선택지 가중치에 활용)
 
             // 대기 중인 레벨업이 있으면 다음 선택지 표시
             if (LevelUpManager.HasPendingLevelUp())
@@ -234,10 +241,11 @@ namespace Necrocis
                 uiRoot.SetActive(false);
                 isShowing = false;
                 Time.timeScale = 1f;
-                GrantPostLevelUpInvincibility();
+                GrantPostLevelUpInvincibility(); // 레벨업 완료 후 1초 무적
             }
         }
 
+        // 기존 버튼들 제거 (새 선택지 표시 전에 호출)
         private void ClearButtons()
         {
             foreach (var btn in choiceButtons)
@@ -290,6 +298,7 @@ namespace Necrocis
             choiceButtons.Add(btnObj);
         }
 
+        // 선택지의 효과를 한글로 조합 (예: "공격력 +3, 방어력 +1")
         private string GetChoiceDescription(StatChoice choice)
         {
             StatEffect effect = StatManager.GetStatEffect(choice);
@@ -310,6 +319,7 @@ namespace Necrocis
             return string.Join(", ", parts);
         }
 
+        // 스탯 타입 → 한글 이름 변환
         private string GetStatName(CharacterStatType type)
         {
             switch (type)
@@ -420,6 +430,7 @@ namespace Necrocis
             buttonContainer = btnContainer.transform;
         }
 
+        // 레벨업/직업 선택 완료 후 1초 무적 부여 (피격 방지)
         private void GrantPostLevelUpInvincibility()
         {
             Health health = FindFirstObjectByType<Health>();
@@ -427,6 +438,7 @@ namespace Necrocis
                 health.GrantTemporaryInvincibility(1f);
         }
 
+        // UI 요소 생성 헬퍼 (RectTransform 포함)
         private GameObject CreateUIElement(string name, Transform parent)
         {
             GameObject obj = new GameObject(name, typeof(RectTransform));

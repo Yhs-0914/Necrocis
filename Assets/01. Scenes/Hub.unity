@@ -530,6 +530,7 @@ GameObject:
   - component: {fileID: 1905923577}
   - component: {fileID: 1905923576}
   - component: {fileID: 1905923575}
+  - component: {fileID: 1905923579}
   - component: {fileID: 1905923574}
   - component: {fileID: 1905923573}
   - component: {fileID: 1905923579}
@@ -835,7 +836,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9c01680b68414de69e2f057bab278891, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.CharacterStats
 --- !u!1 &2001426150
 GameObject:
