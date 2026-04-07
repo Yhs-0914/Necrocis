@@ -35,6 +35,9 @@ namespace Necrocis
         [Header("Enemies")]
         public List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();
 
+        [Header("Mid Boss Arena")]
+        public MidBossArenaConfig midBossArena = new MidBossArenaConfig();
+
         [Header("Return Portal")]
         public PortalConfig returnPortal = new PortalConfig();
 
@@ -254,5 +257,48 @@ namespace Necrocis
         public Sprite[] debrisVfxSprites;
         public float debrisVfxScale = 15f;
         public float debrisVfxSpeed = 0.12f;
+    }
+
+    [System.Serializable]
+    public class MidBossArenaConfig
+    {
+        public bool enabled = true;
+        public bool onlyEnableOnLargeMaps = true;
+        public int minimumMapWidth = 300;
+        public int minimumMapHeight = 300;
+
+        [Header("Layout")]
+        public bool useCustomCenter = false;
+        public Vector2Int centerGrid = new Vector2Int(150, 150);
+        public Vector2Int arenaSize = new Vector2Int(26, 26);
+        public int wallThicknessInCells = 1;
+
+        [Header("Visual")]
+        public float wallHeight = 4f;
+        public float wallHeightOffset = 1.5f;
+        public float groundFogOffset = 0.15f;
+        public float triggerHeight = 4f;
+        public int sortingOrder = 3500;
+        public Color unlockedFogColor = new Color(0.75f, 0.82f, 0.88f, 0.18f);
+        public Color lockedFogColor = new Color(0.82f, 0.9f, 0.95f, 0.48f);
+
+        [Header("Boss")]
+        public MidBossDefinition boss = new MidBossDefinition();
+    }
+
+    [System.Serializable]
+    public class MidBossDefinition
+    {
+        public string displayName = "MidBoss";
+        public EnemySpawnRuleConfig bossRule;
+        public bool useEnemyRuleFallback = true;
+        public int fallbackEnemyRuleIndex = 0;
+
+        [Header("Optional Overrides")]
+        public bool overrideStats = false;
+        public float maxHealthMultiplier = 1f;
+        public float attackDamageMultiplier = 1f;
+        public float moveSpeedMultiplier = 1f;
+        public Vector3 scaleMultiplier = Vector3.one;
     }
 }

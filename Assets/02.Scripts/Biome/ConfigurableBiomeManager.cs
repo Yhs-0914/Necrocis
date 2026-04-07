@@ -15,6 +15,7 @@ namespace Necrocis
         private PerlinNoise detailNoise;
         private readonly List<BiomeObjectRuleConfig> runtimeRules = new List<BiomeObjectRuleConfig>();
         private readonly List<EnemySpawnRuleConfig> runtimeEnemyRules = new List<EnemySpawnRuleConfig>();
+        private MidBossArenaController midBossArenaController;
 
         /// <summary>
         /// 현재 바이옴 설정 반환 (엘리트 몹 분열 시 적 설정 검색용)
@@ -45,6 +46,12 @@ namespace Necrocis
             heightNoiseAmplitude = config.heightNoiseAmplitude;
 
             base.Awake();
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            TryCreateMidBossArena();
         }
 
         protected override void InitializeNoise()
@@ -113,6 +120,22 @@ namespace Necrocis
             int top = Mathf.Max(0, config.marginTop);
 
             return x >= left && x < mapWidth - right && y >= bottom && y < mapHeight - top;
+        }
+
+        protected override float GetDensityForRule(ObjectRule rule, int worldX, int worldY, int regionType)
+        {
+            float density = base.GetDensityForRule(rule, worldX, worldY, regionType);
+            if (density <= 0f)
+            {
+                return 0f;
+            }
+
+            if (rule.category == SpawnCategory.EnemySpawner && IsInsideMidBossArenaBounds(worldX, worldY))
+            {
+                return 0f;
+            }
+
+            return density;
         }
 
         protected override void BuildObjectRules()
@@ -274,6 +297,56 @@ namespace Necrocis
 
             int index = Mathf.Clamp(GetRegionTypeCached(worldX, worldY), 0, config.regions.Count - 1);
             return config.regions[index];
+        }
+
+        private void TryCreateMidBossArena()
+        {
+            if (config == null || config.midBossArena == null || !config.midBossArena.enabled)
+            {
+                return;
+            }
+
+            if (config.midBossArena.onlyEnableOnLargeMaps
+                && (mapWidth < config.midBossArena.minimumMapWidth || mapHeight < config.midBossArena.minimumMapHeight))
+            {
+                return;
+            }
+
+            if (midBossArenaController != null)
+            {
+                return;
+            }
+
+            GameObject arenaObject = new GameObject("MidBossArena");
+            arenaObject.transform.SetParent(objectsParent != null ? objectsParent : transform, false);
+            midBossArenaController = arenaObject.AddComponent<MidBossArenaController>();
+            midBossArenaController.Configure(this, config.midBossArena, runtimeEnemyRules);
+        }
+
+        private bool IsInsideMidBossArenaBounds(int gridX, int gridY)
+        {
+            if (config == null || config.midBossArena == null || !config.midBossArena.enabled)
+            {
+                return false;
+            }
+
+            if (config.midBossArena.onlyEnableOnLargeMaps
+                && (mapWidth < config.midBossArena.minimumMapWidth || mapHeight < config.midBossArena.minimumMapHeight))
+            {
+                return false;
+            }
+
+            Vector2Int center = config.midBossArena.useCustomCenter
+                ? config.midBossArena.centerGrid
+                : new Vector2Int(mapWidth / 2, mapHeight / 2);
+
+            int halfWidth = Mathf.Max(4, config.midBossArena.arenaSize.x / 2);
+            int halfHeight = Mathf.Max(4, config.midBossArena.arenaSize.y / 2);
+
+            return gridX >= center.x - halfWidth
+                && gridX <= center.x + halfWidth
+                && gridY >= center.y - halfHeight
+                && gridY <= center.y + halfHeight;
         }
 
         private void SpawnConfiguredObject(BiomeObjectRuleConfig rule, ChunkSpawnRecord record, Chunk chunk)

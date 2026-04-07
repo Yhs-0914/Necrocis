@@ -1263,6 +1263,16 @@ namespace Necrocis
             return GridToWorld(mapWidth / 2, 3);
         }
 
+        public void AddRuntimeBlockedCells(IEnumerable<Vector2Int> occupiedCells)
+        {
+            AddBlockedCells(occupiedCells);
+        }
+
+        public void RemoveRuntimeBlockedCells(IEnumerable<Vector2Int> occupiedCells)
+        {
+            RemoveBlockedCells(occupiedCells);
+        }
+
         protected virtual void OnChunkLoaded(Chunk chunk)
         {
         }

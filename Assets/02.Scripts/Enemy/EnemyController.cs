@@ -63,6 +63,8 @@ namespace Necrocis
         // 어그로 부스트 (잔해 효과)
         private float originalChaseRadius; // 원래 chaseRadius (부스트 해제용)
         private bool hasAggroBoost;        // 어그로 부스트 적용 여부
+        private bool defeatEventRaised;
+        private bool ignoreMidBossArenaRestriction;
 
         // ─────────────────────────────────
         // 공개 프로퍼티 (FSM 상태에서 사용)
@@ -79,6 +81,7 @@ namespace Necrocis
         public bool IsCharger => config != null && config.chargesAtPlayer;
         public bool IsCharging => isCharging;
         public bool CanCharge => IsCharger && chargeCooldownTimer <= 0f;
+        public event System.Action<EnemyController> Defeated;
 
         // ─────────────────────────────────
         // 풀링 API (기존 유지)
@@ -135,6 +138,8 @@ namespace Necrocis
             chargeCurrentSpeed = 0f;
             chargeCooldownTimer = 0f;
             hasAggroBoost = false;
+            defeatEventRaised = false;
+            ignoreMidBossArenaRestriction = false;
 
             transform.position = spawnPosition;
             transform.localRotation = Quaternion.identity;
@@ -196,6 +201,7 @@ namespace Necrocis
             colliderExpanded = false;
             isCharging = false;
             hasAggroBoost = false;
+            ignoreMidBossArenaRestriction = false;
 
             GetOrCreatePool(poolArchetypeId).Push(this);
         }
@@ -254,6 +260,10 @@ namespace Necrocis
         public bool IsPlayerInChaseRange()
         {
             if (playerTransform == null) return false;
+            if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsPlayerInsideLockedArena(playerTransform.position))
+            {
+                return false;
+            }
 
             float distToPlayer = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
             if (distToPlayer > config.chaseRadius) return false;
@@ -267,6 +277,10 @@ namespace Necrocis
         public bool IsPlayerInAttackRange()
         {
             if (playerTransform == null) return false;
+            if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsPlayerInsideLockedArena(playerTransform.position))
+            {
+                return false;
+            }
             float dist = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
             return dist <= config.attackRange;
         }
@@ -517,6 +531,7 @@ namespace Necrocis
             stats.ApplyDamage(finalDamage);
             if (stats.IsDead)
             {
+                RaiseDefeated();
                 ChangeState(EnemyDeadState.Instance);
             }
         }
@@ -568,6 +583,11 @@ namespace Necrocis
         public void DisableCollider()
         {
             if (boxCollider != null) boxCollider.enabled = false;
+        }
+
+        public void SetIgnoreMidBossArenaRestriction(bool ignore)
+        {
+            ignoreMidBossArenaRestriction = ignore;
         }
 
         /// <summary>
@@ -1415,6 +1435,17 @@ namespace Necrocis
             if (notifiedOwner || owner == null) return;
             owner.NotifyEnemyReleased(this);
             notifiedOwner = true;
+        }
+
+        private void RaiseDefeated()
+        {
+            if (defeatEventRaised)
+            {
+                return;
+            }
+
+            defeatEventRaised = true;
+            Defeated?.Invoke(this);
         }
         // PrepareForPool: 이 컴포넌트의 핵심 로직을 실행합니다.
 
