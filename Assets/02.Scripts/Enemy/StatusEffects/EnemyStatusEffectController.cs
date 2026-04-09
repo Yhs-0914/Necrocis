@@ -20,6 +20,7 @@ namespace Necrocis
         private float poisonTickDamage;
 
         public bool IsStunned => Time.time < stunEndTime;
+        public bool IsPoisoned => Time.time < poisonEndTime;
 
         public void Initialize(EnemyController owner)
         {

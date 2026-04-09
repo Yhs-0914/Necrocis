@@ -530,9 +530,9 @@ GameObject:
   - component: {fileID: 1905923577}
   - component: {fileID: 1905923576}
   - component: {fileID: 1905923575}
-  - component: {fileID: 1905923579}
   - component: {fileID: 1905923574}
   - component: {fileID: 1905923573}
+  - component: {fileID: 1905923579}
   - component: {fileID: 1905923578}
   m_Layer: 0
   m_Name: Player
@@ -773,10 +773,8 @@ MonoBehaviour:
     baseDamage: 10
     attackPowerScale: 5
     additionalDamage: 5
-    additionalDamageMin: 5
-    additionalDamageMax: 7
     stunDuration: 1
-    areaEffectPrefab: {fileID: 3983581763031629201, guid: f73f946bcf806594fb157aac0fee0209, type: 3}
+    areaEffectPrefab: {fileID: 2272878421662517799, guid: d91c8d46a132ee24e9ae8901bf79ef13, type: 3}
     areaEffectLifetime: 1
     fallbackEffectScale: 2.5
   mageSkill2:
@@ -785,19 +783,15 @@ MonoBehaviour:
     forwardOffset: 2.5
     baseDamage: 15
     attackPowerScale: 0
-    detonationDelay: 0.7
     damageTakenIncreaseRatio: 0.1
     damageTakenIncreaseDuration: 3
-    markEffectPrefab: {fileID: 6458501098902630320, guid: cf3d327d8753b394bb815654ed1f9694, type: 3}
-    markEffectLifetime: 0.8
-    markFallbackEffectScale: 0.8
-    explosionEffectPrefab: {fileID: 827007673572255353, guid: 6b33e3138bc5f0d4680d9129b6702575, type: 3}
+    explosionEffectPrefab: {fileID: 3541389025446690452, guid: bfd76049dba696142be23023e04f1fde, type: 3}
     explosionEffectLifetime: 1
     fallbackEffectScale: 3
   archerSkill1:
     cooldown: 1
     projectileCount: 3
-    fanAngle: 55
+    burstInterval: 0.12
     projectileDamage: 8
     projectileSpeed: 16
     projectileLifeTime: 2
@@ -806,30 +800,31 @@ MonoBehaviour:
     poisonDuration: 4
     poisonTickInterval: 1
     poisonTickDamage: 3
-    shootEffectPrefab: {fileID: 0}
+    shootEffectPrefab: {fileID: 3231871657064075920, guid: 2f497210f7d86254d923f259ceecf630, type: 3}
     shootEffectLifetime: 0.4
   archerSkill2:
     cooldown: 3
-    aimDuration: 0.5
-    range: 10
-    lineHitRadius: 0.55
     targetForwardOffset: 6
-    projectileDamage: 10
-    projectileTravelSpeed: 24
-    projectileLifeTime: 0.65
-    projectilePrefab: {fileID: 0}
-    projectileScale: 0.45
-    poisonExplosionDamage: 6
-    poisonExplosionRadius: 1.8
-    impactEffectPrefab: {fileID: 0}
-    impactEffectLifetime: 1
-    poisonExplosionEffectPrefab: {fileID: 0}
-    poisonExplosionEffectLifetime: 1
+    bigCellDamage: 10
+    bigCellImpactRadius: 1.5
+    bigCellTravelSpeed: 10
+    bigCellVisualPrefab: {fileID: 0}
+    bigCellVisualScale: 0.6
+    bigCellImpactEffectPrefab: {fileID: 0}
+    bigCellImpactEffectLifetime: 1
+    rainProjectileCount: 10
+    rainRadius: 4
+    rainDamage: 15
+    rainSpawnHeight: 6
+    rainProjectileSpeed: 14
+    rainProjectileLifeTime: 2
+    rainSpawnInterval: 0.04
+    rainProjectilePrefab: {fileID: 0}
+    rainProjectileScale: 0.2
+    rainAreaMarkerEffectPrefab: {fileID: 0}
+    rainAreaMarkerLifetime: 1
   autoTargetForwardEnemyForArcherSkill2: 1
   archerSkill2AutoTargetAngle: 90
-  useTestCooldownOverride: 1
-  testSkill1Cooldown: 1
-  testSkill2Cooldown: 3
 --- !u!114 &1905923579
 MonoBehaviour:
   m_ObjectHideFlags: 0

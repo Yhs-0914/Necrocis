@@ -18,12 +18,14 @@ namespace Necrocis
         [System.Serializable]
         private class MageSkill1Config
         {
-            public float cooldown = 4f;
+            public float cooldown = 1f;
             public float radius = 3f;
             public float forwardOffset = 0f;
             public float baseDamage = 0f;
-            public float attackPowerScale = 1f;
+            public float attackPowerScale = 0f;
             public float additionalDamage = 0f;
+            public float additionalDamageMin = 5f;
+            public float additionalDamageMax = 7f;
             public float stunDuration = 1f;
             public GameObject areaEffectPrefab;
             public float areaEffectLifetime = 1f;
@@ -33,13 +35,17 @@ namespace Necrocis
         [System.Serializable]
         private class MageSkill2Config
         {
-            public float cooldown = 10f;
+            public float cooldown = 3f;
             public float radius = 3.5f;
-            public float forwardOffset = 2.5f;
+            public float forwardOffset = 0f;
             public float baseDamage = 15f;
             public float attackPowerScale = 0f;
+            public float detonationDelay = 3f;
             public float damageTakenIncreaseRatio = 0.1f;
             public float damageTakenIncreaseDuration = 3f;
+            public GameObject markEffectPrefab;
+            public float markEffectLifetime = 3f;
+            public float markFallbackEffectScale = 0.8f;
             public GameObject explosionEffectPrefab;
             public float explosionEffectLifetime = 1f;
             public float fallbackEffectScale = 3f;
@@ -48,17 +54,17 @@ namespace Necrocis
         [System.Serializable]
         private class ArcherSkill1Config
         {
-            public float cooldown = 5f;
-            public int projectileCount = 3;
-            public float burstInterval = 0.12f;
-            public float projectileDamage = 1.7f;
+            public float cooldown = 1f;
+            public int projectileCount = 5;
+            public float fanAngle = 55f;
+            public float projectileDamage = 3f;
             public float projectileSpeed = 16f;
             public float projectileLifeTime = 2f;
             public GameObject projectilePrefab;
             public float projectileScale = 0.25f;
-            public float poisonDuration = 4f;
+            public float poisonDuration = 5f;
             public float poisonTickInterval = 1f;
-            public float poisonTickDamage = 0.5f;
+            public float poisonTickDamage = 1f;
             public GameObject shootEffectPrefab;
             public float shootEffectLifetime = 0.4f;
         }
@@ -66,28 +72,22 @@ namespace Necrocis
         [System.Serializable]
         private class ArcherSkill2Config
         {
-            public float cooldown = 8f;
+            public float cooldown = 3f;
+            public float aimDuration = 0.5f;
+            public float range = 10f;
+            public float lineHitRadius = 0.55f;
             public float targetForwardOffset = 6f;
-
-            public float bigCellDamage = 7f;
-            public float bigCellImpactRadius = 1.5f;
-            public float bigCellTravelSpeed = 10f;
-            public GameObject bigCellVisualPrefab;
-            public float bigCellVisualScale = 0.6f;
-            public GameObject bigCellImpactEffectPrefab;
-            public float bigCellImpactEffectLifetime = 1f;
-
-            public int rainProjectileCount = 10;
-            public float rainRadius = 4f;
-            public float rainDamage = 0.7f;
-            public float rainSpawnHeight = 6f;
-            public float rainProjectileSpeed = 14f;
-            public float rainProjectileLifeTime = 2f;
-            public float rainSpawnInterval = 0.04f;
-            public GameObject rainProjectilePrefab;
-            public float rainProjectileScale = 0.2f;
-            public GameObject rainAreaMarkerEffectPrefab;
-            public float rainAreaMarkerLifetime = 1f;
+            public float projectileDamage = 10f;
+            public float projectileTravelSpeed = 24f;
+            public float projectileLifeTime = 0.65f;
+            public GameObject projectilePrefab;
+            public float projectileScale = 0.45f;
+            public float poisonExplosionDamage = 6f;
+            public float poisonExplosionRadius = 1.8f;
+            public GameObject impactEffectPrefab;
+            public float impactEffectLifetime = 1f;
+            public GameObject poisonExplosionEffectPrefab;
+            public float poisonExplosionEffectLifetime = 1f;
         }
 
         [Header("Class")]
@@ -114,6 +114,11 @@ namespace Necrocis
         [SerializeField] private bool autoTargetForwardEnemyForArcherSkill2 = true;
         [SerializeField] private float archerSkill2AutoTargetAngle = 90f;
 
+        [Header("Test Cooldown Override")]
+        [SerializeField] private bool useTestCooldownOverride = true;
+        [SerializeField] private float testSkill1Cooldown = 1f;
+        [SerializeField] private float testSkill2Cooldown = 3f;
+
         private readonly HashSet<EnemyController> uniqueEnemies = new HashSet<EnemyController>();
 
         private PlayerController playerController;
@@ -122,7 +127,6 @@ namespace Necrocis
         private float nextSkill1ReadyTime;
         private float nextSkill2ReadyTime;
 
-        private bool archerSkill1BurstRunning;
         private bool archerSkill2Running;
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
@@ -136,6 +140,7 @@ namespace Necrocis
                 Debug.LogWarning("[PlayerClassSkillController] enemyMask was Nothing. Fallback to Everything.");
             }
 
+            ApplyTestCooldownOverrideIfNeeded();
             EnsureOverlapBuffer();
             ResolveSkillSpawnPoint();
         }
@@ -166,7 +171,6 @@ namespace Necrocis
 
         private void OnDisable()
         {
-            archerSkill1BurstRunning = false;
             archerSkill2Running = false;
             StopAllCoroutines();
         }
@@ -186,6 +190,22 @@ namespace Necrocis
             return currentClass != PlayerClassType.None;
         }
 
+        private void ApplyTestCooldownOverrideIfNeeded()
+        {
+            if (!useTestCooldownOverride)
+            {
+                return;
+            }
+
+            float skill1Cooldown = Mathf.Max(0f, testSkill1Cooldown);
+            float skill2Cooldown = Mathf.Max(0f, testSkill2Cooldown);
+
+            mageSkill1.cooldown = skill1Cooldown;
+            archerSkill1.cooldown = skill1Cooldown;
+            mageSkill2.cooldown = skill2Cooldown;
+            archerSkill2.cooldown = skill2Cooldown;
+        }
+
         private void TryUseSkill1()
         {
             switch (currentClass)
@@ -200,17 +220,12 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Archer:
-                    if (archerSkill1BurstRunning)
-                    {
-                        return;
-                    }
-
                     if (!TryStartCooldown(ref nextSkill1ReadyTime, archerSkill1.cooldown, "Archer Skill E"))
                     {
                         return;
                     }
 
-                    StartCoroutine(ExecuteArcherSkill1Burst());
+                    ExecuteArcherSkill1FanShot();
                     break;
             }
         }
@@ -220,12 +235,23 @@ namespace Necrocis
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
+                    Vector3 mageSkill2Center = GetSkillCenter(mageSkill2.forwardOffset);
+                    if (!TryFindNearestEnemyInRadius(mageSkill2Center, mageSkill2.radius, out EnemyController mageSkill2Target))
+                    {
+                        if (enableDebugLogs)
+                        {
+                            Debug.Log("Mage Skill R failed: no enemy in range.");
+                        }
+
+                        return;
+                    }
+
                     if (!TryStartCooldown(ref nextSkill2ReadyTime, mageSkill2.cooldown, "Mage Skill R"))
                     {
                         return;
                     }
 
-                    ExecuteMageSkill2();
+                    StartCoroutine(ExecuteMageSkill2(mageSkill2Target));
                     break;
 
                 case PlayerClassType.Archer:
@@ -265,13 +291,23 @@ namespace Necrocis
         private void ExecuteMageSkill1()
         {
             Vector3 center = GetSkillCenter(mageSkill1.forwardOffset);
-            float damage = mageSkill1.baseDamage + playerController.AttackPower * mageSkill1.attackPowerScale + mageSkill1.additionalDamage;
+            float baseDamage = mageSkill1.baseDamage + playerController.AttackPower * mageSkill1.attackPowerScale;
+            float bonusMin = Mathf.Min(mageSkill1.additionalDamageMin, mageSkill1.additionalDamageMax);
+            float bonusMax = Mathf.Max(mageSkill1.additionalDamageMin, mageSkill1.additionalDamageMax);
+            if (bonusMax <= 0f && mageSkill1.additionalDamage > 0f)
+            {
+                bonusMin = mageSkill1.additionalDamage;
+                bonusMax = mageSkill1.additionalDamage;
+            }
+
             int hitCount = ApplyAreaSkill(
                 center,
                 mageSkill1.radius,
                 enemy =>
                 {
-                    enemy.TakeDamage(damage);
+                    float bonusDamage = Random.Range(bonusMin, bonusMax + 0.001f);
+                    float totalDamage = Mathf.Max(0f, baseDamage + bonusDamage);
+                    enemy.TakeDamage(totalDamage);
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
                     status?.ApplyStun(mageSkill1.stunDuration);
                 });
@@ -283,40 +319,64 @@ namespace Necrocis
                 mageSkill1.fallbackEffectScale,
                 new Color(0.35f, 0.8f, 1f, 0.45f));
 
-            Debug.Log($"Mage Skill E hit {hitCount} enemies");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"Mage Skill E hit {hitCount} enemies. BonusDamage={bonusMin:0.#}~{bonusMax:0.#}");
+            }
         }
 
-        private void ExecuteMageSkill2()
+        private IEnumerator ExecuteMageSkill2(EnemyController target)
         {
-            Vector3 center = GetSkillCenter(mageSkill2.forwardOffset);
-            float damage = mageSkill2.baseDamage + playerController.AttackPower * mageSkill2.attackPowerScale;
-            int hitCount = ApplyAreaSkill(
-                center,
-                mageSkill2.radius,
-                enemy =>
+            if (target == null || target.IsDead)
+            {
+                yield break;
+            }
+
+            Vector3 targetEffectPosition = GetTargetEffectPosition(target);
+            float markLifeTime = Mathf.Max(0.1f, Mathf.Min(mageSkill2.markEffectLifetime, mageSkill2.detonationDelay + 0.05f));
+            SpawnSkillEffect(
+                mageSkill2.markEffectPrefab,
+                targetEffectPosition,
+                markLifeTime,
+                mageSkill2.markFallbackEffectScale,
+                new Color(0.8f, 0.95f, 1f, 0.5f));
+
+            float delay = Mathf.Max(0f, mageSkill2.detonationDelay);
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            if (target == null || target.IsDead)
+            {
+                if (enableDebugLogs)
                 {
-                    enemy.TakeDamage(damage);
-                    EnemyStatusEffectController status = EnsureStatusController(enemy);
-                    status?.ApplyDamageTakenIncrease(mageSkill2.damageTakenIncreaseRatio, mageSkill2.damageTakenIncreaseDuration);
-                });
+                    Debug.Log("Mage Skill R canceled: marked target died before detonation.");
+                }
+                yield break;
+            }
+
+            targetEffectPosition = GetTargetEffectPosition(target);
+            float damage = mageSkill2.baseDamage + playerController.AttackPower * mageSkill2.attackPowerScale;
+            target.TakeDamage(damage);
+            EnemyStatusEffectController status = EnsureStatusController(target);
+            status?.ApplyDamageTakenIncrease(mageSkill2.damageTakenIncreaseRatio, mageSkill2.damageTakenIncreaseDuration);
 
             SpawnSkillEffect(
                 mageSkill2.explosionEffectPrefab,
-                center,
+                targetEffectPosition,
                 mageSkill2.explosionEffectLifetime,
                 mageSkill2.fallbackEffectScale,
                 new Color(1f, 0.5f, 0.2f, 0.45f));
 
             if (enableDebugLogs)
             {
-                Debug.Log($"Mage Skill R hit {hitCount} enemies");
+                Debug.Log($"Mage Skill R detonated on {target.name}. Damage={damage:0.##}, Debuff={mageSkill2.damageTakenIncreaseRatio * 100f:0.#}% for {mageSkill2.damageTakenIncreaseDuration:0.##}s");
             }
         }
 
-        private IEnumerator ExecuteArcherSkill1Burst()
+        private void ExecuteArcherSkill1FanShot()
         {
-            archerSkill1BurstRunning = true;
-
             SkillProjectileDebuff debuff = new SkillProjectileDebuff
             {
                 applyPoison = true,
@@ -326,122 +386,161 @@ namespace Necrocis
             };
 
             int projectileCount = Mathf.Max(1, archerSkill1.projectileCount);
-            float interval = Mathf.Max(0.01f, archerSkill1.burstInterval);
-            Vector3 direction = GetFacingDirection();
+            float fanAngle = Mathf.Max(0f, archerSkill1.fanAngle);
+            Vector3 centerDirection = GetFacingDirection();
+            float startAngle = -fanAngle * 0.5f;
+            float stepAngle = projectileCount > 1 ? fanAngle / (projectileCount - 1) : 0f;
 
             for (int i = 0; i < projectileCount; i++)
             {
+                float angle = startAngle + stepAngle * i;
+                Vector3 shotDirection = Quaternion.AngleAxis(angle, Vector3.up) * centerDirection;
+
                 SpawnSkillProjectile(
                     archerSkill1.projectilePrefab,
                     archerSkill1.projectileScale,
                     archerSkill1.projectileDamage,
                     archerSkill1.projectileSpeed,
                     archerSkill1.projectileLifeTime,
-                    direction,
+                    shotDirection,
                     debuff);
-
-                SpawnSkillEffect(
-                    archerSkill1.shootEffectPrefab,
-                    GetProjectileSpawnPosition(direction),
-                    archerSkill1.shootEffectLifetime,
-                    0.25f,
-                    new Color(0.7f, 1f, 0.5f, 0.55f));
-
-                if (i < projectileCount - 1)
-                {
-                    yield return new WaitForSeconds(interval);
-                }
             }
+
+            SpawnSkillEffect(
+                archerSkill1.shootEffectPrefab,
+                GetProjectileSpawnPosition(centerDirection),
+                archerSkill1.shootEffectLifetime,
+                0.25f,
+                new Color(0.7f, 1f, 0.5f, 0.55f));
 
             if (enableDebugLogs)
             {
-                Debug.Log($"Archer Skill E fired {projectileCount} projectiles");
+                Debug.Log($"Archer Skill E fan-shot fired {projectileCount} projectiles. FanAngle={fanAngle:0.#}");
             }
-
-            archerSkill1BurstRunning = false;
         }
 
         private IEnumerator ExecuteArcherSkill2()
         {
             archerSkill2Running = true;
+            Vector3 direction = GetArcherSkill2Direction();
+            Vector3 start = GetProjectileSpawnPosition(direction);
+            Vector3 end = start + direction * Mathf.Max(0.5f, archerSkill2.range);
 
-            Vector3 center = ResolveArcherSkill2Center();
-            SpawnSkillEffect(
-                archerSkill2.rainAreaMarkerEffectPrefab,
-                center,
-                archerSkill2.rainAreaMarkerLifetime,
-                archerSkill2.rainRadius * 2f,
-                new Color(0.4f, 0.9f, 0.4f, 0.2f));
+            float aimDuration = Mathf.Max(0f, archerSkill2.aimDuration);
+            if (aimDuration > 0f)
+            {
+                yield return new WaitForSeconds(aimDuration);
+            }
 
-            Vector3 start = GetProjectileSpawnPosition(GetFacingDirection()) + Vector3.up * 2f;
-            yield return TravelBigCellVisual(start, center);
-
-            int bigCellHitCount = ApplyAreaSkill(
-                center,
-                archerSkill2.bigCellImpactRadius,
-                enemy => enemy.TakeDamage(archerSkill2.bigCellDamage));
-
-            SpawnSkillEffect(
-                archerSkill2.bigCellImpactEffectPrefab,
-                center,
-                archerSkill2.bigCellImpactEffectLifetime,
-                1.2f,
-                new Color(1f, 0.35f, 0.35f, 0.45f));
-
+            yield return TravelArcherSkill2Visual(start, end);
+            int hitCount = ApplyArcherSkill2PiercingDamage(start, end);
             if (enableDebugLogs)
             {
-                Debug.Log($"Archer Skill R big cell hit {bigCellHitCount} enemies");
+                Debug.Log($"Archer Skill R pierced {hitCount} enemies.");
             }
 
-            int rainCount = Mathf.Max(1, archerSkill2.rainProjectileCount);
-            float spawnInterval = Mathf.Max(0.01f, archerSkill2.rainSpawnInterval);
-            for (int i = 0; i < rainCount; i++)
-            {
-                Vector2 random = Random.insideUnitCircle * Mathf.Max(0f, archerSkill2.rainRadius);
-                Vector3 target = center + new Vector3(random.x, 0f, random.y);
-                Vector3 spawn = target + Vector3.up * Mathf.Max(0.5f, archerSkill2.rainSpawnHeight);
-                Vector3 direction = (target - spawn).normalized;
-
-                SpawnSkillProjectile(
-                    archerSkill2.rainProjectilePrefab,
-                    archerSkill2.rainProjectileScale,
-                    archerSkill2.rainDamage,
-                    archerSkill2.rainProjectileSpeed,
-                    archerSkill2.rainProjectileLifeTime,
-                    direction,
-                    default,
-                    spawn);
-
-                if (i < rainCount - 1)
-                {
-                    yield return new WaitForSeconds(spawnInterval);
-                }
-            }
-
-            Debug.Log($"Archer Skill R spawned {rainCount} rain projectiles");
             archerSkill2Running = false;
         }
 
-        private Vector3 ResolveArcherSkill2Center()
+        private Vector3 GetArcherSkill2Direction()
         {
-            Vector3 fallbackCenter = GetSkillCenter(archerSkill2.targetForwardOffset);
+            Vector3 fallbackDirection = GetFacingDirection();
             if (!autoTargetForwardEnemyForArcherSkill2)
             {
-                return fallbackCenter;
+                return fallbackDirection;
             }
 
-            float maxDistance = Mathf.Max(archerSkill2.targetForwardOffset + archerSkill2.rainRadius, 1f);
+            float maxDistance = Mathf.Max(archerSkill2.range, archerSkill2.targetForwardOffset, 1f);
             if (!TryFindForwardEnemyPoint(maxDistance, archerSkill2AutoTargetAngle, out Vector3 targetPoint))
             {
-                return fallbackCenter;
+                return fallbackDirection;
             }
+
+            Vector3 toTarget = targetPoint - transform.position;
+            toTarget.y = 0f;
+            if (toTarget.sqrMagnitude <= 0.0001f)
+            {
+                return fallbackDirection;
+            }
+
+            return toTarget.normalized;
+        }
+
+        private int ApplyArcherSkill2PiercingDamage(Vector3 start, Vector3 end)
+        {
+            EnsureOverlapBuffer();
+
+            float hitRadius = Mathf.Max(0.05f, archerSkill2.lineHitRadius);
+            Vector3 flatDirection = end - start;
+            flatDirection.y = 0f;
+            if (flatDirection.sqrMagnitude <= 0.0001f)
+            {
+                flatDirection = GetFacingDirection();
+            }
+            flatDirection.Normalize();
+
+            Vector3 capsuleStart = transform.position + flatDirection * projectileSpawnOffset;
+            capsuleStart.y = transform.position.y + skillHitHeightOffset;
+            Vector3 capsuleEnd = capsuleStart + flatDirection * Mathf.Max(0.5f, archerSkill2.range);
+
+            int overlapCount = Physics.OverlapCapsuleNonAlloc(
+                capsuleStart,
+                capsuleEnd,
+                hitRadius,
+                overlapBuffer,
+                enemyMask,
+                QueryTriggerInteraction.Collide);
+
+            HashSet<EnemyController> piercedEnemies = new HashSet<EnemyController>();
+            int hitCount = 0;
+
+            for (int i = 0; i < overlapCount; i++)
+            {
+                Collider collider = overlapBuffer[i];
+                if (collider == null || !TryGetEnemyFromCollider(collider, out EnemyController enemy))
+                {
+                    continue;
+                }
+
+                if (!piercedEnemies.Add(enemy))
+                {
+                    continue;
+                }
+
+                enemy.TakeDamage(archerSkill2.projectileDamage);
+                hitCount++;
+
+                EnemyStatusEffectController status = EnsureStatusController(enemy);
+                if (status != null && status.IsPoisoned)
+                {
+                    TriggerArcherSkill2PoisonExplosion(enemy.transform.position);
+                }
+            }
+
+            return hitCount;
+        }
+
+        private void TriggerArcherSkill2PoisonExplosion(Vector3 worldCenter)
+        {
+            Vector3 center = worldCenter;
+            center.y += skillVerticalOffset;
+
+            int explosionHit = ApplyAreaSkill(
+                center,
+                archerSkill2.poisonExplosionRadius,
+                enemy => enemy.TakeDamage(archerSkill2.poisonExplosionDamage));
+
+            SpawnSkillEffect(
+                archerSkill2.poisonExplosionEffectPrefab,
+                center,
+                archerSkill2.poisonExplosionEffectLifetime,
+                Mathf.Max(0.25f, archerSkill2.poisonExplosionRadius * 0.9f),
+                new Color(1f, 0.45f, 0.2f, 0.45f));
 
             if (enableDebugLogs)
             {
-                Debug.Log($"[Archer Skill R] Auto-target center: {targetPoint}");
+                Debug.Log($"[Archer Skill R] Poison explosion triggered. Hit={explosionHit}, Damage={archerSkill2.poisonExplosionDamage:0.##}");
             }
-
-            return targetPoint;
         }
 
         private bool TryFindForwardEnemyPoint(float maxDistance, float maxAngle, out Vector3 point)
@@ -515,12 +614,12 @@ namespace Necrocis
             return true;
         }
 
-        private IEnumerator TravelBigCellVisual(Vector3 start, Vector3 end)
+        private IEnumerator TravelArcherSkill2Visual(Vector3 start, Vector3 end)
         {
             GameObject visual = CreateVisualObject(
-                archerSkill2.bigCellVisualPrefab,
-                archerSkill2.bigCellVisualScale,
-                new Color(1f, 0.7f, 0.25f, 0.7f));
+                archerSkill2.projectilePrefab,
+                archerSkill2.projectileScale,
+                new Color(0.95f, 0.7f, 0.25f, 0.8f));
             if (visual == null)
             {
                 yield break;
@@ -529,8 +628,8 @@ namespace Necrocis
             visual.transform.position = start;
 
             float distance = Vector3.Distance(start, end);
-            float speed = Mathf.Max(0.1f, archerSkill2.bigCellTravelSpeed);
-            float duration = Mathf.Max(0.05f, distance / speed);
+            float speed = Mathf.Max(0.1f, archerSkill2.projectileTravelSpeed);
+            float duration = Mathf.Max(0.01f, Mathf.Min(Mathf.Max(0.05f, distance / speed), archerSkill2.projectileLifeTime));
             float elapsed = 0f;
 
             while (elapsed < duration)
@@ -542,6 +641,13 @@ namespace Necrocis
             }
 
             Destroy(visual);
+
+            SpawnSkillEffect(
+                archerSkill2.impactEffectPrefab,
+                end,
+                archerSkill2.impactEffectLifetime,
+                Mathf.Max(0.2f, archerSkill2.lineHitRadius * 2f),
+                new Color(1f, 0.35f, 0.2f, 0.45f));
         }
 
         private int ApplyAreaSkill(Vector3 center, float radius, System.Action<EnemyController> apply)
@@ -602,6 +708,88 @@ namespace Necrocis
             }
 
             return uniqueEnemies.Count;
+        }
+
+        private bool TryFindNearestEnemyInRadius(Vector3 center, float radius, out EnemyController nearestEnemy)
+        {
+            nearestEnemy = null;
+            EnsureOverlapBuffer();
+
+            float safeRadius = Mathf.Max(0f, radius);
+            Vector3 hitCenter = center;
+            hitCenter.y += skillHitHeightOffset;
+            float halfHeight = Mathf.Max(0.05f, skillHitVerticalHalfHeight);
+            Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
+            Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
+
+            int count = Physics.OverlapCapsuleNonAlloc(
+                capsuleTop,
+                capsuleBottom,
+                safeRadius,
+                overlapBuffer,
+                enemyMask,
+                QueryTriggerInteraction.Collide);
+
+            float bestDistanceSqr = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                Collider collider = overlapBuffer[i];
+                if (collider == null || !TryGetEnemyFromCollider(collider, out EnemyController enemy))
+                {
+                    continue;
+                }
+
+                Vector3 enemyPos = enemy.transform.position;
+                enemyPos.y = center.y;
+                float distanceSqr = (enemyPos - center).sqrMagnitude;
+                if (distanceSqr > bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+
+            if (nearestEnemy != null)
+            {
+                return true;
+            }
+
+            EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (enemy == null || enemy.IsDead)
+                {
+                    continue;
+                }
+
+                Vector3 enemyPos = enemy.transform.position;
+                enemyPos.y = center.y;
+                float distanceSqr = (enemyPos - center).sqrMagnitude;
+                if (distanceSqr > safeRadius * safeRadius || distanceSqr > bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+
+            return nearestEnemy != null;
+        }
+
+        private Vector3 GetTargetEffectPosition(EnemyController target)
+        {
+            if (target == null)
+            {
+                return GetSkillCenter(0f);
+            }
+
+            Vector3 pos = target.transform.position;
+            pos.y += skillVerticalOffset;
+            return pos;
         }
 
         private int ApplyAreaSkillDistanceFallback(Vector3 center, float radius, System.Action<EnemyController> apply)
@@ -905,11 +1093,12 @@ namespace Necrocis
             {
                 case PlayerClassType.Mage:
                     DrawSkillRadius(mageSkill1.forwardOffset, mageSkill1.radius, new Color(0.3f, 0.9f, 1f, 0.4f));
-                    DrawSkillRadius(mageSkill2.forwardOffset, mageSkill2.radius, new Color(1f, 0.5f, 0.2f, 0.4f));
+                    DrawSkillRadius(0f, mageSkill2.radius, new Color(1f, 0.5f, 0.2f, 0.4f));
                     break;
 
                 case PlayerClassType.Archer:
-                    DrawSkillRadius(archerSkill2.targetForwardOffset, archerSkill2.rainRadius, new Color(0.4f, 1f, 0.4f, 0.4f));
+                    DrawSkillRadius(archerSkill2.targetForwardOffset, archerSkill2.lineHitRadius, new Color(0.4f, 1f, 0.4f, 0.6f));
+                    DrawArcherSkill2LineGizmo(new Color(1f, 0.45f, 0.25f, 0.65f));
                     break;
             }
         }
@@ -927,6 +1116,23 @@ namespace Necrocis
 
             Gizmos.color = color;
             Gizmos.DrawWireSphere(center, Mathf.Max(0f, radius));
+        }
+
+        private void DrawArcherSkill2LineGizmo(Color color)
+        {
+            Vector3 direction = Application.isPlaying ? GetArcherSkill2Direction() : Vector3.forward;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                direction = Vector3.forward;
+            }
+
+            Vector3 start = transform.position + direction.normalized * projectileSpawnOffset;
+            start.y = transform.position.y + projectileSpawnHeight + skillVerticalOffset;
+            Vector3 end = start + direction.normalized * Mathf.Max(0.5f, archerSkill2.range);
+
+            Gizmos.color = color;
+            Gizmos.DrawLine(start, end);
+            Gizmos.DrawWireSphere(end, Mathf.Max(0.05f, archerSkill2.lineHitRadius));
         }
     }
 }

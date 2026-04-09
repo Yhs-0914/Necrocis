@@ -754,7 +754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b05995c90308985428a0488a7ee6c8a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerClassSkillController
-  currentClass: 1
+  currentClass: 2
   enemyMask:
     serializedVersion: 2
     m_Bits: 4294967295
