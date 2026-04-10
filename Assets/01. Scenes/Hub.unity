@@ -754,7 +754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b05995c90308985428a0488a7ee6c8a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerClassSkillController
-  currentClass: 1
+  currentClass: 2
   enemyMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -791,6 +791,12 @@ MonoBehaviour:
     markEffectPrefab: {fileID: 6458501098902630320, guid: cf3d327d8753b394bb815654ed1f9694, type: 3}
     markEffectLifetime: 0.8
     markFallbackEffectScale: 0.8
+    markHeadOffset: 0.2
+    scaleEffectByTargetSize: 1
+    effectReferenceTargetHeight: 1.1
+    effectSizeMultiplier: 1
+    effectMinScaleMultiplier: 0.7
+    effectMaxScaleMultiplier: 2.5
     explosionEffectPrefab: {fileID: 827007673572255353, guid: 6b33e3138bc5f0d4680d9129b6702575, type: 3}
     explosionEffectLifetime: 1
     fallbackEffectScale: 3
@@ -800,6 +806,7 @@ MonoBehaviour:
     fanAngle: 55
     projectileDamage: 8
     projectileSpeed: 16
+    projectileRange: 8
     projectileLifeTime: 2
     projectilePrefab: {fileID: 0}
     projectileScale: 0.5
@@ -812,19 +819,19 @@ MonoBehaviour:
     cooldown: 3
     aimDuration: 0.5
     range: 10
-    lineHitRadius: 0.55
+    projectileHitRadius: 0.55
+    projectileVisualLength: 4
+    projectileVisualThickness: 0.8
     targetForwardOffset: 6
     projectileDamage: 10
     projectileTravelSpeed: 24
     projectileLifeTime: 0.65
-    projectilePrefab: {fileID: 0}
+    projectilePrefab: {fileID: 4511601885918977824, guid: 6e1edef04a7e3df498a9e09c56e90ce7, type: 3}
     projectileScale: 0.45
-    poisonExplosionDamage: 6
-    poisonExplosionRadius: 1.8
-    impactEffectPrefab: {fileID: 0}
-    impactEffectLifetime: 1
-    poisonExplosionEffectPrefab: {fileID: 0}
-    poisonExplosionEffectLifetime: 1
+    virusExplosionDamage: 6
+    virusExplosionRadius: 1.8
+    virusExplosionEffectPrefab: {fileID: 0}
+    virusExplosionEffectLifetime: 1
   autoTargetForwardEnemyForArcherSkill2: 1
   archerSkill2AutoTargetAngle: 90
   useTestCooldownOverride: 1

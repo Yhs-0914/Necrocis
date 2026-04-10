@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -42,6 +44,8 @@ namespace Necrocis
         private bool initialized;
         private bool hasImpacted;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
+        private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
+        private Action<EnemyController, Vector3> onEnemyHit;
 
         public void Launch(
             Vector3 direction,
@@ -50,7 +54,8 @@ namespace Necrocis
             float projectileLifeTime,
             LayerMask mask,
             bool shouldDisableOnHit,
-            SkillProjectileDebuff debuff)
+            SkillProjectileDebuff debuff,
+            Action<EnemyController, Vector3> onEnemyHit = null)
         {
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             keepFlightHeight = Mathf.Abs(moveDirection.y) <= 0.0001f;
@@ -61,9 +66,18 @@ namespace Necrocis
             targetMask = mask;
             disableOnHit = shouldDisableOnHit;
             this.debuff = debuff;
+            this.onEnemyHit = onEnemyHit;
             despawnTime = Time.time + lifeTime;
             initialized = true;
             hasImpacted = false;
+            hitEnemyIds.Clear();
+        }
+
+        public void ConfigureHitDetection(float radius, float heightOffset, float verticalHalfHeight)
+        {
+            hitCheckRadius = Mathf.Max(0.05f, radius);
+            hitCheckHeightOffset = heightOffset;
+            hitCheckVerticalHalfHeight = Mathf.Max(0.05f, verticalHalfHeight);
         }
 
         private void OnEnable()
@@ -131,7 +145,7 @@ namespace Necrocis
                     continue;
                 }
 
-                if (TryApplyHit(collider))
+                if (TryApplyHit(collider) && disableOnHit)
                 {
                     break;
                 }
@@ -161,7 +175,11 @@ namespace Necrocis
                 return false;
             }
 
-            hasImpacted = true;
+            int enemyId = enemy.GetInstanceID();
+            if (!hitEnemyIds.Add(enemyId))
+            {
+                return false;
+            }
 
             enemy.TakeDamage(damage);
             EnemyStatusEffectController status = EnsureStatusController(enemy);
@@ -180,10 +198,12 @@ namespace Necrocis
                 status?.ApplyDamageTakenIncrease(debuff.damageTakenIncreaseRatio, debuff.damageTakenIncreaseDuration);
             }
 
+            onEnemyHit?.Invoke(enemy, transform.position);
             SpawnHitEffect(transform.position);
 
             if (disableOnHit)
             {
+                hasImpacted = true;
                 Destroy(gameObject);
             }
 
