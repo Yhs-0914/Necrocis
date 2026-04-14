@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat 'D:\\\\STUDY\\\\Necrocis\\\\Assets\\\\04. Images\\\\enemy\\\\B세포 IDLE \\(1\\).png.meta')",
+      "Bash(stat \"D:\\\\STUDY\\\\Necrocis\\\\Assets\\\\04. Images\\\\enemy\\\\B세포 IDLE \\(1\\).png\" \"D:\\\\STUDY\\\\Necrocis\\\\Assets\\\\04. Images\\\\enemy\\\\B세포 공격.png\" \"D:\\\\STUDY\\\\Necrocis\\\\Assets\\\\04. Images\\\\enemy\\\\B세포 사망.png\")",
+      "Bash(grep -l guid D:/STUDY/Necrocis/Assets/12.Tile/Intestine/*.meta)",
+      "Bash(done)",
+      "Bash(while read:*)",
+      "Bash(do echo:*)",
+      "Bash(find /d/STUDY/Necrocis/Assets -name *.prefab)",
+      "Bash(find /d/STUDY/Necrocis/Assets/04. Images -type f -name *.png)",
+      "Bash(find D:STUDYNecrocisAssets -type f \\\\\\(-name *player*.png -o -name *player*.jpg \\\\\\))",
+      "Bash(find D:STUDYNecrocisAssets -type d -name *[Ss]prite* -o -name *[Pp]layer* -o -name *[Cc]haracter*)",
+      "Bash(find D:STUDYNecrocisAssets -type d -iname *enemy* -o -type d -iname *evil* -o -type d -iname *mob*)",
+      "Bash(find D:STUDYNecrocisAssets -type f \\\\\\(-name *player*.prefab -o -name *.unity \\\\\\))",
+      "Bash(find D:STUDYNecrocisAssets -type f -name *.prefab)",
+      "Bash(find D:STUDYNecrocisAssets -type f -name *.meta -path */Images/* ! -path */Player/* ! -path */enemy/*)",
+      "Bash(xxd)"
+    ]
+  }
+}
