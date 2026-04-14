@@ -22,6 +22,13 @@ namespace Necrocis
         private const string SkillAttachedEffectFallbackPoolName = "__SkillAttachedEffectFallbackSphere";
         private const string ArcherSkill2FallbackProjectilePoolName = "__ArcherSkill2FallbackCylinder";
 
+        private enum ProjectileDirectionReferenceAxis
+        {
+            Up,
+            Right,
+            Forward
+        }
+
         [System.Serializable]
         private class MageSkill1Config
         {
@@ -99,6 +106,10 @@ namespace Necrocis
             public float projectileLifeTime = 0f;
             public GameObject projectilePrefab;
             public float projectileScale = 1f;
+            public ProjectileDirectionReferenceAxis prefabDirectionAxis = ProjectileDirectionReferenceAxis.Right;
+            public Vector3 prefabRotationOffsetEuler = Vector3.zero;
+            public bool autoRollToCamera = true;
+            public ProjectileDirectionReferenceAxis prefabSurfaceNormalAxis = ProjectileDirectionReferenceAxis.Forward;
             [FormerlySerializedAs("poisonExplosionDamage")]
             public float virusExplosionDamage = 10f;
             [FormerlySerializedAs("poisonExplosionRadius")]
@@ -107,6 +118,11 @@ namespace Necrocis
             public GameObject virusExplosionEffectPrefab;
             [FormerlySerializedAs("poisonExplosionEffectLifetime")]
             public float virusExplosionEffectLifetime = 1f;
+            public bool enableAfterImage = true;
+            public float afterImageInterval = 0.03f;
+            public float afterImageFadeDuration = 0.15f;
+            public float afterImageStartAlpha = 0.4f;
+            public int afterImageMaxVisibleCount = 3;
         }
 
         [System.Serializable]
@@ -604,7 +620,7 @@ namespace Necrocis
 
             EnsureProjectilePhysics(projectileObject);
             projectileObject.transform.position = spawnPosition;
-            projectileObject.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            projectileObject.transform.rotation = GetArcherSkill2ProjectileRotation(direction, archerSkill2.projectilePrefab != null);
 
             if (archerSkill2.projectilePrefab != null)
             {
@@ -617,7 +633,106 @@ namespace Necrocis
                 projectileObject.transform.localScale = new Vector3(thickness, length * 0.5f, thickness);
             }
 
+            ConfigureArcherSkill2AfterImage(projectileObject);
             return projectileObject;
+        }
+
+        private void ConfigureArcherSkill2AfterImage(GameObject projectileObject)
+        {
+            if (projectileObject == null)
+            {
+                return;
+            }
+
+            ProjectileAfterImageTrail afterImageTrail = projectileObject.GetComponent<ProjectileAfterImageTrail>();
+            if (afterImageTrail == null)
+            {
+                afterImageTrail = projectileObject.AddComponent<ProjectileAfterImageTrail>();
+            }
+
+            SpriteRenderer sourceRenderer = projectileObject.GetComponentInChildren<SpriteRenderer>(true);
+            afterImageTrail.Configure(
+                sourceRenderer,
+                archerSkill2.enableAfterImage,
+                archerSkill2.afterImageInterval,
+                archerSkill2.afterImageFadeDuration,
+                archerSkill2.afterImageStartAlpha,
+                archerSkill2.afterImageMaxVisibleCount);
+        }
+
+        private Quaternion GetArcherSkill2ProjectileRotation(Vector3 direction, bool usesPrefabVisual)
+        {
+            Vector3 safeDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+            Vector3 sourceAxis = usesPrefabVisual
+                ? GetDirectionReferenceAxis(archerSkill2.prefabDirectionAxis)
+                : Vector3.up;
+
+            Quaternion rotation = Quaternion.FromToRotation(sourceAxis, safeDirection);
+            if (!usesPrefabVisual)
+            {
+                return rotation;
+            }
+
+            Vector3 offsetEuler = archerSkill2.prefabRotationOffsetEuler;
+            if (offsetEuler.sqrMagnitude > 0.0001f)
+            {
+                rotation *= Quaternion.Euler(offsetEuler);
+            }
+
+            if (archerSkill2.autoRollToCamera)
+            {
+                rotation = AlignProjectileRollToCamera(rotation, safeDirection, archerSkill2.prefabSurfaceNormalAxis);
+            }
+
+            return rotation;
+        }
+
+        private static Vector3 GetDirectionReferenceAxis(ProjectileDirectionReferenceAxis axis)
+        {
+            switch (axis)
+            {
+                case ProjectileDirectionReferenceAxis.Up:
+                    return Vector3.up;
+                case ProjectileDirectionReferenceAxis.Forward:
+                    return Vector3.forward;
+                default:
+                    return Vector3.right;
+            }
+        }
+
+        private Quaternion AlignProjectileRollToCamera(
+            Quaternion baseRotation,
+            Vector3 moveDirection,
+            ProjectileDirectionReferenceAxis surfaceNormalAxis)
+        {
+            Camera activeCamera = DontStarveCamera.GetActiveCamera();
+            if (activeCamera == null)
+            {
+                return baseRotation;
+            }
+
+            Vector3 targetNormal = Vector3.ProjectOnPlane(-activeCamera.transform.forward, moveDirection);
+            if (targetNormal.sqrMagnitude <= 0.0001f)
+            {
+                targetNormal = Vector3.ProjectOnPlane(activeCamera.transform.up, moveDirection);
+                if (targetNormal.sqrMagnitude <= 0.0001f)
+                {
+                    return baseRotation;
+                }
+            }
+
+            targetNormal.Normalize();
+
+            Vector3 currentNormal = baseRotation * GetDirectionReferenceAxis(surfaceNormalAxis);
+            currentNormal = Vector3.ProjectOnPlane(currentNormal, moveDirection);
+            if (currentNormal.sqrMagnitude <= 0.0001f)
+            {
+                return baseRotation;
+            }
+
+            currentNormal.Normalize();
+            float rollAngle = Vector3.SignedAngle(currentNormal, targetNormal, moveDirection);
+            return Quaternion.AngleAxis(rollAngle, moveDirection) * baseRotation;
         }
 
         private void HandleArcherSkill2EnemyHit(EnemyController enemy, Vector3 hitPosition)
@@ -633,13 +748,13 @@ namespace Necrocis
                 return;
             }
 
-            TriggerArcherSkill2VirusExplosion(hitPosition);
+            TriggerArcherSkill2VirusExplosion(enemy, hitPosition);
         }
 
-        private void TriggerArcherSkill2VirusExplosion(Vector3 worldCenter)
+        private void TriggerArcherSkill2VirusExplosion(EnemyController target, Vector3 fallbackCenter)
         {
-            Vector3 center = worldCenter;
-            center.y = transform.position.y + skillVerticalOffset;
+            Vector3 center = target != null ? GetTargetEffectPosition(target) : fallbackCenter;
+            float effectScaleMultiplier = target != null ? GetTargetEffectScaleMultiplier(target) : 1f;
 
             int explosionHit = ApplyAreaSkill(
                 center,
@@ -651,7 +766,8 @@ namespace Necrocis
                 center,
                 archerSkill2.virusExplosionEffectLifetime,
                 Mathf.Max(0.25f, archerSkill2.virusExplosionRadius * 0.9f),
-                new Color(1f, 0.45f, 0.2f, 0.45f));
+                new Color(1f, 0.45f, 0.2f, 0.45f),
+                effectScaleMultiplier);
 
             if (enableDebugLogs)
             {
