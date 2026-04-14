@@ -94,6 +94,15 @@ namespace Necrocis
             }
         }
 
+        public void ApplyBleed(float duration, float tickInterval, float tickDamage)
+        {
+            // 출혈은 독과 동일한 틱 데미지 구조
+            ApplyPoison(duration, tickInterval, tickDamage);
+
+            if (enableDebugLogs)
+                Debug.Log($"[EnemyStatus] Bleed applied to {EnemyName} | {duration:0.#}s / {tickDamage:0.#}dmg per {tickInterval:0.#}s");
+        }
+
         public void ApplyPoison(float duration, float tickInterval, float tickDamage)
         {
             if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)

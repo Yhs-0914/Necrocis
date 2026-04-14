@@ -19,6 +19,21 @@ namespace Necrocis
         private static int currentExp = 0;
         private static int expRequired = 100;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            currentLevel = 1;
+            currentExp = 0;
+            expRequired = 100;
+            pendingLevelUps = 0;
+            currentJob = JobType.None;
+            selectionHistory?.Clear();
+            OnLevelUp = null;
+            OnJobSelect = null;
+            OnExpGained = null;
+            OnJobChanged = null;
+        }
+
         private const int MAX_LEVEL = 30;
         private const int BASE_EXP = 100;
         private const float EXP_MULTIPLIER = 1.25f;
@@ -219,8 +234,16 @@ namespace Necrocis
             }
         }
 
+        public static Action<JobType> OnJobChanged;
+
         public static void RecordSelection(StatChoice choice) => selectionHistory.Add(choice);
-        public static void SetJob(JobType job) => currentJob = job;
+
+        public static void SetJob(JobType job)
+        {
+            currentJob = job;
+            OnJobChanged?.Invoke(job);
+        }
+
         public static void ResetSelectionHistory() => selectionHistory.Clear();
         public static JobType GetCurrentJob() => currentJob;
     }

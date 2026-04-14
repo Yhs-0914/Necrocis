@@ -32,6 +32,12 @@ namespace Necrocis
         private bool isShowing;
         private bool isJobSelection;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -40,6 +46,12 @@ namespace Necrocis
                 return;
             }
             Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
         }
 
         private void OnEnable()

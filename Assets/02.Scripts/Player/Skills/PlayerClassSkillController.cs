@@ -7,6 +7,7 @@ namespace Necrocis
     public enum PlayerClassType
     {
         None,
+        Warrior,
         Mage,
         Archer
     }
@@ -15,6 +16,33 @@ namespace Necrocis
     [RequireComponent(typeof(PlayerController))]
     public class PlayerClassSkillController : MonoBehaviour
     {
+        [System.Serializable]
+        private class WarriorSkill1Config
+        {
+            public float cooldown = 4f;
+            public float damage = 6f;
+            public float range = 3f;
+            public float angle = 120f;
+            public float bleedDuration = 3f;
+            public float bleedTickInterval = 1f;
+            public float bleedTickDamage = 1.5f;
+            public GameObject hitEffectPrefab;
+            public float hitEffectLifetime = 0.4f;
+            public float fallbackEffectScale = 0.8f;
+        }
+
+        [System.Serializable]
+        private class WarriorSkill2Config
+        {
+            public float cooldown = 8f;
+            public float radius = 2.8f;
+            public float attackPowerScale = 1.5f;
+            public float knockbackDistance = 1.5f;
+            public GameObject areaEffectPrefab;
+            public float areaEffectLifetime = 0.5f;
+            public float fallbackEffectScale = 3f;
+        }
+
         [System.Serializable]
         private class MageSkill1Config
         {
@@ -104,6 +132,10 @@ namespace Necrocis
         [SerializeField] private float skillHitVerticalHalfHeight = 4f;
         [SerializeField] private bool enableDebugLogs = true;
 
+        [Header("Warrior")]
+        [SerializeField] private WarriorSkill1Config warriorSkill1 = new WarriorSkill1Config();
+        [SerializeField] private WarriorSkill2Config warriorSkill2 = new WarriorSkill2Config();
+
         [Header("Mage")]
         [SerializeField] private MageSkill1Config mageSkill1 = new MageSkill1Config();
         [SerializeField] private MageSkill2Config mageSkill2 = new MageSkill2Config();
@@ -126,6 +158,30 @@ namespace Necrocis
         private bool archerSkill2Running;
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
+
+        private void OnEnable()
+        {
+            LevelUpManager.OnJobChanged += OnJobChanged;
+        }
+
+        private void OnDisable()
+        {
+            LevelUpManager.OnJobChanged -= OnJobChanged;
+            archerSkill1BurstRunning = false;
+            archerSkill2Running = false;
+            StopAllCoroutines();
+        }
+
+        private void OnJobChanged(JobType job)
+        {
+            currentClass = job switch
+            {
+                JobType.Warrior => PlayerClassType.Warrior,
+                JobType.Mage    => PlayerClassType.Mage,
+                JobType.Archer  => PlayerClassType.Archer,
+                _               => PlayerClassType.None
+            };
+        }
 
         private void Awake()
         {
@@ -164,13 +220,6 @@ namespace Necrocis
             }
         }
 
-        private void OnDisable()
-        {
-            archerSkill1BurstRunning = false;
-            archerSkill2Running = false;
-            StopAllCoroutines();
-        }
-
         private bool ShouldAcceptInput()
         {
             if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
@@ -190,6 +239,12 @@ namespace Necrocis
         {
             switch (currentClass)
             {
+                case PlayerClassType.Warrior:
+                    if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E"))
+                        return;
+                    ExecuteWarriorSkill1();
+                    break;
+
                 case PlayerClassType.Mage:
                     if (!TryStartCooldown(ref nextSkill1ReadyTime, mageSkill1.cooldown, "Mage Skill E"))
                     {
@@ -219,6 +274,12 @@ namespace Necrocis
         {
             switch (currentClass)
             {
+                case PlayerClassType.Warrior:
+                    if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R"))
+                        return;
+                    ExecuteWarriorSkill2();
+                    break;
+
                 case PlayerClassType.Mage:
                     if (!TryStartCooldown(ref nextSkill2ReadyTime, mageSkill2.cooldown, "Mage Skill R"))
                     {
@@ -261,6 +322,110 @@ namespace Necrocis
             nextReadyTime = now + Mathf.Max(0f, cooldown);
             return true;
         }
+
+        // ── 전사 스킬 ─────────────────────────────────────────────
+
+        /// <summary>
+        /// 강타(E) - 전방 적 한 명을 물어뜯음. 6 데미지 + 출혈(3초, 초당 1.5)
+        /// </summary>
+        private void ExecuteWarriorSkill1()
+        {
+            if (!TryFindSingleTargetInFront(warriorSkill1.range, warriorSkill1.angle, out EnemyController target))
+            {
+                if (enableDebugLogs)
+                    Debug.Log("Warrior Skill E: 전방에 적 없음");
+                return;
+            }
+
+            target.TakeDamage(warriorSkill1.damage);
+
+            EnemyStatusEffectController status = EnsureStatusController(target);
+            if (status != null)
+                status.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, warriorSkill1.bleedTickDamage);
+
+            Vector3 hitPos = target.transform.position;
+            hitPos.y += skillVerticalOffset;
+            SpawnSkillEffect(
+                warriorSkill1.hitEffectPrefab,
+                hitPos,
+                warriorSkill1.hitEffectLifetime,
+                warriorSkill1.fallbackEffectScale,
+                new Color(0.9f, 0.1f, 0.1f, 0.7f));
+
+            if (enableDebugLogs)
+                Debug.Log($"Warrior Skill E (강타) → {target.gameObject.name} | {warriorSkill1.damage} 데미지 + 출혈");
+        }
+
+        /// <summary>
+        /// 회오리베기(R) - 주변 360도 범위 공격 + 넉백
+        /// </summary>
+        private void ExecuteWarriorSkill2()
+        {
+            Vector3 center = transform.position;
+            center.y += skillVerticalOffset;
+            float damage = playerController.AttackPower * warriorSkill2.attackPowerScale;
+
+            int hitCount = ApplyAreaSkill(center, warriorSkill2.radius, enemy =>
+            {
+                enemy.TakeDamage(damage);
+                Vector3 knockDir = enemy.transform.position - transform.position;
+                knockDir.y = 0f;
+                if (knockDir.sqrMagnitude < 0.001f)
+                    knockDir = GetFacingDirection();
+                enemy.ApplyKnockback(knockDir.normalized, warriorSkill2.knockbackDistance);
+            });
+
+            SpawnSkillEffect(
+                warriorSkill2.areaEffectPrefab,
+                center,
+                warriorSkill2.areaEffectLifetime,
+                warriorSkill2.fallbackEffectScale,
+                new Color(1f, 0.6f, 0.1f, 0.45f));
+
+            if (enableDebugLogs)
+                Debug.Log($"Warrior Skill R (회오리베기) hit {hitCount} enemies | damage {damage:0.#}");
+        }
+
+        /// <summary>
+        /// 전방 콘 안에서 가장 가까운 적 한 명을 반환
+        /// </summary>
+        private bool TryFindSingleTargetInFront(float range, float angle, out EnemyController result)
+        {
+            result = null;
+            EnsureOverlapBuffer();
+
+            Vector3 origin = transform.position;
+            origin.y += skillHitHeightOffset;
+            Vector3 forward = GetFacingDirection();
+            float halfAngle = angle * 0.5f;
+
+            int count = Physics.OverlapSphereNonAlloc(
+                origin, Mathf.Max(0.1f, range),
+                overlapBuffer, enemyMask,
+                QueryTriggerInteraction.Collide);
+
+            float bestDist = float.MaxValue;
+            for (int i = 0; i < count; i++)
+            {
+                if (overlapBuffer[i] == null) continue;
+                if (!TryGetEnemyFromCollider(overlapBuffer[i], out EnemyController enemy)) continue;
+
+                Vector3 toEnemy = enemy.transform.position - transform.position;
+                toEnemy.y = 0f;
+                float dist = toEnemy.magnitude;
+                if (dist > range) continue;
+                if (dist > 0.01f && Vector3.Angle(forward, toEnemy / dist) > halfAngle) continue;
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    result = enemy;
+                }
+            }
+
+            return result != null;
+        }
+
+        // ──────────────────────────────────────────────────────────
 
         private void ExecuteMageSkill1()
         {

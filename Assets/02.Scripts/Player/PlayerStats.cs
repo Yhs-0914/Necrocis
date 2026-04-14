@@ -54,6 +54,12 @@ namespace Necrocis
         }
         // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
+
         private void Awake()
         {
             if (Instance == null)
@@ -68,6 +74,12 @@ namespace Necrocis
             }
 
             EnsureInitialized();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
         }
         // EnsureInitialized: 이 컴포넌트의 핵심 로직을 실행합니다.
 

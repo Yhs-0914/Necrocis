@@ -23,7 +23,7 @@ namespace Necrocis
         [SerializeField] private SpriteRenderer spriteRenderer;
 
         [Header("대기 애니메이션")]
-        [SerializeField] private Sprite[] idleSprites;  // 대기 애니메이션 (1세트)
+        [SerializeField] private Sprite[] idleSprites;
 
         [Header("이동 애니메이션 (방향별)")]
         [SerializeField] private Sprite[] walkDownSprites;
@@ -32,14 +32,42 @@ namespace Necrocis
         [SerializeField] private Sprite[] walkRightSprites;
 
         [Header("애니메이션 설정")]
-        [SerializeField] private float idleFrameRate = 4f;   // 대기 애니메이션 속도
-        [SerializeField] private float walkFrameRate = 8f;   // 이동 애니메이션 속도
+        [SerializeField] private float idleFrameRate = 4f;
+        [SerializeField] private float walkFrameRate = 8f;
 
         [Header("위치 고정")]
         [SerializeField] private bool lockYPosition = false;
         [SerializeField] private float lockedY = -2f;
         [SerializeField] private float groundOffsetY = -2f;
         [SerializeField] private bool useDynamicGroundHeight = true;
+
+        // ── 직업별 스프라이트 ──────────────────────────────────────
+        [System.Serializable]
+        public class JobSpriteSet
+        {
+            public Sprite[] idleSprites;
+            public Sprite[] walkDownSprites;
+            public Sprite[] walkUpSprites;
+            public Sprite[] walkLeftSprites;
+            public Sprite[] walkRightSprites;
+        }
+
+        [Header("직업별 스프라이트")]
+        [SerializeField] private JobSpriteSet warriorSprites;
+        [SerializeField] private JobSpriteSet mageSprites;
+        [SerializeField] private JobSpriteSet archerSprites;
+
+        private JobSpriteSet GetCurrentSet()
+        {
+            switch (LevelUpManager.GetCurrentJob())
+            {
+                case JobType.Warrior: return warriorSprites;
+                case JobType.Mage:    return mageSprites;
+                case JobType.Archer:  return archerSprites;
+                default:              return null;
+            }
+        }
+        // ──────────────────────────────────────────────────────────
 
         // 방향
         public enum Direction { Down, Up, Left, Right }
@@ -62,6 +90,13 @@ namespace Necrocis
         private bool playerStatsEventsBound;
         private bool deathHandled;
 
+        // 플레이 모드 진입 시 이전 세션의 static 참조를 초기화 (MissingReferenceException 방지)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
+
         public PlayerStats Stats => playerStats;
         public CharacterStats RuntimeStats => playerStats != null ? playerStats.RuntimeStats : null;
         public float MoveSpeed => playerStats != null ? playerStats.MoveSpeed : 0f;
@@ -69,11 +104,9 @@ namespace Necrocis
         public float MaxHealth => playerStats != null ? playerStats.MaxHealth : 0f;
         public float AttackPower => playerStats != null ? playerStats.AttackPower : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
-        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
 
         private void Awake()
         {
-            // 싱글톤 패턴
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -82,7 +115,6 @@ namespace Necrocis
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // 스프라이트 렌더러 찾기
             if (spriteRenderer == null)
             {
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -95,25 +127,19 @@ namespace Necrocis
                 }
             }
 
-            // 스프라이트 기본 설정
             spriteRenderer.color = Color.white;
 
             Billboard billboard = spriteRenderer.GetComponent<Billboard>();
             if (billboard == null)
-            {
                 billboard = spriteRenderer.gameObject.AddComponent<Billboard>();
-            }
             billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
 
             SpriteYSort ySort = spriteRenderer.GetComponent<SpriteYSort>();
             if (ySort == null)
-            {
                 ySort = spriteRenderer.gameObject.AddComponent<SpriteYSort>();
-            }
             ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
             ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
 
-            // 물리 컴포넌트 확인
             rb = GetComponent<Rigidbody>();
             characterController = GetComponent<CharacterController>();
             EnsurePlayerStats();
@@ -121,25 +147,20 @@ namespace Necrocis
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
         }
-        // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
 
         private void Start()
         {
-            // 태그 설정
             gameObject.tag = "Player";
 
-            // Y 위치 강제 (바닥 위)
             Vector3 pos = transform.position;
             pos.y = 0f;
             transform.position = pos;
 
-            // 초기 애니메이션 (대기)
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
             Debug.Log($"[Player] 시작 위치: {transform.position}");
         }
-        // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
         private void Update()
         {
@@ -147,7 +168,6 @@ namespace Necrocis
             UpdateAnimation();
             ApplyLockedRotation();
         }
-        // 유니티 생명주기: 물리 스텝 기반 로직을 실행합니다.
 
         private void FixedUpdate()
         {
@@ -156,12 +176,8 @@ namespace Necrocis
             ApplyLockedRotation();
         }
 
-        /// <summary>
-        /// 입력 처리
-        /// </summary>
         private void HandleInput()
         {
-            // 포커스 없거나 게임 시작 직후면 입력 무시
             if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
             {
                 movement = Vector3.zero;
@@ -176,91 +192,67 @@ namespace Necrocis
                 return;
             }
 
-            // InputManager 기반 입력
             var input = InputManager.Instance;
 
             Vector2 moveInput = input.MoveAction.ReadValue<Vector2>();
             movement = new Vector3(moveInput.x, 0, moveInput.y).normalized;
             isMoving = movement.sqrMagnitude > 0.01f;
             if (isMoving)
-            {
                 lastMoveDirection = movement;
-            }
 
-            // 방향 결정 (마지막 입력 방향 유지)
             if (isMoving)
-            {
                 UpdateDirection(moveInput.x, moveInput.y);
-            }
 
-            // 애니메이션 변경
             UpdateAnimationState();
         }
 
-        /// <summary>
-        /// 방향 업데이트
-        /// </summary>
         private void UpdateDirection(float h, float v)
         {
-            // 수직 우선
             if (Mathf.Abs(v) >= Mathf.Abs(h))
-            {
                 currentDirection = v > 0 ? Direction.Up : Direction.Down;
-            }
             else
-            {
                 currentDirection = h > 0 ? Direction.Right : Direction.Left;
-            }
         }
 
-        /// <summary>
-        /// 애니메이션 상태 업데이트
-        /// </summary>
         private void UpdateAnimationState()
         {
+            JobSpriteSet set = GetCurrentSet();
+
             Sprite[] newAnimation;
             float newFrameRate;
 
             if (!isMoving)
             {
-                // 대기 애니메이션 (하나만 사용)
                 newFrameRate = idleFrameRate;
-                newAnimation = idleSprites;
+                newAnimation = (set?.idleSprites?.Length > 0) ? set.idleSprites : idleSprites;
             }
             else
             {
-                // 이동 애니메이션
                 newFrameRate = walkFrameRate;
                 switch (currentDirection)
                 {
                     case Direction.Down:
-                        newAnimation = walkDownSprites;
+                        newAnimation = (set?.walkDownSprites?.Length > 0) ? set.walkDownSprites : walkDownSprites;
                         break;
                     case Direction.Up:
-                        newAnimation = walkUpSprites;
+                        newAnimation = (set?.walkUpSprites?.Length > 0) ? set.walkUpSprites : walkUpSprites;
                         break;
                     case Direction.Left:
-                        newAnimation = walkLeftSprites;
+                        newAnimation = (set?.walkLeftSprites?.Length > 0) ? set.walkLeftSprites : walkLeftSprites;
                         break;
                     case Direction.Right:
-                        newAnimation = walkRightSprites;
+                        newAnimation = (set?.walkRightSprites?.Length > 0) ? set.walkRightSprites : walkRightSprites;
                         break;
                     default:
-                        newAnimation = walkDownSprites;
+                        newAnimation = (set?.walkDownSprites?.Length > 0) ? set.walkDownSprites : walkDownSprites;
                         break;
                 }
             }
 
-            // 애니메이션 변경 시 리셋
             if (newAnimation != currentAnimation)
-            {
                 SetAnimation(newAnimation, newFrameRate);
-            }
         }
 
-        /// <summary>
-        /// 애니메이션 설정
-        /// </summary>
         private void SetAnimation(Sprite[] sprites, float frameRate)
         {
             currentAnimation = sprites;
@@ -268,16 +260,10 @@ namespace Necrocis
             currentFrame = 0;
             frameTimer = 0f;
 
-            // 첫 프레임 즉시 적용
             if (currentAnimation != null && currentAnimation.Length > 0)
-            {
                 spriteRenderer.sprite = currentAnimation[0];
-            }
         }
 
-        /// <summary>
-        /// 애니메이션 프레임 업데이트
-        /// </summary>
         private void UpdateAnimation()
         {
             if (currentAnimation == null || currentAnimation.Length == 0) return;
@@ -291,22 +277,16 @@ namespace Necrocis
                 currentFrame = (currentFrame + 1) % currentAnimation.Length;
 
                 if (spriteRenderer != null && currentFrame < currentAnimation.Length)
-                {
                     spriteRenderer.sprite = currentAnimation[currentFrame];
-                }
             }
         }
 
-        /// <summary>
-        /// 이동 처리
-        /// </summary>
         private void Move()
         {
             if (!isMoving)
             {
                 if (rb != null)
                 {
-                    // 이동 안 할 때 속도 제거 (드리프트 방지)
                     rb.linearVelocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
                 }
@@ -322,7 +302,6 @@ namespace Necrocis
                 rb.angularVelocity = Vector3.zero;
             }
         }
-        // TryMoveWithHeight: 작업을 시도하고 성공 여부를 반환합니다.
 
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
@@ -351,13 +330,11 @@ namespace Necrocis
                     ApplyMove(moveX);
                     return true;
                 }
-
                 if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveZ))
                 {
                     ApplyMove(moveZ);
                     return true;
                 }
-
                 return false;
             }
 
@@ -366,36 +343,24 @@ namespace Necrocis
                 ApplyMove(moveZ);
                 return true;
             }
-
             if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveX))
             {
                 ApplyMove(moveX);
                 return true;
             }
-
             return false;
         }
-        // ApplyMove: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyMove(Vector3 moveVector)
         {
             if (characterController != null)
-            {
                 characterController.Move(moveVector);
-            }
             else if (rb != null)
-            {
                 rb.MovePosition(rb.position + moveVector);
-            }
             else
-            {
                 transform.position += moveVector;
-            }
         }
 
-        /// <summary>
-        /// 스폰 위치로 이동
-        /// </summary>
         public void SpawnAt(Vector3 position)
         {
             transform.position = position;
@@ -410,7 +375,6 @@ namespace Necrocis
             ApplyLockedY();
             ApplyLockedRotation();
         }
-        // LockY: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void LockY(float y)
         {
@@ -419,13 +383,11 @@ namespace Necrocis
             groundOffsetY = y;
             ApplyLockedY();
         }
-        // UnlockY: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void UnlockY()
         {
             lockYPosition = false;
         }
-        // ApplyLockedY: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyLockedY()
         {
@@ -434,9 +396,7 @@ namespace Necrocis
             float desiredY = lockedY;
             BiomeManager biome = BiomeManager.Active;
             if (useDynamicGroundHeight && biome != null)
-            {
                 desiredY = biome.GetGroundHeight(transform.position) + groundOffsetY;
-            }
 
             if (characterController != null)
             {
@@ -462,7 +422,6 @@ namespace Necrocis
             fallback.y = desiredY;
             transform.position = fallback;
         }
-        // ApplyLockedRotation: 변경 사항을 런타임 객체에 반영합니다.
 
         private void ApplyLockedRotation()
         {
@@ -471,30 +430,17 @@ namespace Necrocis
                 rb.rotation = FixedPlayerRotation;
                 rb.angularVelocity = Vector3.zero;
             }
-
             transform.rotation = FixedPlayerRotation;
         }
 
-        /// <summary>
-        /// 현재 방향 가져오기
-        /// </summary>
-        public Direction GetCurrentDirection()
-        {
-            return currentDirection;
-        }
+        public Direction GetCurrentDirection() => currentDirection;
 
         public Vector3 GetLogicalFacingDirection()
         {
             if (movement.sqrMagnitude > 0.0001f)
-            {
                 return movement.normalized;
-            }
-
             if (lastMoveDirection.sqrMagnitude > 0.0001f)
-            {
                 return lastMoveDirection.normalized;
-            }
-
             return DirectionToVector(currentDirection);
         }
 
@@ -502,14 +448,20 @@ namespace Necrocis
         {
             return direction switch
             {
-                Direction.Up => Vector3.forward,
-                Direction.Down => Vector3.back,
-                Direction.Left => Vector3.left,
+                Direction.Up    => Vector3.forward,
+                Direction.Down  => Vector3.back,
+                Direction.Left  => Vector3.left,
                 Direction.Right => Vector3.right,
-                _ => Vector3.forward
+                _               => Vector3.forward
             };
         }
-        // RefreshBaseStats: 변경 사항을 런타임 객체에 반영합니다.
+
+        public void FaceDirection(Direction direction)
+        {
+            currentDirection = direction;
+            lastMoveDirection = DirectionToVector(direction);
+            UpdateAnimationState();
+        }
 
         public void RefreshBaseStats(bool resetCurrentHealth = false)
         {
@@ -517,7 +469,6 @@ namespace Necrocis
             playerStats.ConfigureBaseStats(baseMoveSpeed, baseMaxHealth, baseAttackPower, resetCurrentHealth);
             playerStatsConfigured = true;
         }
-        // TakeDamage: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void TakeDamage(float damage)
         {
@@ -529,50 +480,36 @@ namespace Necrocis
             else
                 playerStats?.TakeDamage(damage);
         }
-        // Heal: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void Heal(float amount)
         {
             EnsurePlayerStats();
             playerStats.Heal(amount);
         }
-        // AddStatModifier: 상태 또는 컬렉션을 갱신합니다.
 
         public void AddStatModifier(CharacterStatModifier modifier)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifier(modifier);
         }
-        // AddStatModifiers: 상태 또는 컬렉션을 갱신합니다.
 
         public void AddStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifiers(modifiers, source);
         }
-        // ApplyOrReplaceStatModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyOrReplaceStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyOrReplaceSourceModifiers(modifiers, source);
         }
-        // RemoveStatModifiersFromSource: 상태 또는 컬렉션을 갱신합니다.
 
         public int RemoveStatModifiersFromSource(object source)
         {
             EnsurePlayerStats();
             return playerStats.RemoveModifiersFromSource(source);
         }
-        // FaceDirection: 이 컴포넌트의 핵심 로직을 실행합니다.
-
-        public void FaceDirection(Direction direction)
-        {
-            currentDirection = direction;
-            lastMoveDirection = DirectionToVector(direction);
-            UpdateAnimationState();
-        }
-        // EnsurePlayerStats: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void EnsurePlayerStats()
         {
@@ -580,9 +517,7 @@ namespace Necrocis
             {
                 playerStats = GetComponent<PlayerStats>();
                 if (playerStats == null)
-                {
                     playerStats = gameObject.AddComponent<PlayerStats>();
-                }
             }
 
             if (!playerStatsConfigured)
@@ -601,11 +536,8 @@ namespace Necrocis
         private void EnsureClassSkillController()
         {
             if (GetComponent<PlayerClassSkillController>() == null)
-            {
                 gameObject.AddComponent<PlayerClassSkillController>();
-            }
         }
-        // HandlePlayerHealthChanged: 이벤트와 후속 처리를 담당합니다.
 
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
@@ -621,11 +553,14 @@ namespace Necrocis
             }
 
             if (!deathHandled && args.CurrentValue <= 0f)
-            {
                 Die();
-            }
         }
-        // Die: 이 컴포넌트의 핵심 로직을 실행합니다.
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
 
         private void Die()
         {
