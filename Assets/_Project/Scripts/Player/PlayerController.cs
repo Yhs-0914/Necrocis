@@ -46,6 +46,27 @@ namespace Necrocis
         [SerializeField] private Sprite[] walkLeftSprites;
         [SerializeField] private Sprite[] walkRightSprites;
 
+        [Header("전사 스프라이트")]
+        [SerializeField] private Sprite[] warriorIdleSprites;
+        [SerializeField] private Sprite[] warriorWalkDownSprites;
+        [SerializeField] private Sprite[] warriorWalkUpSprites;
+        [SerializeField] private Sprite[] warriorWalkLeftSprites;
+        [SerializeField] private Sprite[] warriorWalkRightSprites;
+
+        [Header("법사 스프라이트")]
+        [SerializeField] private Sprite[] mageIdleSprites;
+        [SerializeField] private Sprite[] mageWalkDownSprites;
+        [SerializeField] private Sprite[] mageWalkUpSprites;
+        [SerializeField] private Sprite[] mageWalkLeftSprites;
+        [SerializeField] private Sprite[] mageWalkRightSprites;
+
+        [Header("궁수 스프라이트")]
+        [SerializeField] private Sprite[] archerIdleSprites;
+        [SerializeField] private Sprite[] archerWalkDownSprites;
+        [SerializeField] private Sprite[] archerWalkUpSprites;
+        [SerializeField] private Sprite[] archerWalkLeftSprites;
+        [SerializeField] private Sprite[] archerWalkRightSprites;
+
         [Header("애니메이션 설정")]
         [SerializeField] private float idleFrameRate = 4f;   // 대기 애니메이션 속도
         [SerializeField] private float walkFrameRate = 8f;   // 이동 애니메이션 속도
@@ -635,6 +656,47 @@ namespace Necrocis
             {
                 gameObject.AddComponent<PlayerClassSkillController>();
             }
+        }
+
+        private void OnEnable()
+        {
+            LevelUpManager.OnJobSelect += OnJobSelected;
+        }
+
+        private void OnDisable()
+        {
+            LevelUpManager.OnJobSelect -= OnJobSelected;
+        }
+
+        private void OnJobSelected()
+        {
+            JobType job = LevelUpManager.GetCurrentJob();
+            switch (job)
+            {
+                case JobType.Warrior:
+                    idleSprites      = warriorIdleSprites;
+                    walkDownSprites  = warriorWalkDownSprites;
+                    walkUpSprites    = warriorWalkUpSprites;
+                    walkLeftSprites  = warriorWalkLeftSprites;
+                    walkRightSprites = warriorWalkRightSprites;
+                    break;
+                case JobType.Mage:
+                    idleSprites      = mageIdleSprites;
+                    walkDownSprites  = mageWalkDownSprites;
+                    walkUpSprites    = mageWalkUpSprites;
+                    walkLeftSprites  = mageWalkLeftSprites;
+                    walkRightSprites = mageWalkRightSprites;
+                    break;
+                case JobType.Archer:
+                    idleSprites      = archerIdleSprites;
+                    walkDownSprites  = archerWalkDownSprites;
+                    walkUpSprites    = archerWalkUpSprites;
+                    walkLeftSprites  = archerWalkLeftSprites;
+                    walkRightSprites = archerWalkRightSprites;
+                    break;
+            }
+
+            SetAnimation(idleSprites, idleFrameRate);
         }
 
         // HP 변경 콜백: 데미지/회복 로그 출력 + HP 0이면 사망 처리

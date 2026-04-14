@@ -9,7 +9,8 @@ namespace Necrocis
     {
         None,
         Mage,
-        Archer
+        Archer,
+        Warrior
     }
 
     [DisallowMultipleComponent]
@@ -108,6 +109,20 @@ namespace Necrocis
             public float virusExplosionEffectLifetime = 1f;
         }
 
+        [System.Serializable]
+        private class WarriorSkill1Config
+        {
+            public float cooldown = 4f;
+            public float range = 2.5f;
+            public float damage = 6f;
+            public float bleedDuration = 3f;
+            public float bleedTickInterval = 1f;
+            public float bleedTickDamage = 1.5f;
+            public GameObject hitEffectPrefab;
+            public float hitEffectLifetime = 0.5f;
+            public float fallbackEffectScale = 0.8f;
+        }
+
         [Header("Class")]
         [SerializeField] private PlayerClassType currentClass = PlayerClassType.Mage;
 
@@ -129,6 +144,9 @@ namespace Necrocis
         [Header("Archer")]
         [SerializeField] private ArcherSkill1Config archerSkill1 = new ArcherSkill1Config();
         [SerializeField] private ArcherSkill2Config archerSkill2 = new ArcherSkill2Config();
+
+        [Header("Warrior")]
+        [SerializeField] private WarriorSkill1Config warriorSkill1 = new WarriorSkill1Config();
         [SerializeField] private bool autoTargetForwardEnemyForArcherSkill2 = true;
         [SerializeField] private float archerSkill2AutoTargetAngle = 90f;
 
@@ -220,6 +238,7 @@ namespace Necrocis
 
             mageSkill1.cooldown = skill1Cooldown;
             archerSkill1.cooldown = skill1Cooldown;
+            warriorSkill1.cooldown = skill1Cooldown;
             mageSkill2.cooldown = skill2Cooldown;
             archerSkill2.cooldown = skill2Cooldown;
         }
@@ -244,6 +263,15 @@ namespace Necrocis
                     }
 
                     ExecuteArcherSkill1FanShot();
+                    break;
+
+                case PlayerClassType.Warrior:
+                    if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E"))
+                    {
+                        return;
+                    }
+
+                    ExecuteWarriorSkill1Bite();
                     break;
             }
         }
@@ -340,6 +368,37 @@ namespace Necrocis
             if (enableDebugLogs)
             {
                 Debug.Log($"Mage Skill E hit {hitCount} enemies. BonusDamage={bonusMin:0.#}~{bonusMax:0.#}");
+            }
+        }
+
+        private void ExecuteWarriorSkill1Bite()
+        {
+            Vector3 center = GetSkillCenter(0f);
+            if (!TryFindNearestEnemyInRadius(center, warriorSkill1.range, out EnemyController target))
+            {
+                if (enableDebugLogs)
+                {
+                    Debug.Log("Warrior Skill E failed: no enemy in range.");
+                }
+                return;
+            }
+
+            target.TakeDamage(warriorSkill1.damage);
+
+            EnemyStatusEffectController status = EnsureStatusController(target);
+            status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, warriorSkill1.bleedTickDamage);
+
+            Vector3 effectPos = GetTargetEffectPosition(target);
+            SpawnSkillEffect(
+                warriorSkill1.hitEffectPrefab,
+                effectPos,
+                warriorSkill1.hitEffectLifetime,
+                warriorSkill1.fallbackEffectScale,
+                new Color(0.85f, 0.1f, 0.1f, 0.6f));
+
+            if (enableDebugLogs)
+            {
+                Debug.Log($"Warrior Skill E hit {target.name}. Damage={warriorSkill1.damage}, Bleed={warriorSkill1.bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
             }
         }
 
@@ -1260,6 +1319,10 @@ namespace Necrocis
                 case PlayerClassType.Archer:
                     DrawSkillRadius(archerSkill2.targetForwardOffset, archerSkill2.projectileHitRadius, new Color(0.4f, 1f, 0.4f, 0.6f));
                     DrawArcherSkill2LineGizmo(new Color(1f, 0.45f, 0.25f, 0.65f));
+                    break;
+
+                case PlayerClassType.Warrior:
+                    DrawSkillRadius(0f, warriorSkill1.range, new Color(0.9f, 0.1f, 0.1f, 0.4f));
                     break;
             }
         }
