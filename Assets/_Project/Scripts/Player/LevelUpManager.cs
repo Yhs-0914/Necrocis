@@ -30,6 +30,7 @@ namespace Necrocis
 
         public static Action OnLevelUp;       // 레벨업 이벤트 (LevelUpUI가 구독)
         public static Action OnJobSelect;     // 직업 선택 이벤트 (레벨 10에서 발생)
+        public static Action<JobType> OnJobChanged; // 직업 확정 이벤트 (전직 완료 시 발생)
         public static Action<int> OnExpGained; // 경험치 획득 이벤트 (ExpBarUI가 구독)
 
         // 경험치 추가 (레벨별 배율 적용 후 누적)
@@ -54,7 +55,7 @@ namespace Necrocis
             if (currentLevel <= 9)
                 return 2.0f;
             else if (currentLevel == 10)
-                return 0f;
+                return currentJob == JobType.None ? 0f : 1f;
             else if (currentLevel <= 20)
                 return 1.0f;
             else
@@ -234,7 +235,16 @@ namespace Necrocis
         }
 
         public static void RecordSelection(StatChoice choice) => selectionHistory.Add(choice);
-        public static void SetJob(JobType job) => currentJob = job;
+        public static void SetJob(JobType job)
+        {
+            if (job == JobType.None || currentJob == job)
+            {
+                return;
+            }
+
+            currentJob = job;
+            OnJobChanged?.Invoke(currentJob);
+        }
         public static void ResetSelectionHistory() => selectionHistory.Clear();
         public static JobType GetCurrentJob() => currentJob;
     }

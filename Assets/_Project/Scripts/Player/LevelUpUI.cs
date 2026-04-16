@@ -20,6 +20,7 @@ namespace Necrocis
         [SerializeField] private Color buttonColor = new Color(0.2f, 0.2f, 0.3f, 1f);   // 버튼 기본 색상
         [SerializeField] private Color buttonHoverColor = new Color(0.3f, 0.3f, 0.5f, 1f); // 버튼 호버 색상
         [SerializeField] private int fontSize = 20;
+        [SerializeField] private bool useBuiltInJobSelectionUI = false;
 
         private GameObject uiRoot;              // UI Canvas 루트
         private Transform buttonContainer;      // 선택 버튼들의 부모 Transform
@@ -46,7 +47,8 @@ namespace Necrocis
         private void OnEnable()
         {
             LevelUpManager.OnLevelUp += ShowLevelUpChoices;
-            LevelUpManager.OnJobSelect += ShowJobSelection;
+            if (useBuiltInJobSelectionUI)
+                LevelUpManager.OnJobSelect += ShowJobSelection;
         }
 
         private void OnDisable()

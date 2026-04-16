@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 namespace Necrocis
 {
     /// <summary>
-    /// 플레이어 이동 + 방향별 스프라이트 애니메이션
+    /// ?뚮젅?댁뼱 ?대룞 + 諛⑺뼢蹂??ㅽ봽?쇱씠???좊땲硫붿씠??
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
@@ -28,77 +28,77 @@ namespace Necrocis
 
         private static readonly Quaternion FixedPlayerRotation = Quaternion.identity;
 
-        [Header("기본 스탯")]
+        [Header("Base Stats")]
         [FormerlySerializedAs("moveSpeed")]
         [SerializeField] private float baseMoveSpeed = 5f;
         [SerializeField] private float baseMaxHealth = 150f;
         [SerializeField] private float baseAttackPower = 10f;
 
-        [Header("스프라이트 렌더러")]
+        [Header("Sprite Renderer")]
         [SerializeField] private SpriteRenderer spriteRenderer;
 
-        [Header("대기 애니메이션")]
-        [SerializeField] private Sprite[] idleSprites;  // 대기 애니메이션 (1세트)
+        [Header("Idle Sprites")]
+        [SerializeField] private Sprite[] idleSprites;
 
-        [Header("이동 애니메이션 (방향별)")]
+        [Header("Walk Sprites By Direction")]
         [SerializeField] private Sprite[] walkDownSprites;
         [SerializeField] private Sprite[] walkUpSprites;
         [SerializeField] private Sprite[] walkLeftSprites;
         [SerializeField] private Sprite[] walkRightSprites;
 
-        [Header("전사 스프라이트")]
+        [Header("Warrior Sprites")]
         [SerializeField] private Sprite[] warriorIdleSprites;
         [SerializeField] private Sprite[] warriorWalkDownSprites;
         [SerializeField] private Sprite[] warriorWalkUpSprites;
         [SerializeField] private Sprite[] warriorWalkLeftSprites;
         [SerializeField] private Sprite[] warriorWalkRightSprites;
 
-        [Header("법사 스프라이트")]
+        [Header("Mage Sprites")]
         [SerializeField] private Sprite[] mageIdleSprites;
         [SerializeField] private Sprite[] mageWalkDownSprites;
         [SerializeField] private Sprite[] mageWalkUpSprites;
         [SerializeField] private Sprite[] mageWalkLeftSprites;
         [SerializeField] private Sprite[] mageWalkRightSprites;
 
-        [Header("궁수 스프라이트")]
+        [Header("Archer Sprites")]
         [SerializeField] private Sprite[] archerIdleSprites;
         [SerializeField] private Sprite[] archerWalkDownSprites;
         [SerializeField] private Sprite[] archerWalkUpSprites;
         [SerializeField] private Sprite[] archerWalkLeftSprites;
         [SerializeField] private Sprite[] archerWalkRightSprites;
 
-        [Header("애니메이션 설정")]
-        [SerializeField] private float idleFrameRate = 4f;   // 대기 애니메이션 속도
-        [SerializeField] private float walkFrameRate = 8f;   // 이동 애니메이션 속도
+        [Header("Animation Settings")]
+        [SerializeField] private float idleFrameRate = 4f;
+        [SerializeField] private float walkFrameRate = 8f;
 
-        [Header("위치 고정")]
+        [Header("Position Lock")]
         [SerializeField] private bool lockYPosition = false;
         [SerializeField] private float lockedY = -2f;
         [SerializeField] private float groundOffsetY = -2f;
         [SerializeField] private bool useDynamicGroundHeight = true;
 
-        // 4방향 열거형 (스프라이트 애니메이션 및 공격 방향용)
+        // 4諛⑺뼢 ?닿굅??(?ㅽ봽?쇱씠???좊땲硫붿씠??諛?怨듦꺽 諛⑺뼢??
         public enum Direction { Down, Up, Left, Right }
-        private Direction currentDirection = Direction.Up;      // 현재 바라보는 방향
+        private Direction currentDirection = Direction.Up;      // ?꾩옱 諛붾씪蹂대뒗 諛⑺뼢
         private Vector3 lastMoveDirection = Vector3.forward;
-        private bool isMoving = false;                       // 이동 중 여부
+        private bool isMoving = false;                       // ?대룞 以??щ?
 
-        // 스프라이트 애니메이션 상태
-        private Sprite[] currentAnimation;   // 현재 재생 중인 스프라이트 배열
-        private int currentFrame = 0;        // 현재 프레임 인덱스
-        private float frameTimer = 0f;       // 프레임 전환 타이머
-        private float currentFrameRate;      // 현재 프레임 속도
+        // ?ㅽ봽?쇱씠???좊땲硫붿씠???곹깭
+        private Sprite[] currentAnimation;   // ?꾩옱 ?ъ깮 以묒씤 ?ㅽ봽?쇱씠??諛곗뿴
+        private int currentFrame = 0;        // ?꾩옱 ?꾨젅???몃뜳??
+        private float frameTimer = 0f;       // ?꾨젅???꾪솚 ??대㉧
+        private float currentFrameRate;      // ?꾩옱 ?꾨젅???띾룄
 
-        // 이동 및 물리
-        private Vector3 movement;                  // 이동 벡터
-        private Rigidbody rb;                      // 물리 컴포넌트 (있으면 사용)
-        private CharacterController characterController; // CharacterController (있으면 우선 사용)
-        private PlayerStats playerStats;           // 스탯 컴포넌트 참조
-        private bool playerStatsConfigured;        // 기본 스탯 설정 완료 여부
-        private bool playerStatsEventsBound;       // HP 변경 이벤트 구독 여부
-        private bool deathHandled;                 // 사망 처리 완료 여부 (중복 방지)
+        // ?대룞 諛?臾쇰━
+        private Vector3 movement;                  // ?대룞 踰≫꽣
+        private Rigidbody rb;                      // 臾쇰━ 而댄룷?뚰듃 (?덉쑝硫??ъ슜)
+        private CharacterController characterController; // CharacterController (?덉쑝硫??곗꽑 ?ъ슜)
+        private PlayerStats playerStats;           // ?ㅽ꺈 而댄룷?뚰듃 李몄“
+        private bool playerStatsConfigured;        // 湲곕낯 ?ㅽ꺈 ?ㅼ젙 ?꾨즺 ?щ?
+        private bool playerStatsEventsBound;       // HP 蹂寃??대깽??援щ룆 ?щ?
+        private bool deathHandled;                 // ?щ쭩 泥섎━ ?꾨즺 ?щ? (以묐났 諛⑹?)
 
-        // 외부 접근용 프로퍼티 (PlayerStats가 없으면 안전한 기본값 반환)
+        // ?몃? ?묎렐???꾨줈?쇳떚 (PlayerStats媛 ?놁쑝硫??덉쟾??湲곕낯媛?諛섑솚)
         public PlayerStats Stats => playerStats;
         public CharacterStats RuntimeStats => playerStats != null ? playerStats.RuntimeStats : null;
         public float MoveSpeed => playerStats != null ? playerStats.MoveSpeed : 0f;
@@ -106,11 +106,11 @@ namespace Necrocis
         public float MaxHealth => playerStats != null ? playerStats.MaxHealth : 0f;
         public float AttackPower => playerStats != null ? playerStats.AttackPower : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
-        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
+        // ?좊땲???앸챸二쇨린: 李몄“瑜?罹먯떆?섍퀬 湲곕낯 ?곹깭瑜?珥덇린?뷀빀?덈떎.
 
         private void Awake()
         {
-            // 싱글톤 패턴
+            // ?깃????⑦꽩
             if (instance != null && instance != this)
             {
                 Destroy(gameObject);
@@ -120,7 +120,7 @@ namespace Necrocis
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // 스프라이트 렌더러 찾기
+            // ?ㅽ봽?쇱씠???뚮뜑??李얘린
             if (spriteRenderer == null)
             {
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -133,7 +133,7 @@ namespace Necrocis
                 }
             }
 
-            // 스프라이트 기본 설정
+            // ?ㅽ봽?쇱씠??湲곕낯 ?ㅼ젙
             spriteRenderer.color = Color.white;
 
             Billboard billboard = spriteRenderer.GetComponent<Billboard>();
@@ -151,7 +151,7 @@ namespace Necrocis
             ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
             ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
 
-            // 물리 컴포넌트 확인
+            // 臾쇰━ 而댄룷?뚰듃 ?뺤씤
             rb = GetComponent<Rigidbody>();
             characterController = GetComponent<CharacterController>();
             EnsurePlayerStats();
@@ -167,25 +167,26 @@ namespace Necrocis
                 instance = null;
             }
         }
-        // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
+        // ?좊땲???앸챸二쇨린: Awake ?댄썑 珥덇린 ?고????ㅼ젙???섑뻾?⑸땲??
 
         private void Start()
         {
-            // 태그 설정
+            // ?쒓렇 ?ㅼ젙
             gameObject.tag = "Player";
 
-            // Y 위치 강제 (바닥 위)
+            // Y ?꾩튂 媛뺤젣 (諛붾떏 ??
             Vector3 pos = transform.position;
             pos.y = 0f;
             transform.position = pos;
+            ApplyJobVisual(LevelUpManager.GetCurrentJob());
 
-            // 초기 애니메이션 (대기)
+            // 珥덇린 ?좊땲硫붿씠??(?湲?
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
-            Debug.Log($"[Player] 시작 위치: {transform.position}");
+            Debug.Log($"[Player] ?쒖옉 ?꾩튂: {transform.position}");
         }
-        // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
+        // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
         private void Update()
         {
@@ -193,7 +194,7 @@ namespace Necrocis
             UpdateAnimation();
             ApplyLockedRotation();
         }
-        // 유니티 생명주기: 물리 스텝 기반 로직을 실행합니다.
+        // ?좊땲???앸챸二쇨린: 臾쇰━ ?ㅽ뀦 湲곕컲 濡쒖쭅???ㅽ뻾?⑸땲??
 
         private void FixedUpdate()
         {
@@ -203,11 +204,11 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 입력 처리
+        /// ?낅젰 泥섎━
         /// </summary>
         private void HandleInput()
         {
-            // 포커스 없거나 게임 시작 직후면 입력 무시
+            // ?ъ빱???녾굅??寃뚯엫 ?쒖옉 吏곹썑硫??낅젰 臾댁떆
             if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
             {
                 movement = Vector3.zero;
@@ -222,7 +223,7 @@ namespace Necrocis
                 return;
             }
 
-            // InputManager 기반 입력
+            // InputManager 湲곕컲 ?낅젰
             var input = InputManager.Instance;
 
             Vector2 moveInput = input.MoveAction.ReadValue<Vector2>();
@@ -233,22 +234,22 @@ namespace Necrocis
                 lastMoveDirection = movement;
             }
 
-            // 방향 결정 (마지막 입력 방향 유지)
+            // 諛⑺뼢 寃곗젙 (留덉?留??낅젰 諛⑺뼢 ?좎?)
             if (isMoving)
             {
                 UpdateDirection(moveInput.x, moveInput.y);
             }
 
-            // 애니메이션 변경
+            // ?좊땲硫붿씠??蹂寃?
             UpdateAnimationState();
         }
 
         /// <summary>
-        /// 방향 업데이트
+        /// 諛⑺뼢 ?낅뜲?댄듃
         /// </summary>
         private void UpdateDirection(float h, float v)
         {
-            // 수직 우선
+            // ?섏쭅 ?곗꽑
             if (Mathf.Abs(v) >= Mathf.Abs(h))
             {
                 currentDirection = v > 0 ? Direction.Up : Direction.Down;
@@ -260,7 +261,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 애니메이션 상태 업데이트
+        /// ?좊땲硫붿씠???곹깭 ?낅뜲?댄듃
         /// </summary>
         private void UpdateAnimationState()
         {
@@ -269,13 +270,13 @@ namespace Necrocis
 
             if (!isMoving)
             {
-                // 대기 애니메이션 (하나만 사용)
+                // ?湲??좊땲硫붿씠??(?섎굹留??ъ슜)
                 newFrameRate = idleFrameRate;
                 newAnimation = idleSprites;
             }
             else
             {
-                // 이동 애니메이션
+                // ?대룞 ?좊땲硫붿씠??
                 newFrameRate = walkFrameRate;
                 switch (currentDirection)
                 {
@@ -297,7 +298,7 @@ namespace Necrocis
                 }
             }
 
-            // 애니메이션 변경 시 리셋
+            // ?좊땲硫붿씠??蹂寃???由ъ뀑
             if (newAnimation != currentAnimation)
             {
                 SetAnimation(newAnimation, newFrameRate);
@@ -305,7 +306,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 애니메이션 설정
+        /// ?좊땲硫붿씠???ㅼ젙
         /// </summary>
         private void SetAnimation(Sprite[] sprites, float frameRate)
         {
@@ -314,7 +315,7 @@ namespace Necrocis
             currentFrame = 0;
             frameTimer = 0f;
 
-            // 첫 프레임 즉시 적용
+            // 泥??꾨젅??利됱떆 ?곸슜
             if (currentAnimation != null && currentAnimation.Length > 0)
             {
                 spriteRenderer.sprite = currentAnimation[0];
@@ -322,7 +323,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 애니메이션 프레임 업데이트
+        /// ?좊땲硫붿씠???꾨젅???낅뜲?댄듃
         /// </summary>
         private void UpdateAnimation()
         {
@@ -344,7 +345,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 이동 처리
+        /// ?대룞 泥섎━
         /// </summary>
         private void Move()
         {
@@ -352,7 +353,7 @@ namespace Necrocis
             {
                 if (rb != null)
                 {
-                    // 이동 안 할 때 속도 제거 (드리프트 방지)
+                    // ?대룞 ???????띾룄 ?쒓굅 (?쒕━?꾪듃 諛⑹?)
                     rb.linearVelocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
                 }
@@ -368,11 +369,11 @@ namespace Necrocis
                 rb.angularVelocity = Vector3.zero;
             }
         }
-        // TryMoveWithHeight: 작업을 시도하고 성공 여부를 반환합니다.
+        // TryMoveWithHeight: ?묒뾽???쒕룄?섍퀬 ?깃났 ?щ?瑜?諛섑솚?⑸땲??
 
-        // 높이 기반 이동 제약 처리
-        // BiomeManager가 있으면 CanMove()로 이동 가능 여부 확인
-        // 대각선 이동이 불가하면 X/Z 축 개별로 시도 (벽 슬라이딩 효과)
+        // ?믪씠 湲곕컲 ?대룞 ?쒖빟 泥섎━
+        // BiomeManager媛 ?덉쑝硫?CanMove()濡??대룞 媛???щ? ?뺤씤
+        // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
             BiomeManager biome = BiomeManager.Active;
@@ -390,7 +391,7 @@ namespace Necrocis
                 return true;
             }
 
-            // 대각선 이동 불가 시 → 축별 분리 이동 시도
+            // ?媛곸꽑 ?대룞 遺덇? ????異뺣퀎 遺꾨━ ?대룞 ?쒕룄
             Vector3 moveX = new Vector3(moveVector.x, 0f, 0f);
             Vector3 moveZ = new Vector3(0f, 0f, moveVector.z);
 
@@ -425,9 +426,9 @@ namespace Necrocis
 
             return false;
         }
-        // ApplyMove: 변경 사항을 런타임 객체에 반영합니다.
+        // ApplyMove: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
-        // 실제 이동 적용: CharacterController > Rigidbody > Transform 우선순위
+        // ?ㅼ젣 ?대룞 ?곸슜: CharacterController > Rigidbody > Transform ?곗꽑?쒖쐞
         private void ApplyMove(Vector3 moveVector)
         {
             if (characterController != null)
@@ -445,7 +446,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 스폰 위치로 이동
+        /// ?ㅽ룿 ?꾩튂濡??대룞
         /// </summary>
         public void SpawnAt(Vector3 position)
         {
@@ -461,7 +462,7 @@ namespace Necrocis
             ApplyLockedY();
             ApplyLockedRotation();
         }
-        // LockY: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // LockY: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void LockY(float y)
         {
@@ -470,13 +471,13 @@ namespace Necrocis
             groundOffsetY = y;
             ApplyLockedY();
         }
-        // UnlockY: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // UnlockY: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void UnlockY()
         {
             lockYPosition = false;
         }
-        // ApplyLockedY: 변경 사항을 런타임 객체에 반영합니다.
+        // ApplyLockedY: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         private void ApplyLockedY()
         {
@@ -513,7 +514,7 @@ namespace Necrocis
             fallback.y = desiredY;
             transform.position = fallback;
         }
-        // ApplyLockedRotation: 변경 사항을 런타임 객체에 반영합니다.
+        // ApplyLockedRotation: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         private void ApplyLockedRotation()
         {
@@ -527,7 +528,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 현재 방향 가져오기
+        /// ?꾩옱 諛⑺뼢 媛?몄삤湲?
         /// </summary>
         public Direction GetCurrentDirection()
         {
@@ -560,7 +561,7 @@ namespace Necrocis
                 _ => Vector3.forward
             };
         }
-        // RefreshBaseStats: 변경 사항을 런타임 객체에 반영합니다.
+        // RefreshBaseStats: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         public void RefreshBaseStats(bool resetCurrentHealth = false)
         {
@@ -568,7 +569,7 @@ namespace Necrocis
             playerStats.ConfigureBaseStats(baseMoveSpeed, baseMaxHealth, baseAttackPower, resetCurrentHealth);
             playerStatsConfigured = true;
         }
-        // TakeDamage: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // TakeDamage: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void TakeDamage(float damage)
         {
@@ -580,42 +581,42 @@ namespace Necrocis
             else
                 playerStats?.TakeDamage(damage);
         }
-        // Heal: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // Heal: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void Heal(float amount)
         {
             EnsurePlayerStats();
             playerStats.Heal(amount);
         }
-        // AddStatModifier: 상태 또는 컬렉션을 갱신합니다.
+        // AddStatModifier: ?곹깭 ?먮뒗 而щ젆?섏쓣 媛깆떊?⑸땲??
 
         public void AddStatModifier(CharacterStatModifier modifier)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifier(modifier);
         }
-        // AddStatModifiers: 상태 또는 컬렉션을 갱신합니다.
+        // AddStatModifiers: ?곹깭 ?먮뒗 而щ젆?섏쓣 媛깆떊?⑸땲??
 
         public void AddStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyModifiers(modifiers, source);
         }
-        // ApplyOrReplaceStatModifiers: 변경 사항을 런타임 객체에 반영합니다.
+        // ApplyOrReplaceStatModifiers: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         public void ApplyOrReplaceStatModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
             EnsurePlayerStats();
             playerStats.ApplyOrReplaceSourceModifiers(modifiers, source);
         }
-        // RemoveStatModifiersFromSource: 상태 또는 컬렉션을 갱신합니다.
+        // RemoveStatModifiersFromSource: ?곹깭 ?먮뒗 而щ젆?섏쓣 媛깆떊?⑸땲??
 
         public int RemoveStatModifiersFromSource(object source)
         {
             EnsurePlayerStats();
             return playerStats.RemoveModifiersFromSource(source);
         }
-        // FaceDirection: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // FaceDirection: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void FaceDirection(Direction direction)
         {
@@ -623,9 +624,9 @@ namespace Necrocis
             lastMoveDirection = DirectionToVector(direction);
             UpdateAnimationState();
         }
-        // EnsurePlayerStats: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // EnsurePlayerStats: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
-        // PlayerStats 컴포넌트 보장: 없으면 생성, 미설정이면 기본값으로 초기화, 이벤트 구독
+        // PlayerStats 而댄룷?뚰듃 蹂댁옣: ?놁쑝硫??앹꽦, 誘몄꽕?뺤씠硫?湲곕낯媛믪쑝濡?珥덇린?? ?대깽??援щ룆
         private void EnsurePlayerStats()
         {
             if (playerStats == null)
@@ -660,17 +661,21 @@ namespace Necrocis
 
         private void OnEnable()
         {
-            LevelUpManager.OnJobSelect += OnJobSelected;
+            LevelUpManager.OnJobChanged += HandleJobChanged;
         }
 
         private void OnDisable()
         {
-            LevelUpManager.OnJobSelect -= OnJobSelected;
+            LevelUpManager.OnJobChanged -= HandleJobChanged;
         }
 
-        private void OnJobSelected()
+        private void HandleJobChanged(JobType job)
         {
-            JobType job = LevelUpManager.GetCurrentJob();
+            ApplyJobVisual(job);
+        }
+
+        private void ApplyJobVisual(JobType job)
+        {
             switch (job)
             {
                 case JobType.Warrior:
@@ -694,23 +699,25 @@ namespace Necrocis
                     walkLeftSprites  = archerWalkLeftSprites;
                     walkRightSprites = archerWalkRightSprites;
                     break;
+                default:
+                    return;
             }
 
             SetAnimation(idleSprites, idleFrameRate);
         }
 
-        // HP 변경 콜백: 데미지/회복 로그 출력 + HP 0이면 사망 처리
+        // HP 蹂寃?肄쒕갚: ?곕?吏/?뚮났 濡쒓렇 異쒕젰 + HP 0?대㈃ ?щ쭩 泥섎━
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
             if (args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
-                Debug.Log($"[Player] 피해 {damageTaken} 받음 | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] ?쇳빐 {damageTaken} 諛쏆쓬 | HP {args.CurrentValue}/{args.MaxValue}");
             }
             else if (args.CurrentValue > args.PreviousValue)
             {
                 float healed = args.CurrentValue - args.PreviousValue;
-                Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] ?뚮났 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
             }
 
             if (!deathHandled && args.CurrentValue <= 0f)
@@ -718,9 +725,9 @@ namespace Necrocis
                 Die();
             }
         }
-        // Die: 이 컴포넌트의 핵심 로직을 실행합니다.
+        // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
-        // 사망 처리: 이동/공격 비활성화, 대기 애니메이션 전환
+        // ?щ쭩 泥섎━: ?대룞/怨듦꺽 鍮꾪솢?깊솕, ?湲??좊땲硫붿씠???꾪솚
         private void Die()
         {
             deathHandled = true;
@@ -744,7 +751,9 @@ namespace Necrocis
                 classSkillController.enabled = false;
 
             enabled = false;
-            Debug.Log("[Player] HP가 0이 되어 사망했습니다.");
+            Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
         }
     }
 }
+
+

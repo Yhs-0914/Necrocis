@@ -140,7 +140,7 @@ namespace Necrocis
         }
 
         [Header("Class")]
-        [SerializeField] private PlayerClassType currentClass = PlayerClassType.Mage;
+        [SerializeField] private PlayerClassType currentClass = PlayerClassType.None;
 
         [Header("Shared")]
         [SerializeField] private LayerMask enemyMask = ~0;
@@ -182,6 +182,7 @@ namespace Necrocis
         private bool archerSkill2Running;
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
+        public PlayerClassType CurrentClass => currentClass;
 
         private void Awake()
         {
@@ -195,6 +196,12 @@ namespace Necrocis
             ApplyTestCooldownOverrideIfNeeded();
             EnsureOverlapBuffer();
             ResolveSkillSpawnPoint();
+        }
+
+        private void OnEnable()
+        {
+            LevelUpManager.OnJobChanged += HandleJobChanged;
+            ApplyJob(LevelUpManager.GetCurrentJob());
         }
 
         private void Update()
@@ -223,8 +230,45 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            LevelUpManager.OnJobChanged -= HandleJobChanged;
             archerSkill2Running = false;
             StopAllCoroutines();
+        }
+
+        public void ApplyJob(JobType job)
+        {
+            SetClass(MapJobToClass(job));
+        }
+
+        public void SetClass(PlayerClassType newClass, bool resetCooldown = true)
+        {
+            currentClass = newClass;
+
+            if (!resetCooldown)
+            {
+                return;
+            }
+
+            nextSkill1ReadyTime = 0f;
+            nextSkill2ReadyTime = 0f;
+            archerSkill2Running = false;
+            StopAllCoroutines();
+        }
+
+        private void HandleJobChanged(JobType job)
+        {
+            ApplyJob(job);
+        }
+
+        private static PlayerClassType MapJobToClass(JobType job)
+        {
+            return job switch
+            {
+                JobType.Mage => PlayerClassType.Mage,
+                JobType.Archer => PlayerClassType.Archer,
+                JobType.Warrior => PlayerClassType.Warrior,
+                _ => PlayerClassType.None
+            };
         }
 
         private bool ShouldAcceptInput()
