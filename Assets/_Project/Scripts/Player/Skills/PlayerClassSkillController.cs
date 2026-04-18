@@ -130,6 +130,7 @@ namespace Necrocis
         {
             public float cooldown = 4f;
             public float range = 2.5f;
+            public float forwardAngle = 120f;  // 전방 탐색 각도 (좌우 각 60도)
             public float damage = 6f;
             public float bleedDuration = 3f;
             public float bleedTickInterval = 1f;
@@ -137,6 +138,20 @@ namespace Necrocis
             public GameObject hitEffectPrefab;
             public float hitEffectLifetime = 0.5f;
             public float fallbackEffectScale = 0.8f;
+        }
+
+        [System.Serializable]
+        private class WarriorSkill2Config
+        {
+            public float cooldown = 8f;
+            public float searchRange = 6f;   // 돌진 대상 탐색 범위
+            public float dashSpeed = 18f;    // 돌진 속도
+            public float damage = 11f;
+            public float rootDuration = 2f;  // 구속(이동불가) 시간
+            public float searchAngle = 90f;  // 전방 탐색 각도
+            public GameObject hitEffectPrefab;
+            public float hitEffectLifetime = 0.5f;
+            public float fallbackEffectScale = 1.0f;
         }
 
         [Header("Class")]
@@ -163,6 +178,7 @@ namespace Necrocis
 
         [Header("Warrior")]
         [SerializeField] private WarriorSkill1Config warriorSkill1 = new WarriorSkill1Config();
+        [SerializeField] private WarriorSkill2Config warriorSkill2 = new WarriorSkill2Config();
         [SerializeField] private bool autoTargetForwardEnemyForArcherSkill2 = true;
         [SerializeField] private float archerSkill2AutoTargetAngle = 90f;
 
@@ -301,6 +317,7 @@ namespace Necrocis
             warriorSkill1.cooldown = skill1Cooldown;
             mageSkill2.cooldown = skill2Cooldown;
             archerSkill2.cooldown = skill2Cooldown;
+            warriorSkill2.cooldown = skill2Cooldown;
         }
 
         private void TryUseSkill1()
@@ -373,6 +390,15 @@ namespace Necrocis
 
                     StartCoroutine(ExecuteArcherSkill2());
                     break;
+
+                case PlayerClassType.Warrior:
+                    if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R"))
+                    {
+                        return;
+                    }
+
+                    StartCoroutine(ExecuteWarriorSkill2Dash());
+                    break;
             }
         }
 
@@ -434,7 +460,7 @@ namespace Necrocis
         private void ExecuteWarriorSkill1Bite()
         {
             Vector3 center = GetSkillCenter(0f);
-            if (!TryFindNearestEnemyInRadius(center, warriorSkill1.range, out EnemyController target))
+            if (!TryFindNearestEnemyInForwardArc(center, warriorSkill1.range, warriorSkill1.forwardAngle, out EnemyController target))
             {
                 if (enableDebugLogs)
                 {
@@ -459,6 +485,71 @@ namespace Necrocis
             if (enableDebugLogs)
             {
                 Debug.Log($"Warrior Skill E hit {target.name}. Damage={warriorSkill1.damage}, Bleed={warriorSkill1.bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
+            }
+        }
+
+        private IEnumerator ExecuteWarriorSkill2Dash()
+        {
+            // 전방 적 탐색
+            if (!TryFindForwardEnemyPoint(warriorSkill2.searchRange, warriorSkill2.searchAngle, out Vector3 targetPoint))
+            {
+                // 전방에 적이 없으면 그냥 전방으로 짧게 돌진
+                targetPoint = transform.position + GetFacingDirection() * warriorSkill2.searchRange;
+            }
+
+            Vector3 dashTarget = targetPoint;
+            dashTarget.y = transform.position.y;
+
+            Vector3 dashDir = (dashTarget - transform.position);
+            dashDir.y = 0f;
+            float dashDistance = dashDir.magnitude;
+
+            if (dashDistance > 0.01f)
+            {
+                dashDir = dashDir.normalized;
+                float dashDuration = dashDistance / Mathf.Max(0.1f, warriorSkill2.dashSpeed);
+                float elapsed = 0f;
+
+                CharacterController cc = playerController.GetComponent<CharacterController>();
+                Rigidbody rb = playerController.GetComponent<Rigidbody>();
+
+                while (elapsed < dashDuration)
+                {
+                    float step = warriorSkill2.dashSpeed * Time.deltaTime;
+                    if (cc != null)
+                        cc.Move(dashDir * step);
+                    else if (rb != null)
+                        rb.MovePosition(rb.position + dashDir * step);
+                    else
+                        playerController.transform.position += dashDir * step;
+
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+            }
+
+            // 도착 후 범위 내 적에게 데미지 + 구속
+            Vector3 hitCenter = GetSkillCenter(0f);
+            if (TryFindNearestEnemyInRadius(hitCenter, warriorSkill1.range + 1f, out EnemyController hitTarget))
+            {
+                hitTarget.TakeDamage(warriorSkill2.damage);
+                EnemyStatusEffectController status = EnsureStatusController(hitTarget);
+                status?.ApplyStun(warriorSkill2.rootDuration);
+
+                Vector3 effectPos = GetTargetEffectPosition(hitTarget);
+                SpawnSkillEffect(
+                    warriorSkill2.hitEffectPrefab,
+                    effectPos,
+                    warriorSkill2.hitEffectLifetime,
+                    warriorSkill2.fallbackEffectScale,
+                    new Color(0.9f, 0.2f, 0.05f, 0.7f));
+
+                if (enableDebugLogs)
+                    Debug.Log($"Warrior Skill R hit {hitTarget.name}. Damage={warriorSkill2.damage}, Root={warriorSkill2.rootDuration}s");
+            }
+            else if (enableDebugLogs)
+            {
+                Debug.Log("Warrior Skill R dash: no enemy at destination.");
             }
         }
 
@@ -950,6 +1041,64 @@ namespace Necrocis
             return uniqueEnemies.Count;
         }
 
+        // 전방 각도(forwardAngle) 안에 있는 가장 가까운 적을 찾음
+        private bool TryFindNearestEnemyInForwardArc(Vector3 center, float radius, float forwardAngle, out EnemyController nearestEnemy)
+        {
+            nearestEnemy = null;
+            Vector3 forward = GetFacingDirection();
+            float halfAngle = Mathf.Max(1f, forwardAngle) * 0.5f;
+            float safeRadius = Mathf.Max(0f, radius);
+            float bestDistanceSqr = float.PositiveInfinity;
+
+            EnsureOverlapBuffer();
+            Vector3 hitCenter = center;
+            hitCenter.y += skillHitHeightOffset;
+            float halfHeight = Mathf.Max(0.05f, skillHitVerticalHalfHeight);
+            Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
+            Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
+
+            int count = Physics.OverlapCapsuleNonAlloc(
+                capsuleTop, capsuleBottom, safeRadius,
+                overlapBuffer, enemyMask, QueryTriggerInteraction.Collide);
+
+            for (int i = 0; i < count; i++)
+            {
+                Collider collider = overlapBuffer[i];
+                if (collider == null || !TryGetEnemyFromCollider(collider, out EnemyController enemy)) continue;
+
+                Vector3 toEnemy = enemy.transform.position - transform.position;
+                toEnemy.y = 0f;
+                if (toEnemy.sqrMagnitude > 0.0001f && Vector3.Angle(forward, toEnemy.normalized) > halfAngle) continue;
+
+                float distanceSqr = toEnemy.sqrMagnitude;
+                if (distanceSqr > bestDistanceSqr) continue;
+
+                bestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+
+            if (nearestEnemy != null) return true;
+
+            // 콜라이더 탐지 실패 시 ActiveEnemyControllers 직접 순회
+            IReadOnlyList<EnemyController> allEnemies = EnemyController.ActiveEnemyControllers;
+            for (int i = 0; i < allEnemies.Count; i++)
+            {
+                EnemyController enemy = allEnemies[i];
+                if (enemy == null || enemy.IsDead) continue;
+
+                Vector3 toEnemy = enemy.transform.position - transform.position;
+                toEnemy.y = 0f;
+                float distanceSqr = toEnemy.sqrMagnitude;
+                if (distanceSqr > safeRadius * safeRadius || distanceSqr > bestDistanceSqr) continue;
+                if (toEnemy.sqrMagnitude > 0.0001f && Vector3.Angle(forward, toEnemy.normalized) > halfAngle) continue;
+
+                bestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+
+            return nearestEnemy != null;
+        }
+
         private bool TryFindNearestEnemyInRadius(Vector3 center, float radius, out EnemyController nearestEnemy)
         {
             nearestEnemy = null;
@@ -1107,6 +1256,11 @@ namespace Necrocis
             if (enemy == null)
             {
                 enemy = collider.GetComponentInParent<EnemyController>();
+            }
+
+            if (enemy == null)
+            {
+                enemy = collider.GetComponentInChildren<EnemyController>();
             }
 
             return enemy != null && !enemy.IsDead;
@@ -1483,6 +1637,7 @@ namespace Necrocis
 
                 case PlayerClassType.Warrior:
                     DrawSkillRadius(0f, warriorSkill1.range, new Color(0.9f, 0.1f, 0.1f, 0.4f));
+                    DrawSkillRadius(0f, warriorSkill2.searchRange, new Color(1f, 0.4f, 0.0f, 0.3f));
                     break;
             }
         }
