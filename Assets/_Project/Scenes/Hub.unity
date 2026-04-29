@@ -2304,6 +2304,7 @@ MonoBehaviour:
   warriorSkill1:
     cooldown: 4
     range: 2.5
+    forwardAngle: 120
     damage: 6
     bleedDuration: 3
     bleedTickInterval: 1
@@ -2311,6 +2312,16 @@ MonoBehaviour:
     hitEffectPrefab: {fileID: 0}
     hitEffectLifetime: 0.5
     fallbackEffectScale: 0.8
+  warriorSkill2:
+    cooldown: 8
+    searchRange: 6
+    dashSpeed: 18
+    damage: 11
+    rootDuration: 2
+    searchAngle: 90
+    hitEffectPrefab: {fileID: 0}
+    hitEffectLifetime: 0.5
+    fallbackEffectScale: 1
   autoTargetForwardEnemyForArcherSkill2: 1
   archerSkill2AutoTargetAngle: 90
   useTestCooldownOverride: 1
