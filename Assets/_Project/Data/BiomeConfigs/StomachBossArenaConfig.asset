@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 688cd385dd4c4f5397358e6ca5f07a9a, type: 3}
+  m_Name: StomachBossArenaConfig
+  m_EditorClassIdentifier: 
+  midBossArena:
+    enabled: 1
+    onlyEnableOnLargeMaps: 1
+    minimumMapWidth: 300
+    minimumMapHeight: 300
+    useCustomCenter: 0
+    centerGrid: {x: 150, y: 150}
+    arenaSize: {x: 26, y: 26}
+    wallThicknessInCells: 1
+    wallHeight: 4
+    wallHeightOffset: 1.5
+    groundFogOffset: 0.15
+    triggerHeight: 4
+    sortingOrder: 3500
+    unlockedFogColor: {r: 0.75, g: 0.82, b: 0.88, a: 0.18}
+    lockedFogColor: {r: 0.82, g: 0.9, b: 0.95, a: 0.48}
+    boss:
+      displayName: MidBoss
+      useCustomBossRule: 0
+      useEnemyRuleFallback: 1
+      fallbackEnemyRuleIndex: 0
+      patternType: 0
+      overrideStats: 0
+      maxHealthMultiplier: 1
+      attackDamageMultiplier: 1
+      moveSpeedMultiplier: 1
+      scaleMultiplier: {x: 1, y: 1, z: 1}
+      minimumMaxHealth: 0
+      intestinePattern:
+        phase2HealthRatio: 0.5
+        phase1FleeDistance: 7
+        phase1RoamRadius: 8
+        phase1MoveMultiplier: 1
+        phase2PreferredDistance: 2.5
+        phase2MoveMultiplier: 1.15
+        dungPreDelay: 0.5
+        phase1DungCooldown: 8
+        phase2ThrowCooldown: 5
+        dungCollisionDamage: 1
+        dungSlowRatio: 0.2
+        dungSlowDuration: 3
+        dungHazardRadius: 0.75
+        dungLifeTime: 10
+        throwTravelTime: 0.7
+        throwArcHeight: 2.5
+        parasiteMinCount: 2
+        parasiteMaxCount: 3
+        parasiteSpawnDelay: 0.45
+        parasiteSpawnRadius: 1.1
+        parasiteMaxHealth: 6
+        parasiteMoveSpeed: 2.3
+        parasiteAttackDamage: 1
+        parasiteAttackCooldown: 1.3
+        parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
+        stompMinDelay: 7
+        stompPreDelay: 0.55
+        stompRadius: 6
+        stompDamage: 2
+        stompSlowRatio: 0.3
+        stompSlowDuration: 3
+        phase1Color: {r: 0.72, g: 0.45, b: 0.24, a: 1}
+        phase2Color: {r: 0.95, g: 0.32, b: 0.18, a: 1}
+        dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
+        parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
+        shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1

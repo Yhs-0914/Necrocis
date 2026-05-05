@@ -64,13 +64,14 @@ namespace Necrocis
                 return false;
             }
 
-            float attackDamage = playerController.AttackPower;
+            PlayerStats stats = playerController.Stats;
+            float attackDamage = PlayerCombatCalculator.GetBasicAttackDamage(stats);
             if (attackDamage <= 0f)
             {
                 return false;
             }
 
-            nextAttackTime = Time.time + attackCooldown;
+            nextAttackTime = Time.time + PlayerCombatCalculator.GetBasicAttackCooldown(attackCooldown, stats);
             EnsureOverlapBuffer();
             hitEnemies.Clear();
             playerController.FaceDirection(attackDirection);
@@ -78,12 +79,14 @@ namespace Necrocis
             Vector3 attackDirectionVector = DirectionToVector(attackDirection);
             Vector3 attackOrigin = transform.position;
             attackOrigin.y += attackHeightOffset;
-            Vector3 overlapCenter = attackOrigin + attackDirectionVector * attackOriginOffset;
+            float effectiveAttackOriginOffset = PlayerCombatCalculator.GetBasicAttackRange(attackOriginOffset, stats);
+            float effectiveAttackRadius = PlayerCombatCalculator.GetBasicAttackRange(attackRadius, stats);
+            Vector3 overlapCenter = attackOrigin + attackDirectionVector * effectiveAttackOriginOffset;
             float halfAngle = attackAngle * 0.5f;
 
             int hitCount = Physics.OverlapSphereNonAlloc(
                 overlapCenter,
-                attackRadius,
+                effectiveAttackRadius,
                 overlapResults,
                 targetMask,
                 QueryTriggerInteraction.Collide);

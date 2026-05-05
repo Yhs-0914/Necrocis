@@ -40,11 +40,10 @@ namespace Necrocis
         private const float BASE_MAX_HEALTH = 150f;
         private const float BASE_MOVE_SPEED = 5f;
         private const float BASE_ATTACK_POWER = 30f;
-        private const float BASE_DEFENSE = 5f;
         private const float BASE_ATTACK_SPEED = 1f;
-        private const float BASE_RANGE = 1f;
+        private const float BASE_ATTACK_RANGE = 1f;
         private const float BASE_MAGIC = 20f;
-        private const float BASE_COOLDOWN = 10f;
+        private const float BASE_SKILL_COOLDOWN_REDUCTION = 0f;
 
         // CharacterStats의 이벤트를 외부에 전달 (중계 패턴)
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged
@@ -110,11 +109,10 @@ namespace Necrocis
                 new CharacterStatValue(CharacterStatType.MaxHealth, BASE_MAX_HEALTH),
                 new CharacterStatValue(CharacterStatType.MoveSpeed, BASE_MOVE_SPEED),
                 new CharacterStatValue(CharacterStatType.AttackPower, BASE_ATTACK_POWER),
-                new CharacterStatValue(CharacterStatType.Defense, BASE_DEFENSE),
                 new CharacterStatValue(CharacterStatType.AttackSpeed, BASE_ATTACK_SPEED),
-                new CharacterStatValue(CharacterStatType.Range, BASE_RANGE),
+                new CharacterStatValue(CharacterStatType.AttackRange, BASE_ATTACK_RANGE),
                 new CharacterStatValue(CharacterStatType.Magic, BASE_MAGIC),
-                new CharacterStatValue(CharacterStatType.Cooldown, BASE_COOLDOWN),
+                new CharacterStatValue(CharacterStatType.SkillCooldownReduction, BASE_SKILL_COOLDOWN_REDUCTION),
             }, true);
 
             initialized = true;
@@ -123,16 +121,36 @@ namespace Necrocis
 
         public void ConfigureBaseStats(float moveSpeed, float maxHealth, float attackPower, bool resetCurrentHealth = false)
         {
+            ConfigureBaseStats(
+                moveSpeed,
+                maxHealth,
+                attackPower,
+                BASE_ATTACK_SPEED,
+                BASE_ATTACK_RANGE,
+                BASE_MAGIC,
+                BASE_SKILL_COOLDOWN_REDUCTION,
+                resetCurrentHealth);
+        }
+
+        public void ConfigureBaseStats(
+            float moveSpeed,
+            float maxHealth,
+            float attackPower,
+            float attackSpeed,
+            float attackRange,
+            float magic,
+            float skillCooldownReduction,
+            bool resetCurrentHealth = false)
+        {
             RuntimeStats.ConfigureBaseStats(new CharacterStatValue[]
             {
                 new CharacterStatValue(CharacterStatType.MaxHealth, maxHealth),
                 new CharacterStatValue(CharacterStatType.MoveSpeed, moveSpeed),
                 new CharacterStatValue(CharacterStatType.AttackPower, attackPower),
-                new CharacterStatValue(CharacterStatType.Defense, BASE_DEFENSE),
-                new CharacterStatValue(CharacterStatType.AttackSpeed, BASE_ATTACK_SPEED),
-                new CharacterStatValue(CharacterStatType.Range, BASE_RANGE),
-                new CharacterStatValue(CharacterStatType.Magic, BASE_MAGIC),
-                new CharacterStatValue(CharacterStatType.Cooldown, BASE_COOLDOWN),
+                new CharacterStatValue(CharacterStatType.AttackSpeed, attackSpeed),
+                new CharacterStatValue(CharacterStatType.AttackRange, attackRange),
+                new CharacterStatValue(CharacterStatType.Magic, magic),
+                new CharacterStatValue(CharacterStatType.SkillCooldownReduction, skillCooldownReduction),
             }, !initialized || resetCurrentHealth);
             initialized = true;
         }
@@ -183,6 +201,10 @@ namespace Necrocis
         public float MaxHealth => RuntimeStats.MaxHealth;
         public float CurrentHealth => RuntimeStats.CurrentHealth;
         public float AttackPower => RuntimeStats.AttackPower;
+        public float AttackSpeed => RuntimeStats.AttackSpeed;
+        public float AttackRange => RuntimeStats.AttackRange;
+        public float Magic => RuntimeStats.Magic;
+        public float SkillCooldownReduction => RuntimeStats.SkillCooldownReduction;
         public bool IsDead => RuntimeStats.IsDead;
 
         // ─────────────────────────────────
@@ -191,12 +213,13 @@ namespace Necrocis
 
         public float GetHealth() => RuntimeStats.MaxHealth;
         public float GetAttack() => RuntimeStats.AttackPower;
-        public float GetDefense() => RuntimeStats.Defense;
+        [Obsolete("Player defense is no longer part of the base stat set.")]
+        public float GetDefense() => 0f;
         public float GetSpeed() => RuntimeStats.MoveSpeed;
         public float GetAttackSpeed() => RuntimeStats.AttackSpeed;
-        public float GetRange() => RuntimeStats.Range;
+        public float GetRange() => RuntimeStats.AttackRange;
         public float GetMagic() => RuntimeStats.Magic;
-        public float GetCooldown() => RuntimeStats.Cooldown;
+        public float GetCooldown() => RuntimeStats.SkillCooldownReduction;
 
         // ─────────────────────────────────
         // HP 위임
@@ -221,6 +244,14 @@ namespace Necrocis
             EnsureInitialized();
             if (modifiers == null) return;
             foreach (CharacterStatModifierData modifier in modifiers)
+                RuntimeStats.AddModifier(modifier.ToModifier(source));
+        }
+
+        public void ApplyPlayerStatModifiers(IEnumerable<PlayerStatModifierData> modifiers, object source)
+        {
+            EnsureInitialized();
+            if (modifiers == null) return;
+            foreach (PlayerStatModifierData modifier in modifiers)
                 RuntimeStats.AddModifier(modifier.ToModifier(source));
         }
         // ApplyOrReplaceSourceModifiers: 변경 사항을 런타임 객체에 반영합니다.

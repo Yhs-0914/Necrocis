@@ -7,14 +7,20 @@ namespace Necrocis
     // 캐릭터 스탯 종류 열거형
     public enum CharacterStatType
     {
-        MaxHealth,    // 최대 체력
-        MoveSpeed,    // 이동 속도
-        AttackPower,  // 공격력
-        Defense,      // 방어력
-        AttackSpeed,  // 공격 속도
-        Range,        // 공격 사거리
-        Magic,        // 마력
-        Cooldown      // 스킬 쿨타임
+        MaxHealth = 0,               // 최대 체력
+        MoveSpeed = 1,               // 이동 속도
+        AttackPower = 2,             // 기본공격 공격력
+        [Obsolete("Player defense is no longer part of the base stat set.")]
+        Defense = 3,
+        AttackSpeed = 4,             // 기본공격 공격 속도
+        AttackRange = 5,             // 기본공격 사거리
+        Magic = 6,                   // 스킬 데미지 증가율(%)
+        SkillCooldownReduction = 7,  // 스킬 쿨타임 감소율(%)
+
+        [Obsolete("Use AttackRange instead.")]
+        Range = AttackRange,
+        [Obsolete("Use SkillCooldownReduction instead.")]
+        Cooldown = SkillCooldownReduction
     }
 
     // 모디파이어 적용 방식 (적용 순서: Flat → PercentAdd → PercentMultiply)
@@ -133,11 +139,16 @@ namespace Necrocis
         public float MaxHealth => GetValue(CharacterStatType.MaxHealth);
         public float MoveSpeed => GetValue(CharacterStatType.MoveSpeed);
         public float AttackPower => GetValue(CharacterStatType.AttackPower);
-        public float Defense => GetValue(CharacterStatType.Defense);
         public float AttackSpeed => GetValue(CharacterStatType.AttackSpeed);
-        public float Range => GetValue(CharacterStatType.Range);
+        public float AttackRange => GetValue(CharacterStatType.AttackRange);
         public float Magic => GetValue(CharacterStatType.Magic);
-        public float Cooldown => GetValue(CharacterStatType.Cooldown);
+        public float SkillCooldownReduction => GetValue(CharacterStatType.SkillCooldownReduction);
+        [Obsolete("Player defense is no longer part of the base stat set.")]
+        public float Defense => 0f;
+        [Obsolete("Use AttackRange instead.")]
+        public float Range => AttackRange;
+        [Obsolete("Use SkillCooldownReduction instead.")]
+        public float Cooldown => SkillCooldownReduction;
         public float CurrentHealth => currentHealth;                                        // 현재 HP
         public float HealthNormalized => MaxHealth <= 0f ? 0f : currentHealth / MaxHealth; // HP 비율 (0~1)
         public bool IsDead => currentHealth <= 0f;                                         // 사망 여부

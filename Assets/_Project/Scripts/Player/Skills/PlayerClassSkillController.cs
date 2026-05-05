@@ -36,7 +36,6 @@ namespace Necrocis
             public float radius = 3f;
             public float forwardOffset = 0f;
             public float baseDamage = 0f;
-            public float attackPowerScale = 0f;
             public float additionalDamage = 0f;
             public float additionalDamageMin = 5f;
             public float additionalDamageMax = 7f;
@@ -53,7 +52,6 @@ namespace Necrocis
             public float radius = 3.5f;
             public float forwardOffset = 0f;
             public float baseDamage = 15f;
-            public float attackPowerScale = 0f;
             public float detonationDelay = 3f;
             public float damageTakenIncreaseRatio = 0.1f;
             public float damageTakenIncreaseDuration = 3f;
@@ -196,6 +194,8 @@ namespace Necrocis
         private float nextSkill2ReadyTime;
 
         private bool archerSkill2Running;
+
+        private PlayerStats CurrentPlayerStats => playerController != null ? playerController.Stats : PlayerStats.Instance;
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
         public PlayerClassType CurrentClass => currentClass;
@@ -416,14 +416,15 @@ namespace Necrocis
                 return false;
             }
 
-            nextReadyTime = now + Mathf.Max(0f, cooldown);
+            float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
+            nextReadyTime = now + effectiveCooldown;
             return true;
         }
 
         private void ExecuteMageSkill1()
         {
             Vector3 center = GetSkillCenter(mageSkill1.forwardOffset);
-            float baseDamage = mageSkill1.baseDamage + playerController.AttackPower * mageSkill1.attackPowerScale;
+            float baseDamage = mageSkill1.baseDamage;
             float bonusMin = Mathf.Min(mageSkill1.additionalDamageMin, mageSkill1.additionalDamageMax);
             float bonusMax = Mathf.Max(mageSkill1.additionalDamageMin, mageSkill1.additionalDamageMax);
             if (bonusMax <= 0f && mageSkill1.additionalDamage > 0f)
@@ -438,7 +439,7 @@ namespace Necrocis
                 enemy =>
                 {
                     float bonusDamage = Random.Range(bonusMin, bonusMax + 0.001f);
-                    float totalDamage = Mathf.Max(0f, baseDamage + bonusDamage);
+                    float totalDamage = PlayerCombatCalculator.GetSkillDamage(baseDamage + bonusDamage, CurrentPlayerStats);
                     enemy.TakeDamage(totalDamage);
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
                     status?.ApplyStun(mageSkill1.stunDuration);
@@ -469,10 +470,12 @@ namespace Necrocis
                 return;
             }
 
-            target.TakeDamage(warriorSkill1.damage);
+            float damage = PlayerCombatCalculator.GetSkillDamage(warriorSkill1.damage, CurrentPlayerStats);
+            target.TakeDamage(damage);
 
             EnemyStatusEffectController status = EnsureStatusController(target);
-            status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, warriorSkill1.bleedTickDamage);
+            float bleedTickDamage = PlayerCombatCalculator.GetSkillDamage(warriorSkill1.bleedTickDamage, CurrentPlayerStats);
+            status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, bleedTickDamage);
 
             Vector3 effectPos = GetTargetEffectPosition(target);
             SpawnSkillEffect(
@@ -484,7 +487,7 @@ namespace Necrocis
 
             if (enableDebugLogs)
             {
-                Debug.Log($"Warrior Skill E hit {target.name}. Damage={warriorSkill1.damage}, Bleed={warriorSkill1.bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
+                Debug.Log($"Warrior Skill E hit {target.name}. Damage={damage}, Bleed={bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
             }
         }
 
@@ -532,7 +535,8 @@ namespace Necrocis
             Vector3 hitCenter = GetSkillCenter(0f);
             if (TryFindNearestEnemyInRadius(hitCenter, warriorSkill1.range + 1f, out EnemyController hitTarget))
             {
-                hitTarget.TakeDamage(warriorSkill2.damage);
+                float damage = PlayerCombatCalculator.GetSkillDamage(warriorSkill2.damage, CurrentPlayerStats);
+                hitTarget.TakeDamage(damage);
                 EnemyStatusEffectController status = EnsureStatusController(hitTarget);
                 status?.ApplyStun(warriorSkill2.rootDuration);
 
@@ -545,7 +549,7 @@ namespace Necrocis
                     new Color(0.9f, 0.2f, 0.05f, 0.7f));
 
                 if (enableDebugLogs)
-                    Debug.Log($"Warrior Skill R hit {hitTarget.name}. Damage={warriorSkill2.damage}, Root={warriorSkill2.rootDuration}s");
+                    Debug.Log($"Warrior Skill R hit {hitTarget.name}. Damage={damage}, Root={warriorSkill2.rootDuration}s");
             }
             else if (enableDebugLogs)
             {
@@ -586,7 +590,7 @@ namespace Necrocis
 
             Vector3 targetEffectPosition = GetTargetEffectPosition(target);
             float targetEffectScaleMultiplier = GetTargetEffectScaleMultiplier(target);
-            float damage = mageSkill2.baseDamage + playerController.AttackPower * mageSkill2.attackPowerScale;
+            float damage = PlayerCombatCalculator.GetSkillDamage(mageSkill2.baseDamage, CurrentPlayerStats);
             target.TakeDamage(damage);
             EnemyStatusEffectController status = EnsureStatusController(target);
             status?.ApplyDamageTakenIncrease(mageSkill2.damageTakenIncreaseRatio, mageSkill2.damageTakenIncreaseDuration);
@@ -612,7 +616,7 @@ namespace Necrocis
                 applyPoison = true,
                 poisonDuration = archerSkill1.poisonDuration,
                 poisonTickInterval = archerSkill1.poisonTickInterval,
-                poisonTickDamage = archerSkill1.poisonTickDamage
+                poisonTickDamage = PlayerCombatCalculator.GetSkillDamage(archerSkill1.poisonTickDamage, CurrentPlayerStats)
             };
 
             int projectileCount = Mathf.Max(1, archerSkill1.projectileCount);
@@ -635,7 +639,7 @@ namespace Necrocis
                 SpawnSkillProjectile(
                     archerSkill1.projectilePrefab,
                     archerSkill1.projectileScale,
-                    archerSkill1.projectileDamage,
+                    PlayerCombatCalculator.GetSkillDamage(archerSkill1.projectileDamage, CurrentPlayerStats),
                     projectileSpeed,
                     projectileLifeTime,
                     shotDirection,
@@ -730,7 +734,7 @@ namespace Necrocis
 
             projectile.Launch(
                 moveDirection,
-                archerSkill2.projectileDamage,
+                PlayerCombatCalculator.GetSkillDamage(archerSkill2.projectileDamage, CurrentPlayerStats),
                 speed,
                 Mathf.Max(0.05f, lifeTime),
                 enemyMask,
@@ -890,11 +894,12 @@ namespace Necrocis
         {
             Vector3 center = target != null ? GetTargetEffectPosition(target) : fallbackCenter;
             float effectScaleMultiplier = target != null ? GetTargetEffectScaleMultiplier(target) : 1f;
+            float damage = PlayerCombatCalculator.GetSkillDamage(archerSkill2.virusExplosionDamage, CurrentPlayerStats);
 
             int explosionHit = ApplyAreaSkill(
                 center,
                 archerSkill2.virusExplosionRadius,
-                enemy => enemy.TakeDamage(archerSkill2.virusExplosionDamage));
+                enemy => enemy.TakeDamage(damage));
 
             SpawnSkillEffect(
                 archerSkill2.virusExplosionEffectPrefab,
@@ -906,7 +911,7 @@ namespace Necrocis
 
             if (enableDebugLogs)
             {
-                Debug.Log($"[Archer Skill R] Virus explosion triggered. Hit={explosionHit}, Damage={archerSkill2.virusExplosionDamage:0.##}");
+                Debug.Log($"[Archer Skill R] Virus explosion triggered. Hit={explosionHit}, Damage={damage:0.##}");
             }
         }
 

@@ -133,8 +133,8 @@ namespace Necrocis
         // 직업별 고유 스탯 매핑 (레벨 11+ 선택지에서 1번째로 고정 등장)
         private static Dictionary<JobType, StatChoice> jobStatMap = new Dictionary<JobType, StatChoice>
         {
-            [JobType.Warrior] = StatChoice.AttackDefenseUp,   // 전사 → 공격력/방어력
-            [JobType.Mage] = StatChoice.MagicCooldownUp,      // 마법사 → 마력/쿨타임
+            [JobType.Warrior] = StatChoice.AttackPowerUp,     // 전사 → 공격력
+            [JobType.Mage] = StatChoice.MagicUp,              // 마법사 → 마력
             [JobType.Archer] = StatChoice.AttackSpeedRangeUp  // 궁수 → 공격속도/사거리
         };
 

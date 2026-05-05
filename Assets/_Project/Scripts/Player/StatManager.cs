@@ -7,9 +7,9 @@ namespace Necrocis
     {
         HealthUp,            // 체력 증가
         SpeedUp,             // 이동속도 증가
-        AttackDefenseUp,     // 공격력/방어력 증가
+        AttackPowerUp,       // 공격력 증가
         AttackSpeedRangeUp,  // 공격속도/사거리 증가
-        MagicCooldownUp      // 마력 증가/쿨타임 감소
+        MagicUp              // 마력 증가
     }
 
     /// <summary>
@@ -59,13 +59,12 @@ namespace Necrocis
                         [CharacterStatType.MoveSpeed] = 3
                     }
                 },
-                // 공격/방어 증가: 공격력 +3, 방어력 +1 (고정값)
-                [StatChoice.AttackDefenseUp] = new StatEffect
+                // 공격 증가: 공격력 +3 (고정값)
+                [StatChoice.AttackPowerUp] = new StatEffect
                 {
                     flatStats = new Dictionary<CharacterStatType, float>
                     {
-                        [CharacterStatType.AttackPower] = 3,
-                        [CharacterStatType.Defense] = 1
+                        [CharacterStatType.AttackPower] = 3
                     }
                 },
                 // 공격속도/사거리 증가: 공격속도 +5%, 사거리 +5% (퍼센트)
@@ -74,19 +73,15 @@ namespace Necrocis
                     percentStats = new Dictionary<CharacterStatType, float>
                     {
                         [CharacterStatType.AttackSpeed] = 5,
-                        [CharacterStatType.Range] = 5
+                        [CharacterStatType.AttackRange] = 5
                     }
                 },
-                // 마력/쿨타임: 마력 +3 (고정값), 쿨타임 -3% (퍼센트 감소)
-                [StatChoice.MagicCooldownUp] = new StatEffect
+                // 마력 증가: 스킬 데미지 +3% (고정값)
+                [StatChoice.MagicUp] = new StatEffect
                 {
                     flatStats = new Dictionary<CharacterStatType, float>
                     {
                         [CharacterStatType.Magic] = 3
-                    },
-                    percentStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.Cooldown] = -3
                     }
                 }
             };

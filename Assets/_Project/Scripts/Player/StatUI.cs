@@ -23,12 +23,11 @@ namespace Necrocis
         {
             CharacterStatType.MaxHealth,
             CharacterStatType.AttackPower,
-            CharacterStatType.Defense,
             CharacterStatType.MoveSpeed,
             CharacterStatType.AttackSpeed,
-            CharacterStatType.Range,
+            CharacterStatType.AttackRange,
             CharacterStatType.Magic,
-            CharacterStatType.Cooldown
+            CharacterStatType.SkillCooldownReduction
         };
         // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
 
@@ -137,12 +136,11 @@ namespace Necrocis
             {
                 case CharacterStatType.MaxHealth:   return "체력";
                 case CharacterStatType.AttackPower:  return "공격력";
-                case CharacterStatType.Defense:      return "방어력";
                 case CharacterStatType.MoveSpeed:    return "이동속도";
                 case CharacterStatType.AttackSpeed:  return "공격속도";
-                case CharacterStatType.Range:        return "사거리";
+                case CharacterStatType.AttackRange:  return "공격 사거리";
                 case CharacterStatType.Magic:        return "마력";
-                case CharacterStatType.Cooldown:     return "쿨타임";
+                case CharacterStatType.SkillCooldownReduction: return "스킬 쿨타임 감소";
                 default:                             return type.ToString();
             }
         }

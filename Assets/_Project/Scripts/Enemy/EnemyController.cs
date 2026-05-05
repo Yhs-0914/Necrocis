@@ -72,6 +72,7 @@ namespace Necrocis
         private Vector2Int cachedGroundGrid;
         private bool isRegisteredInSpatialHash;
         private Vector2Int currentSpatialCell;
+        private bool aiSuppressed;
 
         // ─────────────────────────────────
         // 공개 프로퍼티 (FSM 상태에서 사용)
@@ -149,6 +150,7 @@ namespace Necrocis
             defeatEventRaised = false;
             ignoreMidBossArenaRestriction = false;
             hasCachedGroundHeight = false;
+            aiSuppressed = false;
 
             transform.position = spawnPosition;
             transform.localRotation = Quaternion.identity;
@@ -213,6 +215,7 @@ namespace Necrocis
             hasAggroBoost = false;
             ignoreMidBossArenaRestriction = false;
             hasCachedGroundHeight = false;
+            aiSuppressed = false;
 
             GetOrCreatePool(poolArchetypeId).Push(this);
         }
@@ -226,6 +229,12 @@ namespace Necrocis
             if (config == null) return;
 
             EnsurePlayerTransform();
+
+            if (aiSuppressed && !IsDead)
+            {
+                SyncHeight();
+                return;
+            }
 
             // 돌진 쿨타임 감소
             if (chargeCooldownTimer > 0f)
@@ -486,7 +495,7 @@ namespace Necrocis
         {
             if (PlayerController.Instance == null) return;
 
-            float damage = stats != null ? stats.AttackPower : config.attackDamage;
+            float damage = EnemyCombatCalculator.GetAttackDamage(stats, config);
 
             if (config.isRanged)
             {
@@ -532,10 +541,7 @@ namespace Necrocis
                 return;
             }
 
-            float incomingDamageMultiplier = statusEffectController != null
-                ? statusEffectController.GetIncomingDamageMultiplier()
-                : 1f;
-            float finalDamage = Mathf.Max(0f, damage * incomingDamageMultiplier);
+            float finalDamage = EnemyCombatCalculator.GetIncomingDamage(damage, statusEffectController);
             if (finalDamage <= 0f)
             {
                 return;
@@ -601,6 +607,33 @@ namespace Necrocis
         public void SetIgnoreMidBossArenaRestriction(bool ignore)
         {
             ignoreMidBossArenaRestriction = ignore;
+        }
+
+        public void SetAiSuppressed(bool suppressed)
+        {
+            if (aiSuppressed == suppressed)
+            {
+                return;
+            }
+
+            aiSuppressed = suppressed;
+            hasDestination = false;
+            attackAnimPlaying = false;
+
+            if (suppressed)
+            {
+                SetIdleAnimation();
+            }
+        }
+
+        public bool MoveByExternalPattern(Vector3 step)
+        {
+            if (IsDead || step.sqrMagnitude <= 0.000001f)
+            {
+                return false;
+            }
+
+            return TryMove(GetCurrentPosition(), step);
         }
 
         /// <summary>
@@ -1115,12 +1148,13 @@ namespace Necrocis
                 return null;
             }
 
-            foreach (EnemySpawnRuleConfig rule in biomeConfig.enemySpawnRules)
+            IReadOnlyList<EnemySpawnRuleConfig> enemySpawnRules = biomeConfig.GetEnemySpawnRules();
+            foreach (EnemySpawnRuleConfig rule in enemySpawnRules)
             {
-                if (rule.name == enemyName)
+                if (rule != null && rule.name == enemyName)
                     return rule;
             }
-            Debug.LogWarning($"[EliteDeath] FindEnemyConfigByName: '{enemyName}'을 찾을 수 없음! 등록된 적: {biomeConfig.enemySpawnRules.Count}개");
+            Debug.LogWarning($"[EliteDeath] FindEnemyConfigByName: '{enemyName}'을 찾을 수 없음! 등록된 적: {enemySpawnRules.Count}개");
             return null;
         }
 

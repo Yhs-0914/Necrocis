@@ -32,11 +32,17 @@ namespace Necrocis
         [Header("Objects")]
         public List<BiomeObjectRuleConfig> objectRules = new List<BiomeObjectRuleConfig>();
 
-        [Header("Enemies")]
-        public List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();
+        [Header("Enemy Config")]
+        public EnemySpawnConfig enemySpawnConfig;
 
-        [Header("Mid Boss Arena")]
-        public MidBossArenaConfig midBossArena = new MidBossArenaConfig();
+        [SerializeField, HideInInspector]
+        private List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();
+
+        [Header("Boss Arena Config")]
+        public BossArenaConfig bossArenaConfig;
+
+        [SerializeField, HideInInspector]
+        private MidBossArenaConfig midBossArena = new MidBossArenaConfig();
 
         [Header("Return Portal")]
         public PortalConfig returnPortal = new PortalConfig();
@@ -51,6 +57,36 @@ namespace Necrocis
                 }
             }
             return null;
+        }
+
+        public IReadOnlyList<EnemySpawnRuleConfig> GetEnemySpawnRules()
+        {
+            if (enemySpawnConfig != null)
+            {
+                IReadOnlyList<EnemySpawnRuleConfig> configuredRules = enemySpawnConfig.GetEnemySpawnRules();
+                if (configuredRules != null)
+                {
+                    return configuredRules;
+                }
+            }
+
+            return enemySpawnRules != null
+                ? enemySpawnRules
+                : System.Array.Empty<EnemySpawnRuleConfig>();
+        }
+
+        public MidBossArenaConfig GetMidBossArenaConfig()
+        {
+            if (bossArenaConfig != null)
+            {
+                MidBossArenaConfig configuredArena = bossArenaConfig.GetMidBossArenaConfig();
+                if (configuredArena != null)
+                {
+                    return configuredArena;
+                }
+            }
+
+            return midBossArena;
         }
     }
 
@@ -290,9 +326,11 @@ namespace Necrocis
     public class MidBossDefinition
     {
         public string displayName = "MidBoss";
+        public bool useCustomBossRule = false;
         public EnemySpawnRuleConfig bossRule;
         public bool useEnemyRuleFallback = true;
         public int fallbackEnemyRuleIndex = 0;
+        public MidBossPatternType patternType = MidBossPatternType.Auto;
 
         [Header("Optional Overrides")]
         public bool overrideStats = false;
@@ -300,5 +338,19 @@ namespace Necrocis
         public float attackDamageMultiplier = 1f;
         public float moveSpeedMultiplier = 1f;
         public Vector3 scaleMultiplier = Vector3.one;
+
+        [Header("Boss Health")]
+        [Tooltip("0이면 바이옴/패턴 기본 최소 체력을 사용합니다.")]
+        public float minimumMaxHealth = 0f;
+
+        [Header("Pattern Settings")]
+        public IntestineBossPatternSettings intestinePattern = new IntestineBossPatternSettings();
+    }
+
+    public enum MidBossPatternType
+    {
+        Auto,
+        None,
+        Intestine
     }
 }

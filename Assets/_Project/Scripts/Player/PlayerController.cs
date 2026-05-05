@@ -5,9 +5,6 @@ using UnityEngine.Serialization;
 
 namespace Necrocis
 {
-    /// <summary>
-    /// ?뚮젅?댁뼱 ?대룞 + 諛⑺뼢蹂??ㅽ봽?쇱씠???좊땲硫붿씠??
-    /// </summary>
     public class PlayerController : MonoBehaviour
     {
         private static PlayerController instance;
@@ -33,6 +30,10 @@ namespace Necrocis
         [SerializeField] private float baseMoveSpeed = 5f;
         [SerializeField] private float baseMaxHealth = 150f;
         [SerializeField] private float baseAttackPower = 10f;
+        [SerializeField] private float baseAttackSpeed = 1f;
+        [SerializeField] private float baseAttackRange = 1f;
+        [SerializeField] private float baseMagic = 20f;
+        [SerializeField] private float baseSkillCooldownReduction = 0f;
 
         [Header("Sprite Renderer")]
         [SerializeField] private SpriteRenderer spriteRenderer;
@@ -105,6 +106,10 @@ namespace Necrocis
         public float CurrentHealth => playerStats != null ? playerStats.CurrentHealth : 0f;
         public float MaxHealth => playerStats != null ? playerStats.MaxHealth : 0f;
         public float AttackPower => playerStats != null ? playerStats.AttackPower : 0f;
+        public float AttackSpeed => playerStats != null ? playerStats.AttackSpeed : 0f;
+        public float AttackRange => playerStats != null ? playerStats.AttackRange : 0f;
+        public float Magic => playerStats != null ? playerStats.Magic : 0f;
+        public float SkillCooldownReduction => playerStats != null ? playerStats.SkillCooldownReduction : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
         // ?좊땲???앸챸二쇨린: 李몄“瑜?罹먯떆?섍퀬 湲곕낯 ?곹깭瑜?珥덇린?뷀빀?덈떎.
 
@@ -566,7 +571,15 @@ namespace Necrocis
         public void RefreshBaseStats(bool resetCurrentHealth = false)
         {
             EnsurePlayerStats();
-            playerStats.ConfigureBaseStats(baseMoveSpeed, baseMaxHealth, baseAttackPower, resetCurrentHealth);
+            playerStats.ConfigureBaseStats(
+                baseMoveSpeed,
+                baseMaxHealth,
+                baseAttackPower,
+                baseAttackSpeed,
+                baseAttackRange,
+                baseMagic,
+                baseSkillCooldownReduction,
+                resetCurrentHealth);
             playerStatsConfigured = true;
         }
         // TakeDamage: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
@@ -640,7 +653,15 @@ namespace Necrocis
 
             if (!playerStatsConfigured)
             {
-                playerStats.ConfigureBaseStats(baseMoveSpeed, baseMaxHealth, baseAttackPower, true);
+                playerStats.ConfigureBaseStats(
+                    baseMoveSpeed,
+                    baseMaxHealth,
+                    baseAttackPower,
+                    baseAttackSpeed,
+                    baseAttackRange,
+                    baseMagic,
+                    baseSkillCooldownReduction,
+                    true);
                 playerStatsConfigured = true;
             }
 
@@ -755,5 +776,4 @@ namespace Necrocis
         }
     }
 }
-
 

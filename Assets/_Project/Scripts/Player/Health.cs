@@ -6,7 +6,7 @@ namespace Necrocis
 {
     /// <summary>
     /// 플레이어 체력 관리.
-    /// CharacterStats 백엔드를 사용하며, 방어력 감소 + 무적 시간 처리.
+    /// CharacterStats 백엔드를 사용하며, 무적 시간 처리를 담당.
     /// </summary>
     public class Health : MonoBehaviour
     {
@@ -62,13 +62,12 @@ namespace Necrocis
                 OnDeath?.Invoke();
         }
 
-        // 데미지 처리: 무적/사망 체크 → 방어력 감소 → 실제 데미지 적용 → 무적 시작
+        // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
         public void TakeDamage(float damageAmount)
         {
             if (isInvincible || IsDead || damageAmount <= 0f) return;
 
-            float defense = Stats?.Defense ?? 0f;
-            float actualDamage = Mathf.Max(1f, damageAmount - defense); // 최소 1 데미지 보장
+            float actualDamage = Mathf.Max(0f, damageAmount);
             Stats?.ApplyDamage(actualDamage);
 
             StartCoroutine(InvincibilityCoroutine());

@@ -39,6 +39,13 @@ namespace Necrocis
             hasImpacted = false;
         }
 
+        public void Launch(Vector3 direction, float damage, LayerMask mask, float range)
+        {
+            Launch(direction, damage, mask);
+            float effectiveRange = Mathf.Max(0.05f, range);
+            deactivateTime = Time.time + effectiveRange / Mathf.Max(0.01f, speed);
+        }
+
         // 풀에서 활성화될 때 수명 타이머 시작
         private void OnEnable()
         {

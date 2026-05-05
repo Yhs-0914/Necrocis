@@ -71,7 +71,9 @@ MonoBehaviour:
   marginBottom: 10
   marginTop: 5
   objectRules: []
+  enemySpawnConfig: {fileID: 11400000, guid: c50840300fb540059cdca5d6a8e4fed9, type: 2}
   enemySpawnRules: []
+  bossArenaConfig: {fileID: 11400000, guid: 7c9112d9322b4ae1934c9e750e22d060, type: 2}
   returnPortal:
     enabled: 1
     name: ReturnPortal

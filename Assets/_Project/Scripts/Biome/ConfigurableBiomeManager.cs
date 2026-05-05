@@ -187,11 +187,12 @@ namespace Necrocis
                 }
             }
 
-            if (config.enemySpawnRules != null)
+            IReadOnlyList<EnemySpawnRuleConfig> enemySpawnRules = config.GetEnemySpawnRules();
+            if (enemySpawnRules != null)
             {
-                for (int i = 0; i < config.enemySpawnRules.Count; i++)
+                for (int i = 0; i < enemySpawnRules.Count; i++)
                 {
-                    EnemySpawnRuleConfig ruleConfig = config.enemySpawnRules[i];
+                    EnemySpawnRuleConfig ruleConfig = enemySpawnRules[i];
                     if (ruleConfig == null) continue;
 
                     // 엘리트 몹은 EliteSpawner에 등록 (포아송 분포가 아닌 타이머 기반 스폰)
@@ -301,13 +302,19 @@ namespace Necrocis
 
         private void TryCreateMidBossArena()
         {
-            if (config == null || config.midBossArena == null || !config.midBossArena.enabled)
+            if (config == null)
             {
                 return;
             }
 
-            if (config.midBossArena.onlyEnableOnLargeMaps
-                && (mapWidth < config.midBossArena.minimumMapWidth || mapHeight < config.midBossArena.minimumMapHeight))
+            MidBossArenaConfig midBossArenaConfig = config.GetMidBossArenaConfig();
+            if (midBossArenaConfig == null || !midBossArenaConfig.enabled)
+            {
+                return;
+            }
+
+            if (midBossArenaConfig.onlyEnableOnLargeMaps
+                && (mapWidth < midBossArenaConfig.minimumMapWidth || mapHeight < midBossArenaConfig.minimumMapHeight))
             {
                 return;
             }
@@ -320,28 +327,34 @@ namespace Necrocis
             GameObject arenaObject = new GameObject("MidBossArena");
             arenaObject.transform.SetParent(objectsParent != null ? objectsParent : transform, false);
             midBossArenaController = arenaObject.AddComponent<MidBossArenaController>();
-            midBossArenaController.Configure(this, config.midBossArena, runtimeEnemyRules);
+            midBossArenaController.Configure(this, midBossArenaConfig, runtimeEnemyRules);
         }
 
         private bool IsInsideMidBossArenaBounds(int gridX, int gridY)
         {
-            if (config == null || config.midBossArena == null || !config.midBossArena.enabled)
+            if (config == null)
             {
                 return false;
             }
 
-            if (config.midBossArena.onlyEnableOnLargeMaps
-                && (mapWidth < config.midBossArena.minimumMapWidth || mapHeight < config.midBossArena.minimumMapHeight))
+            MidBossArenaConfig midBossArenaConfig = config.GetMidBossArenaConfig();
+            if (midBossArenaConfig == null || !midBossArenaConfig.enabled)
             {
                 return false;
             }
 
-            Vector2Int center = config.midBossArena.useCustomCenter
-                ? config.midBossArena.centerGrid
+            if (midBossArenaConfig.onlyEnableOnLargeMaps
+                && (mapWidth < midBossArenaConfig.minimumMapWidth || mapHeight < midBossArenaConfig.minimumMapHeight))
+            {
+                return false;
+            }
+
+            Vector2Int center = midBossArenaConfig.useCustomCenter
+                ? midBossArenaConfig.centerGrid
                 : new Vector2Int(mapWidth / 2, mapHeight / 2);
 
-            int halfWidth = Mathf.Max(4, config.midBossArena.arenaSize.x / 2);
-            int halfHeight = Mathf.Max(4, config.midBossArena.arenaSize.y / 2);
+            int halfWidth = Mathf.Max(4, midBossArenaConfig.arenaSize.x / 2);
+            int halfHeight = Mathf.Max(4, midBossArenaConfig.arenaSize.y / 2);
 
             return gridX >= center.x - halfWidth
                 && gridX <= center.x + halfWidth

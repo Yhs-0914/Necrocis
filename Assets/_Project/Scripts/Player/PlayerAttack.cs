@@ -19,6 +19,7 @@ namespace Necrocis
         [SerializeField] private float projectileSpawnOffset = 0.65f;
         [SerializeField] private float projectileSpawnHeight = 1f;
         [SerializeField] private float projectileSpawnExtraHeight = 2f;
+        [SerializeField] private float projectileRange = 8f;
         [SerializeField] private LayerMask rangedTargetMask = ~0;
 
         [Header("Shared")]
@@ -53,7 +54,9 @@ namespace Necrocis
                 return;
             }
 
-            bool canAttack = Time.time >= lastAttackTime + attackCooldown; // 원거리 공격 쿨다운 체크
+            PlayerStats stats = PlayerStats.Instance;
+            float effectiveAttackCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(attackCooldown, stats);
+            bool canAttack = Time.time >= lastAttackTime + effectiveAttackCooldown; // 원거리 공격 쿨다운 체크
 
             if (input.DebugLevelUpAction.WasPressedThisFrame())
             {
@@ -63,6 +66,12 @@ namespace Necrocis
 
             if (input.MeleeAttackAction.WasPressedThisFrame())
             {
+                if (!canAttack)
+                {
+                    return;
+                }
+
+                lastAttackTime = Time.time;
                 MeleeAttack();
                 return;
             }
@@ -97,10 +106,14 @@ namespace Necrocis
         // 근거리 공격: 방향 앞에 OverlapBox를 생성하여 범위 내 적에게 데미지
         private void MeleeAttack()
         {
+            PlayerStats stats = PlayerStats.Instance;
             Vector3 direction = GetAttackDirection();
-            Vector3 boxCenter = transform.position + direction * meleeAttackOffset; // 판정 중심점
+            float effectiveAttackOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset, stats);
+            Vector3 boxCenter = transform.position + direction * effectiveAttackOffset; // 판정 중심점
             // Y를 높여서 높이 차이와 관계없이 적을 감지
-            Vector3 tallBoxSize = new Vector3(meleeAttackBoxSize.x, 20f, meleeAttackBoxSize.z);
+            float effectiveWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x, stats);
+            float effectiveDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z, stats);
+            Vector3 tallBoxSize = new Vector3(effectiveWidth, 20f, effectiveDepth);
             Quaternion rotation = Quaternion.LookRotation(direction);
 
             Collider[] hitColliders = Physics.OverlapBox(
@@ -121,9 +134,7 @@ namespace Necrocis
                     continue;
                 }
 
-                float damage = PlayerStats.Instance != null
-                    ? PlayerStats.Instance.GetAttack()
-                    : meleeAttackDamage;
+                float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage);
 
                 enemy.TakeDamage(damage);
                 Debug.Log($"[PlayerAttack] Melee hit {hitCollider.gameObject.name} for {damage}");
@@ -162,11 +173,11 @@ namespace Necrocis
                 return;
             }
 
-            float damage = PlayerStats.Instance != null
-                ? PlayerStats.Instance.GetAttack()
-                : 10f;
+            PlayerStats stats = PlayerStats.Instance;
+            float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, 10f);
+            float effectiveProjectileRange = PlayerCombatCalculator.GetBasicAttackRange(projectileRange, stats);
 
-            proj.Launch(direction, damage, rangedTargetMask);
+            proj.Launch(direction, damage, rangedTargetMask, effectiveProjectileRange);
             Debug.Log($"[PlayerAttack] Bullet fired toward {direction}");
         }
 

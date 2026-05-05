@@ -10,6 +10,9 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class MidBossArenaController : MonoBehaviour
     {
+        private const float DefaultMidBossMinimumMaxHealth = 250f;
+        private const float IntestineMidBossMinimumMaxHealth = 500f;
+
         private static Sprite fogSprite;
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
 
@@ -158,8 +161,53 @@ namespace Necrocis
             activeBoss.SetIgnoreMidBossArenaRestriction(true);
             activeBoss.Defeated -= HandleBossDefeated;
             activeBoss.Defeated += HandleBossDefeated;
+            ConfigureBiomeSpecificBossPattern(activeBoss, bossSpawnPosition);
 
             Debug.Log($"[MidBossArena] 중간보스 스폰: {bossRule.name} @ {bossSpawnPosition}");
+        }
+
+        private void ConfigureBiomeSpecificBossPattern(EnemyController boss, Vector3 bossSpawnPosition)
+        {
+            if (boss == null || biome == null)
+            {
+                return;
+            }
+
+            IntestineBossPattern intestinePattern = boss.GetComponent<IntestineBossPattern>();
+            MidBossPatternType patternType = ResolveBossPatternType();
+            if (patternType == MidBossPatternType.Intestine)
+            {
+                if (intestinePattern == null)
+                {
+                    intestinePattern = boss.gameObject.AddComponent<IntestineBossPattern>();
+                }
+
+                intestinePattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.intestinePattern);
+                return;
+            }
+
+            if (intestinePattern != null)
+            {
+                intestinePattern.enabled = false;
+            }
+
+            boss.SetAiSuppressed(false);
+        }
+
+        private MidBossPatternType ResolveBossPatternType()
+        {
+            MidBossPatternType configuredType = arenaConfig != null && arenaConfig.boss != null
+                ? arenaConfig.boss.patternType
+                : MidBossPatternType.Auto;
+
+            if (configuredType != MidBossPatternType.Auto)
+            {
+                return configuredType;
+            }
+
+            return biome != null && biome.BiomeType == BiomeType.Intestine
+                ? MidBossPatternType.Intestine
+                : MidBossPatternType.None;
         }
 
         private void UnlockArena()
@@ -347,9 +395,15 @@ namespace Necrocis
             }
 
             MidBossDefinition bossDefinition = arenaConfig.boss;
-            if (bossDefinition != null && bossDefinition.bossRule != null)
+            if (bossDefinition != null && bossDefinition.useCustomBossRule && bossDefinition.bossRule != null)
             {
-                return BuildBossRule(bossDefinition.bossRule, bossDefinition);
+                EnemySpawnRuleConfig customBossRule = BuildBossRule(bossDefinition.bossRule, bossDefinition);
+                if (HasRenderableSprite(customBossRule))
+                {
+                    return customBossRule;
+                }
+
+                Debug.LogWarning("[MidBossArena] 커스텀 보스 룰에 스프라이트가 없어 적 fallback 룰을 사용합니다.");
             }
 
             if (bossDefinition != null
@@ -454,10 +508,45 @@ namespace Necrocis
                 boss.maxHealth *= Mathf.Max(0.01f, bossDefinition.maxHealthMultiplier);
                 boss.attackDamage *= Mathf.Max(0.01f, bossDefinition.attackDamageMultiplier);
                 boss.moveSpeed *= Mathf.Max(0.01f, bossDefinition.moveSpeedMultiplier);
-                boss.scale = Vector3.Scale(boss.scale, bossDefinition.scaleMultiplier);
             }
 
+            if (bossDefinition != null)
+            {
+                boss.scale = Vector3.Scale(boss.scale, GetSafeScaleMultiplier(bossDefinition.scaleMultiplier));
+            }
+
+            boss.maxHealth = Mathf.Max(boss.maxHealth, GetMinimumBossMaxHealth(bossDefinition));
+
             return boss;
+        }
+
+        private static Vector3 GetSafeScaleMultiplier(Vector3 scaleMultiplier)
+        {
+            return new Vector3(
+                Mathf.Approximately(scaleMultiplier.x, 0f) ? 1f : Mathf.Max(0.01f, scaleMultiplier.x),
+                Mathf.Approximately(scaleMultiplier.y, 0f) ? 1f : Mathf.Max(0.01f, scaleMultiplier.y),
+                Mathf.Approximately(scaleMultiplier.z, 0f) ? 1f : Mathf.Max(0.01f, scaleMultiplier.z));
+        }
+
+        private static bool HasRenderableSprite(EnemySpawnRuleConfig rule)
+        {
+            return rule != null
+                && ((rule.idleSprites != null && rule.idleSprites.Length > 0)
+                    || (rule.moveSprites != null && rule.moveSprites.Length > 0)
+                    || (rule.attackSprites != null && rule.attackSprites.Length > 0)
+                    || (rule.deathSprites != null && rule.deathSprites.Length > 0));
+        }
+
+        private float GetMinimumBossMaxHealth(MidBossDefinition bossDefinition)
+        {
+            if (bossDefinition != null && bossDefinition.minimumMaxHealth > 0f)
+            {
+                return bossDefinition.minimumMaxHealth;
+            }
+
+            return biome != null && biome.BiomeType == BiomeType.Intestine
+                ? IntestineMidBossMinimumMaxHealth
+                : DefaultMidBossMinimumMaxHealth;
         }
 
         private void ApplyFogVisualState()
