@@ -67,9 +67,30 @@ namespace Necrocis
         [SerializeField] private Sprite[] archerWalkLeftSprites;
         [SerializeField] private Sprite[] archerWalkRightSprites;
 
+        [Header("근접공격 스프라이트 (8방향)")]
+        [SerializeField] private Sprite meleeDown;
+        [SerializeField] private Sprite meleeUp;
+        [SerializeField] private Sprite meleeLeft;
+        [SerializeField] private Sprite meleeRight;
+        [SerializeField] private Sprite meleeDownLeft;
+        [SerializeField] private Sprite meleeDownRight;
+        [SerializeField] private Sprite meleeUpLeft;
+        [SerializeField] private Sprite meleeUpRight;
+
+        [Header("원거리공격 스프라이트 (8방향)")]
+        [SerializeField] private Sprite rangedDown;
+        [SerializeField] private Sprite rangedUp;
+        [SerializeField] private Sprite rangedLeft;
+        [SerializeField] private Sprite rangedRight;
+        [SerializeField] private Sprite rangedDownLeft;
+        [SerializeField] private Sprite rangedDownRight;
+        [SerializeField] private Sprite rangedUpLeft;
+        [SerializeField] private Sprite rangedUpRight;
+
         [Header("Animation Settings")]
         [SerializeField] private float idleFrameRate = 4f;
         [SerializeField] private float walkFrameRate = 8f;
+        [SerializeField] private float attackAnimDuration = 0.2f;
 
         [Header("Position Lock")]
         [SerializeField] private bool lockYPosition = false;
@@ -81,7 +102,11 @@ namespace Necrocis
         public enum Direction { Down, Up, Left, Right }
         private Direction currentDirection = Direction.Up;      // ?꾩옱 諛붾씪蹂대뒗 諛⑺뼢
         private Vector3 lastMoveDirection = Vector3.forward;
-        private bool isMoving = false;                       // ?대룞 以??щ?
+        private bool isMoving = false;
+
+        // 공격 애니메이션 상태
+        private bool isPlayingAttackAnim = false;
+        private float attackAnimEndTime = 0f;                       // ?대룞 以??щ?
 
         // ?ㅽ봽?쇱씠???좊땲硫붿씠???곹깭
         private Sprite[] currentAnimation;   // ?꾩옱 ?ъ깮 以묒씤 ?ㅽ봽?쇱씠??諛곗뿴
@@ -327,6 +352,14 @@ namespace Necrocis
         /// </summary>
         private void UpdateAnimation()
         {
+            if (isPlayingAttackAnim)
+            {
+                if (Time.time >= attackAnimEndTime)
+                    isPlayingAttackAnim = false;
+                else
+                    return;
+            }
+
             if (currentAnimation == null || currentAnimation.Length == 0) return;
 
             frameTimer += Time.deltaTime;
@@ -617,6 +650,58 @@ namespace Necrocis
             return playerStats.RemoveModifiersFromSource(source);
         }
         // FaceDirection: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
+
+                public void PlayAttackAnimation(bool isMelee)
+        {
+            Sprite sprite = isMelee ? GetMeleeSprite() : GetRangedSprite();
+            if (sprite == null || spriteRenderer == null) return;
+
+            spriteRenderer.sprite = sprite;
+            isPlayingAttackAnim = true;
+            attackAnimEndTime = Time.time + attackAnimDuration;
+        }
+
+        private Sprite GetMeleeSprite()
+        {
+            float x = lastMoveDirection.x;
+            float z = lastMoveDirection.z;
+            float absX = Mathf.Abs(x);
+            float absZ = Mathf.Abs(z);
+            bool diagX = absX > 0.3f;
+            bool diagZ = absZ > 0.3f;
+
+            if (diagX && diagZ)
+            {
+                if (x < 0 && z > 0) return meleeUpLeft;
+                if (x > 0 && z > 0) return meleeUpRight;
+                if (x < 0 && z < 0) return meleeDownLeft;
+                return meleeDownRight;
+            }
+            if (absZ >= absX)
+                return z > 0 ? meleeUp : meleeDown;
+            return x > 0 ? meleeRight : meleeLeft;
+        }
+
+        private Sprite GetRangedSprite()
+        {
+            float x = lastMoveDirection.x;
+            float z = lastMoveDirection.z;
+            float absX = Mathf.Abs(x);
+            float absZ = Mathf.Abs(z);
+            bool diagX = absX > 0.3f;
+            bool diagZ = absZ > 0.3f;
+
+            if (diagX && diagZ)
+            {
+                if (x < 0 && z > 0) return rangedUpLeft;
+                if (x > 0 && z > 0) return rangedUpRight;
+                if (x < 0 && z < 0) return rangedDownLeft;
+                return rangedDownRight;
+            }
+            if (absZ >= absX)
+                return z > 0 ? rangedUp : rangedDown;
+            return x > 0 ? rangedRight : rangedLeft;
+        }
 
         public void FaceDirection(Direction direction)
         {

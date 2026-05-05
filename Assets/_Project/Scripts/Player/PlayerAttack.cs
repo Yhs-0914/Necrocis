@@ -97,6 +97,7 @@ namespace Necrocis
         // 근거리 공격: 방향 앞에 OverlapBox를 생성하여 범위 내 적에게 데미지
         private void MeleeAttack()
         {
+            playerController?.PlayAttackAnimation(true);
             Vector3 direction = GetAttackDirection();
             Vector3 boxCenter = transform.position + direction * meleeAttackOffset; // 판정 중심점
             // Y를 높여서 높이 차이와 관계없이 적을 감지
@@ -133,6 +134,7 @@ namespace Necrocis
         // 원거리 공격: 오브젝트 풀에서 투사체를 가져와 발사
         private void RangedAttack()
         {
+            playerController?.PlayAttackAnimation(false);
             ObjectPooler pooler = ResolveObjectPooler();
             if (pooler == null)
             {
