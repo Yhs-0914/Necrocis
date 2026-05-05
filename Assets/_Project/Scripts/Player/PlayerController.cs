@@ -68,29 +68,30 @@ namespace Necrocis
         [SerializeField] private Sprite[] archerWalkRightSprites;
 
         [Header("근접공격 스프라이트 (8방향)")]
-        [SerializeField] private Sprite meleeDown;
-        [SerializeField] private Sprite meleeUp;
-        [SerializeField] private Sprite meleeLeft;
-        [SerializeField] private Sprite meleeRight;
-        [SerializeField] private Sprite meleeDownLeft;
-        [SerializeField] private Sprite meleeDownRight;
-        [SerializeField] private Sprite meleeUpLeft;
-        [SerializeField] private Sprite meleeUpRight;
+        [SerializeField] private Sprite[] meleeDown;
+        [SerializeField] private Sprite[] meleeUp;
+        [SerializeField] private Sprite[] meleeLeft;
+        [SerializeField] private Sprite[] meleeRight;
+        [SerializeField] private Sprite[] meleeDownLeft;
+        [SerializeField] private Sprite[] meleeDownRight;
+        [SerializeField] private Sprite[] meleeUpLeft;
+        [SerializeField] private Sprite[] meleeUpRight;
 
         [Header("원거리공격 스프라이트 (8방향)")]
-        [SerializeField] private Sprite rangedDown;
-        [SerializeField] private Sprite rangedUp;
-        [SerializeField] private Sprite rangedLeft;
-        [SerializeField] private Sprite rangedRight;
-        [SerializeField] private Sprite rangedDownLeft;
-        [SerializeField] private Sprite rangedDownRight;
-        [SerializeField] private Sprite rangedUpLeft;
-        [SerializeField] private Sprite rangedUpRight;
+        [SerializeField] private Sprite[] rangedDown;
+        [SerializeField] private Sprite[] rangedUp;
+        [SerializeField] private Sprite[] rangedLeft;
+        [SerializeField] private Sprite[] rangedRight;
+        [SerializeField] private Sprite[] rangedDownLeft;
+        [SerializeField] private Sprite[] rangedDownRight;
+        [SerializeField] private Sprite[] rangedUpLeft;
+        [SerializeField] private Sprite[] rangedUpRight;
 
         [Header("Animation Settings")]
         [SerializeField] private float idleFrameRate = 4f;
         [SerializeField] private float walkFrameRate = 8f;
-        [SerializeField] private float attackAnimDuration = 0.2f;
+        [SerializeField] private float attackAnimDuration = 0.3f;
+        [SerializeField] private float attackFrameRate = 12f;
 
         [Header("Position Lock")]
         [SerializeField] private bool lockYPosition = false;
@@ -290,6 +291,7 @@ namespace Necrocis
         /// </summary>
         private void UpdateAnimationState()
         {
+            if (isPlayingAttackAnim) return;
             Sprite[] newAnimation;
             float newFrameRate;
 
@@ -352,12 +354,11 @@ namespace Necrocis
         /// </summary>
         private void UpdateAnimation()
         {
-            if (isPlayingAttackAnim)
+            if (isPlayingAttackAnim && Time.time >= attackAnimEndTime)
             {
-                if (Time.time >= attackAnimEndTime)
-                    isPlayingAttackAnim = false;
-                else
-                    return;
+                isPlayingAttackAnim = false;
+                UpdateAnimationState();
+                return;
             }
 
             if (currentAnimation == null || currentAnimation.Length == 0) return;
@@ -653,15 +654,15 @@ namespace Necrocis
 
                 public void PlayAttackAnimation(bool isMelee)
         {
-            Sprite sprite = isMelee ? GetMeleeSprite() : GetRangedSprite();
-            if (sprite == null || spriteRenderer == null) return;
+            Sprite[] sprites = isMelee ? GetMeleeSprites() : GetRangedSprites();
+            if (sprites == null || sprites.Length == 0) return;
 
-            spriteRenderer.sprite = sprite;
+            SetAnimation(sprites, attackFrameRate);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + attackAnimDuration;
         }
 
-        private Sprite GetMeleeSprite()
+        private Sprite[] GetMeleeSprites()
         {
             float x = lastMoveDirection.x;
             float z = lastMoveDirection.z;
@@ -682,7 +683,7 @@ namespace Necrocis
             return x > 0 ? meleeRight : meleeLeft;
         }
 
-        private Sprite GetRangedSprite()
+        private Sprite[] GetRangedSprites()
         {
             float x = lastMoveDirection.x;
             float z = lastMoveDirection.z;
