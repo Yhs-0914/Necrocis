@@ -8,14 +8,23 @@ namespace Necrocis
     public class ReturnPortal : MonoBehaviour
     {
         [Header("설정")]
-        [SerializeField] private bool isActive = true;
+        [SerializeField] private bool isActive = false;  // 보스 처치 후에만 활성화
         [SerializeField] private float activationDelay = 1f;  // 씬 로드 후 활성화 딜레이
 
         private float spawnTime;
+        private SpriteRenderer spriteRenderer;
 
         private void Start()
         {
             spawnTime = Time.time;
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            ApplyVisual();
+        }
+
+        private void ApplyVisual()
+        {
+            if (spriteRenderer != null)
+                spriteRenderer.enabled = isActive;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -71,6 +80,7 @@ namespace Necrocis
         public void SetActive(bool active)
         {
             isActive = active;
+            ApplyVisual();
         }
     }
 }

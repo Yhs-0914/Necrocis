@@ -30,6 +30,10 @@ namespace Necrocis
         private void Awake()
         {
             playerController = GetComponent<PlayerController>();
+            if (playerController == null)
+                playerController = GetComponentInParent<PlayerController>();
+            if (playerController == null)
+                Debug.LogError("[PlayerAttack] PlayerController를 찾지 못했습니다. 공격 애니메이션이 작동하지 않습니다.");
             if (rangedTargetMask.value == 0)
             {
                 rangedTargetMask = ~0;
@@ -116,18 +120,32 @@ namespace Necrocis
             // 히트된 콜라이더에서 EnemyController를 찾아 데미지 적용
             foreach (Collider hitCollider in hitColliders)
             {
-                EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
                 float damage = PlayerStats.Instance != null
                     ? PlayerStats.Instance.GetAttack()
                     : meleeAttackDamage;
 
-                enemy.TakeDamage(damage);
-                Debug.Log($"[PlayerAttack] Melee hit {hitCollider.gameObject.name} for {damage}");
+                EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
+                if (enemy != null && !enemy.IsDead)
+                {
+                    enemy.TakeDamage(damage);
+                    Debug.Log($"[PlayerAttack] Melee hit {hitCollider.gameObject.name} for {damage}");
+                    continue;
+                }
+
+                BossParasite parasite = hitCollider.GetComponentInParent<BossParasite>();
+                if (parasite != null && !parasite.IsDead)
+                {
+                    parasite.TakeDamage(damage);
+                    Debug.Log($"[PlayerAttack] Melee hit parasite for {damage}");
+                    continue;
+                }
+
+                IntestineMidBossController intestineBoss = hitCollider.GetComponentInParent<IntestineMidBossController>();
+                if (intestineBoss != null && !intestineBoss.IsDead)
+                {
+                    intestineBoss.TakeDamage(damage);
+                    Debug.Log($"[PlayerAttack] Melee hit intestine boss for {damage}");
+                }
             }
         }
 

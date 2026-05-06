@@ -96,6 +96,9 @@ namespace Necrocis
             // 재단 생성
             SetupAltar();
 
+            // 클리어한 바이옴 포털 비활성화
+            RefreshPortalStates();
+
             AdjustPlayerHeight();
 
             isGenerated = true;
@@ -168,6 +171,20 @@ namespace Necrocis
             BoxCollider col = wall.AddComponent<BoxCollider>();
             col.size = size;
             col.isTrigger = false;  // 실제 충돌
+        }
+
+        /// <summary>
+        /// 클리어된 바이옴의 포털을 비활성화
+        /// </summary>
+        private void RefreshPortalStates()
+        {
+            BiomeType[] biomes = { BiomeType.Intestine, BiomeType.Liver, BiomeType.Stomach, BiomeType.Lung };
+            for (int i = 0; i < 4; i++)
+            {
+                if (portals[i] == null) continue;
+                bool cleared = GameManager.Instance != null && GameManager.Instance.HasRelic(biomes[i]);
+                portals[i].SetActive(!cleared);
+            }
         }
 
         /// <summary>

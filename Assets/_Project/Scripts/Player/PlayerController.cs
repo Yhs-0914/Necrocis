@@ -652,14 +652,20 @@ namespace Necrocis
         }
         // FaceDirection: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
-                public void PlayAttackAnimation(bool isMelee)
+        public void PlayAttackAnimation(bool isMelee)
         {
             Sprite[] sprites = isMelee ? GetMeleeSprites() : GetRangedSprites();
-            if (sprites == null || sprites.Length == 0) return;
+            if (sprites == null || sprites.Length == 0)
+            {
+                Debug.LogWarning($"[PlayerController] 공격 스프라이트 미할당 - isMelee:{isMelee} dir:{lastMoveDirection}");
+                return;
+            }
 
-            SetAnimation(sprites, attackFrameRate);
+            float duration = Mathf.Max(0.3f, attackAnimDuration);
+            SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
             isPlayingAttackAnim = true;
-            attackAnimEndTime = Time.time + attackAnimDuration;
+            attackAnimEndTime = Time.time + duration;
+            Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
         }
 
         private Sprite[] GetMeleeSprites()

@@ -90,20 +90,37 @@ namespace Necrocis
                 return;
             }
 
-            EnemyController enemy = other.GetComponent<EnemyController>();
-            if (enemy == null)
-            {
-                enemy = other.GetComponentInParent<EnemyController>();
-            }
+            EnemyController enemy = other.GetComponent<EnemyController>()
+                ?? other.GetComponentInParent<EnemyController>();
 
-            if (enemy == null || enemy.IsDead)
+            if (enemy != null && !enemy.IsDead)
             {
+                hasImpacted = true;
+                enemy.TakeDamage(damage);
+                gameObject.SetActive(false);
                 return;
             }
 
-            hasImpacted = true;
-            enemy.TakeDamage(damage);
-            gameObject.SetActive(false);
+            BossParasite parasite = other.GetComponent<BossParasite>()
+                ?? other.GetComponentInParent<BossParasite>();
+
+            if (parasite != null && !parasite.IsDead)
+            {
+                hasImpacted = true;
+                parasite.TakeDamage(damage);
+                gameObject.SetActive(false);
+                return;
+            }
+
+            IntestineMidBossController intestineBoss = other.GetComponent<IntestineMidBossController>()
+                ?? other.GetComponentInParent<IntestineMidBossController>();
+
+            if (intestineBoss != null && !intestineBoss.IsDead)
+            {
+                hasImpacted = true;
+                intestineBoss.TakeDamage(damage);
+                gameObject.SetActive(false);
+            }
         }
 
         private void TryDetectHitByOverlap()
