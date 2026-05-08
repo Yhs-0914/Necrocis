@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using Necrocis;
+using UnityEngine.SceneManagement;
 
 [DisallowMultipleComponent]
 public class ClassChoice : MonoBehaviour
@@ -37,10 +38,7 @@ public class ClassChoice : MonoBehaviour
 
     private void Awake()
     {
-        EnsurePlayerOwnedCanvasHierarchy();
-        EnsureEventSystem();
-        ResolveReferences();
-        BindButtons();
+        RefreshUIContext();
         HideUI(forceRestoreTimeScale: false);
     }
 
@@ -49,6 +47,7 @@ public class ClassChoice : MonoBehaviour
         LevelUpManager.OnJobSelect += HandleJobSelectionRequested;
         LevelUpManager.OnLevelUp += HandleLevelChanged;
         LevelUpManager.OnJobChanged += HandleJobChanged;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
     }
 
     private void OnDisable()
@@ -56,21 +55,24 @@ public class ClassChoice : MonoBehaviour
         LevelUpManager.OnJobSelect -= HandleJobSelectionRequested;
         LevelUpManager.OnLevelUp -= HandleLevelChanged;
         LevelUpManager.OnJobChanged -= HandleJobChanged;
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
         HideUI();
     }
 
     private void Start()
     {
-        EnsurePlayerOwnedCanvasHierarchy();
-        EnsureEventSystem();
-        ResolveReferences();
-        BindButtons();
+        RefreshUIContext();
         EvaluateVisibility();
     }
 
     public void ChooseWarrior() => SelectJob(JobType.Warrior);
     public void ChooseArcher() => SelectJob(JobType.Archer);
     public void ChooseMage() => SelectJob(JobType.Mage);
+
+    private void HandleSceneLoaded(Scene _, LoadSceneMode __)
+    {
+        RefreshUIContext();
+    }
 
     private void HandleLevelChanged()
     {
@@ -124,10 +126,7 @@ public class ClassChoice : MonoBehaviour
 
     private void ShowUI()
     {
-        EnsurePlayerOwnedCanvasHierarchy();
-        EnsureEventSystem();
-        ResolveReferences();
-        BindButtons();
+        RefreshUIContext();
 
         if (classChoiceUI == null)
         {
@@ -236,6 +235,14 @@ public class ClassChoice : MonoBehaviour
 
         button.onClick.RemoveListener(action);
         button.onClick.AddListener(action);
+    }
+
+    private void RefreshUIContext()
+    {
+        EnsureEventSystem();
+        EnsurePlayerOwnedCanvasHierarchy();
+        ResolveReferences();
+        BindButtons();
     }
 
     private Button FindButtonByKeyword(string keyword)
@@ -458,14 +465,28 @@ public class ClassChoice : MonoBehaviour
 
     private static void EnsureEventSystem()
     {
-        if (Object.FindFirstObjectByType<EventSystem>() != null)
+        EventSystem eventSystem = Object.FindFirstObjectByType<EventSystem>();
+        if (eventSystem == null)
         {
-            return;
+            GameObject esObj = new GameObject("EventSystem");
+            eventSystem = esObj.AddComponent<EventSystem>();
         }
 
-        GameObject esObj = new GameObject("EventSystem");
-        esObj.AddComponent<EventSystem>();
-        esObj.AddComponent<InputSystemUIInputModule>();
+        InputSystemUIInputModule inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+        if (inputModule == null)
+        {
+            inputModule = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+        }
+
+        if (!eventSystem.enabled)
+        {
+            eventSystem.enabled = true;
+        }
+
+        if (!inputModule.enabled)
+        {
+            inputModule.enabled = true;
+        }
     }
 
     private static PlayerController ResolvePlayerController()

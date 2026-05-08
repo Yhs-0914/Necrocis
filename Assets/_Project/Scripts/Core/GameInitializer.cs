@@ -145,6 +145,12 @@ namespace Necrocis
             if (playerObj.GetComponent<ExpBarUI>() == null)
                 playerObj.AddComponent<ExpBarUI>();
 
+            if (playerObj.GetComponent<PlayerHeartUI>() == null)
+                playerObj.AddComponent<PlayerHeartUI>();
+
+            if (playerObj.GetComponent<global::StackChoice>() == null)
+                playerObj.AddComponent<global::StackChoice>();
+
             if (playerObj.GetComponent<LevelUpUI>() == null)
                 playerObj.AddComponent<LevelUpUI>();
 
