@@ -37,7 +37,7 @@ namespace Necrocis
         private bool initialized;             // 기본 스탯 초기화 완료 여부
 
         // 기본 스탯
-        private const float BASE_MAX_HEALTH = 150f;
+        private const float BASE_MAX_HEALTH = 10f;
         private const float BASE_MOVE_SPEED = 5f;
         private const float BASE_ATTACK_POWER = 30f;
         private const float BASE_DEFENSE = 5f;

@@ -12,6 +12,7 @@ namespace Necrocis
     {
         private const string PoolRootName = "__EnemyPool";
         private const float SpatialHashCellSize = 2f;
+        private const float NormalizedEnemyAttackDamage = 1f;
 
         private static readonly List<EnemyController> ActiveEnemies = new List<EnemyController>();              // 현재 활성 적 목록 (분리 벡터 계산용)
         private static readonly Dictionary<int, Stack<EnemyController>> PooledEnemies = new Dictionary<int, Stack<EnemyController>>(); // 타입별 오브젝트 풀
@@ -486,7 +487,7 @@ namespace Necrocis
         {
             if (PlayerController.Instance == null) return;
 
-            float damage = stats != null ? stats.AttackPower : config.attackDamage;
+            float damage = NormalizedEnemyAttackDamage;
 
             if (config.isRanged)
             {
@@ -554,7 +555,7 @@ namespace Necrocis
         public void GrantExp()
         {
             if (config == null) return;
-            LevelUpManager.AddExp(config.expReward);
+            LevelUpManager.AddEnemyKillExp();
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !config.isElite)
@@ -1375,7 +1376,7 @@ namespace Necrocis
             {
                 new CharacterStatValue(CharacterStatType.MoveSpeed, config.moveSpeed),
                 new CharacterStatValue(CharacterStatType.MaxHealth, config.maxHealth),
-                new CharacterStatValue(CharacterStatType.AttackPower, config.attackDamage)
+                new CharacterStatValue(CharacterStatType.AttackPower, NormalizedEnemyAttackDamage)
             };
 
             for (int i = 0; i < additionalStats.Count; i++)

@@ -31,7 +31,7 @@ namespace Necrocis
         [Header("Base Stats")]
         [FormerlySerializedAs("moveSpeed")]
         [SerializeField] private float baseMoveSpeed = 5f;
-        [SerializeField] private float baseMaxHealth = 150f;
+        [SerializeField] private float baseMaxHealth = 10f;
         [SerializeField] private float baseAttackPower = 10f;
 
         [Header("Sprite Renderer")]
