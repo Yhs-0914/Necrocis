@@ -21,13 +21,22 @@ MonoBehaviour:
     centerGrid: {x: 150, y: 150}
     arenaSize: {x: 26, y: 26}
     wallThicknessInCells: 1
+    lockBoundaryInsetInCells: 1
+    triggerInsetInCells: 2
     wallHeight: 4
     wallHeightOffset: 1.5
     groundFogOffset: 0.15
     triggerHeight: 4
     sortingOrder: 3500
-    unlockedFogColor: {r: 0.75, g: 0.82, b: 0.88, a: 0.18}
-    lockedFogColor: {r: 0.82, g: 0.9, b: 0.95, a: 0.48}
+    fogSprite: {fileID: 21300000, guid: c10f2071bfff404491e4b780e2c614dd, type: 3}
+    unlockedFogColor: {r: 1, g: 1, b: 1, a: 0.85}
+    lockedFogColor: {r: 1, g: 1, b: 1, a: 0.35}
+    useInteriorFogCover: 1
+    interiorFogColor: {r: 1, g: 1, b: 1, a: 1}
+    interiorFogHiddenAlpha: 1
+    interiorFogRevealedAlpha: 0
+    fogRevealDuration: 1.4
+    interiorFogSortingOrderOffset: 3000
     boss:
       displayName: IntestineBoss
       useCustomBossRule: 0

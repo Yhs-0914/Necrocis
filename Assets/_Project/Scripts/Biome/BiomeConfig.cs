@@ -308,6 +308,10 @@ namespace Necrocis
         public Vector2Int centerGrid = new Vector2Int(150, 150);
         public Vector2Int arenaSize = new Vector2Int(26, 26);
         public int wallThicknessInCells = 1;
+        [Tooltip("안개 벽보다 안쪽으로 봉쇄 경계를 들여놓을 칸 수")]
+        public int lockBoundaryInsetInCells = 1;
+        [Tooltip("안개 벽 안쪽 모서리에서 추가로 진입 트리거를 들여놓을 칸 수")]
+        public int triggerInsetInCells = 2;
 
         [Header("Visual")]
         public float wallHeight = 4f;
@@ -315,8 +319,17 @@ namespace Necrocis
         public float groundFogOffset = 0.15f;
         public float triggerHeight = 4f;
         public int sortingOrder = 3500;
-        public Color unlockedFogColor = new Color(0.75f, 0.82f, 0.88f, 0.18f);
-        public Color lockedFogColor = new Color(0.82f, 0.9f, 0.95f, 0.48f);
+        public Sprite fogSprite;
+        public Color unlockedFogColor = new Color(1f, 1f, 1f, 0.85f);
+        public Color lockedFogColor = new Color(1f, 1f, 1f, 0.35f);
+
+        [Header("Fog Reveal")]
+        public bool useInteriorFogCover = true;
+        public Color interiorFogColor = Color.white;
+        [Range(0f, 1f)] public float interiorFogHiddenAlpha = 1f;
+        [Range(0f, 1f)] public float interiorFogRevealedAlpha = 0f;
+        public float fogRevealDuration = 1.4f;
+        public int interiorFogSortingOrderOffset = 3000;
 
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();

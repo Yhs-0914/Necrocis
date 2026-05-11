@@ -18,6 +18,7 @@ namespace Necrocis
 
         private readonly List<SpriteRenderer> fogRenderers = new List<SpriteRenderer>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
+        private SpriteRenderer interiorFogRenderer;
 
         private BiomeManager biome;
         private MidBossArenaConfig arenaConfig;
@@ -27,6 +28,7 @@ namespace Necrocis
         private Vector2Int arenaSize;
         private bool arenaLocked;
         private bool bossDefeated;
+        private float fogRevealAmount;
 
         public bool IsLocked => arenaLocked;
 
@@ -66,7 +68,7 @@ namespace Necrocis
 
         private void Update()
         {
-            AnimateFog();
+            UpdateFogReveal(Time.deltaTime);
 
             if (!arenaLocked || bossDefeated)
             {
@@ -249,9 +251,9 @@ namespace Necrocis
                 trigger = gameObject.AddComponent<BoxCollider>();
             }
 
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            float innerWidth = Mathf.Max(biome.TileSize, (arenaSize.x - thickness * 2) * biome.TileSize);
-            float innerDepth = Mathf.Max(biome.TileSize, (arenaSize.y - thickness * 2) * biome.TileSize);
+            int triggerInset = GetTriggerInsetCells();
+            float innerWidth = Mathf.Max(biome.TileSize, (arenaSize.x - triggerInset * 2) * biome.TileSize);
+            float innerDepth = Mathf.Max(biome.TileSize, (arenaSize.y - triggerInset * 2) * biome.TileSize);
 
             trigger.isTrigger = true;
             trigger.size = new Vector3(innerWidth, arenaConfig.triggerHeight, innerDepth);
@@ -261,6 +263,7 @@ namespace Necrocis
         private void BuildFogWalls()
         {
             fogRenderers.Clear();
+            interiorFogRenderer = null;
 
             Vector3 worldCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
             float widthWorld = arenaSize.x * biome.TileSize;
@@ -270,6 +273,11 @@ namespace Necrocis
             float halfDepth = depthWorld * 0.5f;
             float wallOffsetX = halfWidth - thicknessWorld * 0.5f;
             float wallOffsetZ = halfDepth - thicknessWorld * 0.5f;
+
+            if (arenaConfig.useInteriorFogCover)
+            {
+                CreateInteriorFogCover(worldCenter, new Vector2(widthWorld, depthWorld));
+            }
 
             CreateFogWall(
                 "NorthFogWall",
@@ -299,13 +307,46 @@ namespace Necrocis
             position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset;
             wall.transform.position = position;
             wall.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            wall.transform.localScale = new Vector3(size.x, size.y, 1f);
 
             SpriteRenderer renderer = wall.AddComponent<SpriteRenderer>();
             renderer.sprite = GetFogSprite();
+            ApplyFogWorldSize(wall.transform, renderer.sprite, size);
             renderer.sortingOrder = arenaConfig.sortingOrder;
             renderer.color = arenaLocked ? arenaConfig.lockedFogColor : arenaConfig.unlockedFogColor;
             fogRenderers.Add(renderer);
+        }
+
+        private void CreateInteriorFogCover(Vector3 position, Vector2 size)
+        {
+            GameObject cover = new GameObject("InteriorFogCover");
+            cover.transform.SetParent(transform, false);
+            position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset + 0.02f;
+            cover.transform.position = position;
+            cover.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            interiorFogRenderer = cover.AddComponent<SpriteRenderer>();
+            interiorFogRenderer.sprite = GetFogSprite();
+            ApplyFogWorldSize(cover.transform, interiorFogRenderer.sprite, size);
+            interiorFogRenderer.sortingOrder = arenaConfig.sortingOrder + arenaConfig.interiorFogSortingOrderOffset;
+        }
+
+        private static void ApplyFogWorldSize(Transform target, Sprite sprite, Vector2 worldSize)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (sprite == null)
+            {
+                target.localScale = new Vector3(worldSize.x, worldSize.y, 1f);
+                return;
+            }
+
+            Vector3 spriteSize = sprite.bounds.size;
+            float scaleX = spriteSize.x > 0.0001f ? worldSize.x / spriteSize.x : worldSize.x;
+            float scaleY = spriteSize.y > 0.0001f ? worldSize.y / spriteSize.y : worldSize.y;
+            target.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
         private void HandleBossDefeated(EnemyController boss)
@@ -353,10 +394,11 @@ namespace Necrocis
             blockedBoundaryCells.Clear();
 
             int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int minX = centerGrid.x - arenaSize.x / 2;
-            int minY = centerGrid.y - arenaSize.y / 2;
-            int maxX = minX + arenaSize.x - 1;
-            int maxY = minY + arenaSize.y - 1;
+            int lockInset = GetLockBoundaryInsetCells();
+            int minX = centerGrid.x - arenaSize.x / 2 + lockInset;
+            int minY = centerGrid.y - arenaSize.y / 2 + lockInset;
+            int maxX = centerGrid.x - arenaSize.x / 2 + arenaSize.x - 1 - lockInset;
+            int maxY = centerGrid.y - arenaSize.y / 2 + arenaSize.y - 1 - lockInset;
 
             for (int x = minX; x <= maxX; x++)
             {
@@ -375,6 +417,22 @@ namespace Necrocis
                     blockedBoundaryCells.Add(new Vector2Int(x, y));
                 }
             }
+        }
+
+        private int GetLockBoundaryInsetCells()
+        {
+            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
+            int configuredInset = Mathf.Max(0, arenaConfig.lockBoundaryInsetInCells);
+            int maxInset = Mathf.Max(0, (Mathf.Min(arenaSize.x, arenaSize.y) - thickness * 2 - 2) / 2);
+            return Mathf.Min(configuredInset, maxInset);
+        }
+
+        private int GetTriggerInsetCells()
+        {
+            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
+            int configuredInset = Mathf.Max(0, arenaConfig.triggerInsetInCells);
+            int maxInset = Mathf.Max(0, (Mathf.Min(arenaSize.x, arenaSize.y) - 1) / 2);
+            return Mathf.Min(thickness + configuredInset, maxInset);
         }
 
         private Vector2Int ResolveCenterGrid()
@@ -551,37 +609,54 @@ namespace Necrocis
 
         private void ApplyFogVisualState()
         {
-            Color baseColor = arenaLocked ? arenaConfig.lockedFogColor : arenaConfig.unlockedFogColor;
+            UpdateFogVisuals();
+        }
+
+        private void UpdateFogReveal(float deltaTime)
+        {
+            float target = ShouldRevealInteriorFog() ? 1f : 0f;
+            float duration = Mathf.Max(0.01f, arenaConfig.fogRevealDuration);
+            fogRevealAmount = Mathf.MoveTowards(fogRevealAmount, target, deltaTime / duration);
+            UpdateFogVisuals();
+        }
+
+        private bool ShouldRevealInteriorFog()
+        {
+            return arenaLocked || bossDefeated;
+        }
+
+        private void UpdateFogVisuals()
+        {
+            Color borderColor = arenaConfig.lockedFogColor;
             for (int i = 0; i < fogRenderers.Count; i++)
             {
                 if (fogRenderers[i] != null)
                 {
-                    fogRenderers[i].color = baseColor;
+                    float pulse = 0.9f + Mathf.Sin(Time.time * 1.8f + i * 0.65f) * 0.08f;
+                    Color animatedColor = borderColor;
+                    animatedColor.a = Mathf.Clamp01(borderColor.a * fogRevealAmount * pulse);
+                    fogRenderers[i].color = animatedColor;
                 }
             }
-        }
 
-        private void AnimateFog()
-        {
-            Color baseColor = arenaLocked ? arenaConfig.lockedFogColor : arenaConfig.unlockedFogColor;
-            float baseAlpha = baseColor.a;
-            for (int i = 0; i < fogRenderers.Count; i++)
+            if (interiorFogRenderer != null)
             {
-                SpriteRenderer renderer = fogRenderers[i];
-                if (renderer == null)
-                {
-                    continue;
-                }
-
-                float pulse = 0.82f + Mathf.Sin(Time.time * 1.8f + i * 0.65f) * 0.12f;
-                Color animatedColor = baseColor;
-                animatedColor.a = Mathf.Clamp01(baseAlpha * pulse);
-                renderer.color = animatedColor;
+                Color interiorColor = arenaConfig.interiorFogColor;
+                interiorColor.a = Mathf.Lerp(
+                    Mathf.Clamp01(arenaConfig.interiorFogHiddenAlpha),
+                    Mathf.Clamp01(arenaConfig.interiorFogRevealedAlpha),
+                    fogRevealAmount);
+                interiorFogRenderer.color = interiorColor;
             }
         }
 
-        private static Sprite GetFogSprite()
+        private Sprite GetFogSprite()
         {
+            if (arenaConfig != null && arenaConfig.fogSprite != null)
+            {
+                return arenaConfig.fogSprite;
+            }
+
             if (fogSprite != null)
             {
                 return fogSprite;
