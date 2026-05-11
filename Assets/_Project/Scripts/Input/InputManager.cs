@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Necrocis
@@ -8,7 +8,7 @@ namespace Necrocis
     /// </summary>
     public class InputManager : MonoBehaviour
     {
-        // 싱글톤 — null이면 자동 생성 (씬에 없어도 동작 보장)
+        // 싱글톤: null이면 자동 생성 (씬에 없어도 동작 보장)
         public static InputManager Instance
         {
             get
@@ -30,11 +30,11 @@ namespace Necrocis
 
         private static InputManager instance;
 
-        // ─── InputAction 정의 ───
-        public InputAction MoveAction { get; private set; }         // 이동 (방향키, 2DVector 컴포지트)
+        // --- InputAction 정의 ---
+        public InputAction MoveAction { get; private set; }         // 이동 (방향키 2DVector 컴포지트)
 
         public InputAction MeleeAttackAction { get; private set; }  // 근거리 공격 (Q)
-        public InputAction RangedAttackAction { get; private set; } // 원거리 공격 (E)
+        public InputAction RangedAttackAction { get; private set; } // 원거리 공격 (W)
         public InputAction Skill1Action { get; private set; }
         public InputAction Skill2Action { get; private set; }
 
@@ -42,13 +42,14 @@ namespace Necrocis
         public InputAction Digit2Action { get; private set; }       // 숫자키 2
         public InputAction Digit3Action { get; private set; }       // 숫자키 3
         public InputAction Digit4Action { get; private set; }       // 숫자키 4
+        public InputAction Digit5Action { get; private set; }       // 숫자키 5
 
         public InputAction StatWindowAction { get; private set; }   // 스탯창 토글 (O)
         public InputAction DebugLevelUpAction { get; private set; } // 디버그 레벨업 (P)
 
-        private const string RebindKey = "InputRebinds"; // PlayerPrefs 키 (리바인딩 저장용)
+        private const string RebindKey = "InputRebinds"; // PlayerPrefs 키(리바인딩 저장용)
 
-        // 싱글톤 초기화: 액션 생성 → 리바인딩 로드 → 전체 활성화
+        // 싱글톤 초기화: 액션 생성 -> 리바인딩 로드 -> 전체 활성화
         private void Awake()
         {
             if (instance != null && instance != this)
@@ -103,46 +104,27 @@ namespace Necrocis
             Digit2Action = new InputAction("Digit2", InputActionType.Button, "<Keyboard>/2");
             Digit3Action = new InputAction("Digit3", InputActionType.Button, "<Keyboard>/3");
             Digit4Action = new InputAction("Digit4", InputActionType.Button, "<Keyboard>/4");
+            Digit5Action = new InputAction("Digit5", InputActionType.Button, "<Keyboard>/5");
 
             StatWindowAction = new InputAction("StatWindow", InputActionType.Button, "<Keyboard>/o");
             DebugLevelUpAction = new InputAction("DebugLevelUp", InputActionType.Button, "<Keyboard>/p");
         }
 
-        // 모든 액션 활성화 (Enable 해야 입력을 받을 수 있음)
+        // 모든 액션 활성화 (Enable 되어야 입력을 받을 수 있음)
         private void EnableAll()
         {
-            MoveAction.Enable();
-            MeleeAttackAction.Enable();
-            RangedAttackAction.Enable();
-            Skill1Action.Enable();
-            Skill2Action.Enable();
-            Digit1Action.Enable();
-            Digit2Action.Enable();
-            Digit3Action.Enable();
-            Digit4Action.Enable();
-            StatWindowAction.Enable();
-            DebugLevelUpAction.Enable();
+            SetActionsEnabled(true);
         }
 
         // 비활성화 시 모든 액션 Disable (메모리 누수 방지)
         private void OnDisable()
         {
-            MoveAction?.Disable();
-            MeleeAttackAction?.Disable();
-            RangedAttackAction?.Disable();
-            Skill1Action?.Disable();
-            Skill2Action?.Disable();
-            Digit1Action?.Disable();
-            Digit2Action?.Disable();
-            Digit3Action?.Disable();
-            Digit4Action?.Disable();
-            StatWindowAction?.Disable();
-            DebugLevelUpAction?.Disable();
+            SetActionsEnabled(false);
         }
 
-        // ─────────────────────────────────
+        // ---------------------------------
         // 리바인딩
-        // ─────────────────────────────────
+        // ---------------------------------
 
         // 현재 리바인딩 상태를 PlayerPrefs에 JSON으로 저장
         public void SaveRebinds()
@@ -248,7 +230,27 @@ namespace Necrocis
         {
             foreach (InputAction action in GetAllActions())
             {
-                action.RemoveAllBindingOverrides();
+                action?.RemoveAllBindingOverrides();
+            }
+        }
+
+        private void SetActionsEnabled(bool enabled)
+        {
+            foreach (InputAction action in GetAllActions())
+            {
+                if (action == null)
+                {
+                    continue;
+                }
+
+                if (enabled)
+                {
+                    action.Enable();
+                }
+                else
+                {
+                    action.Disable();
+                }
             }
         }
 
@@ -266,6 +268,7 @@ namespace Necrocis
                 Digit2Action,
                 Digit3Action,
                 Digit4Action,
+                Digit5Action,
                 StatWindowAction,
                 DebugLevelUpAction
             };

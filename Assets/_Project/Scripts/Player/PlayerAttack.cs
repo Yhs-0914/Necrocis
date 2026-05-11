@@ -107,6 +107,7 @@ namespace Necrocis
         private void MeleeAttack()
         {
             PlayerStats stats = PlayerStats.Instance;
+            playerController?.PlayAttackAnimation(true);
             Vector3 direction = GetAttackDirection();
             float effectiveAttackOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset, stats);
             Vector3 boxCenter = transform.position + direction * effectiveAttackOffset; // 판정 중심점
@@ -144,6 +145,7 @@ namespace Necrocis
         // 원거리 공격: 오브젝트 풀에서 투사체를 가져와 발사
         private void RangedAttack()
         {
+            playerController?.PlayAttackAnimation(false);
             ObjectPooler pooler = ResolveObjectPooler();
             if (pooler == null)
             {

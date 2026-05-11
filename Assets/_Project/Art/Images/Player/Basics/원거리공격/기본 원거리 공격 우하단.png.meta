@@ -6,7 +6,7 @@ TextureImporter:
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -37,13 +37,13 @@ TextureImporter:
     filterMode: 1
     aniso: 1
     mipBias: 0
-    wrapU: 0
-    wrapV: 0
+    wrapU: 1
+    wrapV: 1
     wrapW: 0
-  nPOTScale: 1
+  nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 0
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -52,9 +52,9 @@ TextureImporter:
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
-  alphaIsTransparency: 0
+  alphaIsTransparency: 1
   spriteTessellationDetail: -1
-  textureType: 0
+  textureType: 8
   textureShape: 1
   singleChannelComponent: 0
   flipbookRows: 1
@@ -95,12 +95,166 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_0"
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 1
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 813a639469876a8429e9b9df61c4688c
+      internalID: 592109666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_1"
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 1
+        width: 23
+        height: 25
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57fc17c85b7f8d041a39d8c5a60870c3
+      internalID: 1413492923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_2"
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 1
+        width: 26
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a017e2c6a882684da04d225a86b48c6
+      internalID: -1056920907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_3"
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 1
+        width: 25
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a3487998dc1f38d4987539b02020d31d
+      internalID: 691243504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_4"
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 1
+        width: 23
+        height: 21
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b1ab548f09467754985bb7327657b539
+      internalID: 27914981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_5"
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 1
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 33a201f62de8536468e5bff681ce7463
+      internalID: 329601219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_6"
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 1
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa19b82e53998734996e1670e97453c5
+      internalID: -1789705467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: e3f4ab29125bc94488d28938af965d51
     internalID: 0
     vertices: []
     indices: 
@@ -108,8 +262,17 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
-    nameFileIdTable: {}
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_0": 592109666
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_1": 1413492923
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_2": -1056920907
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_3": 691243504
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_4": 27914981
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_5": 329601219
+      "\uAE30\uBCF8 \uC6D0\uAC70\uB9AC \uACF5\uACA9 \uC6B0\uD558\uB2E8_6": -1789705467
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

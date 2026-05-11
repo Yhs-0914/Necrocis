@@ -560,7 +560,7 @@ namespace Necrocis
         public void GrantExp()
         {
             if (config == null) return;
-            LevelUpManager.AddExp(config.expReward);
+            LevelUpManager.AddEnemyKillExp();
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !config.isElite)

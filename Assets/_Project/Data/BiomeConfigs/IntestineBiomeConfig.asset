@@ -201,7 +201,7 @@ MonoBehaviour:
     leashRadius: 14
     idleDelayRange: {x: 0.8, y: 1.6}
     maxHealth: 6
-    attackDamage: 0.5
+    attackDamage: 1
     attackRange: 4
     attackCooldown: 1
     expReward: 10
@@ -297,7 +297,7 @@ MonoBehaviour:
     leashRadius: 10
     idleDelayRange: {x: 0.4, y: 1.1}
     maxHealth: 6
-    attackDamage: 0.5
+    attackDamage: 1
     attackRange: 1.5
     attackCooldown: 1
     expReward: 10
@@ -400,7 +400,7 @@ MonoBehaviour:
     leashRadius: 14
     idleDelayRange: {x: 0.6, y: 1.4}
     maxHealth: 4
-    attackDamage: 0.8
+    attackDamage: 1
     attackRange: 7
     attackCooldown: 1.5
     expReward: 15

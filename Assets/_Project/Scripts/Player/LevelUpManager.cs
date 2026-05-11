@@ -27,6 +27,7 @@ namespace Necrocis
         private const int MAX_LEVEL = 30;          // 최대 레벨
         private const int BASE_EXP = 100;          // 기본 필요 경험치
         private const float EXP_MULTIPLIER = 1.25f; // 레벨당 필요 경험치 증가 배율
+        private const int ENEMY_KILL_EXP = 10;     // 잡몹 처치 고정 경험치
 
         public static Action OnLevelUp;       // 레벨업 이벤트 (LevelUpUI가 구독)
         public static Action OnJobSelect;     // 직업 선택 이벤트 (레벨 10에서 발생)
@@ -43,6 +44,18 @@ namespace Necrocis
 
             currentExp += actualExp;
             OnExpGained?.Invoke(actualExp);
+
+            CheckLevelUp();
+        }
+
+        // 적 처치 시 고정 경험치 지급 (배율/개별 보상값 미적용)
+        public static void AddEnemyKillExp()
+        {
+            if (currentLevel >= MAX_LEVEL) return;
+            if (currentLevel == 10 && currentJob == JobType.None) return;
+
+            currentExp += ENEMY_KILL_EXP;
+            OnExpGained?.Invoke(ENEMY_KILL_EXP);
 
             CheckLevelUp();
         }

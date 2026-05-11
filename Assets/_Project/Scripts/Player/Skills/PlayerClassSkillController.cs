@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,10 +18,18 @@ namespace Necrocis
     [RequireComponent(typeof(PlayerController))]
     public class PlayerClassSkillController : MonoBehaviour
     {
+        public enum SkillSlot
+        {
+            Skill1,
+            Skill2
+        }
+
         private const string SkillProjectileFallbackPoolName = "__SkillProjectileFallbackSphere";
         private const string SkillEffectFallbackPoolName = "__SkillEffectFallbackSphere";
         private const string SkillAttachedEffectFallbackPoolName = "__SkillAttachedEffectFallbackSphere";
         private const string ArcherSkill2FallbackProjectilePoolName = "__ArcherSkill2FallbackCylinder";
+        private const int Skill1UnlockLevel = 10;
+        private const int Skill2UnlockLevel = 20;
 
         private enum ProjectileDirectionReferenceAxis
         {
@@ -199,6 +208,8 @@ namespace Necrocis
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
         public PlayerClassType CurrentClass => currentClass;
+        public event Action<SkillSlot, float> CooldownStarted;
+        public event Action<SkillSlot> CooldownReset;
 
         private void Awake()
         {
@@ -247,8 +258,7 @@ namespace Necrocis
         private void OnDisable()
         {
             LevelUpManager.OnJobChanged -= HandleJobChanged;
-            archerSkill2Running = false;
-            StopAllCoroutines();
+            ResetCooldownState();
         }
 
         public void ApplyJob(JobType job)
@@ -265,10 +275,30 @@ namespace Necrocis
                 return;
             }
 
-            nextSkill1ReadyTime = 0f;
-            nextSkill2ReadyTime = 0f;
-            archerSkill2Running = false;
-            StopAllCoroutines();
+            ResetCooldownState();
+        }
+
+        public bool IsSkillCoolingDown(SkillSlot slot)
+        {
+            return GetRemainingCooldown(slot) > 0f;
+        }
+
+        public float GetRemainingCooldown(SkillSlot slot)
+        {
+            float now = Time.time;
+            float nextReady = slot == SkillSlot.Skill1 ? nextSkill1ReadyTime : nextSkill2ReadyTime;
+            return Mathf.Max(0f, nextReady - now);
+        }
+
+        public float GetConfiguredCooldown(SkillSlot slot)
+        {
+            return currentClass switch
+            {
+                PlayerClassType.Mage => slot == SkillSlot.Skill1 ? Mathf.Max(0f, mageSkill1.cooldown) : Mathf.Max(0f, mageSkill2.cooldown),
+                PlayerClassType.Archer => slot == SkillSlot.Skill1 ? Mathf.Max(0f, archerSkill1.cooldown) : Mathf.Max(0f, archerSkill2.cooldown),
+                PlayerClassType.Warrior => slot == SkillSlot.Skill1 ? Mathf.Max(0f, warriorSkill1.cooldown) : Mathf.Max(0f, warriorSkill2.cooldown),
+                _ => 0f
+            };
         }
 
         private void HandleJobChanged(JobType job)
@@ -322,10 +352,15 @@ namespace Necrocis
 
         private void TryUseSkill1()
         {
+            if (!CanUseSkillSlot(SkillSlot.Skill1))
+            {
+                return;
+            }
+
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
-                    if (!TryStartCooldown(ref nextSkill1ReadyTime, mageSkill1.cooldown, "Mage Skill E"))
+                    if (!TryStartCooldown(ref nextSkill1ReadyTime, mageSkill1.cooldown, "Mage Skill E", SkillSlot.Skill1))
                     {
                         return;
                     }
@@ -334,7 +369,7 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Archer:
-                    if (!TryStartCooldown(ref nextSkill1ReadyTime, archerSkill1.cooldown, "Archer Skill E"))
+                    if (!TryStartCooldown(ref nextSkill1ReadyTime, archerSkill1.cooldown, "Archer Skill E", SkillSlot.Skill1))
                     {
                         return;
                     }
@@ -343,7 +378,7 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
-                    if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E"))
+                    if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E", SkillSlot.Skill1))
                     {
                         return;
                     }
@@ -355,6 +390,11 @@ namespace Necrocis
 
         private void TryUseSkill2()
         {
+            if (!CanUseSkillSlot(SkillSlot.Skill2))
+            {
+                return;
+            }
+
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
@@ -369,7 +409,7 @@ namespace Necrocis
                         return;
                     }
 
-                    if (!TryStartCooldown(ref nextSkill2ReadyTime, mageSkill2.cooldown, "Mage Skill R"))
+                    if (!TryStartCooldown(ref nextSkill2ReadyTime, mageSkill2.cooldown, "Mage Skill R", SkillSlot.Skill2))
                     {
                         return;
                     }
@@ -383,7 +423,7 @@ namespace Necrocis
                         return;
                     }
 
-                    if (!TryStartCooldown(ref nextSkill2ReadyTime, archerSkill2.cooldown, "Archer Skill R"))
+                    if (!TryStartCooldown(ref nextSkill2ReadyTime, archerSkill2.cooldown, "Archer Skill R", SkillSlot.Skill2))
                     {
                         return;
                     }
@@ -392,7 +432,7 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
-                    if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R"))
+                    if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R", SkillSlot.Skill2))
                     {
                         return;
                     }
@@ -402,7 +442,7 @@ namespace Necrocis
             }
         }
 
-        private bool TryStartCooldown(ref float nextReadyTime, float cooldown, string label)
+        private bool TryStartCooldown(ref float nextReadyTime, float cooldown, string label, SkillSlot slot)
         {
             float now = Time.time;
             if (now < nextReadyTime)
@@ -418,7 +458,36 @@ namespace Necrocis
 
             float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
             nextReadyTime = now + effectiveCooldown;
+            CooldownStarted?.Invoke(slot, effectiveCooldown);
             return true;
+        }
+
+        private bool CanUseSkillSlot(SkillSlot slot)
+        {
+            int requiredLevel = slot == SkillSlot.Skill1 ? Skill1UnlockLevel : Skill2UnlockLevel;
+            int currentLevel = LevelUpManager.GetCurrentLevel();
+            if (currentLevel >= requiredLevel)
+            {
+                return true;
+            }
+
+            if (enableDebugLogs)
+            {
+                string skillKey = slot == SkillSlot.Skill1 ? "E" : "R";
+                Debug.Log($"[Skill {skillKey}] Locked: requires level {requiredLevel}. Current level {currentLevel}.");
+            }
+
+            return false;
+        }
+
+        private void ResetCooldownState()
+        {
+            nextSkill1ReadyTime = 0f;
+            nextSkill2ReadyTime = 0f;
+            archerSkill2Running = false;
+            StopAllCoroutines();
+            CooldownReset?.Invoke(SkillSlot.Skill1);
+            CooldownReset?.Invoke(SkillSlot.Skill2);
         }
 
         private void ExecuteMageSkill1()
@@ -438,7 +507,7 @@ namespace Necrocis
                 mageSkill1.radius,
                 enemy =>
                 {
-                    float bonusDamage = Random.Range(bonusMin, bonusMax + 0.001f);
+                    float bonusDamage = UnityEngine.Random.Range(bonusMin, bonusMax + 0.001f);
                     float totalDamage = PlayerCombatCalculator.GetSkillDamage(baseDamage + bonusDamage, CurrentPlayerStats);
                     enemy.TakeDamage(totalDamage);
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
