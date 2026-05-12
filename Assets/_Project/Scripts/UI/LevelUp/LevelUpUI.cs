@@ -1,0 +1,450 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+
+namespace Necrocis
+{
+    /// <summary>
+    /// 레벨업 시 스탯 선택 UI.
+    /// Canvas가 없으면 자동 생성. LevelUpManager.OnLevelUp 이벤트에 연결.
+    /// </summary>
+    public class LevelUpUI : MonoBehaviour
+    {
+        public static LevelUpUI Instance { get; private set; } // 싱글톤
+
+        [Header("UI 설정")]
+        [SerializeField] private Color panelColor = new Color(0f, 0f, 0f, 0.85f);       // 배경 패널 색상
+        [SerializeField] private Color buttonColor = new Color(0.2f, 0.2f, 0.3f, 1f);   // 버튼 기본 색상
+        [SerializeField] private Color buttonHoverColor = new Color(0.3f, 0.3f, 0.5f, 1f); // 버튼 호버 색상
+        [SerializeField] private int fontSize = 20;
+        [SerializeField] private bool useBuiltInJobSelectionUI = false;
+
+        private GameObject uiRoot;              // UI Canvas 루트
+        private Transform buttonContainer;      // 선택 버튼들의 부모 Transform
+        private Text titleText;                 // "LEVEL UP!" 또는 "직업 선택!" 타이틀
+        private Text levelText;                 // 현재 레벨 표시
+        private Text guideText;                 // 안내 문구
+        private List<GameObject> choiceButtons = new List<GameObject>();  // 생성된 버튼 목록 (정리용)
+        private List<LevelUpStatChoice> currentChoices = new List<LevelUpStatChoice>(); // 현재 표시 중인 스탯 선택지
+        private List<JobType> currentJobs = new List<JobType>();          // 현재 표시 중인 직업 선택지
+        private bool isShowing;      // UI 표시 중 여부
+        private bool isJobSelection; // 직업 선택 모드 여부 (스탯 선택과 구분)
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
+
+        // LevelUpManager 이벤트 구독 (레벨업 → 스탯 선택, 레벨10 → 직업 선택)
+        private void OnEnable()
+        {
+            LevelUpManager.OnLevelUp += ShowLevelUpChoices;
+            if (useBuiltInJobSelectionUI)
+                LevelUpManager.OnJobSelect += ShowJobSelection;
+        }
+
+        private void OnDisable()
+        {
+            LevelUpManager.OnLevelUp -= ShowLevelUpChoices;
+            LevelUpManager.OnJobSelect -= ShowJobSelection;
+        }
+
+        private void Start()
+        {
+            EnsureEventSystem(); // EventSystem이 없으면 UI 클릭이 안 되므로 보장
+            BuildUI();
+            uiRoot.SetActive(false);
+        }
+
+        // UI 클릭 처리를 위한 EventSystem 보장
+        private void EnsureEventSystem()
+        {
+            if (FindFirstObjectByType<EventSystem>() == null)
+            {
+                GameObject esObj = new GameObject("EventSystem");
+                esObj.AddComponent<EventSystem>();
+                esObj.AddComponent<InputSystemUIInputModule>();
+            }
+        }
+
+        // 숫자키 입력으로 선택 처리 (직업 선택: 1~3, 스탯 선택: 1~4)
+        private void Update()
+        {
+            if (!isShowing) return;
+
+            var input = InputManager.Instance;
+            if (input == null) return;
+
+            if (isJobSelection)
+            {
+                if (input.Digit1Action.WasPressedThisFrame() && currentJobs.Count >= 1)
+                    SelectJob(currentJobs[0]);
+                else if (input.Digit2Action.WasPressedThisFrame() && currentJobs.Count >= 2)
+                    SelectJob(currentJobs[1]);
+                else if (input.Digit3Action.WasPressedThisFrame() && currentJobs.Count >= 3)
+                    SelectJob(currentJobs[2]);
+            }
+            else
+            {
+                if (input.Digit1Action.WasPressedThisFrame() && currentChoices.Count >= 1)
+                    SelectChoice(currentChoices[0]);
+                else if (input.Digit2Action.WasPressedThisFrame() && currentChoices.Count >= 2)
+                    SelectChoice(currentChoices[1]);
+                else if (input.Digit3Action.WasPressedThisFrame() && currentChoices.Count >= 3)
+                    SelectChoice(currentChoices[2]);
+                else if (input.Digit4Action.WasPressedThisFrame() && currentChoices.Count >= 4)
+                    SelectChoice(currentChoices[3]);
+            }
+        }
+
+        // 레벨업 시 호출: 랜덤 스탯 선택지 4개를 표시하고 게임 일시정지
+        private void ShowLevelUpChoices()
+        {
+            List<LevelUpStatChoice> choices = LevelUpManager.GetRandomChoices();
+            if (choices == null || choices.Count == 0) return;
+
+            currentChoices = choices;
+            titleText.text = "LEVEL UP!";
+            titleText.color = new Color(1f, 0.85f, 0.2f); // 금색
+            guideText.text = "숫자키(1~4)로 능력을 선택하세요";
+            levelText.text = $"Lv.{LevelUpManager.GetCurrentLevel()}";
+            ClearButtons();
+
+            for (int i = 0; i < choices.Count; i++)
+            {
+                CreateChoiceButton(choices[i], i + 1);
+            }
+
+            uiRoot.SetActive(true);
+            isShowing = true;
+            Time.timeScale = 0f; // 게임 일시정지
+        }
+
+        // 레벨 10 도달 시 호출: 직업 3종 (전사/마법사/궁수) 선택 UI 표시
+        private void ShowJobSelection()
+        {
+            currentJobs = new List<JobType> { JobType.Warrior, JobType.Mage, JobType.Archer };
+            isJobSelection = true;
+
+            titleText.text = "직업 선택!";
+            titleText.color = new Color(0.4f, 0.8f, 1f); // 하늘색
+            levelText.text = $"Lv.{LevelUpManager.GetCurrentLevel()}";
+            guideText.text = "숫자키(1~3)로 직업을 선택하세요";
+            ClearButtons();
+
+            for (int i = 0; i < currentJobs.Count; i++)
+            {
+                CreateJobButton(currentJobs[i], i + 1);
+            }
+
+            uiRoot.SetActive(true);
+            isShowing = true;
+            Time.timeScale = 0f;
+        }
+
+        // 직업 선택 처리: LevelUpManager에 직업 설정 → 대기 레벨업 있으면 계속 진행
+        private void SelectJob(JobType job)
+        {
+            LevelUpManager.SetJob(job);
+            isJobSelection = false;
+            titleText.color = new Color(1f, 0.85f, 0.2f); // 이후 레벨업은 금색 타이틀
+
+            if (LevelUpManager.HasPendingLevelUp())
+            {
+                LevelUpManager.ProcessNextPendingLevelUp(); // 다음 대기 레벨업 처리
+            }
+            else
+            {
+                uiRoot.SetActive(false);
+                isShowing = false;
+                Time.timeScale = 1f; // 게임 재개
+                GrantPostLevelUpInvincibility();
+            }
+        }
+
+        private void CreateJobButton(JobType job, int index)
+        {
+            GameObject btnObj = new GameObject(job.ToString(), typeof(RectTransform));
+            btnObj.transform.SetParent(buttonContainer, false);
+
+            Image btnImage = btnObj.AddComponent<Image>();
+            btnImage.color = buttonColor;
+
+            Button btn = btnObj.AddComponent<Button>();
+            ColorBlock colors = btn.colors;
+            colors.normalColor = buttonColor;
+            colors.highlightedColor = buttonHoverColor;
+            colors.pressedColor = buttonHoverColor;
+            colors.selectedColor = buttonColor;
+            btn.colors = colors;
+
+            JobType captured = job;
+            btn.onClick.AddListener(() => SelectJob(captured));
+
+            LayoutElement layout = btnObj.AddComponent<LayoutElement>();
+            layout.preferredHeight = 80;
+            layout.flexibleWidth = 1;
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(btnObj.transform, false);
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10, 5);
+            textRect.offsetMax = new Vector2(-10, -5);
+
+            Text text = textObj.AddComponent<Text>();
+            text.text = $"[{index}] {GetJobDescription(job)}";
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 14;
+            text.resizeTextMaxSize = fontSize;
+
+            choiceButtons.Add(btnObj);
+        }
+
+        private string GetJobDescription(JobType job)
+        {
+            switch (job)
+            {
+                case JobType.Warrior: return "전사 - 공격력/방어력 특화";
+                case JobType.Mage:    return "마법사 - 마력/쿨타임 특화";
+                case JobType.Archer:  return "궁수 - 공격속도/사거리 특화";
+                default:              return job.ToString();
+            }
+        }
+
+        // 스탯 선택 처리: 실제 스탯 적용 → 선택 기록 → 대기 레벨업 확인
+        private void SelectChoice(LevelUpStatChoice choice)
+        {
+            if (PlayerStats.Instance != null)
+                PlayerStats.Instance.ApplyLevelUpStatChoice(choice); // 실제 스탯 모디파이어 적용
+
+            LevelUpManager.RecordSelection(choice); // 선택 기록 (직업별 선택지 가중치에 활용)
+
+            // 대기 중인 레벨업이 있으면 다음 선택지 표시
+            if (LevelUpManager.HasPendingLevelUp())
+            {
+                LevelUpManager.ProcessNextPendingLevelUp();
+            }
+            else
+            {
+                uiRoot.SetActive(false);
+                isShowing = false;
+                Time.timeScale = 1f;
+                GrantPostLevelUpInvincibility(); // 레벨업 완료 후 1초 무적
+            }
+        }
+
+        // 기존 버튼들 제거 (새 선택지 표시 전에 호출)
+        private void ClearButtons()
+        {
+            foreach (var btn in choiceButtons)
+                Destroy(btn);
+            choiceButtons.Clear();
+        }
+
+        private void CreateChoiceButton(LevelUpStatChoice choice, int index)
+        {
+            GameObject btnObj = new GameObject(choice.ToString(), typeof(RectTransform));
+            btnObj.transform.SetParent(buttonContainer, false);
+
+            Image btnImage = btnObj.AddComponent<Image>();
+            btnImage.color = buttonColor;
+
+            Button btn = btnObj.AddComponent<Button>();
+            ColorBlock colors = btn.colors;
+            colors.normalColor = buttonColor;
+            colors.highlightedColor = buttonHoverColor;
+            colors.pressedColor = buttonHoverColor;
+            colors.selectedColor = buttonColor;
+            btn.colors = colors;
+
+            LevelUpStatChoice captured = choice;
+            btn.onClick.AddListener(() => SelectChoice(captured));
+
+            LayoutElement layout = btnObj.AddComponent<LayoutElement>();
+            layout.preferredHeight = 70;
+            layout.flexibleWidth = 1;
+
+            // 버튼 텍스트
+            GameObject textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(btnObj.transform, false);
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10, 5);
+            textRect.offsetMax = new Vector2(-10, -5);
+
+            Text text = textObj.AddComponent<Text>();
+            text.text = $"[{index}] {GetChoiceDescription(choice)}";
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 14;
+            text.resizeTextMaxSize = fontSize;
+
+            choiceButtons.Add(btnObj);
+        }
+
+        // 선택지의 효과를 한글로 조합 (예: "공격력 +3, 방어력 +1")
+        private string GetChoiceDescription(LevelUpStatChoice choice)
+        {
+            LevelUpStatEffect effect = LevelUpStatCatalog.GetStatEffect(choice);
+            List<string> parts = new List<string>();
+
+            foreach (var stat in effect.flatStats)
+            {
+                string sign = stat.Value >= 0 ? "+" : "";
+                parts.Add($"{GetStatName(stat.Key)} {sign}{stat.Value}");
+            }
+
+            foreach (var stat in effect.percentStats)
+            {
+                string sign = stat.Value >= 0 ? "+" : "";
+                parts.Add($"{GetStatName(stat.Key)} {sign}{stat.Value}%");
+            }
+
+            return string.Join(", ", parts);
+        }
+
+        // 스탯 타입 → 한글 이름 변환
+        private string GetStatName(CharacterStatType type)
+        {
+            switch (type)
+            {
+                case CharacterStatType.MaxHealth:    return "체력";
+                case CharacterStatType.MoveSpeed:    return "이동속도";
+                case CharacterStatType.AttackPower:  return "공격력";
+                case CharacterStatType.AttackSpeed:  return "공격속도";
+                case CharacterStatType.AttackRange:  return "공격 사거리";
+                case CharacterStatType.Magic:        return "마력";
+                case CharacterStatType.SkillCooldownReduction: return "스킬 쿨타임 감소";
+                default:                             return type.ToString();
+            }
+        }
+
+        // ─────────────────────────────────
+        // UI 자동 생성
+        // ─────────────────────────────────
+
+        private void BuildUI()
+        {
+            // Canvas
+            GameObject canvasObj = new GameObject("LevelUpCanvas");
+            canvasObj.transform.SetParent(transform);
+            Canvas canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            canvasObj.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasObj.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            uiRoot = canvasObj;
+
+            // 배경 패널
+            GameObject panel = CreateUIElement("Panel", canvasObj.transform);
+            RectTransform panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+            Image panelImg = panel.AddComponent<Image>();
+            panelImg.color = panelColor;
+
+            // 중앙 컨테이너
+            GameObject container = CreateUIElement("Container", panel.transform);
+            RectTransform containerRect = container.GetComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.25f, 0.15f);
+            containerRect.anchorMax = new Vector2(0.75f, 0.85f);
+            containerRect.offsetMin = Vector2.zero;
+            containerRect.offsetMax = Vector2.zero;
+
+            VerticalLayoutGroup vlg = container.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 15;
+            vlg.childAlignment = TextAnchor.UpperCenter;
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = false;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
+            vlg.padding = new RectOffset(20, 20, 20, 20);
+
+            // 타이틀
+            GameObject titleObj = CreateUIElement("Title", container.transform);
+            LayoutElement titleLayout = titleObj.AddComponent<LayoutElement>();
+            titleLayout.preferredHeight = 50;
+            titleText = titleObj.AddComponent<Text>();
+            titleText.text = "LEVEL UP!";
+            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.fontSize = 36;
+            titleText.fontStyle = FontStyle.Bold;
+            titleText.color = new Color(1f, 0.85f, 0.2f);
+            titleText.alignment = TextAnchor.MiddleCenter;
+
+            // 레벨 표시
+            GameObject levelObj = CreateUIElement("Level", container.transform);
+            LayoutElement levelLayout = levelObj.AddComponent<LayoutElement>();
+            levelLayout.preferredHeight = 35;
+            levelText = levelObj.AddComponent<Text>();
+            levelText.text = "Lv.1";
+            levelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            levelText.fontSize = 24;
+            levelText.color = Color.white;
+            levelText.alignment = TextAnchor.MiddleCenter;
+
+            // 안내 텍스트
+            GameObject guideObj = CreateUIElement("Guide", container.transform);
+            LayoutElement guideLayout = guideObj.AddComponent<LayoutElement>();
+            guideLayout.preferredHeight = 30;
+            guideText = guideObj.AddComponent<Text>();
+            guideText.text = "숫자키(1~4)로 능력을 선택하세요";
+            guideText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            guideText.fontSize = 18;
+            guideText.color = new Color(0.8f, 0.8f, 0.8f);
+            guideText.alignment = TextAnchor.MiddleCenter;
+
+            // 버튼 컨테이너
+            GameObject btnContainer = CreateUIElement("Buttons", container.transform);
+            VerticalLayoutGroup btnVlg = btnContainer.AddComponent<VerticalLayoutGroup>();
+            btnVlg.spacing = 10;
+            btnVlg.childControlWidth = true;
+            btnVlg.childControlHeight = false;
+            btnVlg.childForceExpandWidth = true;
+            btnVlg.childForceExpandHeight = false;
+
+            LayoutElement btnContainerLayout = btnContainer.AddComponent<LayoutElement>();
+            btnContainerLayout.flexibleHeight = 1;
+
+            buttonContainer = btnContainer.transform;
+        }
+
+        // 레벨업/직업 선택 완료 후 1초 무적 부여 (피격 방지)
+        private void GrantPostLevelUpInvincibility()
+        {
+            Health health = FindFirstObjectByType<Health>();
+            if (health != null)
+                health.GrantTemporaryInvincibility(1f);
+        }
+
+        // UI 요소 생성 헬퍼 (RectTransform 포함)
+        private GameObject CreateUIElement(string name, Transform parent)
+        {
+            GameObject obj = new GameObject(name, typeof(RectTransform));
+            obj.transform.SetParent(parent, false);
+            return obj;
+        }
+    }
+}
