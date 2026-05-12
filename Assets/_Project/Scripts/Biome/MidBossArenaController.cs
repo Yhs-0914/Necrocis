@@ -23,6 +23,7 @@ namespace Necrocis
         private BiomeManager biome;
         private MidBossArenaConfig arenaConfig;
         private EnemySpawnRuleConfig bossRule;
+
         private EnemyController activeBoss;
         private Vector2Int centerGrid;
         private Vector2Int arenaSize;
@@ -49,7 +50,9 @@ namespace Necrocis
             BuildBoundaryCellCache();
             BuildTrigger();
             BuildFogWalls();
+
             SpawnBoss();
+
             ApplyFogVisualState();
         }
 
@@ -71,9 +74,7 @@ namespace Necrocis
             UpdateFogReveal(Time.deltaTime);
 
             if (!arenaLocked || bossDefeated)
-            {
                 return;
-            }
 
             if (activeBoss == null || activeBoss.IsDead || !activeBoss.gameObject.activeInHierarchy)
             {
@@ -107,9 +108,7 @@ namespace Necrocis
             ActiveArenas.Remove(this);
 
             if (activeBoss != null)
-            {
                 activeBoss.Defeated -= HandleBossDefeated;
-            }
 
             if (arenaLocked && biome != null)
             {
@@ -119,7 +118,7 @@ namespace Necrocis
 
         private void TryActivateArena()
         {
-            if (biome == null || bossRule == null)
+            if (biome == null)
             {
                 Debug.LogWarning("[MidBossArena] 보스 룰이 없어 아레나를 활성화할 수 없습니다.");
                 return;
@@ -227,6 +226,10 @@ namespace Necrocis
                 biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
             }
 
+            Vector3 bossDeathPos = activeBoss != null
+                ? activeBoss.transform.position
+                : (biome != null ? biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y) : transform.position);
+
             if (activeBoss != null)
             {
                 activeBoss.Defeated -= HandleBossDefeated;
@@ -237,10 +240,35 @@ namespace Necrocis
 
             if (GameManager.Instance != null)
             {
+                if (biome != null)
+                {
+                    GameManager.Instance.CollectRelic(biome.BiomeType);
+                }
+
                 GameManager.Instance.SetGameState(GameState.InBiome);
             }
 
-            Debug.Log("[MidBossArena] 중간보스 처치 - 봉쇄 해제");
+            SpawnReturnPortal(bossDeathPos);
+
+            Debug.Log("[MidBossArena] 중간보스 처치 - 봉쇄 해제, 귀환 포탈 생성");
+        }
+
+        private void SpawnReturnPortal(Vector3 portalPos)
+        {
+            GameObject portalObj = new GameObject("BossReturnPortal");
+            portalObj.transform.SetParent(transform, true);
+            portalObj.transform.position = portalPos;
+
+            SpriteRenderer sr = portalObj.AddComponent<SpriteRenderer>();
+            sr.color = new Color(0.6f, 0.2f, 1f, 0.85f);
+            sr.sortingOrder = arenaConfig != null ? arenaConfig.sortingOrder : 3500;
+
+            BoxCollider col = portalObj.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            col.size = new Vector3(2f, 2f, 2f);
+
+            ReturnPortal portal = portalObj.AddComponent<ReturnPortal>();
+            portal.SetActive(true);
         }
 
         private void BuildTrigger()

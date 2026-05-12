@@ -31,6 +31,10 @@ namespace Necrocis
         private void Awake()
         {
             playerController = GetComponent<PlayerController>();
+            if (playerController == null)
+                playerController = GetComponentInParent<PlayerController>();
+            if (playerController == null)
+                Debug.LogError("[PlayerAttack] PlayerController를 찾지 못했습니다. 공격 애니메이션이 작동하지 않습니다.");
             if (rangedTargetMask.value == 0)
             {
                 rangedTargetMask = ~0;
@@ -136,7 +140,6 @@ namespace Necrocis
                 }
 
                 float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage);
-
                 enemy.TakeDamage(damage);
                 Debug.Log($"[PlayerAttack] Melee hit {hitCollider.gameObject.name} for {damage}");
             }

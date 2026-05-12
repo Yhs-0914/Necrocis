@@ -146,6 +146,9 @@ namespace Necrocis
             BiomeData data = BiomeData.GetBiomeData(targetBiome);
             Debug.Log($"[Portal] {data.displayName} 바이옴으로 이동! (크기: {data.mapSize.x}x{data.mapSize.y})");
 
+            // 포털 진입 시 비활성화
+            SetActive(false);
+
             // GameManager에 바이옴 진입 알림
             if (GameManager.Instance != null)
             {

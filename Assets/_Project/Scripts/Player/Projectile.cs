@@ -97,11 +97,8 @@ namespace Necrocis
                 return;
             }
 
-            EnemyController enemy = other.GetComponent<EnemyController>();
-            if (enemy == null)
-            {
-                enemy = other.GetComponentInParent<EnemyController>();
-            }
+            EnemyController enemy = other.GetComponent<EnemyController>()
+                ?? other.GetComponentInParent<EnemyController>();
 
             if (enemy == null || enemy.IsDead)
             {
