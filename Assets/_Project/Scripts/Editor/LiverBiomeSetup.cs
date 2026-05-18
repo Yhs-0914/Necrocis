@@ -90,7 +90,7 @@ namespace Necrocis.EditorTools
             config.regionCellSize = 35f;
             config.regionBlendWidth = 4f;
             config.detailNoiseScale = 0.05f;
-            config.heightNoiseAmplitude = 0.45f;
+            config.heightNoiseAmplitude = 0.85f;
 
             TileBase[] grassWalls = new TileBase[] { grassWall1Tile, grassWall2Tile, grassWall3Tile };
 
