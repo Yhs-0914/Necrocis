@@ -148,8 +148,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0941cf4d1b51474484afe7a9079d580c, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ConfigurableBiomeManager
-  mapWidth: 150
-  mapHeight: 150
+  mapWidth: 300
+  mapHeight: 300
   chunkSize: 16
   tileSize: 1
   seed: 0

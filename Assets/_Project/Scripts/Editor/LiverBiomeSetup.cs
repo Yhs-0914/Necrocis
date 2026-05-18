@@ -125,13 +125,13 @@ namespace Necrocis.EditorTools
             });
 
             config.objectRules.Clear();
-            // Grass — 잔디 (scatter decoration)
+            // Grass — 잔디 (scatter decoration). density 높여서 자주, scaleBias=1로 작은~큰 골고루.
             config.objectRules.Add(new BiomeObjectRuleConfig
             {
                 name = "Grass",
                 poolKind = BiomeObjectKind.FloorDecoration,
-                density = 0.08f,
-                minDistance = 4f,
+                density = 0.15f,
+                minDistance = 3f,
                 poissonSalt = 201,
                 allowedRegions = new System.Collections.Generic.List<int> { 0 },
                 blocksMovement = false,
@@ -148,10 +148,10 @@ namespace Necrocis.EditorTools
                 isTrigger = false,
                 colliderSize = new Vector3(1f, 1f, 1f),
                 colliderCenter = Vector3.zero,
-                scaleRange = new Vector2(0.7f, 2.5f),
+                scaleRange = new Vector2(0.5f, 2.8f),
                 scaleSalt = 4201,
-                scaleBias = 3f,
-                spacingPadding = 1.8f,
+                scaleBias = 1f,
+                spacingPadding = 1.6f,
             });
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
