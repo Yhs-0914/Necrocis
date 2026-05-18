@@ -38,17 +38,88 @@ MonoBehaviour:
     fogRevealDuration: 1.4
     interiorFogSortingOrderOffset: 3000
     boss:
-      displayName: MidBoss
+      displayName: LiverBoss
       useCustomBossRule: 0
+      bossRule:
+        name: Enemy
+        density: 0.0025
+        minDistance: 8
+        poissonSalt: 400
+        allowedRegions: 
+        maxAlive: 1
+        activationRadius: 20
+        respawnCooldown: 8
+        spawnRadius: 1.5
+        moveSpeed: 1.5
+        stoppingDistance: 0.1
+        wanderRadius: 4
+        chaseRadius: 6
+        leashRadius: 8
+        idleDelayRange: {x: 0.5, y: 1.5}
+        maxHealth: 30
+        attackDamage: 10
+        attackRange: 1.5
+        attackCooldown: 1
+        expReward: 10
+        additionalBaseStats: []
+        separationDistance: 1.1
+        separationStrength: 1
+        heightOffset: 0
+        scale: {x: 1, y: 1, z: 1}
+        sortingOrder: 1000
+        useBillboard: 1
+        useYSort: 1
+        animationSpeed: 0.15
+        addCollider: 1
+        isTrigger: 0
+        colliderSize: {x: 0.7, y: 1.1, z: 0.7}
+        colliderCenter: {x: 0, y: 0.55, z: 0}
+        idleSprites: []
+        moveSprites: []
+        attackSprites: []
+        attackSpritesUp: []
+        attackSpritesDown: []
+        attackAnimationSpeed: 0.12
+        isRanged: 0
+        projectileSpeed: 8
+        projectileLifeTime: 3
+        projectileSprite: {fileID: 0}
+        projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+        projectileSpawnOffset: 0.5
+        expandColliderOnAttack: 0
+        attackColliderSize: {x: 2, y: 2, z: 2}
+        attackColliderCenter: {x: 0, y: 0.55, z: 0}
+        deathSprites: []
+        deathAnimationSpeed: 0.15
+        isElite: 0
+        tintColor: {r: 1, g: 1, b: 1, a: 1}
+        killTriggerEnemyName: 
+        killTriggerCount: 10
+        splitsOnDeath: 0
+        splitCount: 2
+        splitEnemyName: 
+        splitVfxSprites: []
+        splitVfxScale: 3
+        splitVfxSpeed: 0.08
+        splitVfxDuration: 0.6
+        chargesAtPlayer: 0
+        chargeSpeed: 6
+        chargeAccelTime: 0.3
+        leavesDebrisOnDeath: 0
+        debrisDuration: 5
+        debrisAggroRadius: 8
+        debrisVfxSprites: []
+        debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
       useEnemyRuleFallback: 1
       fallbackEnemyRuleIndex: 0
-      patternType: 0
+      patternType: 2
       overrideStats: 0
       maxHealthMultiplier: 1
       attackDamageMultiplier: 1
       moveSpeedMultiplier: 1
-      scaleMultiplier: {x: 1, y: 1, z: 1}
-      minimumMaxHealth: 0
+      scaleMultiplier: {x: 4, y: 4, z: 4}
+      minimumMaxHealth: 100
       intestinePattern:
         phase2HealthRatio: 0.5
         phase1FleeDistance: 7
