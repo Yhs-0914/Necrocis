@@ -493,12 +493,16 @@ namespace Necrocis
 
                     int upperGX = startX + lx;
                     int upperGY = startY + ly;
-                    int wallDepth = GetWallDepth(upperGX, upperGY);
-                    if (wallDepth <= 0)
+                    int configuredDepth = GetWallDepth(upperGX, upperGY);
+                    if (configuredDepth <= 0)
                     {
                         chunk.cliffLevels[lowerIndex] = lowerLevel;
                         continue;
                     }
+
+                    // 실제 높이 차만큼만 벽 그림 (height +1 -> 1칸 벽).
+                    int heightDiff = upperLevel - lowerLevel;
+                    int wallDepth = Mathf.Min(heightDiff, configuredDepth);
 
                     for (int wallRow = 0; wallRow < wallDepth; wallRow++)
                     {
