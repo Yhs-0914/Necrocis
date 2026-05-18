@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1067529776, guid: 48ad49c13f957c44aaad56346e7d21b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: VARCOSound.Editor.dll::VARCOSound.Editor.State.VARCOSoundEditorState
+  soundGeneration:
+    promptText: "\uAD34\uBB3C\uC774 \uC138\uD3EC(\uC6D0\uAC70\uB9AC \uACF5\uACA9)\uB97C
+      \uBC1C\uC2F8\uD558\uB294 \uC18C\uB9AC"
+    generationCount: 1
+    suggestionModeIndex: 0
+    generatedEntries: []
+    promptBoosterPrompts: []
+    imagePrompterPrompts: []
+    lastActiveEntryId: 
+    imageSourceIndex: 0
+    selectedCameraIndex: 0
+    imageContext:
+      kind: 0
+      assetGuid: 
+      assetPath: 
+      externalFilePath: 
+      descriptor: 
+      cacheRelativePath: 
+  musicGeneration:
+    promptText: 
+    generatedEntries: []
+    lastActiveEntryId: 
+    imageSourceIndex: 0
+    selectedCameraIndex: 0
+    scrollPosition: 0
+    imageContext:
+      kind: 0
+      assetGuid: 
+      assetPath: 
+      externalFilePath: 
+      descriptor: 
+      cacheRelativePath: 
+    pendingTasks: []
+  autoLoop:
+    inputClipGuid: 8cbcc89ae0da1774692d17656395c34e
+    inputClipPath: Assets/_Project/Art/Sound/PlayerAttack_Sound.wav
+    segmentStart: 0
+    segmentEnd: 0
+    loopResult:
+      id: da6b1029f2304cc1a7d62042e2b01cde
+      displayName: 
+      cacheRelativePath: 
+      isSavedToProject: 0
+      fromSuggestion: 0
+      suggestionIndex: 0
+      createdTicks: 639146811292099588
+  autoVariation:
+    lastStrength: 1
+    lastSampleCount: 3
+    inputClipGuid: 
+    inputClipPath: 
+    segmentStart: 0
+    segmentEnd: 0
+    variationEntries: []
+  monsterVoice:
+    lastConversionRatio: 1
+    sourceClipGuid: 
+    sourceClipPath: 
+    segmentStart: 0
+    segmentEnd: 0
+    targetClipGuid: 
+    targetClipPath: 
+    resultEntry:
+      id: 79d8b992f4aa42538a1af9590101d8e2
+      displayName: 
+      cacheRelativePath: 
+      isSavedToProject: 0
+      fromSuggestion: 0
+      suggestionIndex: 0
+      createdTicks: 639146811292353545

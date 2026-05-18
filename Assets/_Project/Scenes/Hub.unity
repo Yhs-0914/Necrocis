@@ -2453,6 +2453,7 @@ MonoBehaviour:
   cooldownTMPText: {fileID: 0}
   readyIconColor: {r: 1, g: 1, b: 1, a: 1}
   coolingIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
+  lockedIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
   cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.6}
   useUnscaledTime: 0
   keyLabel: E
@@ -2873,6 +2874,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1232513961}
   m_CullTransparentMesh: 1
+--- !u!1 &1304690875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1304690877}
+  - component: {fileID: 1304690876}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1304690876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304690875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e61e58a9c538f834db4e5e24ab768fc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.AudioManager
+  playerSfxEntries:
+  - soundId: 1
+    clip: {fileID: 8300000, guid: 8cbcc89ae0da1774692d17656395c34e, type: 3}
+    volume: 0.4
+  - soundId: 2
+    clip: {fileID: 8300000, guid: 0585d5667805e0545b2ee7df6e4225d8, type: 3}
+    volume: 0.4
+  sfxMasterVolume: 1
+  warnIfMissingMapping: 1
+--- !u!4 &1304690877
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304690875}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1337840198
 GameObject:
   m_ObjectHideFlags: 0
@@ -3962,6 +4016,7 @@ MonoBehaviour:
   cooldownTMPText: {fileID: 0}
   readyIconColor: {r: 1, g: 1, b: 1, a: 1}
   coolingIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
+  lockedIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
   cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.6}
   useUnscaledTime: 0
   keyLabel: E
@@ -4919,9 +4974,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6677856733d61344e832893e34b6b07b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerController
-  baseMoveSpeed: 10
-  baseMaxHealth: 10
-  baseAttackPower: 10
   spriteRenderer: {fileID: 571540666}
   idleSprites:
   - {fileID: -71036734, guid: bb4e252c981424e4ebf934ceb3c5bbb1, type: 3}
@@ -5310,15 +5362,21 @@ MonoBehaviour:
   meleeAttackDamage: 20
   meleeAttackBoxSize: {x: 1, y: 1, z: 2}
   meleeAttackOffset: 1
+  meleeTargetMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  meleeOverlapBufferSize: 24
   firePoint: {fileID: 1905923572}
   projectileSpawnPoint: {fileID: 1905923572}
   projectileSpawnOffset: 0.65
   projectileSpawnHeight: 1
   projectileSpawnExtraHeight: 2
+  projectileRange: 8
   rangedTargetMask:
     serializedVersion: 2
     m_Bits: 4294967295
   attackCooldown: 1
+  enableDebugLogs: 0
 --- !u!114 &1905923578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5342,13 +5400,13 @@ MonoBehaviour:
   skillVerticalOffset: 2
   skillHitHeightOffset: 0.75
   skillHitVerticalHalfHeight: 4
+  maxAreaSkillHitTargets: 32
   enableDebugLogs: 1
   mageSkill1:
     cooldown: 1
     radius: 5
     forwardOffset: 0
     baseDamage: 5
-    attackPowerScale: 5
     additionalDamage: 5
     additionalDamageMin: 5
     additionalDamageMax: 7
@@ -5361,7 +5419,6 @@ MonoBehaviour:
     radius: 3.5
     forwardOffset: 2.5
     baseDamage: 15
-    attackPowerScale: 0
     detonationDelay: 0.7
     damageTakenIncreaseRatio: 0.1
     damageTakenIncreaseDuration: 3
@@ -5703,3 +5760,4 @@ SceneRoots:
   - {fileID: 1874716686}
   - {fileID: 1166282790}
   - {fileID: 77331893}
+  - {fileID: 1304690877}

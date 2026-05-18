@@ -129,6 +129,7 @@ namespace Necrocis
         {
             PlayerStats stats = PlayerStats.Instance;
             playerController?.PlayAttackAnimation(true);
+            AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.MeleeAttack);
             Vector3 direction = GetAttackDirection();
             float effectiveAttackOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset, stats);
             Vector3 boxCenter = transform.position + direction * effectiveAttackOffset; // 판정 중심점
@@ -194,6 +195,7 @@ namespace Necrocis
         private void RangedAttack()
         {
             playerController?.PlayAttackAnimation(false);
+            AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.RangedAttack);
             PlayerProjectilePool pooler = ResolveObjectPooler();
             if (pooler == null)
             {
