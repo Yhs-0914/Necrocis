@@ -20,6 +20,9 @@ namespace Necrocis
         public float heightNoiseScale = 0.02f;
         public float heightNoiseAmplitude = 0.45f;
 
+        [Tooltip("0 초과 시 Pokemon식 이진 고원 모드: Perlin noise가 이 값 초과면 height +1 (덩어리 평탄). 0이면 legacy RoundToInt 모드.")]
+        public float heightThreshold = 0f;
+
         [Header("Tile Defaults")]
         public List<TileTypeMapping> tileMappings = new List<TileTypeMapping>();
 

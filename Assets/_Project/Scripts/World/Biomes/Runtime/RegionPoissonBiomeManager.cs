@@ -16,6 +16,7 @@ namespace Necrocis
         [Header("=== Height ===")]
         [SerializeField] protected float heightNoiseScale = 0.02f;
         [SerializeField] protected float heightNoiseAmplitude = 0.45f;
+        [SerializeField] protected float heightThreshold = 0f;
 
         protected BiomePerlinNoise heightNoise;
         protected readonly List<ObjectRule> objectRules = new List<ObjectRule>();
@@ -50,6 +51,13 @@ namespace Necrocis
             public int regionMask;
             public int salt;
             public int configIndex;
+
+            // Scale-aware spacing: 후보의 scale에 따라 실제 거리 요구치를 키움
+            public float scaleMin;
+            public float scaleMax;
+            public int scaleSalt;
+            public float scaleBias;
+            public float spacingPadding;
         }
 
         protected enum SpawnCategory
@@ -373,14 +381,26 @@ namespace Necrocis
                 baseHeight = Mathf.Lerp(primaryHeight, secondaryHeight, sample.blend);
             }
 
-            float noise = 0f;
-            if (heightNoise != null)
+            int level;
+            if (heightThreshold > 0f && heightNoise != null)
             {
-                noise = heightNoise.GetNoise(worldX, worldY) * heightNoiseAmplitude;
+                // Threshold 모드: Perlin > threshold면 +1 (이진 고원).
+                float noise = heightNoise.GetNoise(worldX, worldY);
+                int boost = noise > heightThreshold ? 1 : 0;
+                level = Mathf.RoundToInt(baseHeight) + boost;
+            }
+            else
+            {
+                // Legacy 연속 노이즈 모드.
+                float noise = 0f;
+                if (heightNoise != null)
+                {
+                    noise = heightNoise.GetNoise(worldX, worldY) * heightNoiseAmplitude;
+                }
+                float heightValue = baseHeight + noise;
+                level = Mathf.RoundToInt(heightValue);
             }
 
-            float heightValue = baseHeight + noise;
-            int level = Mathf.RoundToInt(heightValue);
             return Mathf.Clamp(level, minHeightLevel, maxHeightLevel);
         }
 
@@ -411,9 +431,13 @@ namespace Necrocis
             float selfValue = BiomeDeterministic.Hash01(seed, worldX, worldY, rule.salt);
             if (selfValue >= density) return false;
 
-            float radius = Mathf.Max(0.5f, rule.minDistance);
-            float radiusSq = radius * radius;
-            int cellRange = Mathf.CeilToInt(radius / cellSize);
+            float padding = rule.spacingPadding > 0f ? rule.spacingPadding : 1f;
+            float baseRadius = Mathf.Max(0.5f, rule.minDistance);
+            float selfScale = GetRuleScale(rule, worldX, worldY);
+            // 가장 큰 가능한 scale 기준으로 검색 범위 확보
+            float maxPossibleScale = Mathf.Max(1f, rule.scaleMax);
+            float searchRadius = baseRadius * padding * Mathf.Max(selfScale, maxPossibleScale);
+            int cellRange = Mathf.CeilToInt(searchRadius / cellSize);
 
             for (int dx = -cellRange; dx <= cellRange; dx++)
             {
@@ -425,11 +449,15 @@ namespace Necrocis
 
                     float offsetX = otherCandidate.x - worldX;
                     float offsetY = otherCandidate.y - worldY;
-                    if (offsetX * offsetX + offsetY * offsetY > radiusSq) continue;
+                    float distSq = offsetX * offsetX + offsetY * offsetY;
 
                     int otherRegionType = GetRegionTypeCached(otherCandidate.x, otherCandidate.y);
                     float otherDensity = GetDensityForRule(rule, otherCandidate.x, otherCandidate.y, otherRegionType);
                     if (otherDensity <= 0f) continue;
+
+                    float otherScale = GetRuleScale(rule, otherCandidate.x, otherCandidate.y);
+                    float requiredRadius = baseRadius * padding * Mathf.Max(selfScale, otherScale);
+                    if (distSq > requiredRadius * requiredRadius) continue;
 
                     float otherValue = BiomeDeterministic.Hash01(seed, otherCandidate.x, otherCandidate.y, rule.salt);
                     if (otherValue < otherDensity && otherValue < selfValue)
@@ -440,6 +468,13 @@ namespace Necrocis
             }
 
             return true;
+        }
+
+        private float GetRuleScale(ObjectRule rule, int x, int y)
+        {
+            if (rule.scaleMax <= 0f) return 1f;
+            int salt = rule.scaleSalt != 0 ? rule.scaleSalt : rule.salt + 9173;
+            return BiomeDeterministic.ComputeScale(seed, x, y, salt, rule.scaleMin, rule.scaleMax, rule.scaleBias);
         }
 
         private Vector2Int GetCandidateInCell(int cellX, int cellY, int cellSize, int salt)

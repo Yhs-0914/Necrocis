@@ -472,10 +472,7 @@ namespace Necrocis
                 }
             }
 
-            // ── 높이 cliff 벽 렌더 (임시 비활성, 평지 모드) ──
-            // 1칸 높이 차이에 1장의 wall sprite를 깔던 로직. sand_wall sprite 자체가 cliff face처럼
-            // 보이지 않아서 "주변 타일을 바꾼 듯" 보이는 문제 있음. 다시 켤 때 주석 해제.
-            /*
+            // 높이 cliff 벽 렌더 (threshold 모드 + sand_wall 1장).
             for (int ly = 1; ly < chunkSize; ly++)
             {
                 for (int lx = 0; lx < chunkSize; lx++)
@@ -524,7 +521,6 @@ namespace Necrocis
                     }
                 }
             }
-            */
 
             BoundsInt bounds = new BoundsInt(0, 0, 0, chunkSize, chunkSize, 1);
             for (int i = 0; i < levelCount; i++)
@@ -574,9 +570,7 @@ namespace Necrocis
                 }
             }
 
-            // ── 맵 남쪽 외곽 sand 벽 페인팅 (임시 비활성) ──
-            // 다시 켤 때 주석 해제.
-            /*
+            // 맵 남쪽 외곽 sand 벽 페인팅.
             if (useCliffOverlayTilemaps && chunk.cliffTilemaps != null && chunk.chunkY == 0)
             {
                 for (int lx = 0; lx < chunkSize; lx++)
@@ -603,7 +597,6 @@ namespace Necrocis
                     }
                 }
             }
-            */
         }
 
         /// <summary>

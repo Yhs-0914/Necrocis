@@ -44,6 +44,7 @@ namespace Necrocis
             regionCount = config.regions.Count;
             heightNoiseScale = config.heightNoiseScale;
             heightNoiseAmplitude = config.heightNoiseAmplitude;
+            heightThreshold = config.heightThreshold;
 
             base.Awake();
         }
