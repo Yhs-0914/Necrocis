@@ -92,11 +92,13 @@ namespace Necrocis.EditorTools
             config.detailNoiseScale = 0.05f;
             config.heightNoiseAmplitude = 0.85f;
 
-            TileBase[] grassWalls = new TileBase[] { grassWall1Tile, grassWall2Tile, grassWall3Tile };
+            // Sand 지형 자체의 오르막은 sand 벽면.
+            // grass_wall은 나중에 grass region 추가될 때를 위해 보존 (현재는 사용 안 함).
+            TileBase[] sandWalls = new TileBase[] { sandWallTile, sandWallTile, sandWallTile };
 
             config.regions.Clear();
-            // Sand region 단 1개. 높이 노이즈로 인한 상승 부위에 grass_wall 3-stack 렌더.
-            // 맵 남쪽 외곽에 sand_wall 3타일 세로 렌더 (mapEdge 효과).
+            // Sand region. 높이 노이즈로 인한 상승 부위에 sand_wall 3-stack 렌더.
+            // 맵 남쪽 외곽에도 sand_wall 3타일 세로 렌더.
             config.regions.Add(new BiomeRegionDefinition
             {
                 name = "Sand",
@@ -107,7 +109,7 @@ namespace Necrocis.EditorTools
                 variantType = BiomeTileType.FloorVariant,
                 variantThreshold = 0.65f,
                 tileVariants = null,
-                wallTiles = grassWalls,
+                wallTiles = sandWalls,
                 mapEdgeWallTile = sandWallTile,
                 mapEdgeWallDepth = 3,
             });
