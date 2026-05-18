@@ -90,7 +90,7 @@ namespace Necrocis.EditorTools
             config.regionCellSize = 35f;
             config.regionBlendWidth = 4f;
             config.detailNoiseScale = 0.05f;
-            config.heightNoiseAmplitude = 0.85f;
+            config.heightNoiseAmplitude = 0f; // 임시 평지. 벽 시스템 다시 살릴 때 0.7~0.9로.
 
             // Sand 지형 자체의 오르막은 sand 벽면.
             // grass_wall은 나중에 grass region 추가될 때를 위해 보존 (현재는 사용 안 함).
