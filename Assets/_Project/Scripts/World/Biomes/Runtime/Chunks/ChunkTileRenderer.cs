@@ -102,6 +102,11 @@ namespace Necrocis
                 chunk.cliffLevels = new int[tileCount];
             }
 
+            if (chunk.cliffOverlayTiles == null || chunk.cliffOverlayTiles.Length != tileCount)
+            {
+                chunk.cliffOverlayTiles = new TileBase[tileCount];
+            }
+
             if (chunk.tileBuffer == null || chunk.tileBuffer.Length != tileCount)
             {
                 chunk.tileBuffer = new TileBase[tileCount];

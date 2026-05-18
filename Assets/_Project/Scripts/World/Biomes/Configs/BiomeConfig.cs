@@ -104,6 +104,16 @@ namespace Necrocis
 
         [Tooltip("같은 리전 내 시각적 변형 타일들 (해시 기반 선택)")]
         public TileBase[] tileVariants;
+
+        [Header("Side Walls (south-facing)")]
+        [Tooltip("이 리전이 남쪽 이웃보다 높을 때 아래로 그릴 벽 타일들. index 0 = 벽 맨 위(상승 타일 바로 아래), 마지막 = 벽 맨 아래. 비어 있으면 벽 안 그림.")]
+        public TileBase[] wallTiles;
+
+        [Tooltip("맵 남쪽 외곽 경계에서 그릴 벽 타일. 동일 sprite를 mapEdgeWallDepth만큼 세로로 반복.")]
+        public TileBase mapEdgeWallTile;
+
+        [Tooltip("맵 외곽 벽의 세로 깊이(타일 수). 0이면 외곽 벽 안 그림.")]
+        public int mapEdgeWallDepth = 3;
     }
 
     [System.Serializable]
@@ -148,6 +158,17 @@ namespace Necrocis
         public bool isTrigger = false;
         public Vector3 colliderSize = new Vector3(1f, 1f, 1f);
         public Vector3 colliderCenter = Vector3.zero;
+
+        [Header("Scale Variation")]
+        [Tooltip("위치 기반 해시로 [min, max] 사이 값이 결정적으로 선택됩니다. 둘 다 1이면 변형 없음.")]
+        public Vector2 scaleRange = new Vector2(1f, 1f);
+        public int scaleSalt = 0;
+
+        [Tooltip("분포 편향. 1=균등, >1=작은 쪽으로 편향(큰 게 드물어짐), <1=큰 쪽으로 편향.")]
+        public float scaleBias = 1f;
+
+        [Tooltip("Poisson 거리 요구치에 곱해지는 추가 패딩. 1=정확히 minDistance×scale, >1=더 떨어지게(스프라이트 시각 여백 보상).")]
+        public float spacingPadding = 1f;
     }
 
     [System.Serializable]

@@ -15,111 +15,207 @@ MonoBehaviour:
   biomeType: 2
   regionCellSize: 35
   regionBlendWidth: 4
-  detailNoiseScale: 0.015
+  detailNoiseScale: 0.05
   regions:
-  - name: Grass1
-    baseHeight: 0
-    primaryTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c501, type: 2}
-    primaryType: 1
-    variantTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c502, type: 2}
-    variantType: 2
-    variantThreshold: 0.9
-    tileVariants:
-    - {fileID: 11400000, guid: aa00000000000000000000000000a102, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a103, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a104, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a105, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a106, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a107, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a108, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a109, type: 2}
-  - name: Grass3
-    baseHeight: -1
-    primaryTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c503, type: 2}
-    primaryType: 1
-    variantTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c504, type: 2}
-    variantType: 2
-    variantThreshold: 0.9
-    tileVariants:
-    - {fileID: 11400000, guid: aa00000000000000000000000000a302, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a303, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a304, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a305, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a306, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a307, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a308, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a309, type: 2}
-  - name: Grass5
-    baseHeight: 1
-    primaryTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c505, type: 2}
-    primaryType: 1
-    variantTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c506, type: 2}
-    variantType: 2
-    variantThreshold: 0.9
-    tileVariants:
-    - {fileID: 11400000, guid: aa00000000000000000000000000a502, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a503, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a504, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a505, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a506, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a507, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a508, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a509, type: 2}
   - name: Sand
-    baseHeight: -2
-    primaryTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c507, type: 2}
+    baseHeight: 0
+    primaryTile: {fileID: 11400000, guid: efa690c9d67a50a4f967b3ad85993aed, type: 2}
     primaryType: 1
-    variantTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c508, type: 2}
+    variantTile: {fileID: 11400000, guid: 3eb8d96ad2a6e644f810596b1b4763f2, type: 2}
     variantType: 2
-    variantThreshold: 0.95
+    variantThreshold: 0.65
     tileVariants: []
-  - name: SandLake
-    baseHeight: -3
-    primaryTile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c509, type: 2}
-    primaryType: 1
-    variantTile: {fileID: 0}
-    variantType: 0
-    variantThreshold: 0.2
-    tileVariants:
-    - {fileID: 11400000, guid: aa00000000000000000000000000a702, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a703, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a704, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a705, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a706, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a707, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a708, type: 2}
-    - {fileID: 11400000, guid: aa00000000000000000000000000a709, type: 2}
+    wallTiles:
+    - {fileID: 11400000, guid: d53b2723b083def4b85025b2cbb8dc34, type: 2}
+    - {fileID: 11400000, guid: 0f199e276fdcbc7418f1ab9f79322f54, type: 2}
+    - {fileID: 11400000, guid: 02c3ae9f7ed195946a904843ef1bbee1, type: 2}
+    mapEdgeWallTile: {fileID: 11400000, guid: e751333d828c9f543b0c8e1135fe4945, type: 2}
+    mapEdgeWallDepth: 3
   heightNoiseScale: 0.015
-  heightNoiseAmplitude: 0.3
+  heightNoiseAmplitude: 0.45
   tileMappings:
   - tileType: 1
-    tile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c501, type: 2}
-  - tileType: 1
-    tile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c503, type: 2}
-  - tileType: 1
-    tile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c505, type: 2}
-  - tileType: 1
-    tile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c507, type: 2}
-  - tileType: 1
-    tile: {fileID: 11400000, guid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c509, type: 2}
+    tile: {fileID: 11400000, guid: efa690c9d67a50a4f967b3ad85993aed, type: 2}
+  - tileType: 2
+    tile: {fileID: 11400000, guid: 3eb8d96ad2a6e644f810596b1b4763f2, type: 2}
   marginLeft: 5
   marginRight: 5
   marginBottom: 10
   marginTop: 5
-  objectRules: []
+  objectRules:
+  - name: Grass
+    poolKind: 1
+    density: 0.08
+    minDistance: 4
+    poissonSalt: 201
+    allowedRegions: 00000000
+    blocksMovement: 0
+    heightOffset: 0.01
+    sortingOrder: 50
+    sprites:
+    - {fileID: 21300000, guid: 2783ec49b7fbef142a9801e63694aa70, type: 3}
+    useDeterministicSprite: 1
+    spriteSalt: 0
+    animate: 0
+    animationSpeed: 0.15
+    useBillboard: 0
+    useYSort: 0
+    addCollider: 0
+    isTrigger: 0
+    colliderSize: {x: 1, y: 1, z: 1}
+    colliderCenter: {x: 0, y: 0, z: 0}
+    scaleRange: {x: 0.7, y: 2.5}
+    scaleSalt: 4201
+    scaleBias: 3
+    spacingPadding: 1.8
   enemySpawnConfig: {fileID: 11400000, guid: 946670425bda4f0293f85cfd208a6778, type: 2}
   enemySpawnRules: []
   bossArenaConfig: {fileID: 11400000, guid: 83239c28f0d24030ad9fe289abc11f93, type: 2}
-  returnPortal:
+  midBossArena:
     enabled: 1
-    name: ReturnPortal
-    poolKind: 100
-    sprite: {fileID: 1428116226, guid: fbc2f259a8b301f42933cd4689e5842c, type: 3}
-    sortingOrder: 1000
-    useCustomPosition: 1
-    gridPosition: {x: 75, y: 4}
-    heightOffset: 0
-    useBillboard: 1
-    scale: {x: 0.5, y: 0.5, z: 0.5}
-    addCollider: 1
-    isTrigger: 1
+    onlyEnableOnLargeMaps: 1
+    minimumMapWidth: 300
+    minimumMapHeight: 300
+    useCustomCenter: 0
+    centerGrid: {x: 150, y: 150}
+    arenaSize: {x: 26, y: 26}
+    wallThicknessInCells: 1
+    lockBoundaryInsetInCells: 1
+    triggerInsetInCells: 2
+    wallHeight: 4
+    wallHeightOffset: 1.5
+    groundFogOffset: 0.15
+    triggerHeight: 4
+    sortingOrder: 3500
+    fogSprite: {fileID: 0}
+    unlockedFogColor: {r: 1, g: 1, b: 1, a: 0.85}
+    lockedFogColor: {r: 1, g: 1, b: 1, a: 0.35}
+    useInteriorFogCover: 1
+    interiorFogColor: {r: 1, g: 1, b: 1, a: 1}
+    interiorFogHiddenAlpha: 1
+    interiorFogRevealedAlpha: 0
+    fogRevealDuration: 1.4
+    interiorFogSortingOrderOffset: 3000
+    boss:
+      displayName: MidBoss
+      useCustomBossRule: 0
+      bossRule:
+        name: Enemy
+        density: 0.0025
+        minDistance: 8
+        poissonSalt: 400
+        allowedRegions: 
+        maxAlive: 1
+        activationRadius: 20
+        respawnCooldown: 8
+        spawnRadius: 1.5
+        moveSpeed: 1.5
+        stoppingDistance: 0.1
+        wanderRadius: 4
+        chaseRadius: 6
+        leashRadius: 8
+        idleDelayRange: {x: 0.5, y: 1.5}
+        maxHealth: 30
+        attackDamage: 10
+        attackRange: 1.5
+        attackCooldown: 1
+        expReward: 10
+        additionalBaseStats: []
+        separationDistance: 1.1
+        separationStrength: 1
+        heightOffset: 0
+        scale: {x: 1, y: 1, z: 1}
+        sortingOrder: 1000
+        useBillboard: 1
+        useYSort: 1
+        animationSpeed: 0.15
+        addCollider: 1
+        isTrigger: 0
+        colliderSize: {x: 0.7, y: 1.1, z: 0.7}
+        colliderCenter: {x: 0, y: 0.55, z: 0}
+        idleSprites: []
+        moveSprites: []
+        attackSprites: []
+        attackSpritesUp: []
+        attackSpritesDown: []
+        attackAnimationSpeed: 0.12
+        isRanged: 0
+        projectileSpeed: 8
+        projectileLifeTime: 3
+        projectileSprite: {fileID: 0}
+        projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+        projectileSpawnOffset: 0.5
+        expandColliderOnAttack: 0
+        attackColliderSize: {x: 2, y: 2, z: 2}
+        attackColliderCenter: {x: 0, y: 0.55, z: 0}
+        deathSprites: []
+        deathAnimationSpeed: 0.15
+        isElite: 0
+        tintColor: {r: 1, g: 1, b: 1, a: 1}
+        killTriggerEnemyName: 
+        killTriggerCount: 10
+        splitsOnDeath: 0
+        splitCount: 2
+        splitEnemyName: 
+        splitVfxSprites: []
+        splitVfxScale: 3
+        splitVfxSpeed: 0.08
+        splitVfxDuration: 0.6
+        chargesAtPlayer: 0
+        chargeSpeed: 6
+        chargeAccelTime: 0.3
+        leavesDebrisOnDeath: 0
+        debrisDuration: 5
+        debrisAggroRadius: 8
+        debrisVfxSprites: []
+        debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
+      useEnemyRuleFallback: 1
+      fallbackEnemyRuleIndex: 0
+      patternType: 0
+      overrideStats: 0
+      maxHealthMultiplier: 1
+      attackDamageMultiplier: 1
+      moveSpeedMultiplier: 1
+      scaleMultiplier: {x: 1, y: 1, z: 1}
+      minimumMaxHealth: 0
+      intestinePattern:
+        phase2HealthRatio: 0.5
+        phase1FleeDistance: 7
+        phase1RoamRadius: 8
+        phase1MoveMultiplier: 1
+        phase2PreferredDistance: 2.5
+        phase2MoveMultiplier: 1.15
+        dungPreDelay: 0.5
+        phase1DungCooldown: 8
+        phase2ThrowCooldown: 5
+        dungCollisionDamage: 1
+        dungSlowRatio: 0.2
+        dungSlowDuration: 3
+        dungHazardRadius: 0.75
+        dungLifeTime: 10
+        throwTravelTime: 0.7
+        throwArcHeight: 2.5
+        parasiteMinCount: 2
+        parasiteMaxCount: 3
+        parasiteSpawnDelay: 0.45
+        parasiteSpawnRadius: 1.1
+        parasiteMaxHealth: 6
+        parasiteMoveSpeed: 2.3
+        parasiteAttackDamage: 1
+        parasiteAttackCooldown: 1.3
+        parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
+        stompMinDelay: 7
+        stompPreDelay: 0.55
+        stompRadius: 6
+        stompDamage: 2
+        stompSlowRatio: 0.3
+        stompSlowDuration: 3
+        phase1Color: {r: 0.72, g: 0.45, b: 0.24, a: 1}
+        phase2Color: {r: 0.95, g: 0.32, b: 0.18, a: 1}
+        dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
+        parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
+        shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1

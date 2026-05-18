@@ -110,6 +110,33 @@ namespace Necrocis
             return config.regions[index].baseHeight;
         }
 
+        protected override int GetWallDepth(int worldX, int worldY)
+        {
+            BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
+            if (region == null || region.wallTiles == null) return 0;
+            return region.wallTiles.Length;
+        }
+
+        protected override TileBase GetWallTile(int worldX, int worldY, int wallRow)
+        {
+            BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
+            if (region == null || region.wallTiles == null) return null;
+            if (wallRow < 0 || wallRow >= region.wallTiles.Length) return null;
+            return region.wallTiles[wallRow];
+        }
+
+        protected override TileBase GetMapEdgeWallTile(int worldX, int worldY)
+        {
+            BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
+            return region != null ? region.mapEdgeWallTile : null;
+        }
+
+        protected override int GetMapEdgeWallDepth(int worldX, int worldY)
+        {
+            BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
+            return region != null ? region.mapEdgeWallDepth : 0;
+        }
+
         protected override bool IsObjectAreaAllowed(int x, int y)
         {
             if (config == null) return true;
@@ -180,7 +207,12 @@ namespace Necrocis
                         blocksMovement = ruleConfig.blocksMovement,
                         regionMask = mask,
                         salt = salt,
-                        configIndex = runtimeRules.Count
+                        configIndex = runtimeRules.Count,
+                        scaleMin = ruleConfig.scaleRange.x,
+                        scaleMax = ruleConfig.scaleRange.y,
+                        scaleSalt = ruleConfig.scaleSalt,
+                        scaleBias = ruleConfig.scaleBias,
+                        spacingPadding = ruleConfig.spacingPadding
                     });
 
                     runtimeRules.Add(ruleConfig);
@@ -374,9 +406,17 @@ namespace Necrocis
             ConfigureBillboard(obj, rule.useBillboard);
             ConfigureYSort(obj, rule.useYSort, rule.sortingOrder);
             ConfigureCollider(obj, rule);
+            ApplyScale(obj, rule, x, y);
 
             RegisterObject(chunk, obj, id, poolKey, rule.blocksMovement);
             ActivateSpawnedObject(obj);
+        }
+
+        private void ApplyScale(GameObject obj, BiomeObjectRuleConfig rule, int x, int y)
+        {
+            int salt = rule.scaleSalt != 0 ? rule.scaleSalt : rule.poissonSalt + 9173;
+            float scale = BiomeDeterministic.ComputeScale(seed, x, y, salt, rule.scaleRange.x, rule.scaleRange.y, rule.scaleBias);
+            obj.transform.localScale = new Vector3(scale, scale, scale);
         }
 
         private void SpawnEnemySpawner(EnemySpawnRuleConfig rule, ChunkSpawnRecord record, Chunk chunk)

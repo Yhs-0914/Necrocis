@@ -167,7 +167,7 @@ MonoBehaviour:
   pooledObjectsParent: {fileID: 0}
   useChunkRootPooling: 1
   maxChunkRootPoolSize: 0
-  useCliffOverlayTilemaps: 0
+  useCliffOverlayTilemaps: 1
   defaultMaxPoolSizePerType: 512
   poolLimits: []
   maxTotalPoolSize: 0

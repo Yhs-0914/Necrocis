@@ -99,6 +99,39 @@ namespace Necrocis
         public int MinHeightLevel => minHeightLevel;
         public int MaxHeightLevel => maxHeightLevel;
 
+        /// <summary>
+        /// 상승 타일 (worldX, worldY)이 남쪽 이웃보다 높을 때 그릴 벽의 깊이(타일 개수).
+        /// 0 이하 반환 시 기존 1-타일 cliff 동작으로 폴백.
+        /// </summary>
+        protected virtual int GetWallDepth(int worldX, int worldY)
+        {
+            return 0;
+        }
+
+        /// <summary>
+        /// 상승 타일 (worldX, worldY) 아래의 wallRow번째 (0=맨위) 벽 타일 스프라이트.
+        /// </summary>
+        protected virtual TileBase GetWallTile(int worldX, int worldY, int wallRow)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 맵 남쪽 외곽 경계에서 (worldX, worldY) 타일 아래에 그릴 벽 타일.
+        /// </summary>
+        protected virtual TileBase GetMapEdgeWallTile(int worldX, int worldY)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 맵 외곽 벽의 세로 깊이.
+        /// </summary>
+        protected virtual int GetMapEdgeWallDepth(int worldX, int worldY)
+        {
+            return 0;
+        }
+
         protected virtual void Awake()
         {
             Active = this;
@@ -413,6 +446,7 @@ namespace Necrocis
             for (int i = 0; i < tileCount; i++)
             {
                 chunk.cliffLevels[i] = int.MinValue;
+                chunk.cliffOverlayTiles[i] = null;
             }
 
             for (int ly = 0; ly < chunkSize; ly++)
@@ -457,7 +491,29 @@ namespace Necrocis
                         continue;
                     }
 
-                    chunk.cliffLevels[lowerIndex] = lowerLevel;
+                    int upperGX = startX + lx;
+                    int upperGY = startY + ly;
+                    int wallDepth = GetWallDepth(upperGX, upperGY);
+                    if (wallDepth <= 0)
+                    {
+                        chunk.cliffLevels[lowerIndex] = lowerLevel;
+                        continue;
+                    }
+
+                    for (int wallRow = 0; wallRow < wallDepth; wallRow++)
+                    {
+                        int wallLY = ly - 1 - wallRow;
+                        if (wallLY < 0) break;
+                        int wallIndex = wallLY * chunkSize + lx;
+
+                        if (chunk.cliffOverlayTiles[wallIndex] != null) continue;
+
+                        TileBase wallTile = GetWallTile(upperGX, upperGY, wallRow);
+                        if (wallTile == null) continue;
+
+                        chunk.cliffOverlayTiles[wallIndex] = wallTile;
+                        chunk.cliffLevels[wallIndex] = lowerLevel;
+                    }
                 }
             }
 
@@ -493,7 +549,8 @@ namespace Necrocis
 
                     if (useCliffOverlayTilemaps && chunk.cliffBuffer != null && chunk.cliffLevels[index] == heightLevel)
                     {
-                        chunk.cliffBuffer[index] = chunk.baseTiles[index];
+                        TileBase wallTile = chunk.cliffOverlayTiles[index];
+                        chunk.cliffBuffer[index] = wallTile != null ? wallTile : chunk.baseTiles[index];
                     }
                 }
 
@@ -505,6 +562,35 @@ namespace Necrocis
                 else
                 {
                     ApplyTileColors(chunk.tilemaps[i], chunk.tileBuffer, chunk.colorBuffer);
+                }
+            }
+
+            // 맵 남쪽 외곽 벽 페인팅 (chunkY=0 이고 ly=0인 타일 아래로 벽 그림).
+            // cliffTilemap을 사용해야 함 — useCliffOverlayTilemaps OFF면 스킵.
+            if (useCliffOverlayTilemaps && chunk.cliffTilemaps != null && chunk.chunkY == 0)
+            {
+                for (int lx = 0; lx < chunkSize; lx++)
+                {
+                    int baseIndex = lx; // ly=0
+                    if (chunk.baseTiles[baseIndex] == null) continue;
+
+                    int gx = startX + lx;
+                    int gy = startY; // = 0
+                    int wallDepth = GetMapEdgeWallDepth(gx, gy);
+                    if (wallDepth <= 0) continue;
+                    TileBase edgeWall = GetMapEdgeWallTile(gx, gy);
+                    if (edgeWall == null) continue;
+
+                    int sourceLevel = chunk.heightLevels[baseIndex];
+                    int tilemapIdx = sourceLevel - minHeightLevel;
+                    if (tilemapIdx < 0 || tilemapIdx >= chunk.cliffTilemaps.Length) continue;
+                    Tilemap edgeTilemap = chunk.cliffTilemaps[tilemapIdx];
+                    if (edgeTilemap == null) continue;
+
+                    for (int wallRow = 0; wallRow < wallDepth; wallRow++)
+                    {
+                        edgeTilemap.SetTile(new Vector3Int(lx, -1 - wallRow, 0), edgeWall);
+                    }
                 }
             }
         }

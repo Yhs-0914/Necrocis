@@ -140,6 +140,7 @@ namespace Necrocis
         public TileBase[] baseTiles;
         public int[] heightLevels;
         public int[] cliffLevels;
+        public TileBase[] cliffOverlayTiles;
         public TileBase[] tileBuffer;
         public TileBase[] cliffBuffer;
         public Color[] colorBuffer;
