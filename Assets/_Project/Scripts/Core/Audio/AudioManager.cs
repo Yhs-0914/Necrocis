@@ -44,11 +44,20 @@ namespace Necrocis
         [SerializeField, Range(0f, 1f)] private float sfxMasterVolume = 1f;
         [SerializeField] private bool warnIfMissingMapping = true;
 
+        [Header("BGM")]
+        [SerializeField] private AudioClip gameplayBgmClip;
+        [SerializeField] private bool autoPlayGameplayBgm = true;
+        [SerializeField] private bool gameplayBgmLoop = true;
+        [SerializeField, Range(0f, 1f)] private float bgmMasterVolume = 1f;
+        [SerializeField, Range(0f, 1f)] private float gameplayBgmVolume = 0.6f;
+
         private readonly Dictionary<PlayerSoundId, PlayerSfxEntry> playerSfxLookup =
             new Dictionary<PlayerSoundId, PlayerSfxEntry>();
 
         private AudioSource sfx2DSource;
+        private AudioSource bgm2DSource;
         private bool initialized;
+        private bool autoBgmStarted;
 
         private void Awake()
         {
@@ -78,8 +87,9 @@ namespace Necrocis
                 return;
             }
 
-            EnsureAudioSource();
+            EnsureAudioSources();
             RebuildLookup();
+            ApplyBgmVolume();
         }
 
         /// <summary>
@@ -108,6 +118,44 @@ namespace Necrocis
             return true;
         }
 
+        /// <summary>
+        /// Plays configured gameplay BGM clip using BGM channel.
+        /// </summary>
+        public bool PlayGameplayBgm()
+        {
+            return PlayBgm(gameplayBgmClip, gameplayBgmLoop, gameplayBgmVolume);
+        }
+
+        /// <summary>
+        /// Plays a clip in BGM channel (2D looping by default).
+        /// </summary>
+        public bool PlayBgm(AudioClip clip, bool loop = true, float volumeScale = 1f)
+        {
+            EnsureInitialized();
+            if (clip == null)
+            {
+                return false;
+            }
+
+            bool clipChanged = bgm2DSource.clip != clip;
+            bgm2DSource.clip = clip;
+            bgm2DSource.loop = loop;
+            bgm2DSource.volume = Mathf.Clamp01(bgmMasterVolume * Mathf.Clamp01(volumeScale));
+
+            if (clipChanged || !bgm2DSource.isPlaying)
+            {
+                bgm2DSource.Play();
+            }
+
+            return true;
+        }
+
+        public void StopBgm()
+        {
+            EnsureInitialized();
+            bgm2DSource.Stop();
+        }
+
         private void EnsureInitialized()
         {
             if (initialized)
@@ -115,12 +163,19 @@ namespace Necrocis
                 return;
             }
 
-            EnsureAudioSource();
+            EnsureAudioSources();
             RebuildLookup();
             initialized = true;
+            TryAutoStartGameplayBgm();
         }
 
-        private void EnsureAudioSource()
+        private void EnsureAudioSources()
+        {
+            EnsureSfxAudioSource();
+            EnsureBgmAudioSource();
+        }
+
+        private void EnsureSfxAudioSource()
         {
             if (sfx2DSource != null)
             {
@@ -136,6 +191,56 @@ namespace Necrocis
             sfx2DSource.playOnAwake = false;
             sfx2DSource.loop = false;
             sfx2DSource.spatialBlend = 0f;
+        }
+
+        private void EnsureBgmAudioSource()
+        {
+            if (bgm2DSource != null)
+            {
+                return;
+            }
+
+            AudioSource[] sources = GetComponents<AudioSource>();
+            for (int i = 0; i < sources.Length; i++)
+            {
+                AudioSource source = sources[i];
+                if (source != null && source != sfx2DSource)
+                {
+                    bgm2DSource = source;
+                    break;
+                }
+            }
+
+            if (bgm2DSource == null)
+            {
+                bgm2DSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            bgm2DSource.playOnAwake = false;
+            bgm2DSource.loop = gameplayBgmLoop;
+            bgm2DSource.spatialBlend = 0f;
+            ApplyBgmVolume();
+        }
+
+        private void TryAutoStartGameplayBgm()
+        {
+            if (autoBgmStarted || !autoPlayGameplayBgm)
+            {
+                return;
+            }
+
+            autoBgmStarted = true;
+            PlayGameplayBgm();
+        }
+
+        private void ApplyBgmVolume()
+        {
+            if (bgm2DSource == null)
+            {
+                return;
+            }
+
+            bgm2DSource.volume = Mathf.Clamp01(bgmMasterVolume * gameplayBgmVolume);
         }
 
         private void RebuildLookup()

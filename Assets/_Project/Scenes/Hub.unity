@@ -2906,12 +2906,20 @@ MonoBehaviour:
   playerSfxEntries:
   - soundId: 1
     clip: {fileID: 8300000, guid: 8cbcc89ae0da1774692d17656395c34e, type: 3}
-    volume: 0.4
+    volume: 0.5
   - soundId: 2
     clip: {fileID: 8300000, guid: 0585d5667805e0545b2ee7df6e4225d8, type: 3}
-    volume: 0.4
+    volume: 0.5
+  - soundId: 3
+    clip: {fileID: 8300000, guid: 518f8a57d40395543a6c428a393f37ae, type: 3}
+    volume: 0.5
   sfxMasterVolume: 1
   warnIfMissingMapping: 1
+  gameplayBgmClip: {fileID: 8300000, guid: 12ef7f4f57fd8fe4aba8df2443aef54b, type: 3}
+  autoPlayGameplayBgm: 1
+  gameplayBgmLoop: 1
+  bgmMasterVolume: 1
+  gameplayBgmVolume: 0.2
 --- !u!4 &1304690877
 Transform:
   m_ObjectHideFlags: 0

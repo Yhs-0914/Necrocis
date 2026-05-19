@@ -819,6 +819,8 @@ namespace Necrocis
             deathHandled = true;
             movement = Vector3.zero;
             isMoving = false;
+            AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.Death);
+            AudioManager.Instance?.StopBgm();
 
             if (rb != null)
             {

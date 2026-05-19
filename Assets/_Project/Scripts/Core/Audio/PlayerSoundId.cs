@@ -8,6 +8,7 @@ namespace Necrocis
     {
         None = 0,
         MeleeAttack = 1,
-        RangedAttack = 2
+        RangedAttack = 2,
+        Death = 3
     }
 }
