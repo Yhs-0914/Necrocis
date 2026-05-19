@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,6 +78,12 @@ namespace Necrocis
         [SerializeField] private Sprite[] rangedUpLeft;
         [SerializeField] private Sprite[] rangedUpRight;
 
+        [Header("Dash")]
+        [SerializeField] private float dashSpeed = 20f;
+        [SerializeField] private float dashDuration = 0.15f;
+        [SerializeField] private float dashCooldown = 0.8f;
+        [SerializeField] private bool invincibleDuringDash = true;
+
         [Header("Animation Settings")]
         [SerializeField] private float idleFrameRate = 4f;
         [SerializeField] private float walkFrameRate = 8f;
@@ -94,6 +101,11 @@ namespace Necrocis
         private Direction currentDirection = Direction.Up;      // ?꾩옱 諛붾씪蹂대뒗 諛⑺뼢
         private Vector3 lastMoveDirection = Vector3.forward;
         private bool isMoving = false;
+
+        // 대시 상태
+        private bool isDashing = false;
+        private float lastDashTime = float.NegativeInfinity;
+        private Vector3 dashVelocity;
 
         // 공격 애니메이션 상태
         private bool isPlayingAttackAnim = false;
@@ -255,6 +267,12 @@ namespace Necrocis
             }
 
             // 諛⑺뼢 寃곗젙 (留덉?留??낅젰 諛⑺뼢 ?좎?)
+            // 대시 입력 (Shift)
+            if (input.DashAction.WasPressedThisFrame() && !isDashing && Time.time >= lastDashTime + dashCooldown)
+            {
+                StartCoroutine(DashCoroutine());
+            }
+
             if (isMoving)
             {
                 UpdateDirection(moveInput.x, moveInput.y);
@@ -377,6 +395,12 @@ namespace Necrocis
         /// </summary>
         private void Move()
         {
+            if (isDashing)
+            {
+                ApplyMove(dashVelocity * Time.fixedDeltaTime);
+                return;
+            }
+
             if (!isMoving)
             {
                 if (rb != null)
@@ -602,6 +626,7 @@ namespace Necrocis
         public void TakeDamage(float damage)
         {
             if (deathHandled) return;
+            if (isDashing && invincibleDuringDash) return;
 
             Health health = GetComponent<Health>();
             if (health != null)
@@ -702,6 +727,23 @@ namespace Necrocis
             if (absZ >= absX)
                 return z > 0 ? rangedUp : rangedDown;
             return x > 0 ? rangedRight : rangedLeft;
+        }
+
+        private IEnumerator DashCoroutine()
+        {
+            isDashing = true;
+            lastDashTime = Time.time;
+
+            Vector3 dir = lastMoveDirection.sqrMagnitude > 0.001f
+                ? lastMoveDirection.normalized
+                : DirectionToVector(currentDirection);
+            dir.y = 0f;
+            dashVelocity = dir * dashSpeed;
+
+            yield return new WaitForSeconds(dashDuration);
+
+            isDashing = false;
+            dashVelocity = Vector3.zero;
         }
 
         public void FaceDirection(Direction direction)

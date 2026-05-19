@@ -44,6 +44,7 @@ namespace Necrocis
         public InputAction Digit4Action { get; private set; }       // 숫자키 4
         public InputAction Digit5Action { get; private set; }       // 숫자키 5
 
+        public InputAction DashAction { get; private set; }          // 대시 (Shift)
         public InputAction StatWindowAction { get; private set; }   // 스탯창 토글 (O)
         public InputAction DebugLevelUpAction { get; private set; } // 디버그 레벨업 (P)
 
@@ -105,6 +106,8 @@ namespace Necrocis
             Digit3Action = new InputAction("Digit3", InputActionType.Button, "<Keyboard>/3");
             Digit4Action = new InputAction("Digit4", InputActionType.Button, "<Keyboard>/4");
             Digit5Action = new InputAction("Digit5", InputActionType.Button, "<Keyboard>/5");
+
+            DashAction = new InputAction("Dash", InputActionType.Button, "<Keyboard>/space");
 
             StatWindowAction = new InputAction("StatWindow", InputActionType.Button, "<Keyboard>/o");
             DebugLevelUpAction = new InputAction("DebugLevelUp", InputActionType.Button, "<Keyboard>/p");
@@ -264,6 +267,7 @@ namespace Necrocis
                 RangedAttackAction,
                 Skill1Action,
                 Skill2Action,
+                DashAction,
                 Digit1Action,
                 Digit2Action,
                 Digit3Action,
