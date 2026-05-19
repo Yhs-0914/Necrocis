@@ -27,6 +27,7 @@ namespace Necrocis
 
         [Header("게임 상태")]
         [SerializeField] private GameState currentState = GameState.InHub;
+        [SerializeField] private GameDifficulty currentDifficulty = GameDifficulty.Normal;
         [SerializeField] private BiomeType currentBiome = BiomeType.None;
 
         [Header("보스 부산물 (목) 수집 현황")]
@@ -48,6 +49,8 @@ namespace Necrocis
 
         // 프로퍼티
         public GameState CurrentState => currentState;
+        public GameDifficulty CurrentDifficulty => currentDifficulty;
+        public bool IsNormalDifficulty => currentDifficulty == GameDifficulty.Normal;
         public BiomeType CurrentBiome => currentBiome;
         public int CollectedRelicCount => (hasIntestineRelic ? 1 : 0) + (hasLiverRelic ? 1 : 0)
                                         + (hasStomachRelic ? 1 : 0) + (hasLungRelic ? 1 : 0);

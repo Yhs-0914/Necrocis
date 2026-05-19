@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -82,6 +83,8 @@ namespace Necrocis
         [SerializeField] private float walkFrameRate = 8f;
         [SerializeField] private float attackAnimDuration = 0.3f;
         [SerializeField] private float attackFrameRate = 12f;
+        [SerializeField] private Sprite[] deathSprites;
+        [SerializeField] private float deathFrameRate = 8f;
 
         [Header("Position Lock")]
         [SerializeField] private bool lockYPosition = false;
@@ -113,6 +116,8 @@ namespace Necrocis
         private bool playerStatsConfigured;        // 湲곕낯 ?ㅽ꺈 ?ㅼ젙 ?꾨즺 ?щ?
         private bool playerStatsEventsBound;       // HP 蹂寃??대깽??援щ룆 ?щ?
         private bool deathHandled;                 // ?щ쭩 泥섎━ ?꾨즺 ?щ? (以묐났 諛⑹?)
+        private bool isPlayingDeathAnimation;
+        private Coroutine deathRoutine;
 
         // ?몃? ?묎렐???꾨줈?쇳떚 (PlayerStats媛 ?놁쑝硫??덉쟾??湲곕낯媛?諛섑솚)
         public PlayerStats Stats => playerStats;
@@ -176,6 +181,7 @@ namespace Necrocis
             characterController = GetComponent<CharacterController>();
             EnsurePlayerStats();
             EnsureClassSkillController();
+            EnsureDeathScreen();
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
         }
@@ -210,6 +216,7 @@ namespace Necrocis
 
         private void Update()
         {
+            SyncDeathState();
             HandleInput();
             UpdateAnimation();
             ApplyLockedRotation();
@@ -218,6 +225,7 @@ namespace Necrocis
 
         private void FixedUpdate()
         {
+            SyncDeathState();
             Move();
             ApplyLockedY();
             ApplyLockedRotation();
@@ -236,10 +244,9 @@ namespace Necrocis
                 return;
             }
 
-            if (deathHandled)
+            if (IsControlBlocked())
             {
-                movement = Vector3.zero;
-                isMoving = false;
+                StopMotion();
                 return;
             }
 
@@ -355,6 +362,11 @@ namespace Necrocis
                 return;
             }
 
+            if (isPlayingDeathAnimation)
+            {
+                return;
+            }
+
             if (currentAnimation == null || currentAnimation.Length == 0) return;
 
             frameTimer += Time.deltaTime;
@@ -377,6 +389,12 @@ namespace Necrocis
         /// </summary>
         private void Move()
         {
+            if (IsControlBlocked())
+            {
+                StopMotion();
+                return;
+            }
+
             if (!isMoving)
             {
                 if (rb != null)
@@ -473,6 +491,30 @@ namespace Necrocis
             }
         }
 
+        private bool IsControlBlocked()
+        {
+            return deathHandled || IsDead;
+        }
+
+        private void SyncDeathState()
+        {
+            if (!deathHandled && IsDead)
+            {
+                HandleDeath();
+            }
+        }
+
+        private void StopMotion()
+        {
+            movement = Vector3.zero;
+            isMoving = false;
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+        }
+
         /// <summary>
         /// ?ㅽ룿 ?꾩튂濡??대룞
         /// </summary>
@@ -488,6 +530,41 @@ namespace Necrocis
             }
 
             ApplyLockedY();
+            ApplyLockedRotation();
+        }
+
+        public void ReviveForRespawn()
+        {
+            deathHandled = false;
+            movement = Vector3.zero;
+            isMoving = false;
+            isPlayingAttackAnim = false;
+            isPlayingDeathAnimation = false;
+            if (deathRoutine != null)
+            {
+                StopCoroutine(deathRoutine);
+                deathRoutine = null;
+            }
+
+            EnsurePlayerStats();
+
+            Health health = GetComponent<Health>();
+            if (health != null)
+                health.ResetHealth();
+            else
+                playerStats.RuntimeStats.ResetHealthToMax();
+
+            PlayerAttack attack = GetComponent<PlayerAttack>();
+            if (attack != null)
+                attack.enabled = true;
+
+            PlayerClassSkillController classSkillController = GetComponent<PlayerClassSkillController>();
+            if (classSkillController != null)
+                classSkillController.enabled = true;
+
+            enabled = true;
+            ApplyJobVisual(LevelUpManager.GetCurrentJob());
+            SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
         }
         // LockY: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
@@ -745,6 +822,17 @@ namespace Necrocis
             }
         }
 
+        private PlayerDeathScreen EnsureDeathScreen()
+        {
+            PlayerDeathScreen deathScreen = GetComponent<PlayerDeathScreen>();
+            if (deathScreen == null)
+            {
+                deathScreen = gameObject.AddComponent<PlayerDeathScreen>();
+            }
+
+            return deathScreen;
+        }
+
         private void OnEnable()
         {
             LevelUpManager.OnJobChanged += HandleJobChanged;
@@ -808,25 +896,26 @@ namespace Necrocis
 
             if (!deathHandled && args.CurrentValue <= 0f)
             {
-                Die();
+                HandleDeath();
             }
         }
         // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
+
+        public void HandleDeath()
+        {
+            if (deathHandled)
+            {
+                return;
+            }
+
+            Die();
+        }
 
         // ?щ쭩 泥섎━: ?대룞/怨듦꺽 鍮꾪솢?깊솕, ?湲??좊땲硫붿씠???꾪솚
         private void Die()
         {
             deathHandled = true;
-            movement = Vector3.zero;
-            isMoving = false;
-
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-            }
-
-            SetAnimation(idleSprites, idleFrameRate);
+            StopMotion();
 
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
@@ -836,8 +925,38 @@ namespace Necrocis
             if (classSkillController != null)
                 classSkillController.enabled = false;
 
-            enabled = false;
+            if (deathRoutine != null)
+                StopCoroutine(deathRoutine);
+            deathRoutine = StartCoroutine(PlayDeathThenShowGameOver());
+
             Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+        }
+
+        private IEnumerator PlayDeathThenShowGameOver()
+        {
+            if (deathSprites != null && deathSprites.Length > 0)
+            {
+                isPlayingDeathAnimation = true;
+                SetAnimation(deathSprites, Mathf.Max(1f, deathFrameRate));
+
+                float frameDuration = 1f / Mathf.Max(1f, deathFrameRate);
+                for (int i = 1; i < deathSprites.Length; i++)
+                {
+                    yield return new WaitForSeconds(frameDuration);
+                    if (spriteRenderer != null && deathSprites[i] != null)
+                    {
+                        spriteRenderer.sprite = deathSprites[i];
+                    }
+                }
+            }
+            else
+            {
+                SetAnimation(idleSprites, idleFrameRate);
+            }
+
+            isPlayingDeathAnimation = false;
+            EnsureDeathScreen().ShowDeath();
+            deathRoutine = null;
         }
     }
 }

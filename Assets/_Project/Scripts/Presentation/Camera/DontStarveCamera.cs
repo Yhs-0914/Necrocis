@@ -35,6 +35,9 @@ namespace Necrocis
         [SerializeField] private float distance = 5f;          // 뒤로 떨어진 거리
         [SerializeField] private float angle = 45f;            // 내려다보는 각도
         [SerializeField] private float smoothSpeed = 5f;       // 부드러운 이동
+        [SerializeField] private bool centerTargetInView = true;
+        [SerializeField] private bool useTargetRendererCenter = true;
+        [SerializeField] private float targetForwardScreenOffset = 0f;
 
         [Header("줌 (Orthographic = Size, Perspective = Height)")]
         [SerializeField] private float orthoSize = 5f;         // Orthographic 크기
@@ -44,6 +47,8 @@ namespace Necrocis
 
         private Camera cam;
         private Vector3 offset;
+        private Transform cachedRendererTarget;
+        private Renderer[] cachedTargetRenderers;
 
         public static Camera GetActiveCamera()
         {
@@ -96,7 +101,7 @@ namespace Necrocis
             HandleZoom();
 
             // 부드러운 추적
-            Vector3 desiredPosition = target.position + offset;
+            Vector3 desiredPosition = GetTargetViewCenter() + offset;
             Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
             transform.position = smoothedPosition;
         }
@@ -106,6 +111,12 @@ namespace Necrocis
         /// </summary>
         private void CalculateOffset()
         {
+            if (centerTargetInView)
+            {
+                float angleRadians = Mathf.Max(1f, Mathf.Abs(angle)) * Mathf.Deg2Rad;
+                distance = Mathf.Max(0f, height / Mathf.Tan(angleRadians) - targetForwardScreenOffset);
+            }
+
             offset = new Vector3(0, height, -distance);
         }
 
@@ -130,7 +141,7 @@ namespace Necrocis
             // 초기 위치
             if (target != null)
             {
-                transform.position = target.position + offset;
+                transform.position = GetTargetViewCenter() + offset;
             }
         }
 
@@ -169,6 +180,7 @@ namespace Necrocis
         public void SetTarget(Transform newTarget)
         {
             target = newTarget;
+            InvalidateRendererCache();
         }
 
         private bool TryAssignDefaultTarget()
@@ -182,6 +194,7 @@ namespace Necrocis
             if (player != null)
             {
                 target = player.transform;
+                InvalidateRendererCache();
                 return true;
             }
 
@@ -189,6 +202,7 @@ namespace Necrocis
             if (playerObject != null)
             {
                 target = playerObject.transform;
+                InvalidateRendererCache();
             }
 
             return target != null;
@@ -209,8 +223,67 @@ namespace Necrocis
         {
             if (target != null)
             {
-                transform.position = target.position + offset;
+                transform.position = GetTargetViewCenter() + offset;
             }
+        }
+
+        private Vector3 GetTargetViewCenter()
+        {
+            if (target == null || !useTargetRendererCenter)
+            {
+                return target != null ? target.position : Vector3.zero;
+            }
+
+            Renderer[] renderers = GetCachedTargetRenderers();
+            if (renderers == null || renderers.Length == 0)
+            {
+                return target.position;
+            }
+
+            bool hasBounds = false;
+            Bounds bounds = default;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer == null || !renderer.enabled)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            return hasBounds ? bounds.center : target.position;
+        }
+
+        private Renderer[] GetCachedTargetRenderers()
+        {
+            if (target == null)
+            {
+                return null;
+            }
+
+            if (cachedRendererTarget != target || cachedTargetRenderers == null)
+            {
+                cachedRendererTarget = target;
+                cachedTargetRenderers = target.GetComponentsInChildren<Renderer>();
+            }
+
+            return cachedTargetRenderers;
+        }
+
+        private void InvalidateRendererCache()
+        {
+            cachedRendererTarget = null;
+            cachedTargetRenderers = null;
         }
 
 #if UNITY_EDITOR

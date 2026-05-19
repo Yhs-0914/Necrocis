@@ -128,6 +128,7 @@ namespace Necrocis
 
                 if (player != null)
                 {
+                    player.UnlockY();
                     player.SpawnAt(new Vector3(16f, -2f, 7f));
                 }
             }

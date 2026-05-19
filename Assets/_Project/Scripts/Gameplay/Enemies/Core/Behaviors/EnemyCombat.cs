@@ -56,14 +56,14 @@ namespace Necrocis
             attackAnimPlaying = false;
             attackTimer = config.attackCooldown;
 
+            // 공격 범위 내 플레이어에게 데미지
+            ApplyDamageToPlayer();
+
             // 콜라이더 복원
             if (colliderExpanded)
             {
                 RestoreCollider();
             }
-
-            // 공격 범위 내 플레이어에게 데미지
-            ApplyDamageToPlayer();
 
             // 대기 애니메이션으로 복귀
             SetIdleAnimation();
@@ -72,7 +72,8 @@ namespace Necrocis
 
         private void ApplyDamageToPlayer()
         {
-            if (PlayerController.Instance == null) return;
+            PlayerController player = PlayerController.Instance;
+            if (player == null) return;
 
             float damage = EnemyCombatCalculator.GetAttackDamage(stats, config);
 
@@ -82,10 +83,104 @@ namespace Necrocis
                 return;
             }
 
-            Health playerHealth = PlayerController.Instance.GetComponent<Health>();
+            if (!CanMeleeDamagePlayer(player))
+            {
+                return;
+            }
+
+            Health playerHealth = player.GetComponent<Health>();
             if (playerHealth == null) return;
 
             playerHealth.TakeDamage(damage);
+        }
+
+
+        private bool CanMeleeDamagePlayer(PlayerController player)
+        {
+            if (player == null || config == null)
+            {
+                return false;
+            }
+
+            if (!IsPlayerInAttackRange())
+            {
+                return false;
+            }
+
+            if (TryGetPlayerDamageBounds(player, out Bounds playerBounds)
+                && TryGetMeleeAttackBounds(out Bounds attackBounds))
+            {
+                if (BoundsOverlapPlanar(attackBounds, playerBounds))
+                {
+                    return true;
+                }
+            }
+
+            float fallbackRange = GetEffectiveMeleeAttackRange(player);
+            Vector3 toPlayer = player.transform.position - GetCurrentPosition();
+            toPlayer.y = 0f;
+            return toPlayer.sqrMagnitude <= fallbackRange * fallbackRange;
+        }
+
+
+        private bool TryGetPlayerDamageBounds(PlayerController player, out Bounds bounds)
+        {
+            bounds = default;
+            if (player == null)
+            {
+                return false;
+            }
+
+            Collider playerCollider = player.GetComponent<Collider>();
+            if (playerCollider == null)
+            {
+                playerCollider = player.GetComponentInChildren<Collider>();
+            }
+
+            if (playerCollider == null || !playerCollider.enabled)
+            {
+                return false;
+            }
+
+            bounds = playerCollider.bounds;
+            return true;
+        }
+
+
+        private bool TryGetMeleeAttackBounds(out Bounds bounds)
+        {
+            bounds = default;
+            if (config == null)
+            {
+                return false;
+            }
+
+            Vector3 localCenter = config.expandColliderOnAttack ? config.attackColliderCenter : config.colliderCenter;
+            Vector3 localSize = config.expandColliderOnAttack ? config.attackColliderSize : config.colliderSize;
+            if (localSize.x <= 0f || localSize.y <= 0f || localSize.z <= 0f)
+            {
+                return false;
+            }
+
+            Vector3 scaledSize = Vector3.Scale(localSize, Abs(transform.lossyScale));
+            bounds = new Bounds(transform.TransformPoint(localCenter), scaledSize);
+            bounds.Expand(new Vector3(0.2f, 0f, 0.2f));
+            return true;
+        }
+
+
+        private static bool BoundsOverlapPlanar(Bounds a, Bounds b)
+        {
+            return a.min.x <= b.max.x
+                && a.max.x >= b.min.x
+                && a.min.z <= b.max.z
+                && a.max.z >= b.min.z;
+        }
+
+
+        private static Vector3 Abs(Vector3 value)
+        {
+            return new Vector3(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
         }
 
 

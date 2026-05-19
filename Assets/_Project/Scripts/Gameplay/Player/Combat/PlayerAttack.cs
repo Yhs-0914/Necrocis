@@ -71,7 +71,17 @@ namespace Necrocis
                 return;
             }
 
+            if (playerController == null || playerController.IsDead)
+            {
+                return;
+            }
+
             PlayerStats stats = PlayerStats.Instance;
+            if (stats == null || stats.IsDead)
+            {
+                return;
+            }
+
             float effectiveAttackCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(attackCooldown, stats);
             bool canAttack = Time.time >= lastAttackTime + effectiveAttackCooldown; // 원거리 공격 쿨다운 체크
 

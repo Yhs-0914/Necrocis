@@ -179,7 +179,7 @@ namespace Necrocis
 
         [Header("Combat")]
         public float maxHealth = 30f;
-        public float attackDamage = 10f;
+        public float attackDamage = 1f;
         public float attackRange = 1.5f;
         public float attackCooldown = 1f;
         public int expReward = 10;

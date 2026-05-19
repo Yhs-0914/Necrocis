@@ -31,9 +31,9 @@ namespace Necrocis
         [SerializeField] private string heartContainerName = "HeartContainer";
         [SerializeField] private int canvasSortingOrder = 60;
         [SerializeField] private Vector2 canvasReferenceResolution = new Vector2(1920f, 1080f);
-        [SerializeField] private Vector2 anchoredPosition = new Vector2(36f, -36f);
-        [SerializeField] private Vector2 heartSize = new Vector2(48f, 48f);
-        [SerializeField] private float spacing = 6f;
+        [SerializeField] private Vector2 anchoredPosition = new Vector2(24f, -24f);
+        [SerializeField] private Vector2 heartSize = new Vector2(32f, 32f);
+        [SerializeField] private float spacing = 4f;
 
         [Header("Heart Mapping")]
         [SerializeField] private float healthPerHeart = 2f;
@@ -270,8 +270,12 @@ namespace Necrocis
                 return;
             }
 
-            float valuePerHeart = Mathf.Max(1f, healthPerHeart);
-            int totalHearts = Mathf.Clamp(Mathf.CeilToInt(maxHealth / valuePerHeart), 1, Mathf.Max(1, maxVisibleHearts));
+            float valuePerHeart = Mathf.Max(0.5f, healthPerHeart);
+            int totalHearts = Mathf.Max(1, Mathf.CeilToInt(maxHealth / valuePerHeart));
+            if (maxVisibleHearts > 0)
+            {
+                totalHearts = Mathf.Min(totalHearts, maxVisibleHearts);
+            }
             EnsureHeartImageCount(totalHearts);
             ApplyContainerLayoutSettings();
             ApplyHeartSizeToExisting(force: false);
