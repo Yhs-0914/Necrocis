@@ -260,8 +260,22 @@ namespace Necrocis
             portalObj.transform.position = portalPos;
 
             SpriteRenderer sr = portalObj.AddComponent<SpriteRenderer>();
-            sr.color = new Color(0.6f, 0.2f, 1f, 0.85f);
             sr.sortingOrder = arenaConfig != null ? arenaConfig.sortingOrder : 3500;
+
+            // arenaConfig의 returnPortalSprite 적용
+            if (arenaConfig != null && arenaConfig.returnPortalSprite != null)
+            {
+                sr.sprite = arenaConfig.returnPortalSprite;
+                sr.color = Color.white;
+                portalObj.transform.localScale = arenaConfig.returnPortalScale;
+            }
+            else
+            {
+                sr.color = new Color(0.6f, 0.2f, 1f, 0.85f);
+            }
+
+            if (GetComponent<Billboard>() == null)
+                portalObj.AddComponent<Billboard>();
 
             BoxCollider col = portalObj.AddComponent<BoxCollider>();
             col.isTrigger = true;
@@ -470,7 +484,10 @@ namespace Necrocis
                 return arenaConfig.centerGrid;
             }
 
-            return new Vector2Int(biome.MapWidth / 2, biome.MapHeight / 2);
+            // 플레이어 진입 포탈은 (mapWidth/2, y=5) — 아레나를 바로 위에 배치
+            int halfArenaH = Mathf.Max(4, arenaSize.y / 2);
+            int nearEntryY = halfArenaH + 8;
+            return new Vector2Int(biome.MapWidth / 2, nearEntryY);
         }
 
         private EnemySpawnRuleConfig ResolveBossRule(IList<EnemySpawnRuleConfig> availableEnemyRules)

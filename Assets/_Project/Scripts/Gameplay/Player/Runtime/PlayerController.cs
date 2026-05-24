@@ -7,6 +7,8 @@ namespace Necrocis
 {
     public class PlayerController : MonoBehaviour
     {
+        public static event System.Action OnPlayerDied;
+
         private static PlayerController instance;
 
         public static PlayerController Instance
@@ -190,10 +192,12 @@ namespace Necrocis
             EnsureClassSkillController();
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
         }
 
         private void OnDestroy()
         {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
             if (instance == this)
             {
                 instance = null;
@@ -797,6 +801,39 @@ namespace Necrocis
             LevelUpManager.OnJobChanged -= HandleJobChanged;
         }
 
+        private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (!deathHandled) return;
+
+            deathHandled = false;
+            movement = Vector3.zero;
+            isMoving = false;
+            isDashing = false;
+            dashVelocity = Vector3.zero;
+
+            if (rb != null)
+            {
+                rb.isKinematic = false;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            if (characterController != null)
+                characterController.enabled = true;
+
+            enabled = true;
+
+            PlayerAttack attack = GetComponent<PlayerAttack>();
+            if (attack != null) attack.enabled = true;
+
+            PlayerClassSkillController classSkill = GetComponent<PlayerClassSkillController>();
+            if (classSkill != null) classSkill.enabled = true;
+
+            Health health = GetComponent<Health>();
+            if (health != null) health.ResetHealth();
+            else if (playerStats != null) playerStats.RuntimeStats?.ResetHealthToMax();
+        }
+
         private void HandleJobChanged(JobType job)
         {
             ApplyJobVisual(job);
@@ -866,7 +903,11 @@ namespace Necrocis
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
+                rb.isKinematic = true;
             }
+
+            if (characterController != null)
+                characterController.enabled = false;
 
             SetAnimation(idleSprites, idleFrameRate);
 
@@ -879,6 +920,7 @@ namespace Necrocis
                 classSkillController.enabled = false;
 
             enabled = false;
+            OnPlayerDied?.Invoke();
             Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
         }
     }
