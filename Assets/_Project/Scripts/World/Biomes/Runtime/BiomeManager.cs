@@ -255,6 +255,14 @@ namespace Necrocis
 
             // 초기 청크 로드
             UpdateChunks();
+
+            WorldItemSpawner itemSpawner = GetComponent<WorldItemSpawner>();
+            if (itemSpawner == null)
+            {
+                itemSpawner = gameObject.AddComponent<WorldItemSpawner>();
+            }
+
+            itemSpawner.SpawnItemsNow();
         }
 
         /// <summary>

@@ -139,6 +139,9 @@ namespace Necrocis
             if (playerObj.GetComponent<PlayerAttack>() == null)
                 playerObj.AddComponent<PlayerAttack>();
 
+            if (playerObj.GetComponent<PlayerItemManager>() == null)
+                playerObj.AddComponent<PlayerItemManager>();
+
             if (playerObj.GetComponent<PlayerClassSkillController>() == null)
                 playerObj.AddComponent<PlayerClassSkillController>();
 
