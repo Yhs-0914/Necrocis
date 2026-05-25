@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,6 +17,8 @@ namespace Necrocis
     [RequireComponent(typeof(PlayerStats))]
     public class PlayerItemManager : MonoBehaviour
     {
+        private const string RemovedParasiticSporeItemId = "parasitic_spore";
+
         [Serializable]
         public class PlayerItemEntry
         {
@@ -109,6 +111,7 @@ namespace Necrocis
 
         [Header("Template")]
         [SerializeField] private bool autoPopulateBasicProjectileItems = true;
+        [SerializeField] private bool enablePickupNotification = true;
 
         private readonly List<AcquiredPlayerItem> acquiredItems = new List<AcquiredPlayerItem>();
         private readonly Dictionary<string, PlayerItemEntry> entryMap = new Dictionary<string, PlayerItemEntry>(StringComparer.OrdinalIgnoreCase);
@@ -136,7 +139,18 @@ namespace Necrocis
             }
 
             playerStats = GetComponent<PlayerStats>();
+            PurgeRemovedItemsFromCatalog();
             RebuildCatalog();
+
+            if (enablePickupNotification && GetComponent<PlayerItemPickupNotifier>() == null)
+            {
+                gameObject.AddComponent<PlayerItemPickupNotifier>();
+            }
+
+            if (GetComponent<PlayerItemCombatEffects>() == null)
+            {
+                gameObject.AddComponent<PlayerItemCombatEffects>();
+            }
         }
 
         private void OnDestroy()
@@ -172,6 +186,7 @@ namespace Necrocis
                 PopulateBasicProjectileTemplateItems();
             }
 
+            PurgeRemovedItemsFromCatalog();
             RebuildCatalog();
         }
 
@@ -202,8 +217,7 @@ namespace Necrocis
                 new PlayerItemEntry("vascular_reflection", "혈관 반사", "벽에 튕기는 반사 투사체", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("toxic_mucosa", "독성 점막", "공격 적중 시 중독 피해 부여", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("freezing_nerve", "빙결 신경", "공격 적중 시 적 이동속도 감소", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("hemorrhage_organ", "출혈 기관", "적중 시 지속 출혈 피해", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("parasitic_spore", "기생 포자", "적 사망 시 작은 탄환 추가 생성", PlayerItemCategory.BasicProjectile)
+                new PlayerItemEntry("hemorrhage_organ", "출혈 기관", "적중 시 지속 출혈 피해", PlayerItemCategory.BasicProjectile)
             };
         }
 
@@ -226,6 +240,28 @@ namespace Necrocis
                 if (!entryMap.ContainsKey(entry.ItemId))
                 {
                     entryMap.Add(entry.ItemId, entry);
+                }
+            }
+        }
+
+        private void PurgeRemovedItemsFromCatalog()
+        {
+            if (itemEntries == null || itemEntries.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = itemEntries.Count - 1; i >= 0; i--)
+            {
+                PlayerItemEntry entry = itemEntries[i];
+                if (entry == null || string.IsNullOrWhiteSpace(entry.ItemId))
+                {
+                    continue;
+                }
+
+                if (string.Equals(entry.ItemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase))
+                {
+                    itemEntries.RemoveAt(i);
                 }
             }
         }
@@ -267,6 +303,7 @@ namespace Necrocis
             }
 
             ItemAcquired?.Invoke(this, acquiredItem);
+            Debug.Log($"[PlayerItemManager] 아이템 획득: {acquiredItem.DisplayName} ({acquiredItem.ItemId}) [{acquiredItems.Count}/{maxItemSlots}]");
             return true;
         }
 

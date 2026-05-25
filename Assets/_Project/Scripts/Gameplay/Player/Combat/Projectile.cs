@@ -1,75 +1,168 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
 {
-    /// <summary>
-    /// Pooled projectile movement and hit handling.
-    /// </summary>
     public class Projectile : MonoBehaviour
     {
-        private const int HitBufferSize = 8;
+        public enum SpawnKind
+        {
+            Normal = 0,
+            SplitChild = 1
+        }
 
-        [SerializeField] private float speed = 15f;    // 투사체 이동 속도
-        [SerializeField] private float lifeTime = 3f;  // 수명 (초) — 이후 자동 비활성화
+        private const int HitBufferSize = 8;
+        private const int ExplosionBufferSize = 24;
+
+        [SerializeField] private float speed = 15f;
+        [SerializeField] private float lifeTime = 3f;
         [SerializeField] private LayerMask targetMask = ~0;
         [SerializeField] private float hitCheckRadius = 0.35f;
         [SerializeField] private float hitCheckHeightOffset = 0.75f;
         [SerializeField] private float hitCheckVerticalHalfHeight = 2.5f;
 
-        private Vector3 moveDirection; // 이동 방향 (정규화)
+        private Vector3 moveDirection;
         private float flightHeight;
-        private float damage;          // 적에게 가할 데미지
+        private float damage;
         private float deactivateTime;
         private bool hasImpacted;
+        private float traveledDistance;
+        private bool returning;
+        private int maxHitCount = 1;
+        private int currentHitCount;
+        private int remainingBounces;
+        private bool splitTriggered;
+        private SpawnKind spawnKind = SpawnKind.Normal;
+        private PlayerItemCombatEffects itemEffects;
+        private Transform ownerTransform;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
+        private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
+        private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
 
-        // 외부에서 호출: 방향과 데미지를 설정하여 발사
+        private Vector3 defaultLocalScale = Vector3.one;
+        private bool defaultScaleCached;
+
         public void Launch(Vector3 direction, float damage)
         {
-            Launch(direction, damage, targetMask);
+            Launch(direction, damage, targetMask, lifeTime * Mathf.Max(0.1f, speed), null, SpawnKind.Normal);
         }
 
         public void Launch(Vector3 direction, float damage, LayerMask mask)
+        {
+            Launch(direction, damage, mask, lifeTime * Mathf.Max(0.1f, speed), null, SpawnKind.Normal);
+        }
+
+        public void Launch(Vector3 direction, float damage, LayerMask mask, float range)
+        {
+            Launch(direction, damage, mask, range, null, SpawnKind.Normal);
+        }
+
+        public void Launch(Vector3 direction, float damage, LayerMask mask, float range, PlayerItemCombatEffects effects, SpawnKind kind = SpawnKind.Normal)
         {
             direction.y = 0f;
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             this.damage = damage;
             targetMask = mask;
+            itemEffects = effects;
+            spawnKind = kind;
             flightHeight = transform.position.y;
-            hasImpacted = false;
-        }
+            ownerTransform = PlayerController.Instance != null ? PlayerController.Instance.transform : null;
 
-        public void Launch(Vector3 direction, float damage, LayerMask mask, float range)
-        {
-            Launch(direction, damage, mask);
+            traveledDistance = 0f;
+            currentHitCount = 0;
+            hitEnemyIds.Clear();
+            hasImpacted = false;
+            returning = false;
+            splitTriggered = false;
+
+            maxHitCount = 1;
+            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            {
+                maxHitCount = Mathf.Max(1, itemEffects.GetPiercingHitCount());
+                remainingBounces = itemEffects.GetReflectionBounceCount();
+            }
+            else
+            {
+                remainingBounces = 0;
+            }
+
+            CacheDefaultScale();
+            float scaleMultiplier = 1f;
+            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            {
+                scaleMultiplier = itemEffects.GetScaleMultiplier();
+            }
+            transform.localScale = defaultLocalScale * scaleMultiplier;
+
             float effectiveRange = Mathf.Max(0.05f, range);
+            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            {
+                effectiveRange *= itemEffects.GetRangeMultiplier();
+            }
+
             deactivateTime = Time.time + effectiveRange / Mathf.Max(0.01f, speed);
         }
 
-        // 풀에서 활성화될 때 수명 타이머 시작
         private void OnEnable()
         {
-            // Object pooling rule: return to pool by disabling, do not destroy.
-            deactivateTime = Time.time + lifeTime;
+            CacheDefaultScale();
+            if (deactivateTime <= Time.time)
+            {
+                deactivateTime = Time.time + lifeTime;
+            }
             hasImpacted = false;
         }
 
-        // 매 프레임 방향으로 이동 + 히트 감지
         private void Update()
         {
-            Vector3 nextPosition = transform.position + moveDirection * speed * Time.deltaTime;
+            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            {
+                if (itemEffects.HasHomingCell)
+                {
+                    ApplyHoming(Time.deltaTime);
+                }
+
+                if (itemEffects.HasRefluxOrgan)
+                {
+                    UpdateBoomerangState();
+                }
+            }
+
+            Vector3 step = moveDirection * speed * Time.deltaTime;
+            if (TryReflectFromBiome(ref step))
+            {
+                // reflected
+            }
+
+            Vector3 nextPosition = transform.position + step;
             nextPosition.y = flightHeight;
             transform.position = nextPosition;
+            traveledDistance += step.magnitude;
+
+            if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
+            {
+                ApplyPulseScale();
+            }
+
+            if (returning && ownerTransform != null)
+            {
+                Vector3 toOwner = ownerTransform.position - transform.position;
+                toOwner.y = 0f;
+                if (toOwner.sqrMagnitude <= 0.49f)
+                {
+                    gameObject.SetActive(false);
+                    return;
+                }
+            }
+
             TryDetectHitByOverlap();
 
-            // 수명 만료 시 자동 비활성화 (풀로 반환)
             if (Time.time >= deactivateTime)
             {
                 gameObject.SetActive(false);
             }
         }
 
-        // 트리거 충돌: 적에게 데미지 후 풀로 반환 (비활성화)
         private void OnTriggerEnter(Collider other)
         {
             HandleHit(other);
@@ -105,9 +198,36 @@ namespace Necrocis
                 return;
             }
 
-            hasImpacted = true;
+            int enemyId = enemy.GetInstanceID();
+            if (!hitEnemyIds.Add(enemyId))
+            {
+                return;
+            }
+
+            currentHitCount++;
             enemy.TakeDamage(damage);
-            gameObject.SetActive(false);
+
+            if (itemEffects != null)
+            {
+                itemEffects.ApplyCommonOnHitEffects(enemy, damage, transform.position);
+
+                if (spawnKind == SpawnKind.Normal && itemEffects.HasSplitTissue && !splitTriggered)
+                {
+                    splitTriggered = true;
+                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, damage, targetMask, GetRemainingRange());
+                }
+
+                if (spawnKind == SpawnKind.Normal && itemEffects.HasExplosiveBloodCell)
+                {
+                    ApplyExplosionDamage(enemy);
+                }
+            }
+
+            if (currentHitCount >= maxHitCount)
+            {
+                hasImpacted = true;
+                gameObject.SetActive(false);
+            }
         }
 
         private void TryDetectHitByOverlap()
@@ -146,6 +266,215 @@ namespace Necrocis
                     break;
                 }
             }
+        }
+
+        private void ApplyHoming(float deltaTime)
+        {
+            EnemyController nearestEnemy = FindNearestEnemy(itemEffects.GetHomingSearchRadius());
+            if (nearestEnemy == null)
+            {
+                return;
+            }
+
+            Vector3 toTarget = nearestEnemy.transform.position - transform.position;
+            toTarget.y = 0f;
+            if (toTarget.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            Vector3 desiredDirection = toTarget.normalized;
+            float turnRate = itemEffects.GetHomingTurnRate();
+            moveDirection = Vector3.Slerp(moveDirection, desiredDirection, turnRate * deltaTime).normalized;
+        }
+
+        private EnemyController FindNearestEnemy(float radius)
+        {
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies == null || enemies.Count == 0)
+            {
+                return null;
+            }
+
+            float radiusSqr = radius * radius;
+            float nearestDistSqr = float.MaxValue;
+            EnemyController nearest = null;
+
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (enemy == null || enemy.IsDead)
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - transform.position;
+                toEnemy.y = 0f;
+                float distSqr = toEnemy.sqrMagnitude;
+                if (distSqr > radiusSqr || distSqr >= nearestDistSqr)
+                {
+                    continue;
+                }
+
+                nearestDistSqr = distSqr;
+                nearest = enemy;
+            }
+
+            return nearest;
+        }
+
+        private void UpdateBoomerangState()
+        {
+            if (itemEffects == null || ownerTransform == null)
+            {
+                return;
+            }
+
+            if (!returning && traveledDistance >= itemEffects.GetBoomerangReturnDistance())
+            {
+                returning = true;
+            }
+
+            if (!returning)
+            {
+                return;
+            }
+
+            Vector3 toOwner = ownerTransform.position - transform.position;
+            toOwner.y = 0f;
+            if (toOwner.sqrMagnitude > 0.0001f)
+            {
+                moveDirection = toOwner.normalized;
+            }
+        }
+
+        private bool TryReflectFromBiome(ref Vector3 step)
+        {
+            if (remainingBounces <= 0)
+            {
+                return false;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            if (biome == null)
+            {
+                return false;
+            }
+
+            Vector3 current = transform.position;
+            Vector3 next = current + step;
+            if (IsWalkablePosition(biome, next))
+            {
+                return false;
+            }
+
+            bool xBlocked = !IsWalkablePosition(biome, current + new Vector3(step.x, 0f, 0f));
+            bool zBlocked = !IsWalkablePosition(biome, current + new Vector3(0f, 0f, step.z));
+
+            Vector3 reflectedDirection = moveDirection;
+            if (xBlocked)
+            {
+                reflectedDirection.x = -reflectedDirection.x;
+            }
+
+            if (zBlocked)
+            {
+                reflectedDirection.z = -reflectedDirection.z;
+            }
+
+            if (!xBlocked && !zBlocked)
+            {
+                reflectedDirection = -reflectedDirection;
+            }
+
+            moveDirection = reflectedDirection.sqrMagnitude > 0.0001f ? reflectedDirection.normalized : -moveDirection;
+            remainingBounces--;
+            step = moveDirection * speed * Time.deltaTime;
+            return true;
+        }
+
+        private static bool IsWalkablePosition(BiomeManager biome, Vector3 worldPosition)
+        {
+            Vector2Int grid = biome.WorldToGrid(worldPosition);
+            if (!biome.IsValidPosition(grid.x, grid.y))
+            {
+                return false;
+            }
+
+            return biome.IsWalkable(grid.x, grid.y);
+        }
+
+        private void ApplyPulseScale()
+        {
+            float amplitude = itemEffects.GetPulseAmplitude();
+            float frequency = itemEffects.GetPulseFrequency();
+            float pulse = 1f + Mathf.Sin((traveledDistance / frequency) * Mathf.PI * 2f) * amplitude;
+            transform.localScale = defaultLocalScale * pulse;
+        }
+
+        private void ApplyExplosionDamage(EnemyController primaryEnemy)
+        {
+            float radius = itemEffects.GetExplosionRadius();
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                transform.position,
+                radius,
+                explosionBuffer,
+                targetMask,
+                QueryTriggerInteraction.Collide);
+
+            float explosionDamage = Mathf.Max(0f, damage * itemEffects.GetExplosionDamageMultiplier());
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider collider = explosionBuffer[i];
+                if (collider == null)
+                {
+                    continue;
+                }
+
+                EnemyController enemy = collider.GetComponent<EnemyController>()
+                    ?? collider.GetComponentInParent<EnemyController>();
+
+                if (enemy == null || enemy.IsDead || enemy == primaryEnemy)
+                {
+                    continue;
+                }
+
+                enemy.TakeDamage(explosionDamage);
+                itemEffects.ApplyCommonOnHitEffects(enemy, explosionDamage, transform.position);
+            }
+        }
+
+        private float GetRemainingRange()
+        {
+            float remainingTime = Mathf.Max(0f, deactivateTime - Time.time);
+            return remainingTime * Mathf.Max(0.01f, speed);
+        }
+
+        private void CacheDefaultScale()
+        {
+            if (defaultScaleCached)
+            {
+                return;
+            }
+
+            defaultLocalScale = transform.localScale;
+            defaultScaleCached = true;
+        }
+
+        private void OnDisable()
+        {
+            if (defaultScaleCached)
+            {
+                transform.localScale = defaultLocalScale;
+            }
+
+            hitEnemyIds.Clear();
+            hasImpacted = false;
+            itemEffects = null;
+            returning = false;
+            splitTriggered = false;
+            currentHitCount = 0;
+            remainingBounces = 0;
         }
     }
 }

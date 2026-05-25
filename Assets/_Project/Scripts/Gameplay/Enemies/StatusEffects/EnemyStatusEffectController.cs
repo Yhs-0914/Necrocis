@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -6,6 +7,12 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class EnemyStatusEffectController : MonoBehaviour
     {
+        private struct MoveSpeedSlow
+        {
+            public float ratio;
+            public float endTime;
+        }
+
         [SerializeField] private bool enableDebugLogs = true;
 
         private EnemyController enemy;
@@ -18,6 +25,8 @@ namespace Necrocis
         private float poisonEndTime;
         private float poisonTickInterval;
         private float poisonTickDamage;
+        private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
+        private Coroutine slowRoutine;
 
         public bool IsStunned => Time.time < stunEndTime;
         public bool IsPoisoned => Time.time < poisonEndTime;
@@ -36,11 +45,23 @@ namespace Necrocis
             poisonEndTime = 0f;
             poisonTickInterval = 0f;
             poisonTickDamage = 0f;
+            moveSpeedSlows.Clear();
 
             if (poisonCoroutine != null)
             {
                 StopCoroutine(poisonCoroutine);
                 poisonCoroutine = null;
+            }
+
+            if (slowRoutine != null)
+            {
+                StopCoroutine(slowRoutine);
+                slowRoutine = null;
+            }
+
+            if (enemy != null && enemy.Stats != null)
+            {
+                enemy.Stats.RemoveModifiersFromSource(this);
             }
         }
 
@@ -126,6 +147,32 @@ namespace Necrocis
             }
         }
 
+        public void ApplyMoveSpeedSlow(float slowRatio, float duration)
+        {
+            if (slowRatio <= 0f || duration <= 0f || enemy == null || enemy.Stats == null)
+            {
+                return;
+            }
+
+            moveSpeedSlows.Add(new MoveSpeedSlow
+            {
+                ratio = Mathf.Clamp01(slowRatio),
+                endTime = Time.time + duration
+            });
+
+            RefreshMoveSpeedSlow();
+
+            if (slowRoutine == null)
+            {
+                slowRoutine = StartCoroutine(SlowRoutine());
+            }
+
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[EnemyStatus] Slow applied to {EnemyName} for {duration:0.##}s ({slowRatio * 100f:0.#}%)");
+            }
+        }
+
         private IEnumerator PoisonRoutine()
         {
             while (Time.time < poisonEndTime)
@@ -143,6 +190,58 @@ namespace Necrocis
 
             poisonCoroutine = null;
             poisonEndTime = 0f;
+        }
+
+        private IEnumerator SlowRoutine()
+        {
+            while (moveSpeedSlows.Count > 0)
+            {
+                float nextEndTime = float.PositiveInfinity;
+                for (int i = 0; i < moveSpeedSlows.Count; i++)
+                {
+                    nextEndTime = Mathf.Min(nextEndTime, moveSpeedSlows[i].endTime);
+                }
+
+                float waitTime = Mathf.Max(0.02f, nextEndTime - Time.time);
+                yield return new WaitForSeconds(waitTime);
+                RefreshMoveSpeedSlow();
+            }
+
+            slowRoutine = null;
+        }
+
+        private void RefreshMoveSpeedSlow()
+        {
+            float now = Time.time;
+            for (int i = moveSpeedSlows.Count - 1; i >= 0; i--)
+            {
+                if (moveSpeedSlows[i].endTime <= now)
+                {
+                    moveSpeedSlows.RemoveAt(i);
+                }
+            }
+
+            if (enemy == null || enemy.Stats == null)
+            {
+                return;
+            }
+
+            enemy.Stats.RemoveModifiersFromSource(this);
+
+            float strongestSlow = 0f;
+            for (int i = 0; i < moveSpeedSlows.Count; i++)
+            {
+                strongestSlow = Mathf.Max(strongestSlow, moveSpeedSlows[i].ratio);
+            }
+
+            if (strongestSlow > 0f)
+            {
+                enemy.Stats.AddModifier(
+                    CharacterStatType.MoveSpeed,
+                    -strongestSlow,
+                    CharacterStatModifierMode.PercentAdd,
+                    this);
+            }
         }
 
         private void OnDisable()
