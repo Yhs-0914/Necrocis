@@ -5,6 +5,8 @@ namespace Necrocis
 {
     public partial class EnemyController
     {
+        [SerializeField] private bool logDamageToConsole = true;
+
         public bool TryPerformAttack(float deltaTime)
         {
             if (statusEffectController != null && statusEffectController.IsStunned)
@@ -85,7 +87,7 @@ namespace Necrocis
             Health playerHealth = PlayerController.Instance.GetComponent<Health>();
             if (playerHealth == null) return;
 
-            playerHealth.TakeDamage(damage);
+            playerHealth.TakeDamage(damage, this);
         }
 
 
@@ -109,7 +111,7 @@ namespace Necrocis
             }
 
             EnemyProjectile proj = EnemyProjectile.Acquire(spawnPos, projSprite, config.projectileScale);
-            proj.Launch(dir, damage, config.projectileSpeed, config.projectileLifeTime);
+            proj.Launch(dir, damage, config.projectileSpeed, config.projectileLifeTime, this);
         }
 
         public void TakeDamage(float damage)
@@ -127,8 +129,20 @@ namespace Necrocis
             }
 
             stats.ApplyDamage(finalDamage);
+            if (logDamageToConsole && config != null && !config.isElite)
+            {
+                string enemyName = string.IsNullOrWhiteSpace(config.name) ? gameObject.name : config.name;
+                Debug.Log($"[DamageLog] Player -> {enemyName} : {finalDamage:0.##} (HP {stats.CurrentHealth:0.##}/{stats.MaxHealth:0.##})");
+            }
+
             if (stats.IsDead)
             {
+                if (PlayerController.Instance != null)
+                {
+                    PlayerItemCombatEffects itemEffects = PlayerController.Instance.GetComponent<PlayerItemCombatEffects>();
+                    itemEffects?.NotifyEnemyDefeatedByPlayer(this);
+                }
+
                 RaiseDefeated();
                 ChangeState(EnemyDeadState.Instance);
             }

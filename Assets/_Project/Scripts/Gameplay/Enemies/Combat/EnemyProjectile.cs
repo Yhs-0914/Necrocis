@@ -25,6 +25,7 @@ namespace Necrocis
         private float lifeTime;
         private float elapsed;
         private bool launched;
+        private EnemyController ownerEnemy;
 
         // ─────────────────────────────────
         // 풀링 API
@@ -60,7 +61,7 @@ namespace Necrocis
             return proj;
         }
 
-        public void Launch(Vector3 direction, float damage, float speed, float lifeTime)
+        public void Launch(Vector3 direction, float damage, float speed, float lifeTime, EnemyController sourceEnemy = null)
         {
             moveDirection = direction.normalized;
             this.damage = damage;
@@ -68,12 +69,14 @@ namespace Necrocis
             this.lifeTime = lifeTime;
             elapsed = 0f;
             launched = true;
+            ownerEnemy = sourceEnemy;
         }
 
         private void ReturnToPool()
         {
             if (!launched && !gameObject.activeSelf) return;
             launched = false;
+            ownerEnemy = null;
             gameObject.SetActive(false);
             EnsurePoolRoot();
             transform.SetParent(poolRoot, false);
@@ -116,7 +119,7 @@ namespace Necrocis
                 Health playerHealth = PlayerController.Instance.GetComponent<Health>();
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
-                    playerHealth.TakeDamage(damage);
+                    playerHealth.TakeDamage(damage, ownerEnemy);
                 }
                 ReturnToPool();
             }

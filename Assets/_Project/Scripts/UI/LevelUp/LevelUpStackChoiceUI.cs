@@ -241,6 +241,17 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         string source = $"LevelUpStackChoiceUI_{statType}_{selectionSerial++}";
+        PlayerItemManager itemManager = PlayerItemManager.Instance ?? playerStats.GetComponent<PlayerItemManager>();
+        const bool bioGambleFeatureEnabled = false;
+        bool hasBioGamble = bioGambleFeatureEnabled
+            && itemManager != null
+            && itemManager.ContainsItem(PlayerItemCombatEffects.BioGambleId);
+        if (hasBioGamble)
+        {
+            int randomDelta = Random.Range(-2, 4);
+            ApplyBioGambleStat(playerStats, statType, randomDelta, source);
+            return;
+        }
 
         switch (statType)
         {
@@ -262,6 +273,35 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             case StackStatType.MaxHealth:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MaxHealth, maxHealthFlatIncrease, CharacterStatModifierMode.Flat, source));
                 playerStats.Heal(maxHealthFlatIncrease);
+                break;
+        }
+    }
+
+    private static void ApplyBioGambleStat(PlayerStats playerStats, StackStatType statType, int randomDelta, string source)
+    {
+        switch (statType)
+        {
+            case StackStatType.AttackPower:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackPower, randomDelta, CharacterStatModifierMode.Flat, source));
+                break;
+            case StackStatType.AttackRange:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackRange, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                break;
+            case StackStatType.AttackSpeed:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                break;
+            case StackStatType.Magic:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.Magic, randomDelta, CharacterStatModifierMode.Flat, source));
+                break;
+            case StackStatType.MoveSpeed:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MoveSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                break;
+            case StackStatType.MaxHealth:
+                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MaxHealth, randomDelta, CharacterStatModifierMode.Flat, source));
+                if (randomDelta > 0)
+                {
+                    playerStats.Heal(randomDelta);
+                }
                 break;
         }
     }

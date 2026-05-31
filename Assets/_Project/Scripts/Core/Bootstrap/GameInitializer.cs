@@ -145,6 +145,9 @@ namespace Necrocis
             if (playerObj.GetComponent<PlayerItemPickupNotifier>() == null)
                 playerObj.AddComponent<PlayerItemPickupNotifier>();
 
+            if (playerObj.GetComponent<PlayerItemTestPanel>() == null)
+                playerObj.AddComponent<PlayerItemTestPanel>();
+
             if (playerObj.GetComponent<PlayerClassSkillController>() == null)
                 playerObj.AddComponent<PlayerClassSkillController>();
 

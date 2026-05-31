@@ -12,6 +12,7 @@ namespace Necrocis
     {
         [Tooltip("피격 후 무적 시간(초)")]
         [SerializeField] private float invincibilityDuration = 0.2f;
+        [SerializeField] private bool disableIncomingDamageForTest = true;
 
         private bool isInvincible; // 현재 무적 상태인지
 
@@ -63,11 +64,39 @@ namespace Necrocis
         }
 
         // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
-        public void TakeDamage(float damageAmount)
+        public void TakeDamage(float damageAmount, EnemyController sourceEnemy = null)
         {
-            if (isInvincible || IsDead || damageAmount <= 0f) return;
+            if (disableIncomingDamageForTest || isInvincible || IsDead || damageAmount <= 0f) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects != null)
+            {
+                actualDamage = itemEffects.ProcessIncomingDamage(actualDamage, sourceEnemy);
+            }
+
+            if (actualDamage <= 0f)
+            {
+                return;
+            }
+
+            if (itemEffects != null && Stats != null)
+            {
+                float currentHealth = Stats.CurrentHealth;
+                float maxHealth = Stats.MaxHealth;
+                if (actualDamage >= currentHealth && itemEffects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
+                {
+                    float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
+                    float damageToApply = Mathf.Max(0f, currentHealth - targetHealth);
+                    if (damageToApply > 0f)
+                    {
+                        Stats.ApplyDamage(damageToApply);
+                    }
+
+                    StartCoroutine(InvincibilityCoroutine());
+                    return;
+                }
+            }
             Stats?.ApplyDamage(actualDamage);
 
             StartCoroutine(InvincibilityCoroutine());

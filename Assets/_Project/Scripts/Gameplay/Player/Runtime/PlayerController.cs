@@ -126,6 +126,7 @@ namespace Necrocis
         public float Magic => playerStats != null ? playerStats.Magic : 0f;
         public float SkillCooldownReduction => playerStats != null ? playerStats.SkillCooldownReduction : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
+        public bool IsMoving => isMoving;
         // ?좊땲???앸챸二쇨린: 李몄“瑜?罹먯떆?섍퀬 湲곕낯 ?곹깭瑜?珥덇린?뷀빀?덈떎.
 
         private void Awake()
@@ -605,9 +606,20 @@ namespace Necrocis
 
             Health health = GetComponent<Health>();
             if (health != null)
+            {
                 health.TakeDamage(damage);
+            }
             else
-                playerStats?.TakeDamage(damage);
+            {
+                float finalDamage = Mathf.Max(0f, damage);
+                PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+                if (itemEffects != null)
+                {
+                    finalDamage *= itemEffects.GetIncomingDamageMultiplier();
+                }
+
+                playerStats?.TakeDamage(finalDamage);
+            }
         }
         // Heal: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 

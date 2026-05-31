@@ -13,6 +13,7 @@ namespace Necrocis
 
         private const int HitBufferSize = 8;
         private const int ExplosionBufferSize = 24;
+        private const int ObstacleHitBufferSize = 12;
 
         [SerializeField] private float speed = 15f;
         [SerializeField] private float lifeTime = 3f;
@@ -32,11 +33,18 @@ namespace Necrocis
         private int currentHitCount;
         private int remainingBounces;
         private bool splitTriggered;
+        private bool pulseScaleGrowMode;
+        private bool pulseScaleModeInitialized;
+        private float pulseRangeBudget;
         private SpawnKind spawnKind = SpawnKind.Normal;
         private PlayerItemCombatEffects itemEffects;
         private Transform ownerTransform;
+        private float launchRange;
+        private Vector3 activeBaseScale = Vector3.one;
+        private bool boomerangRehitResetDone;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
         private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
+        private readonly RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
         private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
 
         private Vector3 defaultLocalScale = Vector3.one;
@@ -74,12 +82,21 @@ namespace Necrocis
             hasImpacted = false;
             returning = false;
             splitTriggered = false;
+            boomerangRehitResetDone = false;
+            launchRange = Mathf.Max(0.05f, range);
+            pulseScaleModeInitialized = false;
+            pulseRangeBudget = launchRange;
 
             maxHitCount = 1;
             if (spawnKind == SpawnKind.Normal && itemEffects != null)
             {
                 maxHitCount = Mathf.Max(1, itemEffects.GetPiercingHitCount());
                 remainingBounces = itemEffects.GetReflectionBounceCount();
+                if (itemEffects.HasRefluxOrgan)
+                {
+                    // Boomerang projectiles should not disappear on enemy hit count.
+                    maxHitCount = int.MaxValue;
+                }
             }
             else
             {
@@ -93,11 +110,23 @@ namespace Necrocis
                 scaleMultiplier = itemEffects.GetScaleMultiplier();
             }
             transform.localScale = defaultLocalScale * scaleMultiplier;
+            activeBaseScale = transform.localScale;
 
-            float effectiveRange = Mathf.Max(0.05f, range);
+            float effectiveRange = launchRange;
             if (spawnKind == SpawnKind.Normal && itemEffects != null)
             {
                 effectiveRange *= itemEffects.GetRangeMultiplier();
+                if (itemEffects.HasRefluxOrgan)
+                {
+                    // Outbound + return travel budget.
+                    effectiveRange *= 2f;
+                }
+            }
+            pulseRangeBudget = effectiveRange;
+            if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
+            {
+                pulseScaleGrowMode = Random.value < 0.5f;
+                pulseScaleModeInitialized = true;
             }
 
             deactivateTime = Time.time + effectiveRange / Mathf.Max(0.01f, speed);
@@ -129,9 +158,9 @@ namespace Necrocis
             }
 
             Vector3 step = moveDirection * speed * Time.deltaTime;
-            if (TryReflectFromBiome(ref step))
+            if (!TryReflectFromObstacleCollider(ref step))
             {
-                // reflected
+                TryReflectFromBiome(ref step);
             }
 
             Vector3 nextPosition = transform.position + step;
@@ -204,22 +233,34 @@ namespace Necrocis
                 return;
             }
 
-            currentHitCount++;
-            enemy.TakeDamage(damage);
+            bool isBoomerang = spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasRefluxOrgan;
+            float appliedDamage = damage;
+            if (isBoomerang)
+            {
+                appliedDamage *= itemEffects.GetBoomerangRepeatHitDamageMultiplier();
+            }
 
             if (itemEffects != null)
             {
-                itemEffects.ApplyCommonOnHitEffects(enemy, damage, transform.position);
+                appliedDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, appliedDamage);
+            }
+
+            currentHitCount++;
+            enemy.TakeDamage(appliedDamage);
+
+            if (itemEffects != null)
+            {
+                itemEffects.ApplyCommonOnHitEffects(enemy, appliedDamage, transform.position);
 
                 if (spawnKind == SpawnKind.Normal && itemEffects.HasSplitTissue && !splitTriggered)
                 {
                     splitTriggered = true;
-                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, damage, targetMask, GetRemainingRange());
+                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, appliedDamage, targetMask, GetRemainingRange());
                 }
 
                 if (spawnKind == SpawnKind.Normal && itemEffects.HasExplosiveBloodCell)
                 {
-                    ApplyExplosionDamage(enemy);
+                    ApplyExplosionDamage(enemy, appliedDamage);
                 }
             }
 
@@ -330,7 +371,8 @@ namespace Necrocis
                 return;
             }
 
-            if (!returning && traveledDistance >= itemEffects.GetBoomerangReturnDistance())
+            float returnDistance = itemEffects.GetBoomerangReturnDistance(Mathf.Max(launchRange, 0.5f));
+            if (!returning && traveledDistance >= returnDistance)
             {
                 returning = true;
             }
@@ -345,6 +387,13 @@ namespace Necrocis
             if (toOwner.sqrMagnitude > 0.0001f)
             {
                 moveDirection = toOwner.normalized;
+            }
+
+            if (!boomerangRehitResetDone)
+            {
+                // Allow one more hit pass while returning to the player.
+                hitEnemyIds.Clear();
+                boomerangRehitResetDone = true;
             }
         }
 
@@ -362,14 +411,31 @@ namespace Necrocis
             }
 
             Vector3 current = transform.position;
-            Vector3 next = current + step;
-            if (IsWalkablePosition(biome, next))
+            int sampleCount = Mathf.Max(2, Mathf.CeilToInt(step.magnitude / 0.2f));
+            Vector3 segment = step / sampleCount;
+            Vector3 hitProbe = current;
+            Vector3 preHitProbe = current;
+            bool blocked = false;
+            for (int i = 1; i <= sampleCount; i++)
+            {
+                Vector3 probe = current + segment * i;
+                if (!IsWalkablePosition(biome, probe))
+                {
+                    hitProbe = probe;
+                    preHitProbe = current + segment * (i - 1);
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked)
             {
                 return false;
             }
 
-            bool xBlocked = !IsWalkablePosition(biome, current + new Vector3(step.x, 0f, 0f));
-            bool zBlocked = !IsWalkablePosition(biome, current + new Vector3(0f, 0f, step.z));
+            Vector3 localStep = hitProbe - preHitProbe;
+            bool xBlocked = !IsWalkablePosition(biome, preHitProbe + new Vector3(localStep.x, 0f, 0f));
+            bool zBlocked = !IsWalkablePosition(biome, preHitProbe + new Vector3(0f, 0f, localStep.z));
 
             Vector3 reflectedDirection = moveDirection;
             if (xBlocked)
@@ -393,6 +459,98 @@ namespace Necrocis
             return true;
         }
 
+        private bool TryReflectFromObstacleCollider(ref Vector3 step)
+        {
+            if (remainingBounces <= 0)
+            {
+                return false;
+            }
+
+            float stepDistance = step.magnitude;
+            if (stepDistance <= 0.0001f)
+            {
+                return false;
+            }
+
+            Vector3 direction = step / stepDistance;
+            float probeRadius = Mathf.Max(0.05f, hitCheckRadius * 0.65f);
+            int hitCount = Physics.SphereCastNonAlloc(
+                transform.position,
+                probeRadius,
+                direction,
+                obstacleHitBuffer,
+                stepDistance + 0.02f,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+
+            if (hitCount <= 0)
+            {
+                return false;
+            }
+
+            bool found = false;
+            float nearestDistance = float.MaxValue;
+            RaycastHit nearestHit = default;
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit = obstacleHitBuffer[i];
+                Collider obstacle = hit.collider;
+                if (!IsValidObstacleCollider(obstacle))
+                {
+                    continue;
+                }
+
+                if (hit.distance < nearestDistance)
+                {
+                    nearestDistance = hit.distance;
+                    nearestHit = hit;
+                    found = true;
+                }
+            }
+
+            if (!found)
+            {
+                return false;
+            }
+
+            Vector3 normal = nearestHit.normal.sqrMagnitude > 0.0001f ? nearestHit.normal.normalized : -moveDirection;
+            Vector3 reflectedDirection = Vector3.Reflect(moveDirection, normal);
+            moveDirection = reflectedDirection.sqrMagnitude > 0.0001f ? reflectedDirection.normalized : -moveDirection;
+            remainingBounces--;
+
+            transform.position = nearestHit.point + normal * (probeRadius + 0.02f);
+            step = moveDirection * speed * Time.deltaTime;
+            return true;
+        }
+
+        private bool IsValidObstacleCollider(Collider obstacle)
+        {
+            if (obstacle == null || !obstacle.enabled || obstacle.isTrigger)
+            {
+                return false;
+            }
+
+            Transform obstacleTransform = obstacle.transform;
+            if (obstacleTransform == transform || obstacleTransform.IsChildOf(transform))
+            {
+                return false;
+            }
+
+            if (ownerTransform != null && (obstacleTransform == ownerTransform || obstacleTransform.IsChildOf(ownerTransform)))
+            {
+                return false;
+            }
+
+            EnemyController enemy = obstacle.GetComponent<EnemyController>()
+                ?? obstacle.GetComponentInParent<EnemyController>();
+            if (enemy != null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private static bool IsWalkablePosition(BiomeManager biome, Vector3 worldPosition)
         {
             Vector2Int grid = biome.WorldToGrid(worldPosition);
@@ -406,13 +564,25 @@ namespace Necrocis
 
         private void ApplyPulseScale()
         {
-            float amplitude = itemEffects.GetPulseAmplitude();
-            float frequency = itemEffects.GetPulseFrequency();
-            float pulse = 1f + Mathf.Sin((traveledDistance / frequency) * Mathf.PI * 2f) * amplitude;
-            transform.localScale = defaultLocalScale * pulse;
+            if (!pulseScaleModeInitialized)
+            {
+                pulseScaleGrowMode = Random.value < 0.5f;
+                pulseScaleModeInitialized = true;
+            }
+
+            float progress = Mathf.Clamp01(traveledDistance / Mathf.Max(0.05f, pulseRangeBudget));
+            // Faster early growth/shrink so the effect is more visible right after firing.
+            float acceleratedProgress = 1f - Mathf.Pow(1f - progress, 2.2f);
+            float startScale = 1f;
+            float endScale = pulseScaleGrowMode
+                ? itemEffects.GetPulseAmplitude()
+                : itemEffects.GetPulseFrequency();
+
+            float scaleRatio = Mathf.Lerp(startScale, endScale, acceleratedProgress);
+            transform.localScale = activeBaseScale * scaleRatio;
         }
 
-        private void ApplyExplosionDamage(EnemyController primaryEnemy)
+        private void ApplyExplosionDamage(EnemyController primaryEnemy, float sourceDamage)
         {
             float radius = itemEffects.GetExplosionRadius();
             int hitCount = Physics.OverlapSphereNonAlloc(
@@ -422,7 +592,8 @@ namespace Necrocis
                 targetMask,
                 QueryTriggerInteraction.Collide);
 
-            float explosionDamage = Mathf.Max(0f, damage * itemEffects.GetExplosionDamageMultiplier());
+            float explosionDamage = Mathf.Max(0f, sourceDamage * itemEffects.GetExplosionDamageMultiplier());
+            SpawnExplosionVisual(transform.position, radius);
             for (int i = 0; i < hitCount; i++)
             {
                 Collider collider = explosionBuffer[i];
@@ -439,9 +610,24 @@ namespace Necrocis
                     continue;
                 }
 
-                enemy.TakeDamage(explosionDamage);
-                itemEffects.ApplyCommonOnHitEffects(enemy, explosionDamage, transform.position);
+                float appliedExplosionDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, explosionDamage);
+                enemy.TakeDamage(appliedExplosionDamage);
+                itemEffects.ApplyCommonOnHitEffects(enemy, appliedExplosionDamage, transform.position);
             }
+        }
+
+        private static void SpawnExplosionVisual(Vector3 center, float radius)
+        {
+            GameObject fx = new GameObject("ExplosiveBloodCellFx");
+            fx.transform.position = new Vector3(center.x, center.y + 0.08f, center.z);
+
+            SpriteRenderer renderer = fx.AddComponent<SpriteRenderer>();
+            renderer.sprite = TextureSpriteCache.GetCircleSprite();
+            renderer.color = new Color(1f, 0.26f, 0.12f, 0.55f);
+            renderer.sortingOrder = 5100;
+
+            fx.transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
+            Object.Destroy(fx, 0.2f);
         }
 
         private float GetRemainingRange()
@@ -473,8 +659,94 @@ namespace Necrocis
             itemEffects = null;
             returning = false;
             splitTriggered = false;
+            boomerangRehitResetDone = false;
+            pulseScaleModeInitialized = false;
+            pulseRangeBudget = 0f;
             currentHitCount = 0;
             remainingBounces = 0;
+            launchRange = 0f;
+            activeBaseScale = defaultLocalScale;
+        }
+    }
+
+    internal static class TextureSpriteCache
+    {
+        private static Sprite circleSprite;
+        private static Material spriteMaterial;
+
+        public static Sprite GetCircleSprite()
+        {
+            if (circleSprite != null)
+            {
+                return circleSprite;
+            }
+
+            const int size = 64;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Bilinear;
+
+            float center = (size - 1) * 0.5f;
+            float radius = center - 1f;
+            float innerRadius = radius * 0.45f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - center;
+                    float dy = y - center;
+                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (distance > radius)
+                    {
+                        texture.SetPixel(x, y, Color.clear);
+                        continue;
+                    }
+
+                    if (distance <= innerRadius)
+                    {
+                        texture.SetPixel(x, y, Color.white);
+                        continue;
+                    }
+
+                    float alpha = Mathf.InverseLerp(radius, innerRadius, distance);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+
+            texture.Apply();
+            circleSprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, size, size),
+                new Vector2(0.5f, 0.5f),
+                size);
+            circleSprite.name = "RuntimeCircleSprite";
+            return circleSprite;
+        }
+
+        public static Material GetSpriteMaterial()
+        {
+            if (spriteMaterial != null)
+            {
+                return spriteMaterial;
+            }
+
+            Shader shader = Shader.Find("Sprites/Default");
+            if (shader == null)
+            {
+                shader = Shader.Find("Unlit/Transparent");
+            }
+
+            if (shader == null)
+            {
+                return null;
+            }
+
+            spriteMaterial = new Material(shader)
+            {
+                name = "RuntimeSpriteMaterial"
+            };
+            return spriteMaterial;
         }
     }
 }
