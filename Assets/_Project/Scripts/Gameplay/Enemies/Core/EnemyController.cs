@@ -91,6 +91,7 @@ namespace Necrocis
         public bool IsCharging => isCharging;
         public bool CanCharge => IsCharger && chargeCooldownTimer <= 0f;
         public event System.Action<EnemyController> Defeated;
+        public event System.Action<EnemyController, float> DamageTaken;
 
         // ─────────────────────────────────
         // 풀링 API (기존 유지)

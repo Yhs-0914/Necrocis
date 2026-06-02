@@ -221,7 +221,12 @@ namespace Necrocis
                 return;
             }
 
-            stats.ApplyDamage(finalDamage);
+            float appliedDamage = stats.ApplyDamage(finalDamage);
+            if (appliedDamage > 0f)
+            {
+                DamageTaken?.Invoke(this, appliedDamage);
+            }
+
             if (stats.IsDead)
             {
                 RaiseDefeated();

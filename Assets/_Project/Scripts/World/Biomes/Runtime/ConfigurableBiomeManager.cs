@@ -300,7 +300,7 @@ namespace Necrocis
             GameObject arenaObject = new GameObject("MidBossArena");
             arenaObject.transform.SetParent(objectsParent != null ? objectsParent : transform, false);
             midBossArenaController = arenaObject.AddComponent<MidBossArenaController>();
-            midBossArenaController.Configure(this, midBossArenaConfig, runtimeEnemyRules);
+            midBossArenaController.Configure(this, midBossArenaConfig, runtimeEnemyRules, config.GetReturnPortalConfig());
         }
 
         private bool IsInsideMidBossArenaBounds(int gridX, int gridY)

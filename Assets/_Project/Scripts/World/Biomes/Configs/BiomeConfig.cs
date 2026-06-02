@@ -85,6 +85,14 @@ namespace Necrocis
 
             return midBossArena;
         }
+
+        [Header("Return Portal")]
+        public BiomeReturnPortalConfig returnPortal = new BiomeReturnPortalConfig();
+
+        public BiomeReturnPortalConfig GetReturnPortalConfig()
+        {
+            return returnPortal;
+        }
     }
 
     [System.Serializable]
@@ -147,6 +155,25 @@ namespace Necrocis
         public bool addCollider = false;
         public bool isTrigger = false;
         public Vector3 colliderSize = new Vector3(1f, 1f, 1f);
+        public Vector3 colliderCenter = Vector3.zero;
+    }
+
+    [System.Serializable]
+    public class BiomeReturnPortalConfig
+    {
+        public bool enabled = true;
+        public string name = "ReturnPortal";
+        public BiomeObjectKind poolKind = BiomeObjectKind.Portal;
+        public Sprite sprite;
+        public int sortingOrder = 1000;
+        public bool useCustomPosition = true;
+        public Vector2Int gridPosition = new Vector2Int(0, 4);
+        public float heightOffset = 0f;
+        public bool useBillboard = true;
+        public Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
+        public bool addCollider = true;
+        public bool isTrigger = true;
+        public Vector3 colliderSize = new Vector3(2f, 2f, 2f);
         public Vector3 colliderCenter = Vector3.zero;
     }
 
@@ -331,12 +358,14 @@ namespace Necrocis
 
         [Header("Pattern Settings")]
         public IntestineBossPatternSettings intestinePattern = new IntestineBossPatternSettings();
+        public LiverBossPatternSettings liverPattern = new LiverBossPatternSettings();
     }
 
     public enum MidBossPatternType
     {
         Auto,
         None,
-        Intestine
+        Intestine,
+        Liver
     }
 }

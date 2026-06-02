@@ -78,7 +78,7 @@ MonoBehaviour:
     enabled: 1
     name: ReturnPortal
     poolKind: 100
-    sprite: {fileID: 1428116226, guid: fbc2f259a8b301f42933cd4689e5842c, type: 3}
+    sprite: {fileID: 1816856329, guid: fbc2f259a8b301f42933cd4689e5842c, type: 3}
     sortingOrder: 1000
     useCustomPosition: 1
     gridPosition: {x: 67, y: 4}
