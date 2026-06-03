@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+using System;
+>>>>>>> Stashed changes
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -95,6 +99,7 @@ namespace Necrocis
         [SerializeField] private float beamDamageMultiplier = 0.95f;
         [SerializeField, Min(1)] private int beamHitBufferSize = 48;
 
+<<<<<<< Updated upstream
         [Header("Special Items")]
         [SerializeField] private int overheatMaxStacks = 10;
         [SerializeField] private float overheatStackWindow = 1.4f;
@@ -215,6 +220,10 @@ namespace Necrocis
             public int Stacks;
             public float LastHitTime;
         }
+=======
+        private PlayerItemManager itemManager;
+        private readonly HashSet<string> acquiredItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+>>>>>>> Stashed changes
 
         public bool HasHomingCell => HasItem(HomingCellId);
         public bool HasRefluxOrgan => HasItem(RefluxOrganId);
@@ -262,18 +271,39 @@ namespace Necrocis
         private void Awake()
         {
             itemManager = GetComponent<PlayerItemManager>();
+<<<<<<< Updated upstream
             playerController = GetComponent<PlayerController>();
             playerStats = GetComponent<PlayerStats>();
             previousPosition = GetMovementAnchorPosition();
+=======
+            RebuildItemCache();
+>>>>>>> Stashed changes
         }
 
         private void OnEnable()
         {
+<<<<<<< Updated upstream
             TrySubscribeHealthEvents();
+=======
+            if (itemManager == null)
+            {
+                itemManager = GetComponent<PlayerItemManager>();
+            }
+
+            if (itemManager == null)
+            {
+                return;
+            }
+
+            itemManager.ItemAcquired += HandleItemAcquired;
+            itemManager.ItemRemoved += HandleItemRemoved;
+            RebuildItemCache();
+>>>>>>> Stashed changes
         }
 
         private void OnDisable()
         {
+<<<<<<< Updated upstream
             TryUnsubscribeHealthEvents();
             ClearPlateletMembraneOutline();
             ClearPersistentStatModifiers();
@@ -345,6 +375,15 @@ namespace Necrocis
                 splitRegenerationUsed = false;
             }
 
+=======
+            if (itemManager == null)
+            {
+                return;
+            }
+
+            itemManager.ItemAcquired -= HandleItemAcquired;
+            itemManager.ItemRemoved -= HandleItemRemoved;
+>>>>>>> Stashed changes
         }
 
         public int GetForwardProjectileCount()
@@ -384,7 +423,7 @@ namespace Necrocis
 
         public bool RollCellProliferation()
         {
-            return HasItem(CellProliferationId) && Random.value <= cellProliferationChance;
+            return HasItem(CellProliferationId) && UnityEngine.Random.value <= cellProliferationChance;
         }
 
         public float GetRangeMultiplier()
@@ -765,6 +804,16 @@ namespace Necrocis
 
         public bool HasItem(string itemId)
         {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            if (acquiredItemIds.Count > 0)
+            {
+                return acquiredItemIds.Contains(itemId);
+            }
+
             if (itemManager == null)
             {
                 itemManager = GetComponent<PlayerItemManager>();
@@ -817,7 +866,9 @@ namespace Necrocis
 
         public void SpawnSplitProjectiles(Vector3 origin, Vector3 forwardDirection, float damage, LayerMask mask, float range)
         {
-            Vector3 forward = forwardDirection.sqrMagnitude > 0.0001f ? forwardDirection.normalized : Vector3.forward;
+            Vector3 forward = forwardDirection.sqrMagnitude > 0.0001f
+                ? forwardDirection.normalized
+                : Vector3.forward;
             float angle = GetSplitAngle();
             float sideDamage = damage * GetSplitDamageMultiplier();
             float sideRange = range * GetSplitRangeMultiplier();
@@ -870,6 +921,45 @@ namespace Necrocis
             }
 
             projectile.Launch(direction, damage, mask, range, this, spawnKind);
+        }
+
+        private void HandleItemAcquired(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem acquiredItem)
+        {
+            if (acquiredItem == null || string.IsNullOrWhiteSpace(acquiredItem.ItemId))
+            {
+                return;
+            }
+
+            acquiredItemIds.Add(acquiredItem.ItemId);
+        }
+
+        private void HandleItemRemoved(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem removedItem)
+        {
+            if (removedItem == null || string.IsNullOrWhiteSpace(removedItem.ItemId))
+            {
+                return;
+            }
+
+            acquiredItemIds.Remove(removedItem.ItemId);
+        }
+
+        private void RebuildItemCache()
+        {
+            acquiredItemIds.Clear();
+            if (itemManager == null || itemManager.AcquiredItems == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<PlayerItemManager.AcquiredPlayerItem> acquiredItems = itemManager.AcquiredItems;
+            for (int i = 0; i < acquiredItems.Count; i++)
+            {
+                string itemId = acquiredItems[i].ItemId;
+                if (!string.IsNullOrWhiteSpace(itemId))
+                {
+                    acquiredItemIds.Add(itemId);
+                }
+            }
         }
 
         private static PlayerProjectilePool ResolvePool()

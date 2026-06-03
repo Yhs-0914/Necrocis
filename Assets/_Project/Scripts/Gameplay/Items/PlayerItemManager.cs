@@ -17,9 +17,16 @@ namespace Necrocis
     [RequireComponent(typeof(PlayerStats))]
     public class PlayerItemManager : MonoBehaviour
     {
+<<<<<<< Updated upstream
         private const string RemovedParasiticSporeItemId = "parasitic_spore";
         private const string RemovedNeuralOverloadItemId = "neural_overload";
         private const string RemovedCoagulationCellItemId = "coagulation_cell";
+=======
+        private static readonly HashSet<string> RemovedItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "parasitic_spore"
+        };
+>>>>>>> Stashed changes
 
         [Serializable]
         public class PlayerItemEntry
@@ -175,11 +182,12 @@ namespace Necrocis
             EnsureTemplateCatalogEntries();
             RebuildCatalog();
 
-            if (enablePickupNotification && GetComponent<PlayerItemPickupNotifier>() == null)
+            if (enablePickupNotification)
             {
-                gameObject.AddComponent<PlayerItemPickupNotifier>();
+                EnsureComponent<PlayerItemPickupNotifier>();
             }
 
+<<<<<<< Updated upstream
             if (GetComponent<PlayerItemCombatEffects>() == null)
             {
                 gameObject.AddComponent<PlayerItemCombatEffects>();
@@ -189,6 +197,9 @@ namespace Necrocis
             {
                 gameObject.AddComponent<PlayerItemTestPanel>();
             }
+=======
+            EnsureComponent<PlayerItemCombatEffects>();
+>>>>>>> Stashed changes
         }
 
         private void OnDestroy()
@@ -369,9 +380,13 @@ namespace Necrocis
                     continue;
                 }
 
+<<<<<<< Updated upstream
                 if (string.Equals(entry.ItemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(entry.ItemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(entry.ItemId, RemovedCoagulationCellItemId, StringComparison.OrdinalIgnoreCase))
+=======
+                if (RemovedItemIds.Contains(entry.ItemId))
+>>>>>>> Stashed changes
                 {
                     itemEntries.RemoveAt(i);
                 }
@@ -543,6 +558,17 @@ namespace Necrocis
             {
                 entry.SetDescription("이동하지 않으면 피해 감소 증가 (최대 50%)");
             }
+        }
+
+        private T EnsureComponent<T>() where T : Component
+        {
+            T component = GetComponent<T>();
+            if (component == null)
+            {
+                component = gameObject.AddComponent<T>();
+            }
+
+            return component;
         }
 
         public bool TryAcquireItem(string itemId, out PlayerItemAcquireFailureReason failureReason)

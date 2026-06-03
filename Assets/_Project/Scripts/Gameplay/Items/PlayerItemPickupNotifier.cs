@@ -76,6 +76,7 @@ namespace Necrocis
             {
                 messageText.enabled = false;
             }
+
             hideRoutine = null;
         }
 
