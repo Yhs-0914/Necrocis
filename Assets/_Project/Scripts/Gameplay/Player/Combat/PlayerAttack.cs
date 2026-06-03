@@ -193,6 +193,7 @@ namespace Necrocis
                     ? itemEffects.ApplyPerTargetDamageModifiers(enemy, finalDamage)
                     : finalDamage;
                 enemy.TakeDamage(appliedDamage);
+                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
             }
         }
@@ -397,6 +398,7 @@ namespace Necrocis
                     ? itemEffects.ApplyPerTargetDamageModifiers(enemy, damage)
                     : damage;
                 enemy.TakeDamage(appliedDamage);
+                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
             }
         }

@@ -30,7 +30,7 @@ MonoBehaviour:
     idleDelayRange: {x: 0.8, y: 1.6}
     maxHealth: 6
     attackDamage: 0.5
-    attackRange: 4
+    attackRange: 1.7
     attackCooldown: 1
     expReward: 10
     additionalBaseStats: []
@@ -76,7 +76,7 @@ MonoBehaviour:
     attackSpritesDown: []
     attackAnimationSpeed: 0.12
     expandColliderOnAttack: 1
-    attackColliderSize: {x: 3, y: 2, z: 3}
+    attackColliderSize: {x: 2.2, y: 2, z: 2.2}
     attackColliderCenter: {x: 0, y: 0.55, z: 0}
     deathSprites:
     - {fileID: -2111205726, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}

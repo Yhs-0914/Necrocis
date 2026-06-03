@@ -13,6 +13,7 @@ namespace Necrocis
         private const float HitRadius = 0.8f;
 
         private static readonly Stack<EnemyProjectile> Pool = new Stack<EnemyProjectile>();
+        private static readonly List<EnemyProjectile> ActiveProjectiles = new List<EnemyProjectile>();
         private static Transform poolRoot;
 
         private static Sprite defaultProjectileSprite;
@@ -26,6 +27,9 @@ namespace Necrocis
         private float elapsed;
         private bool launched;
         private EnemyController ownerEnemy;
+
+        public static IReadOnlyList<EnemyProjectile> ActiveEnemyProjectiles => ActiveProjectiles;
+        public bool IsLaunched => launched && gameObject.activeSelf;
 
         // ─────────────────────────────────
         // 풀링 API
@@ -58,6 +62,10 @@ namespace Necrocis
             proj.launched = false;
             proj.elapsed = 0f;
             proj.gameObject.SetActive(true);
+            if (!ActiveProjectiles.Contains(proj))
+            {
+                ActiveProjectiles.Add(proj);
+            }
             return proj;
         }
 
@@ -75,12 +83,18 @@ namespace Necrocis
         private void ReturnToPool()
         {
             if (!launched && !gameObject.activeSelf) return;
+            ActiveProjectiles.Remove(this);
             launched = false;
             ownerEnemy = null;
             gameObject.SetActive(false);
             EnsurePoolRoot();
             transform.SetParent(poolRoot, false);
             Pool.Push(this);
+        }
+
+        public void Deflect()
+        {
+            ReturnToPool();
         }
 
         // ─────────────────────────────────
@@ -123,6 +137,11 @@ namespace Necrocis
                 }
                 ReturnToPool();
             }
+        }
+
+        private void OnDisable()
+        {
+            ActiveProjectiles.Remove(this);
         }
 
         // ─────────────────────────────────

@@ -25,6 +25,7 @@ namespace Necrocis
         private Vector3 moveDirection;
         private float flightHeight;
         private float damage;
+        private float currentSpeed;
         private float deactivateTime;
         private bool hasImpacted;
         private float traveledDistance;
@@ -70,6 +71,7 @@ namespace Necrocis
             direction.y = 0f;
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             this.damage = damage;
+            currentSpeed = Mathf.Max(0.01f, speed);
             targetMask = mask;
             itemEffects = effects;
             spawnKind = kind;
@@ -90,6 +92,9 @@ namespace Necrocis
             maxHitCount = 1;
             if (spawnKind == SpawnKind.Normal && itemEffects != null)
             {
+                float damageMultiplier;
+                currentSpeed = speed * itemEffects.RollUnstableCellProjectileSpeedMultiplier(out damageMultiplier);
+                this.damage *= damageMultiplier;
                 maxHitCount = Mathf.Max(1, itemEffects.GetPiercingHitCount());
                 remainingBounces = itemEffects.GetReflectionBounceCount();
                 if (itemEffects.HasRefluxOrgan)
@@ -129,12 +134,17 @@ namespace Necrocis
                 pulseScaleModeInitialized = true;
             }
 
-            deactivateTime = Time.time + effectiveRange / Mathf.Max(0.01f, speed);
+            deactivateTime = Time.time + effectiveRange / Mathf.Max(0.01f, currentSpeed);
         }
 
         private void OnEnable()
         {
             CacheDefaultScale();
+            if (currentSpeed <= 0f)
+            {
+                currentSpeed = Mathf.Max(0.01f, speed);
+            }
+
             if (deactivateTime <= Time.time)
             {
                 deactivateTime = Time.time + lifeTime;
@@ -157,7 +167,7 @@ namespace Necrocis
                 }
             }
 
-            Vector3 step = moveDirection * speed * Time.deltaTime;
+            Vector3 step = moveDirection * currentSpeed * Time.deltaTime;
             if (!TryReflectFromObstacleCollider(ref step))
             {
                 TryReflectFromBiome(ref step);
@@ -250,6 +260,7 @@ namespace Necrocis
 
             if (itemEffects != null)
             {
+                itemEffects.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects.ApplyCommonOnHitEffects(enemy, appliedDamage, transform.position);
 
                 if (spawnKind == SpawnKind.Normal && itemEffects.HasSplitTissue && !splitTriggered)
@@ -612,6 +623,7 @@ namespace Necrocis
 
                 float appliedExplosionDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, explosionDamage);
                 enemy.TakeDamage(appliedExplosionDamage);
+                itemEffects.TryApplyPostDamageExecutionInstinct(enemy, appliedExplosionDamage);
                 itemEffects.ApplyCommonOnHitEffects(enemy, appliedExplosionDamage, transform.position);
             }
         }
@@ -633,7 +645,7 @@ namespace Necrocis
         private float GetRemainingRange()
         {
             float remainingTime = Mathf.Max(0f, deactivateTime - Time.time);
-            return remainingTime * Mathf.Max(0.01f, speed);
+            return remainingTime * Mathf.Max(0.01f, currentSpeed);
         }
 
         private void CacheDefaultScale()
@@ -666,6 +678,7 @@ namespace Necrocis
             remainingBounces = 0;
             launchRange = 0f;
             activeBaseScale = defaultLocalScale;
+            currentSpeed = Mathf.Max(0.01f, speed);
         }
     }
 

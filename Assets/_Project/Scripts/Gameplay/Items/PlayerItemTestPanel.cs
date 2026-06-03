@@ -353,6 +353,7 @@ namespace Necrocis
                 {
                     selectedAcquiredItemId = null;
                 }
+                RefreshLists();
                 return;
             }
 

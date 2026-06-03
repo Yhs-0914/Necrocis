@@ -17,16 +17,12 @@ namespace Necrocis
     [RequireComponent(typeof(PlayerStats))]
     public class PlayerItemManager : MonoBehaviour
     {
-<<<<<<< Updated upstream
-        private const string RemovedParasiticSporeItemId = "parasitic_spore";
-        private const string RemovedNeuralOverloadItemId = "neural_overload";
-        private const string RemovedCoagulationCellItemId = "coagulation_cell";
-=======
         private static readonly HashSet<string> RemovedItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "parasitic_spore"
+            "parasitic_spore",
+            "neural_overload",
+            "coagulation_cell"
         };
->>>>>>> Stashed changes
 
         [Serializable]
         public class PlayerItemEntry
@@ -187,19 +183,8 @@ namespace Necrocis
                 EnsureComponent<PlayerItemPickupNotifier>();
             }
 
-<<<<<<< Updated upstream
-            if (GetComponent<PlayerItemCombatEffects>() == null)
-            {
-                gameObject.AddComponent<PlayerItemCombatEffects>();
-            }
-
-            if (GetComponent<PlayerItemTestPanel>() == null)
-            {
-                gameObject.AddComponent<PlayerItemTestPanel>();
-            }
-=======
             EnsureComponent<PlayerItemCombatEffects>();
->>>>>>> Stashed changes
+            EnsureComponent<PlayerItemTestPanel>();
         }
 
         private void OnDestroy()
@@ -291,7 +276,26 @@ namespace Necrocis
                 new PlayerItemEntry("recovery_factor", "회복 인자", "45초당 체력 +1 회복", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("reflective_skin", "반사 피부", "피격 시 적에게 피해 반사", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("bio_barrier", "생체 장막", "이동하지 않으면 피해 감소 증가 (최대 50%)", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("split_regeneration", "분열 재생", "체력 0이 될 때 작은 체력으로 부활", PlayerItemCategory.BasicProjectile)
+                new PlayerItemEntry("split_regeneration", "분열 재생", "체력 0이 될 때 작은 체력으로 부활", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("infected_host", "감염 숙주", "잡몹 처치 시 일정 확률로 짧은 시간 아군 생체 생성", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("spore_colony", "포자 군집", "일정 시간마다 적에게 달려드는 작은 포자 생명체 소환", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("blood_drone", "혈액 드론", "플레이어 주변을 떠다니며 가까운 적을 자동 추적 공격", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("guardian_organ", "수호 장기", "플레이어 주변을 맴돌며 적 투사체를 방어", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("tentacle_colony", "촉수 군체", "주변 적을 주기적으로 속박해 이동을 크게 방해", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("electric_neural_network", "전기 신경망", "적 처치 시 사망 지점에서 전류가 튀어 주변 적에게 연쇄 피해", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("infection_transference", "감염 전이", "적 사망 시 주변 적 3명에게 3초 감염 피해 부여", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("macrophage", "대식 세포", "적 처치 시 5초 동안 공격력 증가 (최대 3스택)", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("gluttonous_organ", "폭식 장기", "적 처치 시 3초 동안 이동속도 증가 (최대 4스택)", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("heart_sniper", "심장 저격", "체력 높은 적에게 직접 공격 피해 증가", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("bloodflow_acceleration", "혈류 가속", "보스/엘리트 근처에서 공격속도 증가", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("focused_nerve", "집중 신경", "주변 적이 적을수록 공격력 증가", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("execution_instinct", "처형 본능", "피해 후 체력 낮은 적을 확률 처형", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("berserk_cell", "광폭 세포", "보스전 진입 시 잠시 스탯 상승", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("unstable_cell", "불안정 세포", "투사체 속도 랜덤, 느린 탄 피해 2배", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("grotesque_growth", "기괴 성장", "10초마다 크기와 스탯이 랜덤 변화", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("mutation_rampage", "돌연변이 폭주", "15초마다 7초 랜덤 버프/디버프", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("parasitic_bomb", "기생 폭탄", "적 처치 시 확률로 플레이어 주변 폭발", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("frenzy_hormone", "광란 호르몬", "피격 시 짧게 랜덤 능력 강화", PlayerItemCategory.BasicProjectile)
             };
         }
 
@@ -380,13 +384,7 @@ namespace Necrocis
                     continue;
                 }
 
-<<<<<<< Updated upstream
-                if (string.Equals(entry.ItemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(entry.ItemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(entry.ItemId, RemovedCoagulationCellItemId, StringComparison.OrdinalIgnoreCase))
-=======
                 if (RemovedItemIds.Contains(entry.ItemId))
->>>>>>> Stashed changes
                 {
                     itemEntries.RemoveAt(i);
                 }
@@ -405,9 +403,7 @@ namespace Necrocis
                     continue;
                 }
 
-                if (string.Equals(itemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(itemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(itemId, RemovedCoagulationCellItemId, StringComparison.OrdinalIgnoreCase))
+                if (RemovedItemIds.Contains(itemId))
                 {
                     startingItemIds.RemoveAt(i);
                 }
@@ -434,6 +430,25 @@ namespace Necrocis
                 case PlayerItemCombatEffects.BioResonanceId:
                 case PlayerItemCombatEffects.BloodPressureBurstId:
                 case PlayerItemCombatEffects.VoidCellId:
+                case PlayerItemCombatEffects.InfectedHostId:
+                case PlayerItemCombatEffects.SporeColonyId:
+                case PlayerItemCombatEffects.BloodDroneId:
+                case PlayerItemCombatEffects.GuardianOrganId:
+                case PlayerItemCombatEffects.TentacleColonyId:
+                case PlayerItemCombatEffects.ElectricNeuralNetworkId:
+                case PlayerItemCombatEffects.InfectionTransferenceId:
+                case PlayerItemCombatEffects.MacrophageId:
+                case PlayerItemCombatEffects.GluttonousOrganId:
+                case PlayerItemCombatEffects.HeartSniperId:
+                case PlayerItemCombatEffects.BloodflowAccelerationId:
+                case PlayerItemCombatEffects.FocusedNerveId:
+                case PlayerItemCombatEffects.ExecutionInstinctId:
+                case PlayerItemCombatEffects.BerserkCellId:
+                case PlayerItemCombatEffects.UnstableCellId:
+                case PlayerItemCombatEffects.GrotesqueGrowthId:
+                case PlayerItemCombatEffects.MutationRampageId:
+                case PlayerItemCombatEffects.ParasiticBombId:
+                case PlayerItemCombatEffects.FrenzyHormoneId:
                     entry.ClearRuntimeIconIfMatchesPrefix("RuntimeItemIcon_");
                     break;
             }
@@ -456,6 +471,63 @@ namespace Necrocis
                     break;
                 case PlayerItemCombatEffects.AcidicRuptureId:
                     entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.32f, 0.94f, 0.28f), false));
+                    break;
+                case PlayerItemCombatEffects.InfectedHostId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.92f, 0.96f, 0.9f), false));
+                    break;
+                case PlayerItemCombatEffects.SporeColonyId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.52f, 1f, 0.45f), false));
+                    break;
+                case PlayerItemCombatEffects.BloodDroneId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.95f, 0.08f, 0.18f), true));
+                    break;
+                case PlayerItemCombatEffects.GuardianOrganId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.68f, 0.82f, 1f), false));
+                    break;
+                case PlayerItemCombatEffects.TentacleColonyId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.68f, 0.24f, 0.86f), true));
+                    break;
+                case PlayerItemCombatEffects.ElectricNeuralNetworkId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.45f, 0.82f, 1f), true));
+                    break;
+                case PlayerItemCombatEffects.InfectionTransferenceId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.42f, 0.95f, 0.32f), false));
+                    break;
+                case PlayerItemCombatEffects.MacrophageId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(1f, 0.34f, 0.18f), false));
+                    break;
+                case PlayerItemCombatEffects.GluttonousOrganId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.96f, 0.52f, 0.22f), true));
+                    break;
+                case PlayerItemCombatEffects.HeartSniperId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(1f, 0.12f, 0.18f), true));
+                    break;
+                case PlayerItemCombatEffects.BloodflowAccelerationId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.95f, 0.05f, 0.08f), true));
+                    break;
+                case PlayerItemCombatEffects.FocusedNerveId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.78f, 0.9f, 1f), false));
+                    break;
+                case PlayerItemCombatEffects.ExecutionInstinctId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.96f, 0.86f, 0.2f), true));
+                    break;
+                case PlayerItemCombatEffects.BerserkCellId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(1f, 0.24f, 0.08f), false));
+                    break;
+                case PlayerItemCombatEffects.UnstableCellId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.75f, 0.38f, 1f), true));
+                    break;
+                case PlayerItemCombatEffects.GrotesqueGrowthId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.42f, 1f, 0.58f), false));
+                    break;
+                case PlayerItemCombatEffects.MutationRampageId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(1f, 0.42f, 0.95f), true));
+                    break;
+                case PlayerItemCombatEffects.ParasiticBombId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(0.88f, 0.12f, 0.68f), false));
+                    break;
+                case PlayerItemCombatEffects.FrenzyHormoneId:
+                    entry.AssignIconIfMissing(GetFallbackIcon(entry.ItemId, new Color(1f, 0.72f, 0.12f), true));
                     break;
             }
         }
@@ -558,6 +630,82 @@ namespace Necrocis
             {
                 entry.SetDescription("이동하지 않으면 피해 감소 증가 (최대 50%)");
             }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.InfectedHostId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("잡몹 처치 시 일정 확률로 짧은 시간 아군 생체 생성");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.SporeColonyId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("일정 시간마다 적에게 달려드는 작은 포자 생명체 소환");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.BloodDroneId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("플레이어 주변을 떠다니며 가까운 적을 자동 추적 공격");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.GuardianOrganId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("플레이어 주변을 맴돌며 적 투사체를 방어");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.TentacleColonyId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("주변 적을 주기적으로 속박해 이동을 크게 방해");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.ElectricNeuralNetworkId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("적 처치 시 사망 지점에서 전류가 튀어 주변 적에게 연쇄 피해");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.InfectionTransferenceId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("적 사망 시 주변 적 3명에게 3초 감염 피해 부여");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.MacrophageId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("적 처치 시 5초 동안 공격력 증가 (최대 3스택)");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.GluttonousOrganId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("적 처치 시 3초 동안 이동속도 증가 (최대 4스택)");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.HeartSniperId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("체력 높은 적에게 직접 공격 피해 증가");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.BloodflowAccelerationId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("보스/엘리트 근처에서 공격속도 증가");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.FocusedNerveId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("주변 적이 적을수록 공격력 증가");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.ExecutionInstinctId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("피해 후 체력 낮은 적을 확률 처형");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.BerserkCellId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("보스전 진입 시 잠시 스탯 상승");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.UnstableCellId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("투사체 속도 랜덤, 느린 탄 피해 2배");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.GrotesqueGrowthId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("10초마다 크기와 스탯이 랜덤 변화");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.MutationRampageId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("15초마다 7초 랜덤 버프/디버프");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.ParasiticBombId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("적 처치 시 확률로 플레이어 주변 폭발");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.FrenzyHormoneId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("피격 시 짧게 랜덤 능력 강화");
+            }
         }
 
         private T EnsureComponent<T>() where T : Component
@@ -642,6 +790,12 @@ namespace Necrocis
 
         public void ClearAllItems()
         {
+            if (acquiredItems.Count == 0)
+            {
+                return;
+            }
+
+            List<AcquiredPlayerItem> removedItems = new List<AcquiredPlayerItem>(acquiredItems);
             for (int i = acquiredItems.Count - 1; i >= 0; i--)
             {
                 AcquiredPlayerItem acquiredItem = acquiredItems[i];
@@ -652,6 +806,11 @@ namespace Necrocis
             }
 
             acquiredItems.Clear();
+
+            for (int i = 0; i < removedItems.Count; i++)
+            {
+                ItemRemoved?.Invoke(this, removedItems[i]);
+            }
         }
 
         public bool ContainsItem(string itemId)

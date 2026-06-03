@@ -1,7 +1,4 @@
-<<<<<<< Updated upstream
-=======
 using System;
->>>>>>> Stashed changes
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,6 +49,25 @@ namespace Necrocis
         public const string ReflectiveSkinId = "reflective_skin";
         public const string BioBarrierId = "bio_barrier";
         public const string SplitRegenerationId = "split_regeneration";
+        public const string InfectedHostId = "infected_host";
+        public const string SporeColonyId = "spore_colony";
+        public const string BloodDroneId = "blood_drone";
+        public const string GuardianOrganId = "guardian_organ";
+        public const string TentacleColonyId = "tentacle_colony";
+        public const string ElectricNeuralNetworkId = "electric_neural_network";
+        public const string InfectionTransferenceId = "infection_transference";
+        public const string MacrophageId = "macrophage";
+        public const string GluttonousOrganId = "gluttonous_organ";
+        public const string HeartSniperId = "heart_sniper";
+        public const string BloodflowAccelerationId = "bloodflow_acceleration";
+        public const string FocusedNerveId = "focused_nerve";
+        public const string ExecutionInstinctId = "execution_instinct";
+        public const string BerserkCellId = "berserk_cell";
+        public const string UnstableCellId = "unstable_cell";
+        public const string GrotesqueGrowthId = "grotesque_growth";
+        public const string MutationRampageId = "mutation_rampage";
+        public const string ParasiticBombId = "parasitic_bomb";
+        public const string FrenzyHormoneId = "frenzy_hormone";
 
         [Header("Multi Shot")]
         [SerializeField] private float doubleShotSpreadAngle = 7f;
@@ -99,7 +115,6 @@ namespace Necrocis
         [SerializeField] private float beamDamageMultiplier = 0.95f;
         [SerializeField, Min(1)] private int beamHitBufferSize = 48;
 
-<<<<<<< Updated upstream
         [Header("Special Items")]
         [SerializeField] private int overheatMaxStacks = 10;
         [SerializeField] private float overheatStackWindow = 1.4f;
@@ -161,6 +176,96 @@ namespace Necrocis
         [SerializeField] private float bioBarrierMaxReduction = 0.5f;
         [SerializeField] private float splitRegenerationReviveHealth = 2f;
 
+        [Header("Bio Companions")]
+        [SerializeField, Range(0f, 1f)] private float infectedHostChance = 0.22f;
+        [SerializeField] private float infectedHostLifetime = 9f;
+        [SerializeField] private float infectedHostDamageMultiplier = 1f;
+        [SerializeField] private float infectedHostAttackInterval = 0.8f;
+        [SerializeField] private float infectedHostAttackRadius = 1.25f;
+        [SerializeField] private float infectedHostSearchRadius = 7f;
+        [SerializeField, Min(1)] private int infectedHostMaxAllies = 3;
+        [SerializeField] private float sporeSpawnInterval = 8f;
+        [SerializeField] private float sporeLifetime = 6f;
+        [SerializeField] private float sporeDamageMultiplier = 1f;
+        [SerializeField] private float sporeSearchRadius = 8f;
+        [SerializeField] private float sporeBurstRadius = 1.1f;
+        [SerializeField] private float bloodDroneOrbitRadius = 1.4f;
+        [SerializeField] private float bloodDroneFireInterval = 0.9f;
+        [SerializeField] private float bloodDroneDamageMultiplier = 0.4f;
+        [SerializeField] private float bloodDroneTargetRadius = 9f;
+        [SerializeField] private float guardianOrganOrbitRadius = 1.2f;
+        [SerializeField] private float guardianOrganBlockRadius = 0.9f;
+        [SerializeField] private float guardianOrganCooldown = 2.5f;
+        [SerializeField] private float tentacleBindInterval = 2.2f;
+        [SerializeField] private float tentacleBindRadius = 5.5f;
+        [SerializeField] private float tentacleBindDuration = 1.5f;
+        [SerializeField] private float tentacleSlowRatio = 0.95f;
+        [SerializeField] private float tentacleDamageMultiplier = 0.15f;
+        [SerializeField, Min(1)] private int tentacleMaxTargets = 2;
+
+        [Header("Kill Chain Items")]
+        [SerializeField] private float electricChainDamage = 2f;
+        [SerializeField] private float electricChainRadius = 8f;
+        [SerializeField, Min(1)] private int electricChainMaxHits = 4;
+        [SerializeField] private float electricChainCooldown = 5f;
+        [SerializeField] private float infectionTransferRadius = 4.5f;
+        [SerializeField, Min(1)] private int infectionTransferMaxTargets = 3;
+        [SerializeField] private float infectionTransferDuration = 3f;
+        [SerializeField] private float infectionTransferTickInterval = 1f;
+        [SerializeField] private float infectionTransferTickDamage = 1f;
+        [SerializeField] private float infectionTransferCooldown = 5f;
+        [SerializeField] private float macrophageDuration = 5f;
+        [SerializeField] private float macrophageAttackBonusPerStack = 1f;
+        [SerializeField, Min(1)] private int macrophageMaxStacks = 3;
+        [SerializeField] private float gluttonousOrganDuration = 3f;
+        [SerializeField] private float gluttonousOrganMoveBonusPerStack = 0.5f;
+        [SerializeField, Min(1)] private int gluttonousOrganMaxStacks = 4;
+
+        [Header("Boss Fight Items")]
+        [SerializeField] private float heartSniperHealthThreshold = 0.6f;
+        [SerializeField] private float heartSniperDamageBonusRatio = 0.5f;
+        [SerializeField] private float bloodflowAccelerationRadius = 9f;
+        [SerializeField] private float bloodflowAccelerationAttackSpeedBonus = 0.5f;
+        [SerializeField] private float focusedNerveRadius = 6f;
+        [SerializeField] private float focusedNerveHighAttackBonus = 3f;
+        [SerializeField] private float focusedNerveLowAttackBonus = 1f;
+        [SerializeField] private float executionInstinctHealthThreshold = 0.3f;
+        [SerializeField, Range(0f, 1f)] private float executionInstinctChance = 0.3f;
+        [SerializeField] private float executionInstinctBossDamageMultiplier = 2f;
+        [SerializeField] private float berserkCellDuration = 30f;
+        [SerializeField] private float berserkCellAttackBonus = 3f;
+        [SerializeField] private float berserkCellMoveBonus = 1f;
+        [SerializeField] private float berserkCellAttackSpeedBonus = 2f;
+        [SerializeField] private float berserkCellBossDetectionRadius = 18f;
+
+        [Header("Mutation Chaos Items")]
+        [SerializeField] private float unstableCellMinProjectileSpeedMultiplier = 0.5f;
+        [SerializeField] private float unstableCellMaxProjectileSpeedMultiplier = 1.5f;
+        [SerializeField] private float unstableCellSlowThreshold = 0.9f;
+        [SerializeField] private float unstableCellSlowDamageMultiplier = 2f;
+        [SerializeField] private float grotesqueGrowthInterval = 10f;
+        [SerializeField] private float grotesqueGrowthSmallScale = 0.75f;
+        [SerializeField] private float grotesqueGrowthLargeScale = 1.35f;
+        [SerializeField] private float grotesqueGrowthSmallMoveBonus = 2f;
+        [SerializeField] private float grotesqueGrowthLargeAttackBonus = 2f;
+        [SerializeField] private float grotesqueGrowthLargeMovePenalty = 0.5f;
+        [SerializeField] private float mutationRampageInterval = 15f;
+        [SerializeField] private float mutationRampageDuration = 7f;
+        [SerializeField, Range(0f, 1f)] private float mutationRampageBuffChance = 0.7f;
+        [SerializeField] private float mutationRampageAttackBuff = 2f;
+        [SerializeField] private float mutationRampageMoveBuff = 1.5f;
+        [SerializeField] private float mutationRampageAttackSpeedBuff = 1f;
+        [SerializeField] private float mutationRampageAttackDebuff = 1f;
+        [SerializeField] private float mutationRampageMoveDebuff = 1f;
+        [SerializeField] private float mutationRampageAttackSpeedDebuff = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float parasiticBombChance = 0.3f;
+        [SerializeField] private float parasiticBombRadius = 5f;
+        [SerializeField] private float parasiticBombDamageMultiplier = 2f;
+        [SerializeField] private float frenzyHormoneDuration = 4f;
+        [SerializeField] private float frenzyHormoneCooldown = 5f;
+        [SerializeField] private float frenzyHormoneMinBonus = 1f;
+        [SerializeField] private float frenzyHormoneMaxBonus = 2f;
+
 
         private PlayerItemManager itemManager;
         private PlayerController playerController;
@@ -214,16 +319,53 @@ namespace Necrocis
         private readonly object imperfectRegenModifierSource = new object();
         private readonly object ruptureMovePenaltyModifierSource = new object();
         private readonly object exoskeletonModifierSource = new object();
+        private readonly List<PlayerBioSummon> activeBioSummons = new List<PlayerBioSummon>();
+        private readonly List<EnemyController> tempEnemyTargets = new List<EnemyController>();
+        private PlayerBloodDrone bloodDrone;
+        private PlayerGuardianOrgan guardianOrgan;
+        private float nextSporeSpawnTime;
+        private float tentacleNextBindTime;
+        private bool itemCacheInitialized;
+        private static Material runtimeLineMaterial;
+        private int macrophageStacks;
+        private float macrophageExpireTime = float.NegativeInfinity;
+        private float macrophageAppliedAttackBonus;
+        private int gluttonousOrganStacks;
+        private float gluttonousOrganExpireTime = float.NegativeInfinity;
+        private float gluttonousOrganAppliedMoveBonus;
+        private float electricChainNextReadyTime = float.NegativeInfinity;
+        private float infectionTransferNextReadyTime = float.NegativeInfinity;
+        private int focusedNerveEnemyCount = int.MaxValue;
+        private float focusedNerveNextScanTime;
+        private float berserkCellExpireTime = float.NegativeInfinity;
+        private int berserkCellActiveBossId;
+        private int berserkCellLastTriggeredBossId;
+        private bool berserkCellModifierApplied;
+        private float grotesqueGrowthNextRollTime;
+        private bool grotesqueGrowthModifierApplied;
+        private bool grotesqueGrowthScaleCached;
+        private Vector3 grotesqueGrowthBaseScale = Vector3.one;
+        private float mutationRampageNextRollTime;
+        private float mutationRampageExpireTime = float.NegativeInfinity;
+        private bool mutationRampageModifierApplied;
+        private float frenzyHormoneCooldownUntil = float.NegativeInfinity;
+        private float frenzyHormoneExpireTime = float.NegativeInfinity;
+        private bool frenzyHormoneModifierApplied;
+        private bool applyingParasiticBombDamage;
+        private readonly object macrophageModifierSource = new object();
+        private readonly object gluttonousOrganModifierSource = new object();
+        private readonly object berserkCellModifierSource = new object();
+        private readonly object grotesqueGrowthModifierSource = new object();
+        private readonly object mutationRampageModifierSource = new object();
+        private readonly object frenzyHormoneModifierSource = new object();
+        private readonly Collider[] parasiticBombHitBuffer = new Collider[32];
 
         private struct ResonanceState
         {
             public int Stacks;
             public float LastHitTime;
         }
-=======
-        private PlayerItemManager itemManager;
         private readonly HashSet<string> acquiredItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
->>>>>>> Stashed changes
 
         public bool HasHomingCell => HasItem(HomingCellId);
         public bool HasRefluxOrgan => HasItem(RefluxOrganId);
@@ -262,6 +404,25 @@ namespace Necrocis
         public bool HasReflectiveSkin => HasItem(ReflectiveSkinId);
         public bool HasBioBarrier => HasItem(BioBarrierId);
         public bool HasSplitRegeneration => HasItem(SplitRegenerationId);
+        public bool HasInfectedHost => HasItem(InfectedHostId);
+        public bool HasSporeColony => HasItem(SporeColonyId);
+        public bool HasBloodDrone => HasItem(BloodDroneId);
+        public bool HasGuardianOrgan => HasItem(GuardianOrganId);
+        public bool HasTentacleColony => HasItem(TentacleColonyId);
+        public bool HasElectricNeuralNetwork => HasItem(ElectricNeuralNetworkId);
+        public bool HasInfectionTransference => HasItem(InfectionTransferenceId);
+        public bool HasMacrophage => HasItem(MacrophageId);
+        public bool HasGluttonousOrgan => HasItem(GluttonousOrganId);
+        public bool HasHeartSniper => HasItem(HeartSniperId);
+        public bool HasBloodflowAcceleration => HasItem(BloodflowAccelerationId);
+        public bool HasFocusedNerve => HasItem(FocusedNerveId);
+        public bool HasExecutionInstinct => HasItem(ExecutionInstinctId);
+        public bool HasBerserkCell => HasItem(BerserkCellId);
+        public bool HasUnstableCell => HasItem(UnstableCellId);
+        public bool HasGrotesqueGrowth => HasItem(GrotesqueGrowthId);
+        public bool HasMutationRampage => HasItem(MutationRampageId);
+        public bool HasParasiticBomb => HasItem(ParasiticBombId);
+        public bool HasFrenzyHormone => HasItem(FrenzyHormoneId);
 
         public int BeamHitBufferSize => Mathf.Max(1, beamHitBufferSize);
         public float BeamRadius => Mathf.Max(0.05f, beamRadius);
@@ -271,24 +432,30 @@ namespace Necrocis
         private void Awake()
         {
             itemManager = GetComponent<PlayerItemManager>();
-<<<<<<< Updated upstream
             playerController = GetComponent<PlayerController>();
             playerStats = GetComponent<PlayerStats>();
             previousPosition = GetMovementAnchorPosition();
-=======
             RebuildItemCache();
->>>>>>> Stashed changes
         }
 
         private void OnEnable()
         {
-<<<<<<< Updated upstream
-            TrySubscribeHealthEvents();
-=======
             if (itemManager == null)
             {
                 itemManager = GetComponent<PlayerItemManager>();
             }
+
+            if (playerController == null)
+            {
+                playerController = GetComponent<PlayerController>();
+            }
+
+            if (playerStats == null)
+            {
+                playerStats = GetComponent<PlayerStats>();
+            }
+
+            TrySubscribeHealthEvents();
 
             if (itemManager == null)
             {
@@ -298,16 +465,21 @@ namespace Necrocis
             itemManager.ItemAcquired += HandleItemAcquired;
             itemManager.ItemRemoved += HandleItemRemoved;
             RebuildItemCache();
->>>>>>> Stashed changes
         }
 
         private void OnDisable()
         {
-<<<<<<< Updated upstream
+            if (itemManager != null)
+            {
+                itemManager.ItemAcquired -= HandleItemAcquired;
+                itemManager.ItemRemoved -= HandleItemRemoved;
+            }
+
             TryUnsubscribeHealthEvents();
             ClearPlateletMembraneOutline();
             ClearPersistentStatModifiers();
             resonanceStatesByEnemyId.Clear();
+            ClearBioCompanions();
         }
 
         private void Update()
@@ -330,6 +502,10 @@ namespace Necrocis
             UpdateRuptureMuscleState();
             UpdateImperfectRegenState();
             UpdateTentacleAutoAttack();
+            UpdateBioCompanionItems();
+            UpdateKillChainBuffs();
+            UpdateBossFightItemStates();
+            UpdateMutationChaosItems();
             UpdateDecayStates();
             UpdatePlateletMembraneOutline();
             UpdateUnstableCoreOverlay();
@@ -375,15 +551,6 @@ namespace Necrocis
                 splitRegenerationUsed = false;
             }
 
-=======
-            if (itemManager == null)
-            {
-                return;
-            }
-
-            itemManager.ItemAcquired -= HandleItemAcquired;
-            itemManager.ItemRemoved -= HandleItemRemoved;
->>>>>>> Stashed changes
         }
 
         public int GetForwardProjectileCount()
@@ -532,6 +699,16 @@ namespace Necrocis
                 speedMultiplier *= Mathf.Clamp(muscleSpasmAttackSpeedMultiplier, 0.25f, 1f);
             }
 
+            if (HasBloodflowAcceleration && IsBossOrEliteWithinRadius(Mathf.Max(0.1f, bloodflowAccelerationRadius)))
+            {
+                speedMultiplier *= 1f + Mathf.Max(0f, bloodflowAccelerationAttackSpeedBonus);
+            }
+
+            if (IsBerserkCellActive())
+            {
+                speedMultiplier *= 1f + Mathf.Max(0f, berserkCellAttackSpeedBonus);
+            }
+
             return 1f / Mathf.Max(0.05f, speedMultiplier);
         }
 
@@ -582,6 +759,11 @@ namespace Necrocis
                 bonus += Mathf.Max(0f, severanceReflexFlatAttackBonus);
             }
 
+            if (HasFocusedNerve)
+            {
+                bonus += GetFocusedNerveAttackBonus();
+            }
+
             return bonus;
         }
 
@@ -610,13 +792,32 @@ namespace Necrocis
                 float minDamage = attackPower * Mathf.Max(0f, unstableCoreMinAttackRatio);
                 float maxDamage = attackPower + Mathf.Max(0f, unstableCoreMaxAttackFlatBonus);
                 maxDamage = Mathf.Max(minDamage, maxDamage);
-                float rolledDamage = Random.Range(minDamage, maxDamage);
+                float rolledDamage = UnityEngine.Random.Range(minDamage, maxDamage);
                 unstableCoreCurrentMultiplier = rolledDamage / attackPower;
                 unstableCoreNextRerollTime = Time.time + Mathf.Max(0.1f, unstableCoreRerollInterval);
                 unstableCoreInitialized = true;
             }
 
             return unstableCoreCurrentMultiplier;
+        }
+
+        public float RollUnstableCellProjectileSpeedMultiplier(out float damageMultiplier)
+        {
+            damageMultiplier = 1f;
+            if (!HasUnstableCell)
+            {
+                return 1f;
+            }
+
+            float minSpeed = Mathf.Max(0.05f, unstableCellMinProjectileSpeedMultiplier);
+            float maxSpeed = Mathf.Max(minSpeed, unstableCellMaxProjectileSpeedMultiplier);
+            float speedMultiplier = UnityEngine.Random.Range(minSpeed, maxSpeed);
+            if (speedMultiplier <= Mathf.Max(0.01f, unstableCellSlowThreshold))
+            {
+                damageMultiplier = Mathf.Max(1f, unstableCellSlowDamageMultiplier);
+            }
+
+            return speedMultiplier;
         }
 
         public void NotifyBasicAttackPerformed(float attackDamage, LayerMask mask, float range, Vector3 forwardDirection)
@@ -646,7 +847,7 @@ namespace Necrocis
                 }
             }
 
-            if (HasVoidCell && Random.value <= Mathf.Clamp01(voidCellChance))
+            if (HasVoidCell && UnityEngine.Random.value <= Mathf.Clamp01(voidCellChance))
             {
                 SpawnVoidCellProjectile(attackDamage, mask, range, forwardDirection);
             }
@@ -737,6 +938,13 @@ namespace Necrocis
 
         public void NotifyEnemyDefeatedByPlayer(EnemyController enemy)
         {
+            TrySpawnInfectedHost(enemy);
+            TriggerElectricNeuralNetwork(enemy);
+            TriggerInfectionTransference(enemy);
+            TriggerMacrophageBuff();
+            TriggerGluttonousOrganBuff();
+            TriggerParasiticBomb();
+
             if (!HasBloodContract || playerStats == null || playerStats.IsDead)
             {
                 return;
@@ -767,6 +975,16 @@ namespace Necrocis
         public float ApplyPerTargetDamageModifiers(EnemyController enemy, float damage)
         {
             float adjustedDamage = Mathf.Max(0f, damage);
+            if (enemy == null)
+            {
+                return adjustedDamage;
+            }
+
+            if (HasHeartSniper && IsEnemyAboveHealthRatio(enemy, Mathf.Clamp01(heartSniperHealthThreshold)))
+            {
+                adjustedDamage *= 1f + Mathf.Max(0f, heartSniperDamageBonusRatio);
+            }
+
             if (!HasBioResonance || enemy == null)
             {
                 return adjustedDamage;
@@ -802,6 +1020,41 @@ namespace Necrocis
             return adjustedDamage;
         }
 
+        public void TryApplyPostDamageExecutionInstinct(EnemyController enemy, float appliedDamage)
+        {
+            if (!HasExecutionInstinct || enemy == null || enemy.IsDead)
+            {
+                return;
+            }
+
+            if (!IsEnemyBelowHealthRatio(enemy, Mathf.Clamp01(executionInstinctHealthThreshold)))
+            {
+                return;
+            }
+
+            if (UnityEngine.Random.value > Mathf.Clamp01(executionInstinctChance))
+            {
+                return;
+            }
+
+            if (IsBossLikeEnemy(enemy) || enemy.IsElite)
+            {
+                float bonusMultiplier = Mathf.Max(1f, executionInstinctBossDamageMultiplier) - 1f;
+                float bonusDamage = Mathf.Max(0f, appliedDamage) * bonusMultiplier;
+                if (bonusDamage > 0f)
+                {
+                    enemy.TakeDamage(bonusDamage);
+                }
+                return;
+            }
+
+            float remainingHealth = GetEnemyCurrentHealth(enemy);
+            if (remainingHealth > 0f)
+            {
+                enemy.TakeDamage(remainingHealth);
+            }
+        }
+
         public bool HasItem(string itemId)
         {
             if (string.IsNullOrWhiteSpace(itemId))
@@ -809,7 +1062,7 @@ namespace Necrocis
                 return false;
             }
 
-            if (acquiredItemIds.Count > 0)
+            if (itemCacheInitialized)
             {
                 return acquiredItemIds.Contains(itemId);
             }
@@ -930,6 +1183,7 @@ namespace Necrocis
                 return;
             }
 
+            itemCacheInitialized = true;
             acquiredItemIds.Add(acquiredItem.ItemId);
         }
 
@@ -940,12 +1194,27 @@ namespace Necrocis
                 return;
             }
 
+            itemCacheInitialized = true;
             acquiredItemIds.Remove(removedItem.ItemId);
+
+            if (string.Equals(removedItem.ItemId, GrotesqueGrowthId, StringComparison.OrdinalIgnoreCase))
+            {
+                ClearGrotesqueGrowthState();
+            }
+            else if (string.Equals(removedItem.ItemId, MutationRampageId, StringComparison.OrdinalIgnoreCase))
+            {
+                ClearMutationRampageState();
+            }
+            else if (string.Equals(removedItem.ItemId, FrenzyHormoneId, StringComparison.OrdinalIgnoreCase))
+            {
+                ClearFrenzyHormoneState();
+            }
         }
 
         private void RebuildItemCache()
         {
             acquiredItemIds.Clear();
+            itemCacheInitialized = true;
             if (itemManager == null || itemManager.AcquiredItems == null)
             {
                 return;
@@ -960,6 +1229,1195 @@ namespace Necrocis
                     acquiredItemIds.Add(itemId);
                 }
             }
+        }
+
+        private void UpdateBioCompanionItems()
+        {
+            CleanupBioSummonList();
+            UpdateSporeColony();
+            UpdateBloodDrone();
+            UpdateGuardianOrgan();
+            UpdateTentacleColony();
+        }
+
+        private void TriggerElectricNeuralNetwork(EnemyController defeatedEnemy)
+        {
+            if (!HasElectricNeuralNetwork || defeatedEnemy == null)
+            {
+                return;
+            }
+
+            if (Time.time < electricChainNextReadyTime)
+            {
+                return;
+            }
+
+            tempEnemyTargets.Clear();
+            Vector3 chainOrigin = defeatedEnemy.transform.position;
+            Vector3 previousPosition = chainOrigin;
+            int maxHits = Mathf.Max(1, electricChainMaxHits);
+            float radius = Mathf.Max(0.1f, electricChainRadius);
+            float damage = Mathf.Max(0f, electricChainDamage);
+            if (damage <= 0f)
+            {
+                return;
+            }
+
+            for (int i = 0; i < maxHits; i++)
+            {
+                EnemyController target = FindClosestEnemy(previousPosition, radius, tempEnemyTargets);
+                if (target == null)
+                {
+                    break;
+                }
+
+                tempEnemyTargets.Add(target);
+                Vector3 targetPosition = target.transform.position;
+                SpawnElectricChainVisual(previousPosition, targetPosition);
+                target.TakeDamage(damage);
+                previousPosition = targetPosition;
+            }
+
+            if (tempEnemyTargets.Count > 0)
+            {
+                electricChainNextReadyTime = Time.time + Mathf.Max(0f, electricChainCooldown);
+            }
+        }
+
+        private void TriggerInfectionTransference(EnemyController defeatedEnemy)
+        {
+            if (!HasInfectionTransference || defeatedEnemy == null)
+            {
+                return;
+            }
+
+            if (Time.time < infectionTransferNextReadyTime)
+            {
+                return;
+            }
+
+            tempEnemyTargets.Clear();
+            int maxTargets = Mathf.Max(1, infectionTransferMaxTargets);
+            Vector3 center = defeatedEnemy.transform.position;
+            for (int i = 0; i < maxTargets; i++)
+            {
+                EnemyController target = FindClosestEnemy(center, Mathf.Max(0.1f, infectionTransferRadius), tempEnemyTargets);
+                if (target == null)
+                {
+                    break;
+                }
+
+                tempEnemyTargets.Add(target);
+            }
+
+            for (int i = 0; i < tempEnemyTargets.Count; i++)
+            {
+                EnemyController enemy = tempEnemyTargets[i];
+                if (!IsEnemyTargetable(enemy))
+                {
+                    continue;
+                }
+
+                EnemyStatusEffectController status = EnsureStatusController(enemy);
+                status?.ApplyPoison(
+                    Mathf.Max(0.1f, infectionTransferDuration),
+                    Mathf.Max(0.1f, infectionTransferTickInterval),
+                    Mathf.Max(0f, infectionTransferTickDamage));
+                SpawnInfectionTransferVisual(center, enemy.transform.position);
+            }
+
+            if (tempEnemyTargets.Count > 0)
+            {
+                infectionTransferNextReadyTime = Time.time + Mathf.Max(0f, infectionTransferCooldown);
+            }
+        }
+
+        private void TriggerMacrophageBuff()
+        {
+            if (!HasMacrophage || playerStats == null || playerStats.RuntimeStats == null)
+            {
+                return;
+            }
+
+            macrophageStacks = Mathf.Clamp(macrophageStacks + 1, 1, Mathf.Max(1, macrophageMaxStacks));
+            macrophageExpireTime = Time.time + Mathf.Max(0.1f, macrophageDuration);
+            ApplyKillChainStatBuff(
+                macrophageModifierSource,
+                CharacterStatType.AttackPower,
+                ref macrophageAppliedAttackBonus,
+                Mathf.Max(0f, macrophageAttackBonusPerStack) * macrophageStacks);
+        }
+
+        private void TriggerGluttonousOrganBuff()
+        {
+            if (!HasGluttonousOrgan || playerStats == null || playerStats.RuntimeStats == null)
+            {
+                return;
+            }
+
+            gluttonousOrganStacks = Mathf.Clamp(gluttonousOrganStacks + 1, 1, Mathf.Max(1, gluttonousOrganMaxStacks));
+            gluttonousOrganExpireTime = Time.time + Mathf.Max(0.1f, gluttonousOrganDuration);
+            ApplyKillChainStatBuff(
+                gluttonousOrganModifierSource,
+                CharacterStatType.MoveSpeed,
+                ref gluttonousOrganAppliedMoveBonus,
+                Mathf.Max(0f, gluttonousOrganMoveBonusPerStack) * gluttonousOrganStacks);
+        }
+
+        private void TriggerParasiticBomb()
+        {
+            if (applyingParasiticBombDamage || !HasParasiticBomb || playerStats == null || playerStats.IsDead)
+            {
+                return;
+            }
+
+            if (UnityEngine.Random.value > Mathf.Clamp01(parasiticBombChance))
+            {
+                return;
+            }
+
+            Vector3 center = playerController != null ? playerController.transform.position : transform.position;
+            float radius = Mathf.Max(0.1f, parasiticBombRadius);
+            float damage = Mathf.Max(0.1f, playerStats.AttackPower * Mathf.Max(0f, parasiticBombDamageMultiplier));
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                center,
+                radius,
+                parasiticBombHitBuffer,
+                ~0,
+                QueryTriggerInteraction.Collide);
+
+            HashSet<EnemyController> hitEnemies = new HashSet<EnemyController>();
+            applyingParasiticBombDamage = true;
+            try
+            {
+                for (int i = 0; i < hitCount; i++)
+                {
+                    Collider hitCollider = parasiticBombHitBuffer[i];
+                    parasiticBombHitBuffer[i] = null;
+                    EnemyController enemy = hitCollider != null ? hitCollider.GetComponentInParent<EnemyController>() : null;
+                    if (enemy == null || enemy.IsDead || !hitEnemies.Add(enemy))
+                    {
+                        continue;
+                    }
+
+                    enemy.TakeDamage(damage);
+                }
+            }
+            finally
+            {
+                applyingParasiticBombDamage = false;
+            }
+
+            SpawnParasiticBombVisual(center, radius);
+        }
+
+        private void UpdateKillChainBuffs()
+        {
+            if ((!HasMacrophage || Time.time >= macrophageExpireTime) && macrophageStacks > 0)
+            {
+                macrophageStacks = 0;
+                macrophageExpireTime = float.NegativeInfinity;
+                ClearKillChainStatBuff(macrophageModifierSource, ref macrophageAppliedAttackBonus);
+            }
+
+            if ((!HasGluttonousOrgan || Time.time >= gluttonousOrganExpireTime) && gluttonousOrganStacks > 0)
+            {
+                gluttonousOrganStacks = 0;
+                gluttonousOrganExpireTime = float.NegativeInfinity;
+                ClearKillChainStatBuff(gluttonousOrganModifierSource, ref gluttonousOrganAppliedMoveBonus);
+            }
+        }
+
+        private void UpdateBossFightItemStates()
+        {
+            UpdateFocusedNerveScan();
+            UpdateBerserkCellState();
+        }
+
+        private void UpdateMutationChaosItems()
+        {
+            UpdateGrotesqueGrowthState();
+            UpdateMutationRampageState();
+            UpdateFrenzyHormoneState();
+        }
+
+        private void UpdateGrotesqueGrowthState()
+        {
+            if (!grotesqueGrowthScaleCached)
+            {
+                grotesqueGrowthBaseScale = transform.localScale;
+                grotesqueGrowthScaleCached = true;
+            }
+
+            if (!HasGrotesqueGrowth)
+            {
+                ClearGrotesqueGrowthState();
+                grotesqueGrowthNextRollTime = 0f;
+                return;
+            }
+
+            if (Time.time < grotesqueGrowthNextRollTime)
+            {
+                return;
+            }
+
+            grotesqueGrowthNextRollTime = Time.time + Mathf.Max(0.1f, grotesqueGrowthInterval);
+            bool rollSmall = UnityEngine.Random.value < 0.5f;
+            playerStats?.RuntimeStats?.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
+            grotesqueGrowthModifierApplied = true;
+
+            if (rollSmall)
+            {
+                transform.localScale = grotesqueGrowthBaseScale * Mathf.Max(0.1f, grotesqueGrowthSmallScale);
+                playerStats?.RuntimeStats?.AddModifier(
+                    CharacterStatType.MoveSpeed,
+                    Mathf.Max(0f, grotesqueGrowthSmallMoveBonus),
+                    CharacterStatModifierMode.Flat,
+                    grotesqueGrowthModifierSource);
+                return;
+            }
+
+            transform.localScale = grotesqueGrowthBaseScale * Mathf.Max(0.1f, grotesqueGrowthLargeScale);
+            playerStats?.RuntimeStats?.AddModifier(
+                CharacterStatType.AttackPower,
+                Mathf.Max(0f, grotesqueGrowthLargeAttackBonus),
+                CharacterStatModifierMode.Flat,
+                grotesqueGrowthModifierSource);
+            playerStats?.RuntimeStats?.AddModifier(
+                CharacterStatType.MoveSpeed,
+                -Mathf.Max(0f, grotesqueGrowthLargeMovePenalty),
+                CharacterStatModifierMode.Flat,
+                grotesqueGrowthModifierSource);
+        }
+
+        private void ClearGrotesqueGrowthState()
+        {
+            if (grotesqueGrowthModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
+            {
+                playerStats.RuntimeStats.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
+            }
+
+            if (grotesqueGrowthScaleCached)
+            {
+                transform.localScale = grotesqueGrowthBaseScale;
+            }
+
+            grotesqueGrowthModifierApplied = false;
+        }
+
+        private void UpdateMutationRampageState()
+        {
+            if (!HasMutationRampage)
+            {
+                ClearMutationRampageState();
+                mutationRampageNextRollTime = 0f;
+                return;
+            }
+
+            if (mutationRampageModifierApplied && Time.time >= mutationRampageExpireTime)
+            {
+                ClearMutationRampageState();
+            }
+
+            if (Time.time < mutationRampageNextRollTime)
+            {
+                return;
+            }
+
+            mutationRampageNextRollTime = Time.time + Mathf.Max(0.1f, mutationRampageInterval);
+            mutationRampageExpireTime = Time.time + Mathf.Max(0.1f, mutationRampageDuration);
+            ApplyRandomMutationRampageModifier();
+        }
+
+        private void ApplyRandomMutationRampageModifier()
+        {
+            if (playerStats == null || playerStats.RuntimeStats == null)
+            {
+                return;
+            }
+
+            playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
+            bool isBuff = UnityEngine.Random.value <= Mathf.Clamp01(mutationRampageBuffChance);
+            int statRoll = UnityEngine.Random.Range(0, 3);
+            CharacterStatType statType;
+            float value;
+
+            if (statRoll == 0)
+            {
+                statType = CharacterStatType.AttackPower;
+                value = isBuff ? Mathf.Max(0f, mutationRampageAttackBuff) : -Mathf.Max(0f, mutationRampageAttackDebuff);
+            }
+            else if (statRoll == 1)
+            {
+                statType = CharacterStatType.MoveSpeed;
+                value = isBuff ? Mathf.Max(0f, mutationRampageMoveBuff) : -Mathf.Max(0f, mutationRampageMoveDebuff);
+            }
+            else
+            {
+                statType = CharacterStatType.AttackSpeed;
+                value = isBuff ? Mathf.Max(0f, mutationRampageAttackSpeedBuff) : -Mathf.Max(0f, mutationRampageAttackSpeedDebuff);
+            }
+
+            playerStats.RuntimeStats.AddModifier(statType, value, CharacterStatModifierMode.Flat, mutationRampageModifierSource);
+            mutationRampageModifierApplied = true;
+        }
+
+        private void ClearMutationRampageState()
+        {
+            if (mutationRampageModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
+            {
+                playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
+            }
+
+            mutationRampageModifierApplied = false;
+            mutationRampageExpireTime = float.NegativeInfinity;
+        }
+
+        private void UpdateFrenzyHormoneState()
+        {
+            if (!HasFrenzyHormone)
+            {
+                ClearFrenzyHormoneState();
+                frenzyHormoneCooldownUntil = float.NegativeInfinity;
+                return;
+            }
+
+            if (frenzyHormoneModifierApplied && Time.time >= frenzyHormoneExpireTime)
+            {
+                ClearFrenzyHormoneState();
+            }
+        }
+
+        private void ApplyFrenzyHormoneBuff()
+        {
+            if (!HasFrenzyHormone || playerStats == null || playerStats.RuntimeStats == null)
+            {
+                return;
+            }
+
+            if (Time.time < frenzyHormoneCooldownUntil)
+            {
+                return;
+            }
+
+            playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
+            int statRoll = UnityEngine.Random.Range(0, 3);
+            CharacterStatType statType = statRoll == 0
+                ? CharacterStatType.AttackPower
+                : statRoll == 1 ? CharacterStatType.MoveSpeed : CharacterStatType.AttackSpeed;
+            float minBonus = Mathf.Max(0f, frenzyHormoneMinBonus);
+            float maxBonus = Mathf.Max(minBonus, frenzyHormoneMaxBonus);
+            float bonus = UnityEngine.Random.Range(minBonus, maxBonus);
+            playerStats.RuntimeStats.AddModifier(statType, bonus, CharacterStatModifierMode.Flat, frenzyHormoneModifierSource);
+            frenzyHormoneModifierApplied = true;
+            frenzyHormoneExpireTime = Time.time + Mathf.Max(0.1f, frenzyHormoneDuration);
+            frenzyHormoneCooldownUntil = Time.time + Mathf.Max(0f, frenzyHormoneCooldown);
+        }
+
+        private void ClearFrenzyHormoneState()
+        {
+            if (frenzyHormoneModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
+            {
+                playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
+            }
+
+            frenzyHormoneModifierApplied = false;
+            frenzyHormoneExpireTime = float.NegativeInfinity;
+        }
+
+        private void UpdateFocusedNerveScan()
+        {
+            if (!HasFocusedNerve)
+            {
+                focusedNerveEnemyCount = int.MaxValue;
+                focusedNerveNextScanTime = 0f;
+                return;
+            }
+
+            if (Time.time < focusedNerveNextScanTime)
+            {
+                return;
+            }
+
+            focusedNerveNextScanTime = Time.time + 0.2f;
+            focusedNerveEnemyCount = CountEnemiesWithinRadius(transform.position, Mathf.Max(0.1f, focusedNerveRadius));
+        }
+
+        private void UpdateBerserkCellState()
+        {
+            if (!HasBerserkCell)
+            {
+                ClearBerserkCellBuff();
+                berserkCellLastTriggeredBossId = 0;
+                return;
+            }
+
+            EnemyController boss = FindNearestBossLikeEnemy(Mathf.Max(0.1f, berserkCellBossDetectionRadius));
+            if (boss != null)
+            {
+                int bossId = boss.GetInstanceID();
+                berserkCellActiveBossId = bossId;
+                if (berserkCellLastTriggeredBossId != bossId)
+                {
+                    berserkCellLastTriggeredBossId = bossId;
+                    ActivateBerserkCellBuff();
+                }
+            }
+            else
+            {
+                berserkCellActiveBossId = 0;
+            }
+
+            if (berserkCellModifierApplied && Time.time >= berserkCellExpireTime)
+            {
+                ClearBerserkCellBuff();
+            }
+        }
+
+        private float GetFocusedNerveAttackBonus()
+        {
+            if (focusedNerveEnemyCount <= 1)
+            {
+                return Mathf.Max(0f, focusedNerveHighAttackBonus);
+            }
+
+            if (focusedNerveEnemyCount <= 3)
+            {
+                return Mathf.Max(0f, focusedNerveLowAttackBonus);
+            }
+
+            return 0f;
+        }
+
+        private void ActivateBerserkCellBuff()
+        {
+            if (playerStats == null || playerStats.RuntimeStats == null)
+            {
+                return;
+            }
+
+            playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
+            playerStats.RuntimeStats.AddModifier(
+                CharacterStatType.AttackPower,
+                Mathf.Max(0f, berserkCellAttackBonus),
+                CharacterStatModifierMode.Flat,
+                berserkCellModifierSource);
+            playerStats.RuntimeStats.AddModifier(
+                CharacterStatType.MoveSpeed,
+                Mathf.Max(0f, berserkCellMoveBonus),
+                CharacterStatModifierMode.Flat,
+                berserkCellModifierSource);
+            berserkCellExpireTime = Time.time + Mathf.Max(0.1f, berserkCellDuration);
+            berserkCellModifierApplied = true;
+        }
+
+        private void ClearBerserkCellBuff()
+        {
+            if (playerStats != null && playerStats.RuntimeStats != null)
+            {
+                playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
+            }
+
+            berserkCellExpireTime = float.NegativeInfinity;
+            berserkCellModifierApplied = false;
+        }
+
+        private bool IsBerserkCellActive()
+        {
+            return berserkCellModifierApplied && Time.time < berserkCellExpireTime;
+        }
+
+        private void ApplyKillChainStatBuff(object source, CharacterStatType statType, ref float appliedValue, float value)
+        {
+            if (playerStats == null || playerStats.RuntimeStats == null)
+            {
+                appliedValue = value;
+                return;
+            }
+
+            playerStats.RuntimeStats.RemoveModifiersFromSource(source);
+            appliedValue = Mathf.Max(0f, value);
+            if (appliedValue <= 0f)
+            {
+                return;
+            }
+
+            playerStats.RuntimeStats.AddModifier(
+                statType,
+                appliedValue,
+                CharacterStatModifierMode.Flat,
+                source);
+        }
+
+        private void ClearKillChainStatBuff(object source, ref float appliedValue)
+        {
+            if (playerStats != null && playerStats.RuntimeStats != null)
+            {
+                playerStats.RuntimeStats.RemoveModifiersFromSource(source);
+            }
+
+            appliedValue = 0f;
+        }
+
+        private void SpawnElectricChainVisual(Vector3 start, Vector3 end)
+        {
+            SpawnLineVisual(
+                "ElectricChainVisual",
+                start + Vector3.up * 0.45f,
+                end + Vector3.up * 0.45f,
+                new Color(0.38f, 0.86f, 1f, 0.95f),
+                new Color(0.9f, 1f, 1f, 0.45f),
+                0.11f,
+                0.04f,
+                0.18f);
+        }
+
+        private void SpawnInfectionTransferVisual(Vector3 start, Vector3 end)
+        {
+            SpawnLineVisual(
+                "InfectionTransferVisual",
+                start + Vector3.up * 0.35f,
+                end + Vector3.up * 0.35f,
+                new Color(0.34f, 1f, 0.28f, 0.72f),
+                new Color(0.34f, 1f, 0.28f, 0.18f),
+                0.07f,
+                0.025f,
+                0.25f);
+        }
+
+        private void SpawnParasiticBombVisual(Vector3 center, float radius)
+        {
+            GameObject fx = new GameObject("ParasiticBombVisual");
+            fx.transform.position = new Vector3(center.x, center.y + 1.35f, center.z);
+
+            SpriteRenderer renderer = fx.AddComponent<SpriteRenderer>();
+            renderer.sprite = TextureSpriteCache.GetCircleSprite();
+            renderer.color = new Color(0.88f, 0.12f, 0.68f, 0.55f);
+            renderer.sortingOrder = 5200;
+
+            fx.transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
+            Destroy(fx, 0.22f);
+        }
+
+        private void SpawnLineVisual(
+            string objectName,
+            Vector3 start,
+            Vector3 end,
+            Color startColor,
+            Color endColor,
+            float startWidth,
+            float endWidth,
+            float duration)
+        {
+            GameObject lineObject = new GameObject(objectName);
+            LineRenderer line = lineObject.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = 2;
+            line.SetPosition(0, start);
+            line.SetPosition(1, end);
+            line.startWidth = Mathf.Max(0.01f, startWidth);
+            line.endWidth = Mathf.Max(0.01f, endWidth);
+            line.material = GetRuntimeLineMaterial();
+            line.startColor = startColor;
+            line.endColor = endColor;
+            line.sortingOrder = 5230;
+            Destroy(lineObject, Mathf.Max(0.02f, duration));
+        }
+
+        private void UpdateSporeColony()
+        {
+            if (!HasSporeColony)
+            {
+                nextSporeSpawnTime = Time.time + Mathf.Max(0.1f, sporeSpawnInterval);
+                return;
+            }
+
+            if (Time.time < nextSporeSpawnTime)
+            {
+                return;
+            }
+
+            nextSporeSpawnTime = Time.time + Mathf.Max(0.1f, sporeSpawnInterval);
+            SpawnSporeSummon();
+        }
+
+        private void UpdateBloodDrone()
+        {
+            if (!HasBloodDrone)
+            {
+                if (bloodDrone != null)
+                {
+                    Destroy(bloodDrone.gameObject);
+                    bloodDrone = null;
+                }
+
+                return;
+            }
+
+            if (bloodDrone != null)
+            {
+                return;
+            }
+
+            GameObject droneObject = new GameObject("BloodDrone");
+            bloodDrone = droneObject.AddComponent<PlayerBloodDrone>();
+            bloodDrone.Initialize(this);
+        }
+
+        private void UpdateGuardianOrgan()
+        {
+            if (!HasGuardianOrgan)
+            {
+                if (guardianOrgan != null)
+                {
+                    Destroy(guardianOrgan.gameObject);
+                    guardianOrgan = null;
+                }
+
+                return;
+            }
+
+            if (guardianOrgan != null)
+            {
+                return;
+            }
+
+            GameObject guardianObject = new GameObject("GuardianOrgan");
+            guardianOrgan = guardianObject.AddComponent<PlayerGuardianOrgan>();
+            guardianOrgan.Initialize(this);
+        }
+
+        private void UpdateTentacleColony()
+        {
+            if (!HasTentacleColony)
+            {
+                tentacleNextBindTime = Time.time + Mathf.Max(0.1f, tentacleBindInterval);
+                return;
+            }
+
+            if (Time.time < tentacleNextBindTime)
+            {
+                return;
+            }
+
+            tentacleNextBindTime = Time.time + Mathf.Max(0.1f, tentacleBindInterval);
+            ApplyTentacleBind();
+        }
+
+        private void TrySpawnInfectedHost(EnemyController defeatedEnemy)
+        {
+            if (!HasInfectedHost || defeatedEnemy == null || !CanInfectEnemy(defeatedEnemy))
+            {
+                return;
+            }
+
+            if (CountBioSummons(PlayerBioSummon.SummonKind.InfectedHost) >= Mathf.Max(1, infectedHostMaxAllies))
+            {
+                return;
+            }
+
+            if (UnityEngine.Random.value > Mathf.Clamp01(infectedHostChance))
+            {
+                return;
+            }
+
+            Sprite enemySprite = FindEnemySprite(defeatedEnemy);
+            Sprite[] attackSprites = FindEnemyAttackSprites(defeatedEnemy);
+            Vector3 visualScale = FindEnemyVisualScale(defeatedEnemy, Vector3.one * 0.9f);
+            float damage = GetCompanionBaseDamage() * Mathf.Max(0.05f, infectedHostDamageMultiplier);
+            SpawnBioSummon(
+                PlayerBioSummon.SummonKind.InfectedHost,
+                defeatedEnemy.transform.position,
+                enemySprite,
+                attackSprites,
+                visualScale,
+                new Color(1f, 0.28f, 0.22f, 0.9f),
+                damage,
+                Mathf.Max(0.1f, infectedHostLifetime),
+                Mathf.Max(0.1f, infectedHostSearchRadius),
+                Mathf.Max(0.1f, infectedHostAttackRadius),
+                Mathf.Max(0.1f, infectedHostAttackInterval),
+                false);
+        }
+
+        private void SpawnSporeSummon()
+        {
+            Vector2 offset2D = UnityEngine.Random.insideUnitCircle;
+            if (offset2D.sqrMagnitude <= 0.0001f)
+            {
+                offset2D = Vector2.right;
+            }
+
+            Vector3 desiredPosition = transform.position + new Vector3(offset2D.x, 0f, offset2D.y).normalized * 1.2f;
+            Vector3 spawnPosition = ResolveGroundSpawnPosition(desiredPosition, 0.15f);
+            float damage = GetCompanionBaseDamage() * Mathf.Max(0.05f, sporeDamageMultiplier);
+            SpawnBioSummon(
+                PlayerBioSummon.SummonKind.Spore,
+                spawnPosition,
+                TextureSpriteCache.GetCircleSprite(),
+                null,
+                Vector3.one * 0.65f,
+                new Color(0.52f, 1f, 0.45f, 0.9f),
+                damage,
+                Mathf.Max(0.1f, sporeLifetime),
+                Mathf.Max(0.1f, sporeSearchRadius),
+                Mathf.Max(0.1f, sporeBurstRadius),
+                0.1f,
+                true);
+        }
+
+        private void SpawnBioSummon(
+            PlayerBioSummon.SummonKind kind,
+            Vector3 position,
+            Sprite sprite,
+            Sprite[] attackSprites,
+            Vector3 visualScale,
+            Color color,
+            float damage,
+            float lifetime,
+            float searchRadius,
+            float attackRadius,
+            float attackInterval,
+            bool destroyOnAttack)
+        {
+            GameObject summonObject = new GameObject(kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly");
+            summonObject.transform.position = position;
+            PlayerBioSummon summon = summonObject.AddComponent<PlayerBioSummon>();
+            summon.Initialize(this, kind, sprite, attackSprites, visualScale, color, damage, lifetime, searchRadius, attackRadius, attackInterval, destroyOnAttack);
+            activeBioSummons.Add(summon);
+        }
+
+        private void ApplyTentacleBind()
+        {
+            tempEnemyTargets.Clear();
+            int targetCount = Mathf.Max(1, tentacleMaxTargets);
+            Vector3 center = transform.position;
+
+            for (int i = 0; i < targetCount; i++)
+            {
+                EnemyController enemy = FindClosestEnemy(center, Mathf.Max(0.1f, tentacleBindRadius), tempEnemyTargets);
+                if (enemy == null)
+                {
+                    break;
+                }
+
+                tempEnemyTargets.Add(enemy);
+            }
+
+            float damage = GetCompanionBaseDamage() * Mathf.Max(0f, tentacleDamageMultiplier);
+            for (int i = 0; i < tempEnemyTargets.Count; i++)
+            {
+                EnemyController enemy = tempEnemyTargets[i];
+                if (!IsEnemyTargetable(enemy))
+                {
+                    continue;
+                }
+
+                EnemyStatusEffectController status = EnsureStatusController(enemy);
+                status?.ApplyMoveSpeedSlow(Mathf.Clamp01(tentacleSlowRatio), Mathf.Max(0.1f, tentacleBindDuration));
+                if (damage > 0f)
+                {
+                    enemy.TakeDamage(damage);
+                }
+
+                SpawnTentacleBindVisual(enemy.transform.position, Mathf.Max(0.1f, tentacleBindDuration));
+            }
+        }
+
+        private void SpawnTentacleBindVisual(Vector3 targetPosition, float duration)
+        {
+            Vector3 anchorPosition = GetPlayerVisualCenter() + Vector3.up * 0.15f;
+
+            GameObject anchorObject = new GameObject("TentacleColonyAnchor");
+            anchorObject.transform.position = anchorPosition;
+            anchorObject.transform.localScale = Vector3.one * 0.34f;
+            SpriteRenderer anchorRenderer = anchorObject.AddComponent<SpriteRenderer>();
+            anchorRenderer.sprite = TextureSpriteCache.GetCircleSprite();
+            anchorRenderer.color = new Color(0.22f, 0.58f, 1f, 0.95f);
+            anchorRenderer.sortingOrder = 5220;
+
+            SpawnLineVisual(
+                "TentacleColonyLine",
+                anchorPosition,
+                targetPosition + Vector3.up * 0.35f,
+                new Color(0.22f, 0.58f, 1f, 0.9f),
+                new Color(0.22f, 0.58f, 1f, 0.2f),
+                0.08f,
+                0.035f,
+                duration);
+
+            Destroy(anchorObject, duration);
+        }
+
+        private void CleanupBioSummonList()
+        {
+            for (int i = activeBioSummons.Count - 1; i >= 0; i--)
+            {
+                if (activeBioSummons[i] == null)
+                {
+                    activeBioSummons.RemoveAt(i);
+                }
+            }
+        }
+
+        private int CountBioSummons(PlayerBioSummon.SummonKind kind)
+        {
+            CleanupBioSummonList();
+            int count = 0;
+            for (int i = 0; i < activeBioSummons.Count; i++)
+            {
+                if (activeBioSummons[i] != null && activeBioSummons[i].Kind == kind)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private void ClearBioCompanions()
+        {
+            for (int i = activeBioSummons.Count - 1; i >= 0; i--)
+            {
+                if (activeBioSummons[i] != null)
+                {
+                    Destroy(activeBioSummons[i].gameObject);
+                }
+            }
+
+            activeBioSummons.Clear();
+            if (bloodDrone != null)
+            {
+                Destroy(bloodDrone.gameObject);
+                bloodDrone = null;
+            }
+
+            if (guardianOrgan != null)
+            {
+                Destroy(guardianOrgan.gameObject);
+                guardianOrgan = null;
+            }
+        }
+
+        private bool CanInfectEnemy(EnemyController enemy)
+        {
+            if (enemy == null || enemy.IsElite)
+            {
+                return false;
+            }
+
+            return !IsBossLikeEnemy(enemy);
+        }
+
+        private float GetCompanionBaseDamage()
+        {
+            return playerStats != null ? Mathf.Max(0.1f, playerStats.AttackPower) : 1f;
+        }
+
+        private EnemyController FindClosestEnemy(Vector3 center, float radius, List<EnemyController> excluded = null)
+        {
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies == null || enemies.Count == 0)
+            {
+                return null;
+            }
+
+            float radiusSqr = Mathf.Max(0.1f, radius);
+            radiusSqr *= radiusSqr;
+            float bestDistanceSqr = float.PositiveInfinity;
+            EnemyController bestEnemy = null;
+
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (!IsEnemyTargetable(enemy) || (excluded != null && excluded.Contains(enemy)))
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - center;
+                toEnemy.y = 0f;
+                float distanceSqr = toEnemy.sqrMagnitude;
+                if (distanceSqr > radiusSqr || distanceSqr >= bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                bestEnemy = enemy;
+            }
+
+            return bestEnemy;
+        }
+
+        private int CountEnemiesWithinRadius(Vector3 center, float radius)
+        {
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies == null || enemies.Count == 0)
+            {
+                return 0;
+            }
+
+            float radiusSqr = Mathf.Max(0.1f, radius);
+            radiusSqr *= radiusSqr;
+            int count = 0;
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (!IsEnemyTargetable(enemy))
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - center;
+                toEnemy.y = 0f;
+                if (toEnemy.sqrMagnitude <= radiusSqr)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private bool IsBossOrEliteWithinRadius(float radius)
+        {
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies == null || enemies.Count == 0)
+            {
+                return false;
+            }
+
+            float radiusSqr = Mathf.Max(0.1f, radius);
+            radiusSqr *= radiusSqr;
+            Vector3 center = transform.position;
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (!IsEnemyTargetable(enemy) || (!enemy.IsElite && !IsBossLikeEnemy(enemy)))
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - center;
+                toEnemy.y = 0f;
+                if (toEnemy.sqrMagnitude <= radiusSqr)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static EnemyController FindNearestBossLikeEnemy(float radius)
+        {
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies == null || enemies.Count == 0)
+            {
+                return null;
+            }
+
+            Vector3 center = PlayerController.Instance != null ? PlayerController.Instance.transform.position : Vector3.zero;
+            float radiusSqr = Mathf.Max(0.1f, radius);
+            radiusSqr *= radiusSqr;
+            float bestDistanceSqr = float.PositiveInfinity;
+            EnemyController bestEnemy = null;
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (!IsEnemyTargetable(enemy) || !IsBossLikeEnemy(enemy))
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - center;
+                toEnemy.y = 0f;
+                float distanceSqr = toEnemy.sqrMagnitude;
+                if (distanceSqr > radiusSqr || distanceSqr >= bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                bestEnemy = enemy;
+            }
+
+            return bestEnemy;
+        }
+
+        private static bool IsEnemyAboveHealthRatio(EnemyController enemy, float ratio)
+        {
+            CharacterStats stats = enemy != null ? enemy.Stats : null;
+            if (stats == null || stats.MaxHealth <= 0f)
+            {
+                return false;
+            }
+
+            return stats.CurrentHealth / stats.MaxHealth >= ratio;
+        }
+
+        private static bool IsEnemyBelowHealthRatio(EnemyController enemy, float ratio)
+        {
+            CharacterStats stats = enemy != null ? enemy.Stats : null;
+            if (stats == null || stats.MaxHealth <= 0f)
+            {
+                return false;
+            }
+
+            return stats.CurrentHealth / stats.MaxHealth <= ratio;
+        }
+
+        private static float GetEnemyCurrentHealth(EnemyController enemy)
+        {
+            CharacterStats stats = enemy != null ? enemy.Stats : null;
+            return stats != null ? Mathf.Max(0f, stats.CurrentHealth) : 0f;
+        }
+
+        private static bool IsEnemyTargetable(EnemyController enemy)
+        {
+            return enemy != null && enemy.gameObject.activeInHierarchy && !enemy.IsDead;
+        }
+
+        private static bool IsBossLikeEnemy(EnemyController enemy)
+        {
+            if (enemy == null)
+            {
+                return false;
+            }
+
+            if (enemy.GetComponent<IntestineBossPattern>() != null)
+            {
+                return true;
+            }
+
+            return enemy.gameObject.name.EndsWith("_MidBoss", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static Sprite FindEnemySprite(EnemyController enemy)
+        {
+            if (enemy == null)
+            {
+                return null;
+            }
+
+            SpriteRenderer[] renderers = enemy.GetComponentsInChildren<SpriteRenderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SpriteRenderer renderer = renderers[i];
+                if (renderer == null || renderer.sprite == null || renderer.gameObject.name.Contains("Overlay"))
+                {
+                    continue;
+                }
+
+                return renderer.sprite;
+            }
+
+            return TextureSpriteCache.GetCircleSprite();
+        }
+
+        private static Sprite[] FindEnemyAttackSprites(EnemyController enemy)
+        {
+            EnemySpawnRuleConfig config = enemy != null ? enemy.Config : null;
+            if (config == null)
+            {
+                return null;
+            }
+
+            if (config.attackSprites != null && config.attackSprites.Length > 0)
+            {
+                return config.attackSprites;
+            }
+
+            if (config.attackSpritesDown != null && config.attackSpritesDown.Length > 0)
+            {
+                return config.attackSpritesDown;
+            }
+
+            if (config.attackSpritesUp != null && config.attackSpritesUp.Length > 0)
+            {
+                return config.attackSpritesUp;
+            }
+
+            return null;
+        }
+
+        private static Material GetRuntimeLineMaterial()
+        {
+            if (runtimeLineMaterial != null)
+            {
+                return runtimeLineMaterial;
+            }
+
+            Shader shader = Shader.Find("Sprites/Default");
+            runtimeLineMaterial = new Material(shader != null ? shader : Shader.Find("Universal Render Pipeline/Unlit"))
+            {
+                name = "Runtime_TentacleColonyLine"
+            };
+            return runtimeLineMaterial;
+        }
+
+        private static Vector3 FindEnemyVisualScale(EnemyController enemy, Vector3 fallback)
+        {
+            if (enemy == null)
+            {
+                return fallback;
+            }
+
+            SpriteRenderer[] renderers = enemy.GetComponentsInChildren<SpriteRenderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SpriteRenderer renderer = renderers[i];
+                if (renderer == null || renderer.gameObject.name.Contains("Overlay"))
+                {
+                    continue;
+                }
+
+                return renderer.transform.lossyScale;
+            }
+
+            return fallback;
+        }
+
+        private Vector3 ResolveGroundSpawnPosition(Vector3 desiredPosition, float heightOffset)
+        {
+            BiomeManager biome = BiomeManager.Active;
+            if (biome == null)
+            {
+                Vector3 fallback = desiredPosition;
+                fallback.y = transform.position.y + heightOffset;
+                return fallback;
+            }
+
+            Vector2Int desiredGrid = biome.WorldToGrid(desiredPosition);
+            if (biome.IsWalkable(desiredGrid.x, desiredGrid.y))
+            {
+                return biome.GridToWorldWithHeight(desiredGrid.x, desiredGrid.y, heightOffset);
+            }
+
+            Vector2Int playerGrid = biome.WorldToGrid(transform.position);
+            for (int radius = 1; radius <= 3; radius++)
+            {
+                for (int y = -radius; y <= radius; y++)
+                {
+                    for (int x = -radius; x <= radius; x++)
+                    {
+                        if (Mathf.Abs(x) != radius && Mathf.Abs(y) != radius)
+                        {
+                            continue;
+                        }
+
+                        int gridX = playerGrid.x + x;
+                        int gridY = playerGrid.y + y;
+                        if (biome.IsWalkable(gridX, gridY))
+                        {
+                            return biome.GridToWorldWithHeight(gridX, gridY, heightOffset);
+                        }
+                    }
+                }
+            }
+
+            return biome.GridToWorldWithHeight(playerGrid.x, playerGrid.y, heightOffset);
         }
 
         private static PlayerProjectilePool ResolvePool()
@@ -1108,6 +2566,7 @@ namespace Necrocis
 
                 float adjustedDamage = ApplyPerTargetDamageModifiers(enemy, damage);
                 enemy.TakeDamage(adjustedDamage);
+                TryApplyPostDamageExecutionInstinct(enemy, adjustedDamage);
                 ApplyCommonOnHitEffects(enemy, adjustedDamage, enemy.transform.position);
                 hitCount++;
             }
@@ -1325,11 +2784,29 @@ namespace Necrocis
             playerStats.RuntimeStats.RemoveModifiersFromSource(imperfectRegenModifierSource);
             playerStats.RuntimeStats.RemoveModifiersFromSource(ruptureMovePenaltyModifierSource);
             playerStats.RuntimeStats.RemoveModifiersFromSource(exoskeletonModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(macrophageModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(gluttonousOrganModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
+            playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
             forbiddenGrowthModifierApplied = false;
             overclockNerveModifierApplied = false;
             imperfectRegenModifierApplied = false;
             exoskeletonModifierApplied = false;
+            ClearGrotesqueGrowthState();
+            ClearMutationRampageState();
+            ClearFrenzyHormoneState();
             ruptureAppliedMovePenalty = 0f;
+            macrophageStacks = 0;
+            macrophageAppliedAttackBonus = 0f;
+            macrophageExpireTime = float.NegativeInfinity;
+            gluttonousOrganStacks = 0;
+            gluttonousOrganAppliedMoveBonus = 0f;
+            gluttonousOrganExpireTime = float.NegativeInfinity;
+            berserkCellModifierApplied = false;
+            berserkCellExpireTime = float.NegativeInfinity;
+            berserkCellActiveBossId = 0;
         }
 
         private void TrySubscribeHealthEvents()
@@ -1387,6 +2864,8 @@ namespace Necrocis
             {
                 severanceReflexBuffUntil = Time.time + Mathf.Max(0.1f, severanceReflexDuration);
             }
+
+            ApplyFrenzyHormoneBuff();
         }
 
         private void TriggerOverheatExplosionSelfDamage(float attackDamage)
@@ -1405,7 +2884,7 @@ namespace Necrocis
             }
 
             Vector3 targetPos = target.transform.position;
-            Vector2 randomCircle = Random.insideUnitCircle.normalized * Mathf.Max(0.3f, voidCellSpawnRadius);
+            Vector2 randomCircle = UnityEngine.Random.insideUnitCircle.normalized * Mathf.Max(0.3f, voidCellSpawnRadius);
             Vector3 spawnPos = targetPos + new Vector3(randomCircle.x, 0f, randomCircle.y);
             spawnPos.y = transform.position.y + 0.2f;
             TeleportPlayerTo(spawnPos);
@@ -1462,7 +2941,7 @@ namespace Necrocis
                 return null;
             }
 
-            int index = Random.Range(0, candidates.Count);
+            int index = UnityEngine.Random.Range(0, candidates.Count);
             return candidates[index];
         }
 
@@ -1745,6 +3224,405 @@ namespace Necrocis
             }
 
             transform.position = position;
+        }
+
+        private class PlayerBioSummon : MonoBehaviour
+        {
+            public enum SummonKind
+            {
+                InfectedHost,
+                Spore
+            }
+
+            private PlayerItemCombatEffects owner;
+            private SpriteRenderer spriteRenderer;
+            private EnemyController target;
+            private float damage;
+            private float expireTime;
+            private float searchRadius;
+            private float attackRadius;
+            private float attackInterval;
+            private float nextAttackTime;
+            private float moveSpeed;
+            private bool destroyOnAttack;
+            private Sprite idleSprite;
+            private Sprite[] attackSprites;
+            private float attackVisualEndTime;
+            private float attackVisualFrameTime;
+
+            public SummonKind Kind { get; private set; }
+
+            public void Initialize(
+                PlayerItemCombatEffects owner,
+                SummonKind kind,
+                Sprite sprite,
+                Sprite[] attackSprites,
+                Vector3 visualScale,
+                Color color,
+                float damage,
+                float lifetime,
+                float searchRadius,
+                float attackRadius,
+                float attackInterval,
+                bool destroyOnAttack)
+            {
+                this.owner = owner;
+                Kind = kind;
+                this.damage = Mathf.Max(0f, damage);
+                this.searchRadius = Mathf.Max(0.1f, searchRadius);
+                this.attackRadius = Mathf.Max(0.1f, attackRadius);
+                this.attackInterval = Mathf.Max(0.05f, attackInterval);
+                this.destroyOnAttack = destroyOnAttack;
+                this.attackSprites = attackSprites;
+                moveSpeed = kind == SummonKind.Spore ? 5.2f : 3.2f;
+                expireTime = Time.time + Mathf.Max(0.1f, lifetime);
+
+                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                idleSprite = sprite != null ? sprite : TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.sprite = idleSprite;
+                spriteRenderer.color = color;
+                spriteRenderer.sortingOrder = kind == SummonKind.Spore ? 5100 : 5050;
+                transform.localScale = visualScale;
+            }
+
+            private void Update()
+            {
+                if (owner == null || Time.time >= expireTime)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                SyncBillboard();
+                UpdateAttackVisual();
+                if (!IsEnemyTargetable(target))
+                {
+                    target = owner.FindClosestEnemy(transform.position, searchRadius);
+                }
+
+                if (!IsEnemyTargetable(target))
+                {
+                    DriftAroundOwner();
+                    return;
+                }
+
+                Vector3 toTarget = target.transform.position - transform.position;
+                toTarget.y = 0f;
+                float attackDistance = attackRadius;
+                if (toTarget.sqrMagnitude > attackDistance * attackDistance)
+                {
+                    Vector3 step = toTarget.normalized * moveSpeed * Time.deltaTime;
+                    transform.position += step;
+                    return;
+                }
+
+                if (Time.time < nextAttackTime)
+                {
+                    return;
+                }
+
+                nextAttackTime = Time.time + attackInterval;
+                StartAttackVisual();
+                target.TakeDamage(damage);
+                if (destroyOnAttack)
+                {
+                    SpawnBurstVisual();
+                    Destroy(gameObject);
+                }
+            }
+
+            private void StartAttackVisual()
+            {
+                if (attackSprites == null || attackSprites.Length == 0)
+                {
+                    return;
+                }
+
+                attackVisualEndTime = Time.time + 0.35f;
+                attackVisualFrameTime = Time.time;
+                spriteRenderer.sprite = attackSprites[0] != null ? attackSprites[0] : idleSprite;
+            }
+
+            private void UpdateAttackVisual()
+            {
+                if (attackSprites == null || attackSprites.Length == 0 || Time.time >= attackVisualEndTime)
+                {
+                    if (spriteRenderer != null && spriteRenderer.sprite != idleSprite)
+                    {
+                        spriteRenderer.sprite = idleSprite;
+                    }
+
+                    return;
+                }
+
+                float frameDuration = 0.35f / Mathf.Max(1, attackSprites.Length);
+                if (Time.time < attackVisualFrameTime + frameDuration)
+                {
+                    return;
+                }
+
+                int frameIndex = Mathf.Clamp(
+                    Mathf.FloorToInt((0.35f - Mathf.Max(0f, attackVisualEndTime - Time.time)) / frameDuration),
+                    0,
+                    attackSprites.Length - 1);
+                attackVisualFrameTime = Time.time;
+                if (attackSprites[frameIndex] != null)
+                {
+                    spriteRenderer.sprite = attackSprites[frameIndex];
+                }
+            }
+
+            private void DriftAroundOwner()
+            {
+                if (owner == null)
+                {
+                    return;
+                }
+
+                Vector3 home = owner.transform.position;
+                Vector3 toHome = home - transform.position;
+                toHome.y = 0f;
+                if (toHome.sqrMagnitude <= 1.8f * 1.8f)
+                {
+                    return;
+                }
+
+                transform.position += toHome.normalized * moveSpeed * 0.5f * Time.deltaTime;
+            }
+
+            private void SpawnBurstVisual()
+            {
+                GameObject visualObject = new GameObject("SporeBurstVisual");
+                visualObject.transform.position = transform.position;
+                visualObject.transform.localScale = Vector3.one * 0.9f;
+                SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+                renderer.sprite = TextureSpriteCache.GetCircleSprite();
+                renderer.color = new Color(0.52f, 1f, 0.45f, 0.45f);
+                renderer.sortingOrder = 5150;
+                Destroy(visualObject, 0.18f);
+            }
+
+            private void SyncBillboard()
+            {
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
+            }
+        }
+
+        private class PlayerBloodDrone : MonoBehaviour
+        {
+            private PlayerItemCombatEffects owner;
+            private SpriteRenderer spriteRenderer;
+            private float angle;
+            private float nextFireTime;
+
+            public void Initialize(PlayerItemCombatEffects owner)
+            {
+                this.owner = owner;
+                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.color = new Color(0.95f, 0.08f, 0.18f, 0.92f);
+                spriteRenderer.sortingOrder = 5300;
+                transform.localScale = Vector3.one * 0.68f;
+            }
+
+            private void Update()
+            {
+                if (owner == null)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                angle += Time.deltaTime * 170f;
+                float radians = angle * Mathf.Deg2Rad;
+                Vector3 offset = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.bloodDroneOrbitRadius);
+                transform.position = owner.transform.position + offset + Vector3.up * 0.45f;
+                SyncBillboard();
+
+                if (Time.time < nextFireTime)
+                {
+                    return;
+                }
+
+                EnemyController target = owner.FindClosestEnemy(owner.transform.position, Mathf.Max(0.1f, owner.bloodDroneTargetRadius));
+                if (target == null)
+                {
+                    return;
+                }
+
+                nextFireTime = Time.time + Mathf.Max(0.1f, owner.bloodDroneFireInterval);
+                float damage = owner.GetCompanionBaseDamage() * Mathf.Max(0.05f, owner.bloodDroneDamageMultiplier);
+                PlayerBioProjectile.Spawn(transform.position, target, damage, new Color(1f, 0.05f, 0.16f, 0.95f));
+            }
+
+            private void SyncBillboard()
+            {
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
+            }
+        }
+
+        private class PlayerGuardianOrgan : MonoBehaviour
+        {
+            private PlayerItemCombatEffects owner;
+            private SpriteRenderer spriteRenderer;
+            private float angle;
+            private float nextBlockTime;
+
+            public void Initialize(PlayerItemCombatEffects owner)
+            {
+                this.owner = owner;
+                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.color = new Color(0.68f, 0.82f, 1f, 0.95f);
+                spriteRenderer.sortingOrder = 5350;
+                transform.localScale = Vector3.one * 0.82f;
+            }
+
+            private void Update()
+            {
+                if (owner == null)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                angle += Time.deltaTime * 260f;
+                float radians = angle * Mathf.Deg2Rad;
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                Vector3 right = activeCamera != null ? activeCamera.transform.right : Vector3.right;
+                Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
+                Vector3 center = owner.GetPlayerVisualCenter();
+                Vector3 offset = (right * Mathf.Cos(radians) + up * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
+                transform.position = center + offset;
+                spriteRenderer.color = Time.time >= nextBlockTime
+                    ? new Color(0.68f, 0.82f, 1f, 0.95f)
+                    : new Color(0.35f, 0.48f, 0.7f, 0.45f);
+                SyncBillboard();
+
+                if (Time.time < nextBlockTime)
+                {
+                    return;
+                }
+
+                TryBlockProjectile();
+            }
+
+            private void TryBlockProjectile()
+            {
+                IReadOnlyList<EnemyProjectile> projectiles = EnemyProjectile.ActiveEnemyProjectiles;
+                float blockRadius = Mathf.Max(0.1f, owner.guardianOrganBlockRadius);
+                float blockRadiusSqr = blockRadius * blockRadius;
+
+                for (int i = projectiles.Count - 1; i >= 0; i--)
+                {
+                    EnemyProjectile projectile = projectiles[i];
+                    if (projectile == null || !projectile.IsLaunched)
+                    {
+                        continue;
+                    }
+
+                    Vector3 toProjectile = projectile.transform.position - transform.position;
+                    toProjectile.y = 0f;
+                    if (toProjectile.sqrMagnitude > blockRadiusSqr)
+                    {
+                        continue;
+                    }
+
+                    projectile.Deflect();
+                    nextBlockTime = Time.time + Mathf.Max(0.1f, owner.guardianOrganCooldown);
+                    SpawnBlockVisual();
+                    return;
+                }
+            }
+
+            private void SpawnBlockVisual()
+            {
+                GameObject visualObject = new GameObject("GuardianBlockVisual");
+                visualObject.transform.position = transform.position;
+                visualObject.transform.localScale = Vector3.one * 1.2f;
+                SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+                renderer.sprite = TextureSpriteCache.GetCircleSprite();
+                renderer.color = new Color(0.68f, 0.82f, 1f, 0.35f);
+                renderer.sortingOrder = 5360;
+                Destroy(visualObject, 0.16f);
+            }
+
+            private void SyncBillboard()
+            {
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
+            }
+        }
+
+        private class PlayerBioProjectile : MonoBehaviour
+        {
+            private EnemyController target;
+            private SpriteRenderer spriteRenderer;
+            private float damage;
+            private float expireTime;
+            private float speed;
+
+            public static void Spawn(Vector3 position, EnemyController target, float damage, Color color)
+            {
+                if (!IsEnemyTargetable(target))
+                {
+                    return;
+                }
+
+                GameObject projectileObject = new GameObject("BloodDroneProjectile");
+                projectileObject.transform.position = position;
+                PlayerBioProjectile projectile = projectileObject.AddComponent<PlayerBioProjectile>();
+                projectile.Initialize(target, damage, color);
+            }
+
+            private void Initialize(EnemyController target, float damage, Color color)
+            {
+                this.target = target;
+                this.damage = Mathf.Max(0f, damage);
+                speed = 11f;
+                expireTime = Time.time + 1.6f;
+                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.color = color;
+                spriteRenderer.sortingOrder = 5320;
+                transform.localScale = Vector3.one * 0.22f;
+            }
+
+            private void Update()
+            {
+                if (Time.time >= expireTime || !IsEnemyTargetable(target))
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+
+                Vector3 toTarget = target.transform.position - transform.position;
+                toTarget.y = 0f;
+                if (toTarget.sqrMagnitude <= 0.45f * 0.45f)
+                {
+                    target.TakeDamage(damage);
+                    Destroy(gameObject);
+                    return;
+                }
+
+                transform.position += toTarget.normalized * speed * Time.deltaTime;
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
+            }
         }
     }
 }
