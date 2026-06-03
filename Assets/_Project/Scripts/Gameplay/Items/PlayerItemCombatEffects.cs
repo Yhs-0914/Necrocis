@@ -45,7 +45,6 @@ namespace Necrocis
         public const string ExoskeletonId = "exoskeleton";
         public const string PlateletMembraneId = "platelet_membrane";
         public const string RecoveryFactorId = "recovery_factor";
-        public const string CoagulationCellId = "coagulation_cell";
         public const string ReflectiveSkinId = "reflective_skin";
         public const string BioBarrierId = "bio_barrier";
         public const string SplitRegenerationId = "split_regeneration";
@@ -145,18 +144,16 @@ namespace Necrocis
         [SerializeField] private float imperfectRegenCooldownDuration = 15f;
         [SerializeField] private float severanceReflexDuration = 2f;
         [SerializeField] private float severanceReflexFlatAttackBonus = 6f;
-        [SerializeField] private float exoskeletonDamageReductionRatio = 0.4f;
+        [SerializeField] private float exoskeletonDamageReductionRatio = 0.3f;
         [SerializeField] private float exoskeletonMoveSpeedPenalty = 2f;
-        [SerializeField] private float plateletMembraneInterval = 20f;
-        [SerializeField] private float plateletMembraneShieldAmount = 3f;
-        [SerializeField] private float recoveryFactorInterval = 30f;
+        [SerializeField] private float plateletMembraneInterval = 30f;
+        [SerializeField] private float plateletMembraneShieldAmount = 1f;
+        [SerializeField] private float recoveryFactorInterval = 45f;
         [SerializeField] private float recoveryFactorHealAmount = 1f;
-        [SerializeField] private float coagulationCellCooldown = 60f;
-        [SerializeField] private float coagulationCellBigHitThreshold = 3f;
         [SerializeField] private float reflectiveSkinDamageRatio = 0.5f;
         [SerializeField] private float bioBarrierIdleSecondsPerStep = 1f;
         [SerializeField] private float bioBarrierReductionPerStep = 0.1f;
-        [SerializeField] private float bioBarrierMaxReduction = 0.4f;
+        [SerializeField] private float bioBarrierMaxReduction = 0.5f;
         [SerializeField] private float splitRegenerationReviveHealth = 2f;
 
 
@@ -175,6 +172,13 @@ namespace Necrocis
         private float unstableCoreCurrentMultiplier = 1f;
         private bool unstableCoreInitialized;
         private SpriteRenderer unstableCoreOverlay;
+        private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int OutlineSizeId = Shader.PropertyToID("_OutlineSize");
+        private static readonly int OutlineExpandId = Shader.PropertyToID("_OutlineExpand");
+        private Material plateletMembraneOutlineMaterial;
+        private SpriteRenderer plateletMembraneOutlineTarget;
+        private SpriteRenderer plateletMembraneOutlineRenderer;
+        private bool plateletMembraneShaderWarningLogged;
         private SpriteRenderer playerVisualSpriteRenderer;
         private float rampageMoveAccumulatedTime;
         private float rampageIdleAccumulatedTime;
@@ -198,7 +202,6 @@ namespace Necrocis
         private float plateletMembraneCurrentShield;
         private float plateletMembraneNextReadyTime;
         private float recoveryFactorNextHealTime;
-        private float coagulationCellReadyTime;
         private float bioBarrierIdleTime;
         private bool splitRegenerationUsed;
         private readonly object forbiddenGrowthModifierSource = new object();
@@ -247,7 +250,6 @@ namespace Necrocis
         public bool HasExoskeleton => HasItem(ExoskeletonId);
         public bool HasPlateletMembrane => HasItem(PlateletMembraneId);
         public bool HasRecoveryFactor => HasItem(RecoveryFactorId);
-        public bool HasCoagulationCell => HasItem(CoagulationCellId);
         public bool HasReflectiveSkin => HasItem(ReflectiveSkinId);
         public bool HasBioBarrier => HasItem(BioBarrierId);
         public bool HasSplitRegeneration => HasItem(SplitRegenerationId);
@@ -273,6 +275,7 @@ namespace Necrocis
         private void OnDisable()
         {
             TryUnsubscribeHealthEvents();
+            ClearPlateletMembraneOutline();
             ClearPersistentStatModifiers();
             resonanceStatesByEnemyId.Clear();
         }
@@ -298,6 +301,7 @@ namespace Necrocis
             UpdateImperfectRegenState();
             UpdateTentacleAutoAttack();
             UpdateDecayStates();
+            UpdatePlateletMembraneOutline();
             UpdateUnstableCoreOverlay();
         }
 
@@ -313,7 +317,6 @@ namespace Necrocis
                 if (plateletMembraneCurrentShield <= 0f && Time.time >= plateletMembraneNextReadyTime)
                 {
                     plateletMembraneCurrentShield = Mathf.Max(0f, plateletMembraneShieldAmount);
-                    plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
                 }
             }
 
@@ -342,10 +345,6 @@ namespace Necrocis
                 splitRegenerationUsed = false;
             }
 
-            if (!HasCoagulationCell)
-            {
-                coagulationCellReadyTime = Time.time;
-            }
         }
 
         public int GetForwardProjectileCount()
@@ -655,14 +654,6 @@ namespace Necrocis
             damage *= GetIncomingDamageMultiplier();
             damage = Mathf.Max(0f, damage);
 
-            if (HasCoagulationCell
-                && damage >= Mathf.Max(0.1f, coagulationCellBigHitThreshold)
-                && Time.time >= coagulationCellReadyTime)
-            {
-                coagulationCellReadyTime = Time.time + Mathf.Max(0.1f, coagulationCellCooldown);
-                return 0f;
-            }
-
             if (HasPlateletMembrane && plateletMembraneCurrentShield > 0f)
             {
                 float absorbed = Mathf.Min(plateletMembraneCurrentShield, damage);
@@ -671,6 +662,7 @@ namespace Necrocis
                 if (plateletMembraneCurrentShield <= 0f)
                 {
                     plateletMembraneCurrentShield = 0f;
+                    plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
                 }
             }
 
@@ -1431,6 +1423,145 @@ namespace Necrocis
             unstableCoreOverlay.transform.localScale = Vector3.one * 1.12f;
         }
 
+        private void UpdatePlateletMembraneOutline()
+        {
+            if (!HasPlateletMembrane || plateletMembraneCurrentShield <= 0f)
+            {
+                ClearPlateletMembraneOutline();
+                return;
+            }
+
+            EnsurePlateletMembraneOutlineMaterial();
+            if (plateletMembraneOutlineMaterial == null)
+            {
+                return;
+            }
+
+            if (playerVisualSpriteRenderer == null)
+            {
+                playerVisualSpriteRenderer = FindPlayerSpriteRenderer();
+            }
+
+            if (playerVisualSpriteRenderer == null)
+            {
+                ClearPlateletMembraneOutline();
+                return;
+            }
+
+            if (plateletMembraneOutlineTarget != playerVisualSpriteRenderer)
+            {
+                ClearPlateletMembraneOutline();
+                CleanupPlateletMembraneLegacyVisuals(playerVisualSpriteRenderer.transform);
+                plateletMembraneOutlineTarget = playerVisualSpriteRenderer;
+            }
+
+            plateletMembraneOutlineMaterial.SetColor(OutlineColorId, new Color(0.72f, 0.74f, 0.76f, 1f));
+            plateletMembraneOutlineMaterial.SetFloat(OutlineSizeId, 1.25f);
+            plateletMembraneOutlineMaterial.SetFloat(OutlineExpandId, 0f);
+            EnsurePlateletMembraneOutlineRenderer(playerVisualSpriteRenderer);
+            if (plateletMembraneOutlineRenderer == null)
+            {
+                return;
+            }
+
+            plateletMembraneOutlineRenderer.sprite = playerVisualSpriteRenderer.sprite;
+            plateletMembraneOutlineRenderer.flipX = playerVisualSpriteRenderer.flipX;
+            plateletMembraneOutlineRenderer.flipY = playerVisualSpriteRenderer.flipY;
+            plateletMembraneOutlineRenderer.color = Color.white;
+            plateletMembraneOutlineRenderer.sortingLayerID = playerVisualSpriteRenderer.sortingLayerID;
+            plateletMembraneOutlineRenderer.sortingOrder = playerVisualSpriteRenderer.sortingOrder - 1;
+            plateletMembraneOutlineRenderer.sharedMaterial = plateletMembraneOutlineMaterial;
+            plateletMembraneOutlineRenderer.enabled = true;
+        }
+
+        private void EnsurePlateletMembraneOutlineMaterial()
+        {
+            if (plateletMembraneOutlineMaterial != null)
+            {
+                return;
+            }
+
+            Shader outlineShader = Shader.Find("Necrocis/SpriteOutline");
+            if (outlineShader == null)
+            {
+                if (!plateletMembraneShaderWarningLogged)
+                {
+                    Debug.LogWarning("[PlayerItemCombatEffects] Necrocis/SpriteOutline shader not found.");
+                    plateletMembraneShaderWarningLogged = true;
+                }
+
+                return;
+            }
+
+            plateletMembraneOutlineMaterial = new Material(outlineShader)
+            {
+                name = "Runtime_PlateletMembraneOutline"
+            };
+        }
+
+        private void ClearPlateletMembraneOutline()
+        {
+            if (plateletMembraneOutlineRenderer != null)
+            {
+                plateletMembraneOutlineRenderer.enabled = false;
+            }
+
+            plateletMembraneOutlineRenderer = null;
+            plateletMembraneOutlineTarget = null;
+        }
+
+        private void EnsurePlateletMembraneOutlineRenderer(SpriteRenderer sourceRenderer)
+        {
+            if (sourceRenderer == null)
+            {
+                return;
+            }
+
+            if (plateletMembraneOutlineRenderer != null)
+            {
+                return;
+            }
+
+            Transform existing = sourceRenderer.transform.Find("PlateletMembraneOutline");
+            plateletMembraneOutlineRenderer = existing != null ? existing.GetComponent<SpriteRenderer>() : null;
+            if (plateletMembraneOutlineRenderer == null)
+            {
+                GameObject outlineObject = new GameObject("PlateletMembraneOutline");
+                outlineObject.transform.SetParent(sourceRenderer.transform, false);
+                outlineObject.transform.localPosition = Vector3.zero;
+                outlineObject.transform.localRotation = Quaternion.identity;
+                outlineObject.transform.localScale = Vector3.one;
+                plateletMembraneOutlineRenderer = outlineObject.AddComponent<SpriteRenderer>();
+            }
+
+            plateletMembraneOutlineRenderer.enabled = false;
+        }
+
+        private static void CleanupPlateletMembraneLegacyVisuals(Transform sourceTransform)
+        {
+            if (sourceTransform == null)
+            {
+                return;
+            }
+
+            for (int i = sourceTransform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = sourceTransform.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                string childName = child.name;
+                if (childName == "PlateletMembraneOverlay"
+                    || childName == "PlateletMembraneOutline"
+                    || childName.StartsWith("PlateletMembraneOutline_"))
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+        }
+
         private void EnsureUnstableCoreOverlay()
         {
             if (unstableCoreOverlay != null)
@@ -1478,7 +1609,8 @@ namespace Necrocis
                     continue;
                 }
 
-                if (renderer.gameObject.name.Contains("Overlay"))
+                string objectName = renderer.gameObject.name;
+                if (objectName.Contains("Overlay") || objectName.Contains("Outline"))
                 {
                     continue;
                 }

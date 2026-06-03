@@ -19,6 +19,7 @@ namespace Necrocis
     {
         private const string RemovedParasiticSporeItemId = "parasitic_spore";
         private const string RemovedNeuralOverloadItemId = "neural_overload";
+        private const string RemovedCoagulationCellItemId = "coagulation_cell";
 
         [Serializable]
         public class PlayerItemEntry
@@ -256,7 +257,7 @@ namespace Necrocis
                 new PlayerItemEntry("toxic_mucosa", "독성 점막", "공격 적중 시 중독 피해 부여", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("freezing_nerve", "빙결 신경", "공격 적중 시 적 이동속도 감소", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("hemorrhage_organ", "출혈 기관", "적중 시 지속 출혈 피해", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("overheated_organ", "과열 기관", "계속 공격 시 공격속도 증가, 과열 시 폭발 피해", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("overheated_organ", "과열 기관", "계속 공격 시 공격속도 증가, 과열 시 폭발 피해(자해형)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("mutant_eye", "돌연변이 안구", "전방 180도 범위로 무작위 발사, 공격력 +5", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("organ_tentacle", "장기 촉수", "주변 적 자동 공격, 대신 기본 공격 약화", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("rampage_bloodflow", "폭주 혈류", "이동 중 공격력 증가, 멈추면 감소", PlayerItemCategory.BasicProjectile),
@@ -274,12 +275,11 @@ namespace Necrocis
                 new PlayerItemEntry("imperfect_regeneration", "불완전 재생", "체력 -4, 피해를 받으면 3초 후 체력 +1 회복 (15초 쿨타임)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("severance_reflex", "절단 반사", "피격 직후 공격력 +6", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("bio_gamble", "생체 도박", "레벨업 선택 시 스탯이 -2~+3 범위에서 랜덤 증감", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("exoskeleton", "외골격", "받는 피해 40% 감소, 대신 이동속도 -2", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("platelet_membrane", "혈소판 막", "20초마다 보호막 생성", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("recovery_factor", "회복 인자", "30초당 체력 +1 회복", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("coagulation_cell", "응고 세포", "큰 피해를 한 번 무효화 (쿨타임 1분)", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("exoskeleton", "외골격", "받는 피해 30% 감소, 대신 이동속도 -2", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("platelet_membrane", "혈소판 막", "30초마다 보호막 1 생성", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("recovery_factor", "회복 인자", "45초당 체력 +1 회복", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("reflective_skin", "반사 피부", "피격 시 적에게 피해 반사", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("bio_barrier", "생체 장막", "이동하지 않으면 피해 감소 증가", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("bio_barrier", "생체 장막", "이동하지 않으면 피해 감소 증가 (최대 50%)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("split_regeneration", "분열 재생", "체력 0이 될 때 작은 체력으로 부활", PlayerItemCategory.BasicProjectile)
             };
         }
@@ -370,7 +370,8 @@ namespace Necrocis
                 }
 
                 if (string.Equals(entry.ItemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(entry.ItemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase))
+                    || string.Equals(entry.ItemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(entry.ItemId, RemovedCoagulationCellItemId, StringComparison.OrdinalIgnoreCase))
                 {
                     itemEntries.RemoveAt(i);
                 }
@@ -389,7 +390,9 @@ namespace Necrocis
                     continue;
                 }
 
-                if (string.Equals(itemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(itemId, RemovedParasiticSporeItemId, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(itemId, RemovedNeuralOverloadItemId, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(itemId, RemovedCoagulationCellItemId, StringComparison.OrdinalIgnoreCase))
                 {
                     startingItemIds.RemoveAt(i);
                 }
@@ -523,6 +526,22 @@ namespace Necrocis
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.SeveranceReflexId, StringComparison.OrdinalIgnoreCase))
             {
                 entry.SetDescription("피격 직후 공격력 +6");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.ExoskeletonId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("받는 피해 30% 감소, 대신 이동속도 -2");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.PlateletMembraneId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("30초마다 보호막 1 생성");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.RecoveryFactorId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("45초당 체력 +1 회복");
+            }
+            else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.BioBarrierId, StringComparison.OrdinalIgnoreCase))
+            {
+                entry.SetDescription("이동하지 않으면 피해 감소 증가 (최대 50%)");
             }
         }
 

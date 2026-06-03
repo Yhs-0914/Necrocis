@@ -57,10 +57,42 @@ namespace Necrocis
 
         private void HandleHealthChanged(CharacterStats sender, CharacterHealthChangedEventArgs args)
         {
-            OnHealthChanged?.Invoke(args.CurrentValue, args.MaxValue);
-
             if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
+            {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+
+                OnHealthChanged?.Invoke(args.CurrentValue, args.MaxValue);
                 OnDeath?.Invoke();
+                return;
+            }
+
+            OnHealthChanged?.Invoke(args.CurrentValue, args.MaxValue);
+        }
+
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (Stats != null && Stats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects == null || Stats == null)
+            {
+                return false;
+            }
+
+            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            Stats.RestoreHealth(reviveHealth);
+            StartCoroutine(InvincibilityCoroutine());
+            return true;
         }
 
         // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
@@ -87,10 +119,14 @@ namespace Necrocis
                 if (actualDamage >= currentHealth && itemEffects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
                 {
                     float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
-                    float damageToApply = Mathf.Max(0f, currentHealth - targetHealth);
-                    if (damageToApply > 0f)
+                    if (currentHealth > targetHealth)
                     {
+                        float damageToApply = currentHealth - targetHealth;
                         Stats.ApplyDamage(damageToApply);
+                    }
+                    else if (targetHealth > currentHealth)
+                    {
+                        Stats.RestoreHealth(targetHealth - currentHealth);
                     }
 
                     StartCoroutine(InvincibilityCoroutine());

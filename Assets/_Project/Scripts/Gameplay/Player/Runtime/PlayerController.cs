@@ -205,7 +205,7 @@ namespace Necrocis
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
-            Debug.Log($"[Player] ?쒖옉 ?꾩튂: {transform.position}");
+            Debug.Log($"[Player] 시작 위치: {transform.position}");
         }
         // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -807,21 +807,54 @@ namespace Necrocis
         // HP 蹂寃?肄쒕갚: ?곕?吏/?뚮났 濡쒓렇 異쒕젰 + HP 0?대㈃ ?щ쭩 泥섎━
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
+            if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
+            {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+            }
+
             if (args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
-                Debug.Log($"[Player] ?쇳빐 {damageTaken} 諛쏆쓬 | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 피해 {damageTaken} 받음 | HP {args.CurrentValue}/{args.MaxValue}");
             }
             else if (args.CurrentValue > args.PreviousValue)
             {
                 float healed = args.CurrentValue - args.PreviousValue;
-                Debug.Log($"[Player] ?뚮났 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
             }
 
             if (!deathHandled && args.CurrentValue <= 0f)
             {
                 Die();
             }
+        }
+
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (playerStats != null && playerStats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects == null || playerStats == null)
+            {
+                return false;
+            }
+
+            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            playerStats.RuntimeStats.RestoreHealth(reviveHealth);
+            Health health = GetComponent<Health>();
+            health?.GrantTemporaryInvincibility(0.5f);
+            Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
+            return true;
         }
         // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -851,7 +884,7 @@ namespace Necrocis
                 classSkillController.enabled = false;
 
             enabled = false;
-            Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+            Debug.Log("[Player] HP가 0이 되어 사망했습니다.");
         }
     }
 }

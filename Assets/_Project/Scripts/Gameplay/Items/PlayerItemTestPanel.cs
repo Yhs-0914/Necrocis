@@ -15,7 +15,6 @@ namespace Necrocis
     {
         [Header("Panel")]
         [SerializeField] private bool enablePanel = true;
-        [SerializeField] private bool showOnStart = true;
         [SerializeField] private KeyCode toggleKey = KeyCode.F8;
         [SerializeField] private int sortingOrder = 220;
 
@@ -67,7 +66,7 @@ namespace Necrocis
                 return;
             }
 
-            panelObject.SetActive(showOnStart && enablePanel);
+            panelObject.SetActive(false);
             RefreshLists();
             UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
         }
@@ -120,34 +119,36 @@ namespace Necrocis
             Image panelImage = panelObject.AddComponent<Image>();
             panelImage.color = new Color(0.06f, 0.1f, 0.14f, 0.92f);
             RectTransform panelRect = panelObject.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(1180f, 700f);
+            panelRect.offsetMin = new Vector2(24f, 24f);
+            panelRect.offsetMax = new Vector2(-24f, -24f);
 
-            titleText = CreateLabel("Title", panelObject.transform, new Vector2(0f, 300f), new Vector2(1060f, 46f), 28, TextAnchor.MiddleCenter);
+            titleText = CreateLabel("Title", panelObject.transform, new Vector2(0f, 470f), new Vector2(1740f, 56f), 36, TextAnchor.MiddleCenter);
             titleText.text = "아이템 테스트 패널";
             titleText.color = new Color(0.95f, 0.96f, 0.98f, 1f);
 
-            summaryText = CreateLabel("Summary", panelObject.transform, new Vector2(0f, 258f), new Vector2(1060f, 32f), 20, TextAnchor.MiddleCenter);
+            summaryText = CreateLabel("Summary", panelObject.transform, new Vector2(0f, 420f), new Vector2(1740f, 42f), 26, TextAnchor.MiddleCenter);
             summaryText.color = new Color(0.77f, 0.89f, 0.98f, 1f);
 
-            detailText = CreateLabel("Detail", panelObject.transform, new Vector2(0f, 216f), new Vector2(1060f, 54f), 18, TextAnchor.MiddleCenter);
+            detailText = CreateLabel("Detail", panelObject.transform, new Vector2(0f, 365f), new Vector2(1740f, 60f), 24, TextAnchor.MiddleCenter);
             detailText.color = new Color(0.93f, 0.93f, 0.93f, 1f);
 
-            CreateLabel("CatalogLabel", panelObject.transform, new Vector2(-280f, 170f), new Vector2(520f, 32f), 20, TextAnchor.MiddleLeft).text = "전체 아이템 목록";
-            CreateLabel("AcquiredLabel", panelObject.transform, new Vector2(280f, 170f), new Vector2(520f, 32f), 20, TextAnchor.MiddleLeft).text = "현재 보유 아이템";
+            CreateLabel("CatalogLabel", panelObject.transform, new Vector2(-450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "전체 아이템 목록";
+            CreateLabel("AcquiredLabel", panelObject.transform, new Vector2(450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "현재 보유 아이템";
 
-            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-280f, -10f), new Vector2(520f, 350f));
-            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(280f, -10f), new Vector2(520f, 350f));
+            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -30f), new Vector2(840f, 660f));
+            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -30f), new Vector2(840f, 660f));
 
-            CreateActionButton("AddButton", panelObject.transform, new Vector2(-190f, -250f), new Vector2(240f, 52f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
-            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(80f, -250f), new Vector2(240f, 52f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
-            CreateActionButton("ClearButton", panelObject.transform, new Vector2(350f, -250f), new Vector2(170f, 52f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
-            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-380f, -250f), new Vector2(170f, 52f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
+            CreateActionButton("AddButton", panelObject.transform, new Vector2(-310f, -425f), new Vector2(300f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
+            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(10f, -425f), new Vector2(300f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
+            CreateActionButton("ClearButton", panelObject.transform, new Vector2(300f, -425f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
+            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-600f, -425f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
 
-            statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -315f), new Vector2(1060f, 40f), 18, TextAnchor.MiddleCenter);
+            statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -500f), new Vector2(1740f, 46f), 24, TextAnchor.MiddleCenter);
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
+            panelObject.SetActive(false);
         }
 
         private static void EnsureEventSystem()
@@ -383,7 +384,7 @@ namespace Necrocis
         {
             GameObject row = CreateUiObject("Row", parent);
             RectTransform rowRect = row.GetComponent<RectTransform>();
-            rowRect.sizeDelta = new Vector2(0f, 46f);
+            rowRect.sizeDelta = new Vector2(0f, 62f);
 
             Image rowImage = row.AddComponent<Image>();
             rowImage.color = selected
@@ -393,7 +394,7 @@ namespace Necrocis
             Button button = row.AddComponent<Button>();
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text rowText = CreateLabel("Text", row.transform, Vector2.zero, new Vector2(0f, 0f), 16, TextAnchor.MiddleLeft);
+            Text rowText = CreateLabel("Text", row.transform, Vector2.zero, new Vector2(0f, 0f), 22, TextAnchor.MiddleLeft);
             rowText.text = label;
             rowText.color = new Color(0.95f, 0.95f, 0.95f, 1f);
             RectTransform textRect = rowText.rectTransform;
@@ -423,7 +424,7 @@ namespace Necrocis
             Button button = buttonObject.AddComponent<Button>();
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text text = CreateLabel("Label", buttonObject.transform, Vector2.zero, Vector2.zero, 18, TextAnchor.MiddleCenter);
+            Text text = CreateLabel("Label", buttonObject.transform, Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleCenter);
             text.text = label;
             text.color = Color.white;
             RectTransform textRect = text.rectTransform;
