@@ -359,6 +359,8 @@ namespace Necrocis
         [Header("Pattern Settings")]
         public IntestineBossPatternSettings intestinePattern = new IntestineBossPatternSettings();
         public LiverBossPatternSettings liverPattern = new LiverBossPatternSettings();
+        public StomachBossPatternSettings stomachPattern = new StomachBossPatternSettings();
+        public LungBossPatternSettings lungPattern = new LungBossPatternSettings();
     }
 
     public enum MidBossPatternType
@@ -366,6 +368,8 @@ namespace Necrocis
         Auto,
         None,
         Intestine,
-        Liver
+        Liver,
+        Stomach,
+        Lung
     }
 }

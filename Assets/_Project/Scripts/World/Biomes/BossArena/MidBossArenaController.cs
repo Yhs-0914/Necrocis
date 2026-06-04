@@ -13,6 +13,8 @@ namespace Necrocis
         private const float DefaultMidBossMinimumMaxHealth = 250f;
         private const float IntestineMidBossMinimumMaxHealth = 500f;
         private const float LiverMidBossMinimumMaxHealth = 180f;
+        private const float StomachMidBossMinimumMaxHealth = 170f;
+        private const float LungMidBossMinimumMaxHealth = 40f;
 
         private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
@@ -28,6 +30,7 @@ namespace Necrocis
         private EnemySpawnRuleConfig bossRule;
 
         private EnemyController activeBoss;
+        private LungBossPattern activeLungPattern;
         private Vector2Int centerGrid;
         private Vector2Int arenaSize;
         private bool arenaLocked;
@@ -83,6 +86,16 @@ namespace Necrocis
 
             if (!arenaLocked || bossDefeated)
                 return;
+
+            if (activeLungPattern != null)
+            {
+                if (activeLungPattern.IsEncounterDefeated)
+                {
+                    UnlockArena();
+                }
+
+                return;
+            }
 
             if (activeBoss == null || activeBoss.IsDead || !activeBoss.gameObject.activeInHierarchy)
             {
@@ -185,12 +198,25 @@ namespace Necrocis
             MidBossPatternType patternType = ResolveBossPatternType();
             IntestineBossPattern intestinePattern = boss.GetComponent<IntestineBossPattern>();
             LiverBossPattern liverPattern = boss.GetComponent<LiverBossPattern>();
+            StomachBossPattern stomachPattern = boss.GetComponent<StomachBossPattern>();
+            LungBossPattern lungPattern = GetComponent<LungBossPattern>();
+            activeLungPattern = null;
 
             if (patternType == MidBossPatternType.Intestine)
             {
                 if (liverPattern != null)
                 {
                     liverPattern.enabled = false;
+                }
+
+                if (stomachPattern != null)
+                {
+                    stomachPattern.enabled = false;
+                }
+
+                if (lungPattern != null)
+                {
+                    lungPattern.enabled = false;
                 }
 
                 if (intestinePattern == null)
@@ -209,12 +235,75 @@ namespace Necrocis
                     intestinePattern.enabled = false;
                 }
 
+                if (stomachPattern != null)
+                {
+                    stomachPattern.enabled = false;
+                }
+
+                if (lungPattern != null)
+                {
+                    lungPattern.enabled = false;
+                }
+
                 if (liverPattern == null)
                 {
                     liverPattern = boss.gameObject.AddComponent<LiverBossPattern>();
                 }
 
                 liverPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.liverPattern);
+                return;
+            }
+
+            if (patternType == MidBossPatternType.Stomach)
+            {
+                if (intestinePattern != null)
+                {
+                    intestinePattern.enabled = false;
+                }
+
+                if (liverPattern != null)
+                {
+                    liverPattern.enabled = false;
+                }
+
+                if (lungPattern != null)
+                {
+                    lungPattern.enabled = false;
+                }
+
+                if (stomachPattern == null)
+                {
+                    stomachPattern = boss.gameObject.AddComponent<StomachBossPattern>();
+                }
+
+                stomachPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.stomachPattern);
+                return;
+            }
+
+            if (patternType == MidBossPatternType.Lung)
+            {
+                if (intestinePattern != null)
+                {
+                    intestinePattern.enabled = false;
+                }
+
+                if (liverPattern != null)
+                {
+                    liverPattern.enabled = false;
+                }
+
+                if (stomachPattern != null)
+                {
+                    stomachPattern.enabled = false;
+                }
+
+                if (lungPattern == null)
+                {
+                    lungPattern = gameObject.AddComponent<LungBossPattern>();
+                }
+
+                activeLungPattern = lungPattern;
+                lungPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.lungPattern);
                 return;
             }
 
@@ -226,6 +315,16 @@ namespace Necrocis
             if (liverPattern != null)
             {
                 liverPattern.enabled = false;
+            }
+
+            if (stomachPattern != null)
+            {
+                stomachPattern.enabled = false;
+            }
+
+            if (lungPattern != null)
+            {
+                lungPattern.enabled = false;
             }
 
             boss.SetAiSuppressed(false);
@@ -251,6 +350,8 @@ namespace Necrocis
             {
                 BiomeType.Intestine => MidBossPatternType.Intestine,
                 BiomeType.Liver => MidBossPatternType.Liver,
+                BiomeType.Stomach => MidBossPatternType.Stomach,
+                BiomeType.Lung => MidBossPatternType.Lung,
                 _ => MidBossPatternType.None
             };
         }
@@ -270,14 +371,17 @@ namespace Necrocis
                 biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
             }
 
-            Vector3 bossDeathPos = activeBoss != null
-                ? activeBoss.transform.position
-                : (biome != null ? biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y) : transform.position);
+            Vector3 returnPortalPosition = ResolveReturnPortalPosition();
 
             if (activeBoss != null)
             {
                 activeBoss.Defeated -= HandleBossDefeated;
                 activeBoss = null;
+            }
+            if (activeLungPattern != null)
+            {
+                activeLungPattern.DisposeEncounter();
+                activeLungPattern = null;
             }
 
             ApplyFogVisualState();
@@ -292,9 +396,20 @@ namespace Necrocis
                 GameManager.Instance.SetGameState(GameState.InBiome);
             }
 
-            SpawnReturnPortal(bossDeathPos);
+            SpawnReturnPortal(returnPortalPosition);
 
             Debug.Log("[MidBossArena] 중간보스 처치 - 봉쇄 해제, 귀환 포탈 생성");
+        }
+
+        private Vector3 ResolveReturnPortalPosition()
+        {
+            if (biome == null)
+            {
+                return transform.position;
+            }
+
+            float heightOffset = returnPortalConfig != null ? returnPortalConfig.heightOffset : 0f;
+            return biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, heightOffset);
         }
 
         private void SpawnReturnPortal(Vector3 portalPos)
@@ -460,6 +575,11 @@ namespace Necrocis
                 return;
             }
 
+            if (activeLungPattern != null && !activeLungPattern.IsEncounterDefeated)
+            {
+                return;
+            }
+
             UnlockArena();
         }
 
@@ -594,7 +714,7 @@ namespace Necrocis
         {
             string bossName = !string.IsNullOrWhiteSpace(bossDefinition?.displayName)
                 ? bossDefinition.displayName
-                : patternType == MidBossPatternType.Liver ? "LiverBoss" : "MidBoss";
+                : patternType == MidBossPatternType.Liver ? "LiverBoss" : patternType == MidBossPatternType.Stomach ? "StomachBoss" : patternType == MidBossPatternType.Lung ? "LungBoss" : "MidBoss";
             Sprite sprite = GetRuntimeBossSprite();
 
             EnemySpawnRuleConfig boss = new EnemySpawnRuleConfig
@@ -602,21 +722,21 @@ namespace Necrocis
                 name = bossName,
                 density = 0f,
                 minDistance = 0f,
-                poissonSalt = patternType == MidBossPatternType.Liver ? 7102 : 7001,
+                poissonSalt = patternType == MidBossPatternType.Liver ? 7102 : patternType == MidBossPatternType.Stomach ? 7203 : patternType == MidBossPatternType.Lung ? 7304 : 7001,
                 allowedRegions = new List<int>(),
                 maxAlive = 1,
                 activationRadius = 0f,
                 respawnCooldown = 0f,
                 spawnRadius = 0f,
-                moveSpeed = patternType == MidBossPatternType.Liver ? 1f : 1.5f,
+                moveSpeed = patternType == MidBossPatternType.Liver ? 1f : patternType == MidBossPatternType.Stomach ? 0.5f : patternType == MidBossPatternType.Lung ? 1f : 1.5f,
                 stoppingDistance = 0.1f,
                 wanderRadius = 4f,
                 chaseRadius = 16f,
                 leashRadius = 24f,
                 idleDelayRange = new Vector2(0.5f, 1.2f),
                 maxHealth = GetMinimumBossMaxHealth(bossDefinition),
-                attackDamage = patternType == MidBossPatternType.Liver ? 2f : 1f,
-                attackRange = patternType == MidBossPatternType.Liver ? 7f : 1.5f,
+                attackDamage = patternType == MidBossPatternType.Liver ? 2f : patternType == MidBossPatternType.Stomach ? 3f : patternType == MidBossPatternType.Lung ? 2f : 1f,
+                attackRange = patternType == MidBossPatternType.Liver ? 7f : patternType == MidBossPatternType.Stomach ? 1.6f : patternType == MidBossPatternType.Lung ? 7f : 1.5f,
                 attackCooldown = 1f,
                 expReward = 0,
                 additionalBaseStats = new List<CharacterStatValue>(),
@@ -816,6 +936,8 @@ namespace Necrocis
             {
                 MidBossPatternType.Intestine => IntestineMidBossMinimumMaxHealth,
                 MidBossPatternType.Liver => LiverMidBossMinimumMaxHealth,
+                MidBossPatternType.Stomach => StomachMidBossMinimumMaxHealth,
+                MidBossPatternType.Lung => LungMidBossMinimumMaxHealth,
                 _ => DefaultMidBossMinimumMaxHealth
             };
         }

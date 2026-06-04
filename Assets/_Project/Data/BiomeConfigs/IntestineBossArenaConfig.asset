@@ -57,7 +57,7 @@ MonoBehaviour:
         leashRadius: 8
         idleDelayRange: {x: 0.5, y: 1.5}
         maxHealth: 30
-        attackDamage: 10
+        attackDamage: 2
         attackRange: 1.5
         attackCooldown: 1
         expReward: 10

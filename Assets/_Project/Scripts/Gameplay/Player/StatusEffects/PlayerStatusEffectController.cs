@@ -21,6 +21,7 @@ namespace Necrocis
 
         private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
         private readonly List<AttackPowerReduction> attackPowerReductions = new List<AttackPowerReduction>();
+        private readonly List<Coroutine> damageOverTimeRoutines = new List<Coroutine>();
         private Coroutine statusRoutine;
 
         private PlayerStats playerStats;
@@ -85,6 +86,22 @@ namespace Necrocis
             EnsureStatusRoutine();
         }
 
+        public void ApplyDamageOverTime(float duration, float tickInterval, float tickDamage)
+        {
+            if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)
+            {
+                return;
+            }
+
+            Coroutine routine = null;
+            routine = StartCoroutine(DamageOverTimeRoutine(
+                Mathf.Max(0.01f, duration),
+                Mathf.Max(0.01f, tickInterval),
+                tickDamage,
+                () => damageOverTimeRoutines.Remove(routine)));
+            damageOverTimeRoutines.Add(routine);
+        }
+
         public void CleanseTemporaryDebuffs()
         {
             if (playerStats == null)
@@ -100,6 +117,7 @@ namespace Necrocis
 
             moveSpeedSlows.Clear();
             attackPowerReductions.Clear();
+            StopDamageOverTimeRoutines();
             playerStats?.RemoveModifiersFromSource(this);
         }
 
@@ -132,6 +150,45 @@ namespace Necrocis
             }
 
             statusRoutine = null;
+        }
+
+        private IEnumerator DamageOverTimeRoutine(float duration, float tickInterval, float tickDamage, System.Action onComplete)
+        {
+            PlayerController player = GetComponent<PlayerController>();
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                float waitTime = Mathf.Min(tickInterval, duration - elapsed);
+                yield return new WaitForSeconds(waitTime);
+                elapsed += waitTime;
+
+                if (!isActiveAndEnabled)
+                {
+                    break;
+                }
+
+                if (player == null)
+                {
+                    player = GetComponent<PlayerController>();
+                }
+
+                player?.TakeDamage(tickDamage);
+            }
+
+            onComplete?.Invoke();
+        }
+
+        private void StopDamageOverTimeRoutines()
+        {
+            for (int i = 0; i < damageOverTimeRoutines.Count; i++)
+            {
+                if (damageOverTimeRoutines[i] != null)
+                {
+                    StopCoroutine(damageOverTimeRoutines[i]);
+                }
+            }
+
+            damageOverTimeRoutines.Clear();
         }
 
         private void RefreshTemporaryModifiers()
@@ -200,6 +257,7 @@ namespace Necrocis
 
             moveSpeedSlows.Clear();
             attackPowerReductions.Clear();
+            StopDamageOverTimeRoutines();
             statusRoutine = null;
         }
     }

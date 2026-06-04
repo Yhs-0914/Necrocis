@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   midBossArena:
     enabled: 1
-    onlyEnableOnLargeMaps: 1
+    onlyEnableOnLargeMaps: 0
     minimumMapWidth: 300
     minimumMapHeight: 300
     useCustomCenter: 0
@@ -38,17 +38,117 @@ MonoBehaviour:
     fogRevealDuration: 1.4
     interiorFogSortingOrderOffset: 3000
     boss:
-      displayName: MidBoss
-      useCustomBossRule: 0
+      displayName: StomachBoss
+      useCustomBossRule: 1
+      bossRule:
+        name: StomachBoss
+        density: 0
+        minDistance: 8
+        poissonSalt: 7203
+        allowedRegions:
+        maxAlive: 1
+        activationRadius: 0
+        respawnCooldown: 0
+        spawnRadius: 0
+        moveSpeed: 0.5
+        stoppingDistance: 0.1
+        wanderRadius: 4
+        chaseRadius: 16
+        leashRadius: 24
+        idleDelayRange: {x: 0.5, y: 1.2}
+        maxHealth: 170
+        attackDamage: 3
+        attackRange: 1.6
+        attackCooldown: 1
+        expReward: 0
+        additionalBaseStats: []
+        separationDistance: 0
+        separationStrength: 0
+        heightOffset: 0
+        scale: {x: 1.1, y: 1.1, z: 1.1}
+        sortingOrder: 1000
+        useBillboard: 1
+        useYSort: 1
+        animationSpeed: 0.14
+        addCollider: 1
+        isTrigger: 0
+        colliderSize: {x: 0.8, y: 1.15, z: 0.8}
+        colliderCenter: {x: 0, y: 0.58, z: 0}
+        idleSprites:
+        - {fileID: -1137617529, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: 47732035, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: -2112942602, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: 201702834, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: 736631994, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: 1225240302, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: -468804449, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: -1337087085, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        moveSprites:
+        - {fileID: 1979966403, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 1534210158, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: -1876251983, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: -1605393171, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 987380077, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 135733936, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: -686505990, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 109867631, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 373557875, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        attackSprites:
+        - {fileID: -219287335, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        - {fileID: -971799592, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        - {fileID: -775118714, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        - {fileID: 413590118, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        - {fileID: 1668681315, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        - {fileID: 22756975, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
+        attackSpritesUp: []
+        attackSpritesDown: []
+        attackAnimationSpeed: 0.12
+        isRanged: 0
+        projectileSpeed: 8
+        projectileLifeTime: 3
+        projectileSprite: {fileID: 0}
+        projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+        projectileSpawnOffset: 0.5
+        expandColliderOnAttack: 0
+        attackColliderSize: {x: 2, y: 2, z: 2}
+        attackColliderCenter: {x: 0, y: 0.55, z: 0}
+        deathSprites:
+        - {fileID: -2111205726, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: -1471284020, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: -411185497, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: -1910751373, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: 1898929759, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: 1018222662, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        - {fileID: 72321375, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
+        deathAnimationSpeed: 0.15
+        isElite: 0
+        tintColor: {r: 1, g: 1, b: 1, a: 1}
+        killTriggerEnemyName:
+        killTriggerCount: 0
+        splitsOnDeath: 0
+        splitCount: 0
+        splitEnemyName:
+        splitVfxSprites: []
+        splitVfxScale: 3
+        splitVfxSpeed: 0.08
+        splitVfxDuration: 0.6
+        chargesAtPlayer: 0
+        chargeSpeed: 6
+        chargeAccelTime: 0.3
+        leavesDebrisOnDeath: 0
+        debrisDuration: 5
+        debrisAggroRadius: 8
+        debrisVfxSprites: []
+        debrisVfxScale: 15
       useEnemyRuleFallback: 1
       fallbackEnemyRuleIndex: 0
-      patternType: 0
+      patternType: 4
       overrideStats: 0
       maxHealthMultiplier: 1
       attackDamageMultiplier: 1
       moveSpeedMultiplier: 1
-      scaleMultiplier: {x: 1, y: 1, z: 1}
-      minimumMaxHealth: 0
+      scaleMultiplier: {x: 4, y: 4, z: 4}
+      minimumMaxHealth: 170
       intestinePattern:
         phase2HealthRatio: 0.5
         phase1FleeDistance: 7
@@ -86,6 +186,79 @@ MonoBehaviour:
         dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
         parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
         shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      liverPattern:
+        phase2HealthRatio: 0.5
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        phase2AttackDamage: 2
+        phase2MoveSpeed: 1.5
+        bloodBombRange: 7
+        bloodBombExplosionRadius: 2.5
+        bloodBombFuseTime: 1
+        bloodBombCooldown: 4
+        attackPowerDebuffRatio: 0.15
+        attackPowerDebuffDuration: 5
+        bloodBombArcHeight: 1.4
+        bloodBombProjectileScale: 4
+        bloodBombSprite: {fileID: 473467103, guid: a71f4732a4349ab45b4b1d038597c5f8, type: 3}
+        healingPosePreDelay: 1
+        healingPoseCooldown: 15
+        healingPoseDuration: 5
+        damageHealRatio: 0.7
+        phase1PreferredDistanceRatio: 0.72
+        phase2PreferredDistance: 2.6
+        roamRadius: 9
+        phase1Color: {r: 0.78, g: 0.08, b: 0.12, a: 1}
+        phase2Color: {r: 0.52, g: 0.05, b: 0.1, a: 1}
+        healingPoseColor: {r: 1, g: 0.38, b: 0.52, a: 1}
+        bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
+        explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      stomachPattern:
+        phase2HealthRatio: 0.65
+        phase1AttackDamage: 3
+        phase1MoveSpeed: 0.5
+        phase2AttackDamage: 3
+        phase2MoveSpeed: 1
+        phase1MeleeRange: 1.6
+        phase1MeleeCooldown: 1.7
+        chargeSpeed: 4
+        chargeCooldown: 5
+        chargeDamage: 4
+        chargeKnockbackDistance: 2
+        chargeWindup: 0.35
+        chargeDuration: 1.2
+        chargeHitRadius: 1.25
+        phase2PatternInterval: 3
+        phase2PreferredDistance: 4
+        roamRadius: 9
+        acidRange: 9
+        acidDamage: 2
+        acidDebuffDuration: 5
+        acidTickInterval: 1
+        acidTickDamage: 1
+        acidProjectileTravelTime: 0.55
+        acidArcHeight: 0.8
+        acidProjectileScale: 0.9
+        acidHitRadius: 1.15
+        suctionRange: 6
+        suctionDuration: 0.65
+        suctionStopDistance: 1.05
+        shortRangeDamage: 5
+        shortRangeRadius: 1.8
+        spitKnockbackDistance: 1.6
+        phase1Color: {r: 0.62, g: 0.55, b: 0.34, a: 1}
+        phase2Color: {r: 0.42, g: 0.78, b: 0.2, a: 1}
+        chargeColor: {r: 0.95, g: 0.78, b: 0.22, a: 1}
+        acidColor: {r: 0.55, g: 0.95, b: 0.15, a: 0.95}
+        acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
+        suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
+        leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1

@@ -153,7 +153,7 @@ namespace Necrocis
             public float damage = 6f;
             public float bleedDuration = 3f;
             public float bleedTickInterval = 1f;
-            public float bleedTickDamage = 1.5f;
+            public float bleedTickDamage = 2f;
             public GameObject hitEffectPrefab;
             public float hitEffectLifetime = 0.5f;
             public float fallbackEffectScale = 0.8f;

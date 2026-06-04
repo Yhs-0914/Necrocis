@@ -11,6 +11,43 @@
 - 포털 시스템과 8방향 공격 스프라이트는 `gustlr` 변경을 가져왔다.
 - 보스 몹 구현은 기존 `kjh4845` 장 보스 작업을 유지했다.
 
+## Boss Create 작업 요약
+
+이번 작업에서는 장 보스 기준으로 간, 위, 폐 보스를 추가하고 보스 공통 전투 흐름을 정리했다.
+
+추가 보스:
+
+- 간 보스: 혈액 폭탄 투척, 공격력 감소 디버프, 2페이즈 회복 포즈 패턴을 구현했다.
+- 위 보스: 1페이즈 돌진, 2페이즈 소화액 원거리 공격과 흡입/토해내기 단거리 공격을 구현했다.
+- 폐 보스: 형제 보스 구조를 추가하고, 한 명이 죽으면 남은 보스가 광폭화되는 2페이즈를 구현했다.
+
+보스방/진행 규칙:
+
+- 장, 간, 위, 폐 보스 모두 보스방 가두리와 안개 설정을 공통 구조로 사용한다.
+- 보스 처치 후 귀환 포털은 보스 사망 위치가 아니라 보스방 중앙에 생성된다.
+- 허브에서 클리어된 바이옴 포털은 회색 비활성 상태로 표시된다.
+- 보스가 공격 또는 시전 중 사망하면 남아 있는 투사체, 임시 이펙트, 소환물을 즉시 정리한다.
+
+전투 판정/체력 UI:
+
+- 플레이어 원거리 공격이 보스나 일반 몹을 단일 타격했을 때 관통하지 않고 사라지도록 보정했다.
+- 플레이어 HP는 정수 단위로만 저장, 피해, 회복되도록 정리했다.
+- 하트 UI는 `1 HP = 반칸` 기준으로 정수 HP와 일치하게 표시된다.
+- 플레이어에게 들어가는 보스 피해 기본값과 데미지 틱 기본값에서 소수점 피해를 제거했다.
+
+관련 코드 및 설정:
+
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/IntestineBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/LiverBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/StomachBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/LungBossPattern.cs`
+- `Assets/_Project/Scripts/World/Biomes/BossArena/MidBossArenaController.cs`
+- `Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs`
+- `Assets/_Project/Scripts/World/Hub/HubRoom.cs`
+- `Assets/_Project/Scripts/Core/Stats/CharacterStats.cs`
+- `Assets/_Project/Scripts/UI/HUD/PlayerHeartUI.cs`
+- `Assets/_Project/Data/BiomeConfigs/*BossArenaConfig.asset`
+
 ## 스탯 시스템
 
 플레이어 기본 스탯을 `PlayerStats` 중심으로 다시 정리했다.

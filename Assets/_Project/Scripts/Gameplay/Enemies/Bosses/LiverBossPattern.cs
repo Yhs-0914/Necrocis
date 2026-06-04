@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -37,17 +38,12 @@ namespace Necrocis
         public float phase2PreferredDistance = 2.6f;
         public float roamRadius = 9f;
 
-        [Header("Drop")]
-        public float cleanseDropLifeTime = 90f;
-        public float cleanseDropPickupRadius = 0.85f;
-
         [Header("Temporary Visuals")]
         public Color phase1Color = new Color(0.78f, 0.08f, 0.12f, 1f);
         public Color phase2Color = new Color(0.52f, 0.05f, 0.1f, 1f);
         public Color healingPoseColor = new Color(1f, 0.38f, 0.52f, 1f);
         public Color bloodBombColor = new Color(0.7f, 0f, 0.04f, 0.96f);
         public Color explosionColor = new Color(0.9f, 0.05f, 0.08f, 0.45f);
-        public Color cleanseDropColor = new Color(0.35f, 0.95f, 1f, 1f);
 
         [Header("Debug")]
         public bool startInPhase2ForDebug = false;
@@ -97,17 +93,12 @@ namespace Necrocis
         [SerializeField] private float phase2PreferredDistance = 2.6f;
         [SerializeField] private float roamRadius = 9f;
 
-        [Header("Drop")]
-        [SerializeField] private float cleanseDropLifeTime = 90f;
-        [SerializeField] private float cleanseDropPickupRadius = 0.85f;
-
         [Header("Temporary Visuals")]
         [SerializeField] private Color phase1Color = new Color(0.78f, 0.08f, 0.12f, 1f);
         [SerializeField] private Color phase2Color = new Color(0.52f, 0.05f, 0.1f, 1f);
         [SerializeField] private Color healingPoseColor = new Color(1f, 0.38f, 0.52f, 1f);
         [SerializeField] private Color bloodBombColor = new Color(0.7f, 0f, 0.04f, 0.96f);
         [SerializeField] private Color explosionColor = new Color(0.9f, 0.05f, 0.08f, 0.45f);
-        [SerializeField] private Color cleanseDropColor = new Color(0.35f, 0.95f, 1f, 1f);
 
         [Header("Debug")]
         [SerializeField] private bool startInPhase2ForDebug = false;
@@ -116,11 +107,9 @@ namespace Necrocis
 
         private static Sprite bloodBombSprite;
         private static Sprite explosionSprite;
-        private static Sprite cleanseDropSprite;
 
         private EnemyController boss;
         private CharacterStats stats;
-        private Transform dropParent;
         private SpriteRenderer visualRenderer;
         private Vector3 anchorPosition;
         private Vector3 baseScale = Vector3.one;
@@ -129,7 +118,7 @@ namespace Necrocis
         private float nextHealingPoseTime;
         private bool actionRunning;
         private bool healingPoseActive;
-        private bool dropSpawned;
+        private readonly List<GameObject> activeTempObjects = new List<GameObject>();
 
         public void Initialize(EnemyController controller, Vector3 anchor, Transform parent, LiverBossPatternSettings settings = null)
         {
@@ -137,14 +126,12 @@ namespace Necrocis
 
             boss = controller != null ? controller : GetComponent<EnemyController>();
             stats = boss != null ? boss.Stats : GetComponent<CharacterStats>();
-            dropParent = parent;
             anchorPosition = anchor;
             phase = startInPhase2ForDebug ? BossPhase.Phase2 : BossPhase.Phase1;
             nextBloodBombTime = Time.time + 1f;
             nextHealingPoseTime = phase == BossPhase.Phase2 ? Time.time + GetHealingPoseCooldown() : float.PositiveInfinity;
             actionRunning = false;
             healingPoseActive = false;
-            dropSpawned = false;
             baseScale = transform.localScale;
             visualRenderer = GetComponentInChildren<SpriteRenderer>();
 
@@ -190,14 +177,11 @@ namespace Necrocis
             phase1PreferredDistanceRatio = settings.phase1PreferredDistanceRatio;
             phase2PreferredDistance = settings.phase2PreferredDistance;
             roamRadius = settings.roamRadius;
-            cleanseDropLifeTime = settings.cleanseDropLifeTime;
-            cleanseDropPickupRadius = settings.cleanseDropPickupRadius;
             phase1Color = settings.phase1Color;
             phase2Color = settings.phase2Color;
             healingPoseColor = settings.healingPoseColor;
             bloodBombColor = settings.bloodBombColor;
             explosionColor = settings.explosionColor;
-            cleanseDropColor = settings.cleanseDropColor;
             startInPhase2ForDebug = settings.startInPhase2ForDebug;
             useFastPatternCooldownsForDebug = settings.useFastPatternCooldownsForDebug;
             fastPatternCooldown = settings.fastPatternCooldown;
@@ -205,7 +189,9 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            StopAllCoroutines();
             healingPoseActive = false;
+            CleanupPatternObjects();
 
             if (boss != null)
             {
@@ -213,6 +199,20 @@ namespace Necrocis
                 boss.Defeated -= HandleBossDefeated;
                 boss.SetAiSuppressed(false);
             }
+        }
+
+        private void HandleBossDefeated(EnemyController defeatedBoss)
+        {
+            if (defeatedBoss != boss)
+            {
+                return;
+            }
+
+            StopAllCoroutines();
+            actionRunning = false;
+            healingPoseActive = false;
+            transform.localScale = baseScale;
+            CleanupPatternObjects();
         }
 
         public string CurrentPhaseName => phase.ToString();
@@ -493,41 +493,6 @@ namespace Necrocis
             stats.RestoreHealth(appliedDamage * damageHealRatio);
         }
 
-        private void HandleBossDefeated(EnemyController defeatedBoss)
-        {
-            if (defeatedBoss != boss || dropSpawned)
-            {
-                return;
-            }
-
-            dropSpawned = true;
-            SpawnCleanseDrop(defeatedBoss.transform.position);
-        }
-
-        private void SpawnCleanseDrop(Vector3 position)
-        {
-            position.y = GetGroundHeight(position) + 0.2f;
-            GameObject obj = CreateTempSpriteObject(
-                "LiverBoss_DebuffCleanseDrop",
-                GetCleanseDropSprite(),
-                cleanseDropColor,
-                position,
-                0.9f,
-                3600);
-            obj.transform.SetParent(dropParent != null ? dropParent : transform.parent, true);
-
-            SphereCollider collider = obj.AddComponent<SphereCollider>();
-            collider.isTrigger = true;
-            collider.radius = Mathf.Max(0.1f, cleanseDropPickupRadius);
-
-            Rigidbody body = obj.AddComponent<Rigidbody>();
-            body.useGravity = false;
-            body.isKinematic = true;
-
-            LiverDebuffCleansePickup pickup = obj.AddComponent<LiverDebuffCleansePickup>();
-            pickup.Initialize(cleanseDropLifeTime);
-        }
-
         private void ApplyPhaseStats()
         {
             if (stats == null)
@@ -670,11 +635,12 @@ namespace Necrocis
             status.ApplyAttackPowerReduction(reductionRatio, duration);
         }
 
-        private static GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
+        private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
             GameObject obj = new GameObject(name);
             obj.transform.position = position;
             obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
+            activeTempObjects.Add(obj);
 
             SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
@@ -684,6 +650,20 @@ namespace Necrocis
             Billboard billboard = obj.AddComponent<Billboard>();
             billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
             return obj;
+        }
+
+        private void CleanupPatternObjects()
+        {
+            for (int i = 0; i < activeTempObjects.Count; i++)
+            {
+                if (activeTempObjects[i] != null)
+                {
+                    activeTempObjects[i].SetActive(false);
+                    Destroy(activeTempObjects[i]);
+                }
+            }
+
+            activeTempObjects.Clear();
         }
 
         private Sprite GetBloodBombSprite()
@@ -709,16 +689,6 @@ namespace Necrocis
             }
 
             return explosionSprite;
-        }
-
-        private static Sprite GetCleanseDropSprite()
-        {
-            if (cleanseDropSprite == null)
-            {
-                cleanseDropSprite = CreateCleanseSprite();
-            }
-
-            return cleanseDropSprite;
         }
 
         private static Sprite CreateCircleSprite(string name, int size, float radiusRatio, bool filled)
@@ -757,80 +727,5 @@ namespace Necrocis
             return sprite;
         }
 
-        private static Sprite CreateCleanseSprite()
-        {
-            const int size = 48;
-            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.filterMode = FilterMode.Point;
-            float center = (size - 1) * 0.5f;
-            float radius = center * 0.78f;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
-                    bool inCircle = distance <= radius;
-                    bool inCross = Mathf.Abs(dx) <= 4f && Mathf.Abs(dy) <= 14f
-                        || Mathf.Abs(dy) <= 4f && Mathf.Abs(dx) <= 14f;
-                    float alpha = inCircle || inCross ? 1f : 0f;
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
-            }
-
-            texture.Apply();
-            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
-            sprite.name = "TempCleanseDropSprite";
-            return sprite;
-        }
-
-        private class LiverDebuffCleansePickup : MonoBehaviour
-        {
-            private float destroyTime;
-            private Vector3 baseScale;
-
-            public void Initialize(float lifeTime)
-            {
-                destroyTime = Time.time + Mathf.Max(1f, lifeTime);
-                baseScale = transform.localScale;
-            }
-
-            private void Update()
-            {
-                if (Time.time >= destroyTime)
-                {
-                    Destroy(gameObject);
-                    return;
-                }
-
-                float pulse = 1f + Mathf.Sin(Time.time * 5f) * 0.08f;
-                transform.localScale = baseScale * pulse;
-            }
-
-            private void OnTriggerEnter(Collider other)
-            {
-                PlayerController player = other != null ? other.GetComponent<PlayerController>() : null;
-                if (player == null && other != null)
-                {
-                    player = other.GetComponentInParent<PlayerController>();
-                }
-
-                if (player == null)
-                {
-                    return;
-                }
-
-                PlayerStatusEffectController status = player.GetComponent<PlayerStatusEffectController>();
-                if (status == null)
-                {
-                    status = player.gameObject.AddComponent<PlayerStatusEffectController>();
-                }
-
-                status.CleanseTemporaryDebuffs();
-                Destroy(gameObject);
-            }
-        }
     }
 }

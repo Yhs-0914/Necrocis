@@ -212,14 +212,11 @@ MonoBehaviour:
         phase1PreferredDistanceRatio: 0.72
         phase2PreferredDistance: 2.6
         roamRadius: 9
-        cleanseDropLifeTime: 90
-        cleanseDropPickupRadius: 0.85
         phase1Color: {r: 0.78, g: 0.08, b: 0.12, a: 1}
         phase2Color: {r: 0.52, g: 0.05, b: 0.1, a: 1}
         healingPoseColor: {r: 1, g: 0.38, b: 0.52, a: 1}
         bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
         explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
-        cleanseDropColor: {r: 0.35, g: 0.95, b: 1, a: 1}
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1

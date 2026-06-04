@@ -127,6 +127,8 @@ namespace Necrocis
     /// </summary>
     public class CharacterStats : MonoBehaviour
     {
+        private const float HealthUnitEpsilon = 0.0001f;
+
         private readonly Dictionary<CharacterStatType, float> baseStatValues = new Dictionary<CharacterStatType, float>();   // 기본 스탯값
         private readonly Dictionary<CharacterStatType, float> finalStatValues = new Dictionary<CharacterStatType, float>(); // 모디파이어 적용 후 최종값
         private readonly List<CharacterStatModifier> modifiers = new List<CharacterStatModifier>(); // 활성 모디파이어 목록
@@ -136,7 +138,7 @@ namespace Necrocis
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged;   // 스탯 변경 이벤트
         public event Action<CharacterStats, CharacterHealthChangedEventArgs> HealthChanged; // HP 변경 이벤트
 
-        public float MaxHealth => GetValue(CharacterStatType.MaxHealth);
+        public float MaxHealth => ToHealthUnits(GetValue(CharacterStatType.MaxHealth));
         public float MoveSpeed => GetValue(CharacterStatType.MoveSpeed);
         public float AttackPower => GetValue(CharacterStatType.AttackPower);
         public float AttackSpeed => GetValue(CharacterStatType.AttackSpeed);
@@ -176,7 +178,7 @@ namespace Necrocis
             }
             else
             {
-                currentHealth = Mathf.Clamp(currentHealth, 0f, MaxHealth);
+                currentHealth = ClampHealthUnits(currentHealth);
             }
 
             NotifyHealthChanged(previousCurrentHealth, previousMaxHealth, true);
@@ -198,7 +200,7 @@ namespace Necrocis
 
             if (statType == CharacterStatType.MaxHealth)
             {
-                currentHealth = restoreHealthToMax ? MaxHealth : Mathf.Clamp(currentHealth, 0f, MaxHealth);
+                currentHealth = restoreHealthToMax ? MaxHealth : ClampHealthUnits(currentHealth);
                 NotifyHealthChanged(previousCurrentHealth, previousMaxHealth, true);
             }
         }
@@ -298,8 +300,9 @@ namespace Necrocis
                 return 0f;
             }
 
-            float previousCurrentHealth = currentHealth;
-            currentHealth = Mathf.Max(0f, currentHealth - damage);
+            float damageUnits = ToHealthDeltaUnits(damage);
+            float previousCurrentHealth = ToHealthUnits(currentHealth);
+            currentHealth = Mathf.Max(0f, previousCurrentHealth - damageUnits);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
             return previousCurrentHealth - currentHealth;
         }
@@ -312,8 +315,9 @@ namespace Necrocis
                 return 0f;
             }
 
-            float previousCurrentHealth = currentHealth;
-            currentHealth = Mathf.Min(MaxHealth, currentHealth + amount);
+            float healUnits = ToHealthDeltaUnits(amount);
+            float previousCurrentHealth = ToHealthUnits(currentHealth);
+            currentHealth = Mathf.Min(MaxHealth, previousCurrentHealth + healUnits);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
             return currentHealth - previousCurrentHealth;
         }
@@ -329,8 +333,33 @@ namespace Necrocis
         // 스탯 재계산 후 HP가 최대HP를 초과하지 않도록 클램핑
         private void ClampHealthAfterStatRefresh(float previousCurrentHealth, float previousMaxHealth)
         {
-            currentHealth = Mathf.Clamp(currentHealth, 0f, MaxHealth);
+            currentHealth = ClampHealthUnits(currentHealth);
             NotifyHealthChanged(previousCurrentHealth, previousMaxHealth, false);
+        }
+
+        private float ClampHealthUnits(float value)
+        {
+            return Mathf.Clamp(ToHealthUnits(value), 0f, MaxHealth);
+        }
+
+        private static float ToHealthUnits(float value)
+        {
+            if (value <= 0f)
+            {
+                return 0f;
+            }
+
+            return Mathf.Floor(value + 0.5f + HealthUnitEpsilon);
+        }
+
+        private static float ToHealthDeltaUnits(float value)
+        {
+            if (value <= 0f)
+            {
+                return 0f;
+            }
+
+            return Mathf.Max(1f, Mathf.Ceil(value - HealthUnitEpsilon));
         }
 
         // HP 변경 이벤트 발행 (force=true면 값 변화 없어도 강제 발행)

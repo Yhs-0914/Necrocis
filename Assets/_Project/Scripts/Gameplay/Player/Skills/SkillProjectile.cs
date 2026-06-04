@@ -145,7 +145,7 @@ namespace Necrocis
                     continue;
                 }
 
-                if (TryApplyHit(collider) && disableOnHit)
+                if (TryApplyHit(collider) && hasImpacted)
                 {
                     break;
                 }
@@ -201,13 +201,23 @@ namespace Necrocis
             onEnemyHit?.Invoke(enemy, transform.position);
             SpawnHitEffect(transform.position);
 
-            if (disableOnHit)
+            if (disableOnHit || IsBossTarget(enemy))
             {
                 hasImpacted = true;
                 ReleaseSelf();
             }
 
             return true;
+        }
+
+        private static bool IsBossTarget(EnemyController enemy)
+        {
+            return enemy != null
+                && (enemy.GetComponent<IntestineBossPattern>() != null
+                    || enemy.GetComponent<LiverBossPattern>() != null
+                    || enemy.GetComponent<StomachBossPattern>() != null
+                    || enemy.GetComponent<LungBossPattern>() != null
+                    || enemy.GetComponentInParent<MidBossArenaController>() != null);
         }
 
         private static EnemyStatusEffectController EnsureStatusController(EnemyController enemy)

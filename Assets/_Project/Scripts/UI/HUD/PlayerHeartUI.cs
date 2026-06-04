@@ -36,7 +36,7 @@ namespace Necrocis
         [SerializeField] private float spacing = 4f;
 
         [Header("Heart Mapping")]
-        [SerializeField] private float healthPerHeart = 2f;
+        [SerializeField] private int healthPerHeart = 2;
         [SerializeField] private int maxVisibleHearts = 12;
         [SerializeField] private Color emptyHeartTint = new Color(1f, 1f, 1f, 0.35f);
 
@@ -270,8 +270,10 @@ namespace Necrocis
                 return;
             }
 
-            float valuePerHeart = Mathf.Max(0.5f, healthPerHeart);
-            int totalHearts = Mathf.Max(1, Mathf.CeilToInt(maxHealth / valuePerHeart));
+            int valuePerHeart = Mathf.Max(1, healthPerHeart);
+            int maxHealthUnits = Mathf.Max(0, Mathf.RoundToInt(maxHealth));
+            int currentHealthUnits = Mathf.Clamp(Mathf.RoundToInt(currentHealth), 0, maxHealthUnits);
+            int totalHearts = Mathf.Max(1, (maxHealthUnits + valuePerHeart - 1) / valuePerHeart);
             if (maxVisibleHearts > 0)
             {
                 totalHearts = Mathf.Min(totalHearts, maxVisibleHearts);
@@ -280,16 +282,12 @@ namespace Necrocis
             ApplyContainerLayoutSettings();
             ApplyHeartSizeToExisting(force: false);
 
-            float halfUnit = valuePerHeart * 0.5f;
-            int filledHalfUnits = Mathf.Clamp(
-                Mathf.FloorToInt((Mathf.Max(0f, currentHealth) + 0.001f) / halfUnit),
-                0,
-                totalHearts * 2);
+            int filledUnits = Mathf.Clamp(currentHealthUnits, 0, totalHearts * valuePerHeart);
 
             for (int i = 0; i < totalHearts; i++)
             {
-                int units = Mathf.Clamp(filledHalfUnits - (i * 2), 0, 2);
-                ApplyHeartState(heartImages[i], units);
+                int units = Mathf.Clamp(filledUnits - (i * valuePerHeart), 0, valuePerHeart);
+                ApplyHeartState(heartImages[i], ToHeartSpriteUnits(units, valuePerHeart));
             }
         }
 
@@ -428,6 +426,16 @@ namespace Necrocis
 
             image.sprite = emptyHeartSprite != null ? emptyHeartSprite : fullHeartSprite;
             image.color = emptyHeartSprite != null ? Color.white : emptyHeartTint;
+        }
+
+        private static int ToHeartSpriteUnits(int healthUnitsInHeart, int valuePerHeart)
+        {
+            if (healthUnitsInHeart <= 0)
+            {
+                return 0;
+            }
+
+            return healthUnitsInHeart >= valuePerHeart ? 2 : 1;
         }
     }
 }

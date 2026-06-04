@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -141,6 +142,8 @@ namespace Necrocis
         private float nextDungTime;
         private float nextStompTime;
         private bool actionRunning;
+        private readonly List<GameObject> activeTempObjects = new List<GameObject>();
+        private readonly List<EnemyController> activeSummons = new List<EnemyController>();
 
         public void Initialize(EnemyController controller, Vector3 anchor, Transform parent, IntestineBossPatternSettings settings = null)
         {
@@ -163,6 +166,8 @@ namespace Necrocis
             if (boss != null)
             {
                 boss.SetAiSuppressed(true);
+                boss.Defeated -= HandleBossDefeated;
+                boss.Defeated += HandleBossDefeated;
             }
 
             ApplyPhaseVisual();
@@ -219,10 +224,27 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            StopAllCoroutines();
+            CleanupPatternObjects();
+
             if (boss != null)
             {
+                boss.Defeated -= HandleBossDefeated;
                 boss.SetAiSuppressed(false);
             }
+        }
+
+        private void HandleBossDefeated(EnemyController defeatedBoss)
+        {
+            if (defeatedBoss != boss)
+            {
+                return;
+            }
+
+            StopAllCoroutines();
+            actionRunning = false;
+            transform.localScale = baseScale;
+            CleanupPatternObjects();
         }
 
         public string CurrentPhaseName => phase.ToString();
@@ -527,6 +549,7 @@ namespace Necrocis
                 parasite.Configure(null, rule, center, spawnPosition);
                 parasite.SetIgnoreMidBossArenaRestriction(true);
                 ApplyParasiteVisual(parasite);
+                activeSummons.Add(parasite);
             }
         }
 
@@ -635,11 +658,12 @@ namespace Necrocis
             status.ApplyMoveSpeedSlow(slowRatio, duration);
         }
 
-        private static GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
+        private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
             GameObject obj = new GameObject(name);
             obj.transform.position = position;
             obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
+            activeTempObjects.Add(obj);
 
             SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
@@ -649,6 +673,31 @@ namespace Necrocis
             Billboard billboard = obj.AddComponent<Billboard>();
             billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
             return obj;
+        }
+
+        private void CleanupPatternObjects()
+        {
+            for (int i = 0; i < activeTempObjects.Count; i++)
+            {
+                if (activeTempObjects[i] != null)
+                {
+                    activeTempObjects[i].SetActive(false);
+                    Destroy(activeTempObjects[i]);
+                }
+            }
+
+            activeTempObjects.Clear();
+
+            for (int i = 0; i < activeSummons.Count; i++)
+            {
+                EnemyController summon = activeSummons[i];
+                if (summon != null && summon.gameObject.activeInHierarchy && !summon.IsDead)
+                {
+                    summon.ReleaseToPool();
+                }
+            }
+
+            activeSummons.Clear();
         }
 
         private EnemySpawnRuleConfig GetParasiteRule()
