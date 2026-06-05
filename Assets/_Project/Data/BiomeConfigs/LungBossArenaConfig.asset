@@ -72,8 +72,8 @@ MonoBehaviour:
         animationSpeed: 0.14
         addCollider: 1
         isTrigger: 0
-        colliderSize: {x: 0.65, y: 0.95, z: 0.65}
-        colliderCenter: {x: 0, y: 0.48, z: 0}
+        colliderSize: {x: 0.95, y: 1.65, z: 0.95}
+        colliderCenter: {x: 0, y: 0.82, z: 0}
         idleSprites:
         - {fileID: 355525813, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
         - {fileID: -777785260, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
