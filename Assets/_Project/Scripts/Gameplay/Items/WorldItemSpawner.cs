@@ -6,8 +6,10 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class WorldItemSpawner : MonoBehaviour
     {
+        private const string ItemBoxSpriteConfigResourcePath = "WorldItemBoxSpriteConfig";
+
         [Header("Biome Scope")]
-        [SerializeField] private bool spawnOnlyInIntestine = true;
+        [SerializeField] private bool spawnOnlyInIntestine = false;
 
         [Header("Spawn")]
         [SerializeField, Min(1)] private int spawnCount = 3;
@@ -23,6 +25,11 @@ namespace Necrocis
 
         [Header("Visual")]
         [SerializeField] private Sprite fallbackWorldItemSprite;
+        [SerializeField] private Sprite itemBoxClosedSprite;
+        [SerializeField] private Sprite itemBoxOpenSprite;
+        [SerializeField, Min(0.1f)] private float itemBoxTargetHeight = 1.35f;
+        [SerializeField, Min(0.1f)] private float itemBoxTriggerWidth = 1.25f;
+        [SerializeField, Min(0.1f)] private float itemBoxTriggerHeight = 1.35f;
         [SerializeField] private int sortingOrder = 250;
 
         [Header("Runtime")]
@@ -30,6 +37,7 @@ namespace Necrocis
 
         private bool spawned;
         private readonly List<Vector3> spawnedPositions = new List<Vector3>();
+        private WorldItemBoxSpriteConfig itemBoxSpriteConfig;
 
         private void Start()
         {
@@ -201,6 +209,51 @@ namespace Necrocis
             }
 
             return false;
+        }
+
+        public bool TrySpawnSingleRandomItemAt(Vector3 worldPosition)
+        {
+            PlayerItemManager itemManager = PlayerItemManager.Instance;
+            if (itemManager == null)
+            {
+                return false;
+            }
+
+            if (itemManager.ItemEntries == null || itemManager.ItemEntries.Count == 0)
+            {
+                itemManager.PopulateBasicProjectileTemplateItems();
+            }
+
+            List<PlayerItemManager.PlayerItemEntry> candidates = BuildCandidates(itemManager.ItemEntries);
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            if (biome == null)
+            {
+                return false;
+            }
+
+            if (spawnOnlyInIntestine && biome.BiomeType != BiomeType.Intestine)
+            {
+                return false;
+            }
+
+            Vector2Int grid = biome.WorldToGrid(worldPosition);
+            if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
+            {
+                return TrySpawnSingleRandomItemNear(worldPosition, 2.5f);
+            }
+
+            Vector3 spawnPos = biome.GridToWorld(grid.x, grid.y);
+            spawnPos.y = biome.GetGroundHeight(grid.x, grid.y) + itemGroundOffset;
+
+            PlayerItemManager.PlayerItemEntry selected = candidates[Random.Range(0, candidates.Count)];
+            SpawnItemObject(selected, spawnPos);
+            spawnedPositions.Add(spawnPos);
+            return true;
         }
 
         private List<PlayerItemManager.PlayerItemEntry> BuildCandidates(IReadOnlyList<PlayerItemManager.PlayerItemEntry> entries)
@@ -433,15 +486,19 @@ namespace Necrocis
 
         private void SpawnItemObject(PlayerItemManager.PlayerItemEntry entry, Vector3 worldPosition)
         {
-            GameObject itemObject = new GameObject($"WorldItem_{entry.ItemId}");
+            Sprite itemSprite = entry.Icon != null ? entry.Icon : fallbackWorldItemSprite;
+            Sprite closedSprite = ResolveItemBoxClosedSprite();
+            Sprite openSprite = ResolveItemBoxOpenSprite();
+
+            GameObject itemObject = new GameObject($"ItemBox_{entry.ItemId}");
             itemObject.transform.SetParent(transform, true);
             itemObject.transform.position = worldPosition;
+            itemObject.transform.localScale = Vector3.one * ResolveItemBoxScale(closedSprite);
 
-            Sprite sprite = entry.Icon != null ? entry.Icon : fallbackWorldItemSprite;
-            if (sprite != null)
+            if (closedSprite != null)
             {
                 SpriteRenderer renderer = itemObject.AddComponent<SpriteRenderer>();
-                renderer.sprite = sprite;
+                renderer.sprite = closedSprite;
                 renderer.sortingOrder = sortingOrder;
 
                 Billboard billboard = itemObject.AddComponent<Billboard>();
@@ -463,17 +520,89 @@ namespace Necrocis
                 Renderer markerRenderer = marker.GetComponent<Renderer>();
                 if (markerRenderer != null && markerRenderer.material != null)
                 {
-                    markerRenderer.material.color = new Color(0.8f, 1f, 0.25f, 1f);
+                    markerRenderer.material.color = new Color(0.7f, 0.35f, 0.12f, 1f);
                 }
             }
 
             BoxCollider collider = itemObject.AddComponent<BoxCollider>();
             collider.isTrigger = true;
-            collider.size = new Vector3(1f, 1.2f, 1f);
-            collider.center = new Vector3(0f, 0.6f, 0f);
+            float itemBoxScale = Mathf.Max(0.001f, itemObject.transform.localScale.x);
+            collider.size = new Vector3(itemBoxTriggerWidth / itemBoxScale, itemBoxTriggerHeight / itemBoxScale, itemBoxTriggerWidth / itemBoxScale);
+            collider.center = new Vector3(0f, (itemBoxTriggerHeight * 0.5f) / itemBoxScale, 0f);
 
-            WorldItemPickup pickup = itemObject.AddComponent<WorldItemPickup>();
-            pickup.Initialize(entry.ItemId, entry.DisplayName);
+            WorldItemBoxPickup pickup = itemObject.AddComponent<WorldItemBoxPickup>();
+            pickup.Initialize(entry.ItemId, entry.DisplayName, closedSprite, openSprite, itemSprite, sortingOrder);
+        }
+
+        private float ResolveItemBoxScale(Sprite sprite)
+        {
+            if (sprite == null || sprite.bounds.size.y <= 0.0001f)
+            {
+                return 1f;
+            }
+
+            return Mathf.Max(0.001f, itemBoxTargetHeight / sprite.bounds.size.y);
+        }
+
+        private Sprite ResolveItemBoxClosedSprite()
+        {
+            if (itemBoxClosedSprite != null)
+            {
+                return itemBoxClosedSprite;
+            }
+
+            itemBoxClosedSprite = Resources.Load<Sprite>("Item/Box/ItemBox_close");
+            if (itemBoxClosedSprite == null)
+            {
+                WorldItemBoxSpriteConfig config = ResolveItemBoxSpriteConfig();
+                if (config != null)
+                {
+                    itemBoxClosedSprite = config.ClosedSprite;
+                }
+            }
+#if UNITY_EDITOR
+            if (itemBoxClosedSprite == null)
+            {
+                itemBoxClosedSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Images/Item/Box/ItemBox_close.png");
+            }
+#endif
+            return itemBoxClosedSprite;
+        }
+
+        private Sprite ResolveItemBoxOpenSprite()
+        {
+            if (itemBoxOpenSprite != null)
+            {
+                return itemBoxOpenSprite;
+            }
+
+            itemBoxOpenSprite = Resources.Load<Sprite>("Item/Box/ItemBox_open");
+            if (itemBoxOpenSprite == null)
+            {
+                WorldItemBoxSpriteConfig config = ResolveItemBoxSpriteConfig();
+                if (config != null)
+                {
+                    itemBoxOpenSprite = config.OpenSprite;
+                }
+            }
+#if UNITY_EDITOR
+            if (itemBoxOpenSprite == null)
+            {
+                itemBoxOpenSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Images/Item/Box/ItemBox_open.png");
+            }
+#endif
+            return itemBoxOpenSprite;
+        }
+
+        private WorldItemBoxSpriteConfig ResolveItemBoxSpriteConfig()
+        {
+            if (itemBoxSpriteConfig != null)
+            {
+                return itemBoxSpriteConfig;
+            }
+
+            itemBoxSpriteConfig = Resources.Load<WorldItemBoxSpriteConfig>(ItemBoxSpriteConfigResourcePath);
+            return itemBoxSpriteConfig;
         }
 
         private static void Shuffle<T>(List<T> list)

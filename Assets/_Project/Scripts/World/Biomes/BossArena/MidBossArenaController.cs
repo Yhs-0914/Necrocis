@@ -285,7 +285,7 @@ namespace Necrocis
                 spawner = biome.gameObject.AddComponent<WorldItemSpawner>();
             }
 
-            bool spawnedItem = spawner.TrySpawnSingleRandomItemNear(bossDeathPos, 2.5f);
+            bool spawnedItem = spawner.TrySpawnSingleRandomItemAt(bossDeathPos);
             if (!spawnedItem)
             {
                 Debug.Log("[MidBossArena] 보스 보너스 아이템 드랍 위치를 찾지 못했습니다.");
