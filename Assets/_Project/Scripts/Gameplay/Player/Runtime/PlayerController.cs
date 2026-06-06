@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace Necrocis
 {
@@ -88,6 +89,11 @@ namespace Necrocis
         [SerializeField] private float lockedY = -2f;
         [SerializeField] private float groundOffsetY = -2f;
         [SerializeField] private bool useDynamicGroundHeight = true;
+        [SerializeField] private float fallHeightSpeed = 4f;
+
+        [Header("Climb")]
+        [SerializeField] private float climbHoldDuration = 2f;
+        [SerializeField] private float climbInputGraceDistance = 0.2f;
 
         // 4諛⑺뼢 ?닿굅??(?ㅽ봽?쇱씠???좊땲硫붿씠??諛?怨듦꺽 諛⑺뼢??
         public enum Direction { Down, Up, Left, Right }
@@ -115,6 +121,12 @@ namespace Necrocis
         private bool deathHandled;                 // ?щ쭩 泥섎━ ?꾨즺 ?щ? (以묐났 諛⑹?)
 
         // ?몃? ?묎렐???꾨줈?쇳떚 (PlayerStats媛 ?놁쑝硫??덉쟾??湲곕낯媛?諛섑솚)
+        private float climbHoldTimer;
+        private Vector2Int climbTargetGrid;
+        private bool hasClimbTarget;
+        private GameObject climbPromptRoot;
+        private Image climbPromptKey;
+
         public PlayerStats Stats => playerStats;
         public CharacterStats RuntimeStats => playerStats != null ? playerStats.RuntimeStats : null;
         public float MoveSpeed => playerStats != null ? playerStats.MoveSpeed : 0f;
@@ -170,6 +182,7 @@ namespace Necrocis
             }
             ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
             ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
+            CreateClimbPrompt();
 
             // 臾쇰━ 而댄룷?뚰듃 ?뺤씤
             rb = GetComponent<Rigidbody>();
@@ -211,6 +224,8 @@ namespace Necrocis
         private void Update()
         {
             HandleInput();
+            UpdateClimbPrompt();
+            HandleClimbInput();
             UpdateAnimation();
             ApplyLockedRotation();
         }
@@ -404,6 +419,11 @@ namespace Necrocis
         // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
+            if (hasClimbTarget)
+            {
+                return false;
+            }
+
             BiomeManager biome = BiomeManager.Active;
             if (biome == null)
             {
@@ -457,6 +477,193 @@ namespace Necrocis
         // ApplyMove: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         // ?ㅼ젣 ?대룞 ?곸슜: CharacterController > Rigidbody > Transform ?곗꽑?쒖쐞
+        private void HandleClimbInput()
+        {
+            InputManager input = InputManager.Instance;
+            if (input == null || input.ClimbAction == null || deathHandled)
+            {
+                ResetClimbHold();
+                return;
+            }
+
+            if (!input.ClimbAction.IsPressed())
+            {
+                ResetClimbHold();
+                return;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            if (biome == null)
+            {
+                ResetClimbHold();
+                return;
+            }
+
+            Vector2Int currentGrid = biome.WorldToGrid(transform.position);
+            if (!TryFindClimbDestination(biome, currentGrid, out Vector2Int targetGrid))
+            {
+                ResetClimbHold();
+                return;
+            }
+
+            if (!hasClimbTarget || climbTargetGrid != targetGrid)
+            {
+                hasClimbTarget = true;
+                climbTargetGrid = targetGrid;
+                climbHoldTimer = 0f;
+            }
+
+            movement = Vector3.zero;
+            isMoving = false;
+            climbHoldTimer += Time.deltaTime;
+
+            if (climbHoldTimer >= climbHoldDuration)
+            {
+                CompleteClimb(biome, targetGrid);
+            }
+        }
+
+        private void CreateClimbPrompt()
+        {
+            climbPromptRoot = new GameObject("ClimbPrompt", typeof(RectTransform), typeof(Canvas), typeof(Image));
+            climbPromptRoot.transform.SetParent(transform, false);
+            climbPromptRoot.transform.localPosition = new Vector3(0f, 0.2f, 0f);
+            climbPromptRoot.transform.localScale = Vector3.one * 0.0018f;
+
+            Canvas canvas = climbPromptRoot.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            canvas.sortingOrder = 5000;
+
+            RectTransform rootRect = climbPromptRoot.GetComponent<RectTransform>();
+            rootRect.sizeDelta = new Vector2(130f, 62f);
+            Image bubble = climbPromptRoot.GetComponent<Image>();
+            bubble.color = new Color(1f, 0.96f, 0.98f, 0.96f);
+            bubble.raycastTarget = false;
+
+            Billboard billboard = climbPromptRoot.AddComponent<Billboard>();
+            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+
+            GameObject keyObject = new GameObject("SpaceKey", typeof(RectTransform), typeof(Image));
+            keyObject.transform.SetParent(climbPromptRoot.transform, false);
+            RectTransform keyRect = keyObject.GetComponent<RectTransform>();
+            keyRect.anchorMin = keyRect.anchorMax = new Vector2(0.5f, 0.5f);
+            keyRect.sizeDelta = new Vector2(98f, 34f);
+            keyRect.anchoredPosition = new Vector2(0f, 5f);
+            climbPromptKey = keyObject.GetComponent<Image>();
+            climbPromptKey.color = new Color(0.15f, 0.04f, 0.11f, 1f);
+            climbPromptKey.raycastTarget = false;
+
+            GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelObject.transform.SetParent(keyObject.transform, false);
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            Text label = labelObject.GetComponent<Text>();
+            label.text = "SPACE";
+            label.alignment = TextAnchor.MiddleCenter;
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 17;
+            label.fontStyle = FontStyle.Bold;
+            label.color = Color.white;
+            label.raycastTarget = false;
+
+            GameObject tailObject = new GameObject("Tail", typeof(RectTransform), typeof(Image));
+            tailObject.transform.SetParent(climbPromptRoot.transform, false);
+            RectTransform tailRect = tailObject.GetComponent<RectTransform>();
+            tailRect.anchorMin = tailRect.anchorMax = new Vector2(0.5f, 0f);
+            tailRect.sizeDelta = new Vector2(15f, 15f);
+            tailRect.anchoredPosition = new Vector2(0f, -7f);
+            tailRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            Image tail = tailObject.GetComponent<Image>();
+            tail.color = bubble.color;
+            tail.raycastTarget = false;
+            tailObject.transform.SetAsFirstSibling();
+
+            climbPromptRoot.SetActive(false);
+        }
+
+        private void UpdateClimbPrompt()
+        {
+            if (climbPromptRoot == null)
+            {
+                return;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            bool canClimb = !deathHandled
+                && biome != null
+                && TryFindClimbDestination(biome, biome.WorldToGrid(transform.position), out _);
+
+            climbPromptRoot.SetActive(canClimb);
+            if (canClimb && climbPromptKey != null)
+            {
+                climbPromptKey.color = InputManager.Instance.ClimbAction.IsPressed()
+                    ? new Color(0.82f, 0.15f, 0.32f, 1f)
+                    : new Color(0.15f, 0.04f, 0.11f, 1f);
+            }
+        }
+
+        private bool TryFindClimbDestination(BiomeManager biome, Vector2Int currentGrid, out Vector2Int targetGrid)
+        {
+            Vector2Int facingDirection = GetFacingGridDirection();
+            if (biome.TryGetClimbDestination(currentGrid, facingDirection, out targetGrid))
+            {
+                return true;
+            }
+
+            Vector2Int[] fallbackDirections =
+            {
+                Vector2Int.up,
+                Vector2Int.down,
+                Vector2Int.left,
+                Vector2Int.right
+            };
+
+            foreach (Vector2Int direction in fallbackDirections)
+            {
+                if (direction == facingDirection)
+                {
+                    continue;
+                }
+
+                if (biome.TryGetClimbDestination(currentGrid, direction, out targetGrid))
+                {
+                    return true;
+                }
+            }
+
+            targetGrid = default;
+            return false;
+        }
+
+        private Vector2Int GetFacingGridDirection()
+        {
+            return currentDirection switch
+            {
+                Direction.Down => Vector2Int.down,
+                Direction.Up => Vector2Int.up,
+                Direction.Left => Vector2Int.left,
+                Direction.Right => Vector2Int.right,
+                _ => Vector2Int.up
+            };
+        }
+
+        private void CompleteClimb(BiomeManager biome, Vector2Int targetGrid)
+        {
+            Vector3 destination = biome.GridToWorldWithHeight(targetGrid.x, targetGrid.y, groundOffsetY);
+            SpawnAt(destination);
+            ResetClimbHold();
+        }
+
+        private void ResetClimbHold()
+        {
+            climbHoldTimer = 0f;
+            hasClimbTarget = false;
+            climbTargetGrid = default;
+        }
+
         private void ApplyMove(Vector3 moveVector)
         {
             if (characterController != null)
@@ -521,7 +728,9 @@ namespace Necrocis
             if (characterController != null)
             {
                 Vector3 pos = transform.position;
-                pos.y = desiredY;
+                pos.y = desiredY < pos.y
+                    ? Mathf.MoveTowards(pos.y, desiredY, fallHeightSpeed * Time.fixedDeltaTime)
+                    : desiredY;
                 transform.position = pos;
                 return;
             }
@@ -529,7 +738,9 @@ namespace Necrocis
             if (rb != null)
             {
                 Vector3 pos = rb.position;
-                pos.y = desiredY;
+                pos.y = desiredY < pos.y
+                    ? Mathf.MoveTowards(pos.y, desiredY, fallHeightSpeed * Time.fixedDeltaTime)
+                    : desiredY;
                 rb.position = pos;
 
                 Vector3 vel = rb.linearVelocity;
@@ -539,7 +750,9 @@ namespace Necrocis
             }
 
             Vector3 fallback = transform.position;
-            fallback.y = desiredY;
+            fallback.y = desiredY < fallback.y
+                ? Mathf.MoveTowards(fallback.y, desiredY, fallHeightSpeed * Time.fixedDeltaTime)
+                : desiredY;
             transform.position = fallback;
         }
         // ApplyLockedRotation: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??

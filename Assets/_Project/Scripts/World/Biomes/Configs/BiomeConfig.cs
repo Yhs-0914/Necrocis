@@ -23,6 +23,9 @@ namespace Necrocis
         [Tooltip("0 초과 시 Pokemon식 이진 고원 모드: Perlin noise가 이 값 초과면 height +1 (덩어리 평탄). 0이면 legacy RoundToInt 모드.")]
         public float heightThreshold = 0f;
 
+        [Tooltip("Threshold 모드에서 plateau 경계의 1x1 파편/대각선 톱니를 제거하는 Cellular Automata 반복 횟수. 5/8 majority rule. 0=비활성, 2=권장. threshold==0이면 무시.")]
+        public int heightCaIterations = 2;
+
         [Header("Tile Defaults")]
         public List<TileTypeMapping> tileMappings = new List<TileTypeMapping>();
 
@@ -108,7 +111,7 @@ namespace Necrocis
         [Tooltip("같은 리전 내 시각적 변형 타일들 (해시 기반 선택)")]
         public TileBase[] tileVariants;
 
-        [Header("Side Walls (south-facing)")]
+        [Header("South Walls (3-stack 텍스처 벽)")]
         [Tooltip("이 리전이 남쪽 이웃보다 높을 때 아래로 그릴 벽 타일들. index 0 = 벽 맨 위(상승 타일 바로 아래), 마지막 = 벽 맨 아래. 비어 있으면 벽 안 그림.")]
         public TileBase[] wallTiles;
 
@@ -117,6 +120,14 @@ namespace Necrocis
 
         [Tooltip("맵 외곽 벽의 세로 깊이(타일 수). 0이면 외곽 벽 안 그림.")]
         public int mapEdgeWallDepth = 3;
+
+        [Header("Side Walls (동/서 + 모서리, 검정 실루엣)")]
+        [Tooltip("이 리전이 동/서 이웃보다 높을 때 측면에 그릴 1타일 (보통 검정 단색). null이면 측면 벽 안 그림. 남서/남동 모서리에도 동일 타일 사용.")]
+        public TileBase sideWallTile;
+
+        [Header("Plateau Rise")]
+        [Tooltip("threshold 모드에서 고원이 솟는 height 단계. wallTiles.Length와 일치시켜야 시각/로직 정합 (예: 3-stack이면 plateauRise=3). 0이면 +1 (legacy).")]
+        public int plateauRise = 3;
     }
 
     [System.Serializable]
@@ -151,6 +162,16 @@ namespace Necrocis
         public int spriteSalt = 0;
         public bool animate = false;
         public float animationSpeed = 0.15f;
+
+        [Header("Prefab")]
+        [Tooltip("Resources 폴더 기준 경로입니다. 예: ScatteredObjects/NecroObject")]
+        public string resourcePrefabPath = "";
+        [Tooltip("선택 사항입니다. Resources 폴더 기준 텍스처 경로입니다.")]
+        public string resourceTexturePath = "";
+        public Vector3 prefabLocalPosition = Vector3.zero;
+        public Vector3 prefabRotationEuler = Vector3.zero;
+        [Tooltip("플레이어 시작 지점 근처에는 생성하지 않을 반경입니다. 0이면 비활성.")]
+        public float avoidPlayerSpawnRadius = 0f;
 
         [Header("Components")]
         public bool useBillboard = true;

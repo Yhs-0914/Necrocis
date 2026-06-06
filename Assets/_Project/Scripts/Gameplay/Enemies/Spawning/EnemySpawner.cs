@@ -189,7 +189,7 @@ namespace Necrocis
                 Vector2 offset2D = Random.insideUnitCircle * Mathf.Max(0f, config.spawnRadius);
                 Vector3 candidate = anchorPosition + new Vector3(offset2D.x, 0f, offset2D.y);
                 Vector2Int grid = biome.WorldToGrid(candidate);
-                if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
+                if (!biome.CanSpawnEnemyAt(grid.x, grid.y))
                 {
                     continue;
                 }

@@ -26,13 +26,17 @@ MonoBehaviour:
     variantThreshold: 0.65
     tileVariants: []
     wallTiles:
-    - {fileID: 11400000, guid: d53b2723b083def4b85025b2cbb8dc34, type: 2}
-    - {fileID: 11400000, guid: 0f199e276fdcbc7418f1ab9f79322f54, type: 2}
-    - {fileID: 11400000, guid: 02c3ae9f7ed195946a904843ef1bbee1, type: 2}
+    - {fileID: 11400000, guid: e751333d828c9f543b0c8e1135fe4945, type: 2}
+    - {fileID: 11400000, guid: e751333d828c9f543b0c8e1135fe4945, type: 2}
+    - {fileID: 11400000, guid: e751333d828c9f543b0c8e1135fe4945, type: 2}
     mapEdgeWallTile: {fileID: 11400000, guid: e751333d828c9f543b0c8e1135fe4945, type: 2}
     mapEdgeWallDepth: 3
-  heightNoiseScale: 0.015
-  heightNoiseAmplitude: 0.45
+    sideWallTile: {fileID: 11400000, guid: 9c1861392c406d249aa5650c1f692c92, type: 2}
+    plateauRise: 3
+  heightNoiseScale: 0.01
+  heightNoiseAmplitude: 0
+  heightThreshold: 0.35
+  heightCaIterations: 2
   tileMappings:
   - tileType: 1
     tile: {fileID: 11400000, guid: efa690c9d67a50a4f967b3ad85993aed, type: 2}
@@ -43,31 +47,40 @@ MonoBehaviour:
   marginBottom: 10
   marginTop: 5
   objectRules:
-  - name: Grass
-    poolKind: 1
-    density: 0.08
-    minDistance: 4
-    poissonSalt: 201
+  - name: LiverObstacle
+    poolKind: 2
+    density: 0.03
+    minDistance: 6
+    poissonSalt: 2701
     allowedRegions: 00000000
     blocksMovement: 0
-    heightOffset: 0.01
-    sortingOrder: 50
+    heightOffset: 0
+    sortingOrder: 100
     sprites:
-    - {fileID: 21300000, guid: 2783ec49b7fbef142a9801e63694aa70, type: 3}
+    - {fileID: 21300000, guid: b5d7f7c22a535a146ababcc1f1487671, type: 3}
+    - {fileID: 21300000, guid: b44c14a54e9b4c242be6ae053d369391, type: 3}
+    - {fileID: 21300000, guid: 471692d0c3c43714ba035ff4675dc516, type: 3}
+    - {fileID: 21300000, guid: fd8ffc26f6f6aaf4cbec921689e2e9b9, type: 3}
+    - {fileID: 21300000, guid: 6c74d3f42b7cc4e459802afb24264435, type: 3}
     useDeterministicSprite: 1
-    spriteSalt: 0
+    spriteSalt: 2702
     animate: 0
     animationSpeed: 0.15
-    useBillboard: 0
-    useYSort: 0
-    addCollider: 0
+    resourcePrefabPath: 
+    resourceTexturePath: 
+    prefabLocalPosition: {x: 0, y: 0, z: 0}
+    prefabRotationEuler: {x: 0, y: 0, z: 0}
+    avoidPlayerSpawnRadius: 12
+    useBillboard: 1
+    useYSort: 1
+    addCollider: 1
     isTrigger: 0
-    colliderSize: {x: 1, y: 1, z: 1}
-    colliderCenter: {x: 0, y: 0, z: 0}
-    scaleRange: {x: 0.7, y: 2.5}
-    scaleSalt: 4201
-    scaleBias: 3
-    spacingPadding: 1.8
+    colliderSize: {x: 0.8, y: 1, z: 0.24}
+    colliderCenter: {x: 0, y: 0.5, z: 0}
+    scaleRange: {x: 1.25, y: 1.8}
+    scaleSalt: 2703
+    scaleBias: 1.15
+    spacingPadding: 1.4
   enemySpawnConfig: {fileID: 11400000, guid: 946670425bda4f0293f85cfd208a6778, type: 2}
   enemySpawnRules: []
   bossArenaConfig: {fileID: 11400000, guid: 83239c28f0d24030ad9fe289abc11f93, type: 2}

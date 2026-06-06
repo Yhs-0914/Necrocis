@@ -337,6 +337,9 @@ namespace Necrocis
             {
                 Vector2 offset = Random.insideUnitCircle * Mathf.Max(0f, config.wanderRadius);
                 Vector3 candidate = anchorPosition + new Vector3(offset.x, 0f, offset.y);
+                if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsInsideAnyArena(candidate))
+                    continue;
+
                 Vector2Int grid = biome.WorldToGrid(candidate);
                 if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
                     continue;
@@ -362,6 +365,11 @@ namespace Necrocis
             }
 
             Vector3 targetPosition = currentPosition + step;
+            if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsInsideAnyArena(targetPosition))
+            {
+                return false;
+            }
+
             if (biome.CanMove(currentPosition, targetPosition))
             {
                 MoveToPosition(targetPosition);
@@ -373,12 +381,16 @@ namespace Necrocis
 
             if (Mathf.Abs(step.x) >= Mathf.Abs(step.z))
             {
-                if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveX))
+                if (moveX.sqrMagnitude > 0f
+                    && (ignoreMidBossArenaRestriction || !MidBossArenaController.IsInsideAnyArena(currentPosition + moveX))
+                    && biome.CanMove(currentPosition, currentPosition + moveX))
                 {
                     MoveToPosition(currentPosition + moveX);
                     return true;
                 }
-                if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveZ))
+                if (moveZ.sqrMagnitude > 0f
+                    && (ignoreMidBossArenaRestriction || !MidBossArenaController.IsInsideAnyArena(currentPosition + moveZ))
+                    && biome.CanMove(currentPosition, currentPosition + moveZ))
                 {
                     MoveToPosition(currentPosition + moveZ);
                     return true;
@@ -386,12 +398,16 @@ namespace Necrocis
             }
             else
             {
-                if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveZ))
+                if (moveZ.sqrMagnitude > 0f
+                    && (ignoreMidBossArenaRestriction || !MidBossArenaController.IsInsideAnyArena(currentPosition + moveZ))
+                    && biome.CanMove(currentPosition, currentPosition + moveZ))
                 {
                     MoveToPosition(currentPosition + moveZ);
                     return true;
                 }
-                if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveX))
+                if (moveX.sqrMagnitude > 0f
+                    && (ignoreMidBossArenaRestriction || !MidBossArenaController.IsInsideAnyArena(currentPosition + moveX))
+                    && biome.CanMove(currentPosition, currentPosition + moveX))
                 {
                     MoveToPosition(currentPosition + moveX);
                     return true;

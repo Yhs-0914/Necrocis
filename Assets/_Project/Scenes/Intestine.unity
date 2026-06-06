@@ -158,8 +158,6 @@ MonoBehaviour:
   unloadDistance: 1
   chunkUpdateInterval: 0.5
   destroyChunkRootOnUnload: 1
-  objectLoadDistance: 1
-  objectUnloadDistance: 1
   objectGenerationBudget: 128
   grid: {fileID: 1776847132}
   tilesParent: {fileID: 1591111481}
@@ -167,7 +165,7 @@ MonoBehaviour:
   pooledObjectsParent: {fileID: 0}
   useChunkRootPooling: 1
   maxChunkRootPoolSize: 0
-  useCliffOverlayTilemaps: 0
+  useCliffOverlayTilemaps: 1
   defaultMaxPoolSizePerType: 512
   poolLimits: []
   maxTotalPoolSize: 0

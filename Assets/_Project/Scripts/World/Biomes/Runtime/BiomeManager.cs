@@ -14,8 +14,10 @@ namespace Necrocis
         [Header("맵 설정")]
         [SerializeField] protected int mapWidth;
         [SerializeField] protected int mapHeight;
+        [SerializeField] protected bool useCenteredMapCoordinates;
         [SerializeField] protected int chunkSize;
         [SerializeField] protected float tileSize = 1f;
+        [SerializeField] protected float movementCollisionRadius = 0.68f;
 
         [Header("생성 설정")]
         [SerializeField] protected int seed = 0;
@@ -55,6 +57,8 @@ namespace Necrocis
         [SerializeField] protected int minHeightLevel = -1;
         [SerializeField] protected int maxHeightLevel = 1;
         [SerializeField] protected int maxStepHeight = 1;
+        [SerializeField] protected int maxDropHeight = 2;
+        [SerializeField] protected int maxClimbHeight = 2;
         [SerializeField] protected float heightStep = 0.5f;
         [SerializeField] protected float cliffOverlayOffset = 0.01f;
         [SerializeField] protected Color cliffTint = new Color(0.6f, 0.6f, 0.6f, 1f);
@@ -98,6 +102,8 @@ namespace Necrocis
         public float HeightStep => heightStep;
         public int MinHeightLevel => minHeightLevel;
         public int MaxHeightLevel => maxHeightLevel;
+        public int MinGridXPublic => MinGridX;
+        public int MinGridYPublic => MinGridY;
 
         /// <summary>
         /// 상승 타일 (worldX, worldY)이 남쪽 이웃보다 높을 때 그릴 벽의 깊이(타일 개수).
@@ -130,6 +136,15 @@ namespace Necrocis
         protected virtual int GetMapEdgeWallDepth(int worldX, int worldY)
         {
             return 0;
+        }
+
+        /// <summary>
+        /// 상승 타일 (worldX, worldY)이 동/서 이웃 또는 남동/남서 모서리보다 높을 때 측면에 그릴 1타일.
+        /// 보통 검정 실루엣. null이면 측면 벽 안 그림.
+        /// </summary>
+        protected virtual TileBase GetSideWallTile(int worldX, int worldY)
+        {
+            return null;
         }
 
         protected virtual void Awake()
@@ -171,6 +186,21 @@ namespace Necrocis
             }
 
             return cachedSeed;
+        }
+
+        protected int MinGridX => useCenteredMapCoordinates ? -mapWidth / 2 : 0;
+        protected int MinGridY => useCenteredMapCoordinates ? -mapHeight / 2 : 0;
+        protected int MaxGridXExclusive => MinGridX + mapWidth;
+        protected int MaxGridYExclusive => MinGridY + mapHeight;
+
+        protected int GetChunkStartX(int chunkX)
+        {
+            return MinGridX + chunkX * chunkSize;
+        }
+
+        protected int GetChunkStartY(int chunkY)
+        {
+            return MinGridY + chunkY * chunkSize;
         }
 
         protected virtual void Start()
@@ -435,8 +465,8 @@ namespace Necrocis
             int tileCount = chunkSize * chunkSize;
             EnsureChunkBuffers(chunk, tileCount);
 
-            int startX = chunk.chunkX * chunkSize;
-            int startY = chunk.chunkY * chunkSize;
+            int startX = GetChunkStartX(chunk.chunkX);
+            int startY = GetChunkStartY(chunk.chunkY);
 
             for (int i = 0; i < tileCount; i++)
             {
@@ -472,7 +502,7 @@ namespace Necrocis
                 }
             }
 
-            // 높이 cliff 벽 렌더 (threshold 모드 + sand_wall 1장).
+            // 남쪽 벽 (3-stack 텍스처).
             for (int ly = 1; ly < chunkSize; ly++)
             {
                 for (int lx = 0; lx < chunkSize; lx++)
@@ -518,6 +548,98 @@ namespace Necrocis
 
                         chunk.cliffOverlayTiles[wallIndex] = wallTile;
                         chunk.cliffLevels[wallIndex] = lowerLevel;
+                    }
+                }
+            }
+
+            // 동쪽 측면 + 남동 모서리 (검정 1타일).
+            for (int ly = 0; ly < chunkSize; ly++)
+            {
+                for (int lx = 0; lx < chunkSize - 1; lx++)
+                {
+                    int upperIndex = ly * chunkSize + lx;
+                    int eastIndex = ly * chunkSize + (lx + 1);
+                    if (chunk.baseTiles[upperIndex] == null || chunk.baseTiles[eastIndex] == null) continue;
+
+                    int upperLevel = chunk.heightLevels[upperIndex];
+                    int eastLevel = chunk.heightLevels[eastIndex];
+                    if (upperLevel <= eastLevel) continue;
+
+                    int upperGX = startX + lx;
+                    int upperGY = startY + ly;
+                    TileBase sideTile = GetSideWallTile(upperGX, upperGY);
+                    if (sideTile == null) continue;
+
+                    // 동쪽 1타일.
+                    if (chunk.cliffOverlayTiles[eastIndex] == null)
+                    {
+                        chunk.cliffOverlayTiles[eastIndex] = sideTile;
+                        chunk.cliffLevels[eastIndex] = eastLevel;
+                    }
+
+                    // 남동 모서리 연장: 남쪽도 낮은 plateau-SE 끝일 때 wallDepth만큼 세로 채움.
+                    if (ly > 0)
+                    {
+                        int southIndex = (ly - 1) * chunkSize + lx;
+                        if (chunk.baseTiles[southIndex] != null
+                            && chunk.heightLevels[southIndex] < upperLevel)
+                        {
+                            int cornerDepth = Mathf.Min(GetWallDepth(upperGX, upperGY), upperLevel - eastLevel);
+                            for (int r = 1; r <= cornerDepth; r++)
+                            {
+                                int cornerLY = ly - r;
+                                if (cornerLY < 0) break;
+                                int cornerIndex = cornerLY * chunkSize + (lx + 1);
+                                if (chunk.cliffOverlayTiles[cornerIndex] != null) continue;
+                                chunk.cliffOverlayTiles[cornerIndex] = sideTile;
+                                chunk.cliffLevels[cornerIndex] = eastLevel;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 서쪽 측면 + 남서 모서리 (검정 1타일).
+            for (int ly = 0; ly < chunkSize; ly++)
+            {
+                for (int lx = 1; lx < chunkSize; lx++)
+                {
+                    int upperIndex = ly * chunkSize + lx;
+                    int westIndex = ly * chunkSize + (lx - 1);
+                    if (chunk.baseTiles[upperIndex] == null || chunk.baseTiles[westIndex] == null) continue;
+
+                    int upperLevel = chunk.heightLevels[upperIndex];
+                    int westLevel = chunk.heightLevels[westIndex];
+                    if (upperLevel <= westLevel) continue;
+
+                    int upperGX = startX + lx;
+                    int upperGY = startY + ly;
+                    TileBase sideTile = GetSideWallTile(upperGX, upperGY);
+                    if (sideTile == null) continue;
+
+                    if (chunk.cliffOverlayTiles[westIndex] == null)
+                    {
+                        chunk.cliffOverlayTiles[westIndex] = sideTile;
+                        chunk.cliffLevels[westIndex] = westLevel;
+                    }
+
+                    if (ly > 0)
+                    {
+                        int southIndex = (ly - 1) * chunkSize + lx;
+                        if (chunk.baseTiles[southIndex] != null
+                            && chunk.heightLevels[southIndex] < upperLevel)
+                        {
+                            int cornerDepth = Mathf.Min(GetWallDepth(upperGX, upperGY), upperLevel - westLevel);
+                            for (int r = 1; r <= cornerDepth; r++)
+                            {
+                                int cornerLY = ly - r;
+                                if (cornerLY < 0) break;
+                                int cornerIndex = cornerLY * chunkSize + (lx - 1);
+                                if (chunk.cliffOverlayTiles[cornerIndex] != null) continue;
+                                chunk.cliffOverlayTiles[cornerIndex] = sideTile;
+                                chunk.cliffLevels[cornerIndex] = westLevel;
+                            }
+                        }
                     }
                 }
             }

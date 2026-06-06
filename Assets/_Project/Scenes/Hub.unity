@@ -2453,6 +2453,7 @@ MonoBehaviour:
   cooldownTMPText: {fileID: 0}
   readyIconColor: {r: 1, g: 1, b: 1, a: 1}
   coolingIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
+  lockedIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
   cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.6}
   useUnscaledTime: 0
   keyLabel: E
@@ -3962,6 +3963,7 @@ MonoBehaviour:
   cooldownTMPText: {fileID: 0}
   readyIconColor: {r: 1, g: 1, b: 1, a: 1}
   coolingIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
+  lockedIconColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
   cooldownOverlayColor: {r: 0, g: 0, b: 0, a: 0.6}
   useUnscaledTime: 0
   keyLabel: E
@@ -4919,9 +4921,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6677856733d61344e832893e34b6b07b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerController
-  baseMoveSpeed: 10
-  baseMaxHealth: 10
-  baseAttackPower: 10
   spriteRenderer: {fileID: 571540666}
   idleSprites:
   - {fileID: -71036734, guid: bb4e252c981424e4ebf934ceb3c5bbb1, type: 3}
@@ -5204,6 +5203,9 @@ MonoBehaviour:
   lockedY: -2
   groundOffsetY: -2
   useDynamicGroundHeight: 1
+  fallHeightSpeed: 4
+  climbHoldDuration: 2
+  climbInputGraceDistance: 0.2
 --- !u!4 &1905923572
 Transform:
   m_ObjectHideFlags: 0
@@ -5310,15 +5312,21 @@ MonoBehaviour:
   meleeAttackDamage: 20
   meleeAttackBoxSize: {x: 1, y: 1, z: 2}
   meleeAttackOffset: 1
+  meleeTargetMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  meleeOverlapBufferSize: 24
   firePoint: {fileID: 1905923572}
   projectileSpawnPoint: {fileID: 1905923572}
   projectileSpawnOffset: 0.65
   projectileSpawnHeight: 1
   projectileSpawnExtraHeight: 2
+  projectileRange: 8
   rangedTargetMask:
     serializedVersion: 2
     m_Bits: 4294967295
   attackCooldown: 1
+  enableDebugLogs: 0
 --- !u!114 &1905923578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5342,13 +5350,13 @@ MonoBehaviour:
   skillVerticalOffset: 2
   skillHitHeightOffset: 0.75
   skillHitVerticalHalfHeight: 4
+  maxAreaSkillHitTargets: 32
   enableDebugLogs: 1
   mageSkill1:
     cooldown: 1
     radius: 5
     forwardOffset: 0
     baseDamage: 5
-    attackPowerScale: 5
     additionalDamage: 5
     additionalDamageMin: 5
     additionalDamageMax: 7
@@ -5361,7 +5369,6 @@ MonoBehaviour:
     radius: 3.5
     forwardOffset: 2.5
     baseDamage: 15
-    attackPowerScale: 0
     detonationDelay: 0.7
     damageTakenIncreaseRatio: 0.1
     damageTakenIncreaseDuration: 3

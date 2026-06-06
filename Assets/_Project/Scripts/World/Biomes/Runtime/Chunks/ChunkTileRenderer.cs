@@ -24,7 +24,7 @@ namespace Necrocis
                 chunkRoot.name = $"Chunk_{chunk.chunkX}_{chunk.chunkY}";
             }
 
-            Vector3 chunkOrigin = new Vector3(chunk.chunkX * chunkSize * tileSize, 0f, chunk.chunkY * chunkSize * tileSize);
+            Vector3 chunkOrigin = new Vector3(GetChunkStartX(chunk.chunkX) * tileSize, 0f, GetChunkStartY(chunk.chunkY) * tileSize);
             chunkRoot.transform.localPosition = chunkOrigin;
 
             ChunkRoot rootData = chunkRoot.GetComponent<ChunkRoot>();

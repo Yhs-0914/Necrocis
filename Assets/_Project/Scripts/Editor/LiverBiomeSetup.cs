@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -22,6 +23,7 @@ namespace Necrocis.EditorTools
         private const string GrassWall2Png = LiverWallsPath + "/grass_wall_2.png";
         private const string GrassWall3Png = LiverWallsPath + "/grass_wall_3.png";
         private const string SandWallPng = LiverWallsPath + "/sand_wall.png";
+        private const string SideWallBlackPng = LiverWallsPath + "/wall_side_black.png";
 
         private const string Sand1TileAsset = TileFolderPath + "/sand1.asset";
         private const string Sand2TileAsset = TileFolderPath + "/sand2.asset";
@@ -31,10 +33,13 @@ namespace Necrocis.EditorTools
         private const string GrassWall2TileAsset = TileFolderPath + "/grass_wall_2.asset";
         private const string GrassWall3TileAsset = TileFolderPath + "/grass_wall_3.asset";
         private const string SandWallTileAsset = TileFolderPath + "/sand_wall.asset";
+        private const string SideWallBlackTileAsset = TileFolderPath + "/wall_side_black.asset";
 
         [MenuItem("Necrocis/Setup/Build Liver Sand Biome")]
         public static void BuildLiverSandBiome()
         {
+            EnsureSolidColorSprite(SideWallBlackPng, Color.black, 16);
+
             EnsureSpriteImport(Sand1Png);
             EnsureSpriteImport(Sand2Png);
             EnsureSpriteImport(GrassDecoPng);
@@ -43,6 +48,7 @@ namespace Necrocis.EditorTools
             EnsureSpriteImport(GrassWall2Png);
             EnsureSpriteImport(GrassWall3Png);
             EnsureSpriteImport(SandWallPng);
+            EnsureSpriteImport(SideWallBlackPng);
 
             Sprite sand1Sprite = LoadSprite(Sand1Png);
             Sprite sand2Sprite = LoadSprite(Sand2Png);
@@ -52,18 +58,19 @@ namespace Necrocis.EditorTools
             Sprite grassWall2Sprite = LoadSprite(GrassWall2Png);
             Sprite grassWall3Sprite = LoadSprite(GrassWall3Png);
             Sprite sandWallSprite = LoadSprite(SandWallPng);
+            Sprite sideWallBlackSprite = LoadSprite(SideWallBlackPng);
 
             if (sand1Sprite == null || sand2Sprite == null || grassDecoSprite == null
                 || grassRegionSprite == null
                 || grassWall1Sprite == null || grassWall2Sprite == null || grassWall3Sprite == null
-                || sandWallSprite == null)
+                || sandWallSprite == null || sideWallBlackSprite == null)
             {
                 Debug.LogError(
                     $"[LiverBiomeSetup] Sprite를 찾을 수 없습니다. 경로 확인: " +
                     $"sand1={(sand1Sprite != null)}, sand2={(sand2Sprite != null)}, " +
                     $"grassDeco={(grassDecoSprite != null)}, grassRegion={(grassRegionSprite != null)} ({GrassRegionPng}), " +
                     $"grassWall1={(grassWall1Sprite != null)}, grassWall2={(grassWall2Sprite != null)}, grassWall3={(grassWall3Sprite != null)}, " +
-                    $"sandWall={(sandWallSprite != null)}");
+                    $"sandWall={(sandWallSprite != null)}, sideWallBlack={(sideWallBlackSprite != null)}");
                 return;
             }
 
@@ -77,6 +84,7 @@ namespace Necrocis.EditorTools
             Tile grassWall2Tile = GetOrCreateTile(GrassWall2TileAsset, grassWall2Sprite);
             Tile grassWall3Tile = GetOrCreateTile(GrassWall3TileAsset, grassWall3Sprite);
             Tile sandWallTile = GetOrCreateTile(SandWallTileAsset, sandWallSprite);
+            Tile sideWallBlackTile = GetOrCreateTile(SideWallBlackTileAsset, sideWallBlackSprite);
 
             BiomeConfig config = AssetDatabase.LoadAssetAtPath<BiomeConfig>(ConfigPath);
             if (config == null)
@@ -93,6 +101,7 @@ namespace Necrocis.EditorTools
             config.heightNoiseScale = 0.01f;      // 큰 고원 (period ~100 타일)
             config.heightNoiseAmplitude = 0f;     // threshold 모드에서는 사용 안 함
             config.heightThreshold = 0.35f;       // Perlin > 0.35 → 고원 (약 30% 면적)
+            config.heightCaIterations = 2;        // CA 2회 평활화 (1x1 파편 + 톱니 제거)
 
             // Sand 지형 자체의 오르막은 sand 벽면.
             // grass_wall은 나중에 grass region 추가될 때를 위해 보존 (현재는 사용 안 함).
@@ -101,6 +110,8 @@ namespace Necrocis.EditorTools
             config.regions.Clear();
             // Sand region. 높이 노이즈로 인한 상승 부위에 sand_wall 3-stack 렌더.
             // 맵 남쪽 외곽에도 sand_wall 3타일 세로 렌더.
+            // 동/서/모서리는 검정 실루엣 (sideWallTile).
+            // plateauRise=3 → 시각 3-stack과 height 단계가 정합 (maxStepHeight=1로 못 오름).
             config.regions.Add(new BiomeRegionDefinition
             {
                 name = "Sand",
@@ -114,6 +125,8 @@ namespace Necrocis.EditorTools
                 wallTiles = sandWalls,
                 mapEdgeWallTile = sandWallTile,
                 mapEdgeWallDepth = 3,
+                sideWallTile = sideWallBlackTile,
+                plateauRise = 3,
             });
 
             config.tileMappings.Clear();
@@ -162,6 +175,33 @@ namespace Necrocis.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log("[LiverBiomeSetup] 완료: Sand region + grass_wall(3-stack) 높이 cliff + sand_wall 맵 외곽 남쪽 벽. Grass decoration 유지. Pond 제거.");
+        }
+
+        private static void EnsureSolidColorSprite(string path, Color color, int size)
+        {
+            if (File.Exists(path)) return;
+
+            string absolutePath = Path.GetFullPath(path);
+            string absoluteDir = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(absoluteDir) && !Directory.Exists(absoluteDir))
+            {
+                Directory.CreateDirectory(absoluteDir);
+            }
+
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = color;
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+
+            byte[] png = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
+            File.WriteAllBytes(absolutePath, png);
+
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
 
         private static void EnsureSpriteImport(string path, float pixelsPerUnit = 100f)

@@ -303,6 +303,10 @@ namespace Necrocis
             Transform player = PlayerController.Instance.transform;
             BiomeManager biome = BiomeManager.Active;
             Vector3 spawnPos = FindSpawnPosition(player.position, biome, config);
+            if (float.IsInfinity(spawnPos.x))
+            {
+                return;
+            }
 
             Transform spawnParent = transform;
             int poolId = EnemyController.GetPoolArchetypeId(config);
@@ -452,7 +456,7 @@ namespace Necrocis
                 if (biome != null)
                 {
                     Vector2Int grid = biome.WorldToGrid(candidate);
-                    if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
+                    if (!biome.CanSpawnEnemyAt(grid.x, grid.y))
                         continue;
 
                     candidate.y = biome.GetGroundHeight(candidate) + config.heightOffset;
@@ -463,7 +467,15 @@ namespace Necrocis
 
             Vector3 fallback = playerPos + new Vector3(spawnDistanceMin, 0f, 0f);
             if (biome != null)
+            {
+                Vector2Int fallbackGrid = biome.WorldToGrid(fallback);
+                if (!biome.CanSpawnEnemyAt(fallbackGrid.x, fallbackGrid.y))
+                {
+                    return Vector3.positiveInfinity;
+                }
+
                 fallback.y = biome.GetGroundHeight(fallback) + config.heightOffset;
+            }
             return fallback;
         }
     }

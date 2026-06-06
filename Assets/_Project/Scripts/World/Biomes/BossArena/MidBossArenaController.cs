@@ -32,6 +32,9 @@ namespace Necrocis
         private float fogRevealAmount;
 
         public bool IsLocked => arenaLocked;
+        public bool IsDefeated => bossDefeated;
+        public Vector2Int CenterGrid => centerGrid;
+        public Vector2Int ArenaSize => arenaSize;
 
         public void Configure(BiomeManager biome, MidBossArenaConfig arenaConfig, IList<EnemySpawnRuleConfig> availableEnemyRules)
         {
@@ -100,7 +103,7 @@ namespace Necrocis
                 return;
             }
 
-            TryActivateArena();
+            TryActivateArena(player);
         }
 
         private void OnDestroy()
@@ -116,7 +119,7 @@ namespace Necrocis
             }
         }
 
-        private void TryActivateArena()
+        private void TryActivateArena(PlayerController player)
         {
             if (biome == null)
             {
@@ -132,6 +135,7 @@ namespace Necrocis
 
             arenaLocked = true;
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
+            MovePlayerOffLockedBoundary(player);
             ApplyFogVisualState();
 
             if (GameManager.Instance != null)
@@ -140,6 +144,54 @@ namespace Necrocis
             }
 
             Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
+        }
+
+        private void MovePlayerOffLockedBoundary(PlayerController player)
+        {
+            if (player == null || biome == null)
+            {
+                return;
+            }
+
+            Vector2Int playerGrid = biome.WorldToGrid(player.transform.position);
+            if (IsClearOfLockedBoundary(playerGrid) && biome.IsWalkable(playerGrid.x, playerGrid.y))
+            {
+                return;
+            }
+
+            Vector2Int directionToCenter = new Vector2Int(
+                System.Math.Sign(centerGrid.x - playerGrid.x),
+                System.Math.Sign(centerGrid.y - playerGrid.y));
+
+            int maxDistance = Mathf.Max(arenaSize.x, arenaSize.y);
+            for (int distance = 1; distance <= maxDistance; distance++)
+            {
+                Vector2Int candidate = playerGrid + directionToCenter * distance;
+                if (!IsClearOfLockedBoundary(candidate) || !biome.IsWalkable(candidate.x, candidate.y))
+                {
+                    continue;
+                }
+
+                Vector3 safePosition = biome.GridToWorldWithHeight(candidate.x, candidate.y);
+                player.SpawnAt(safePosition);
+                return;
+            }
+        }
+
+        private bool IsClearOfLockedBoundary(Vector2Int cell)
+        {
+            for (int x = cell.x - 1; x <= cell.x + 1; x++)
+            {
+                for (int y = cell.y - 1; y <= cell.y + 1; y++)
+                {
+                    if (blockedBoundaryCells.Contains(new Vector2Int(x, y)))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private void SpawnBoss()
@@ -417,6 +469,20 @@ namespace Necrocis
             return false;
         }
 
+        public static bool IsInsideAnyArena(Vector3 worldPosition)
+        {
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena != null && arena.ContainsWorldPosition(worldPosition))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void BuildBoundaryCellCache()
         {
             blockedBoundaryCells.Clear();
@@ -470,7 +536,9 @@ namespace Necrocis
                 return arenaConfig.centerGrid;
             }
 
-            return new Vector2Int(biome.MapWidth / 2, biome.MapHeight / 2);
+            return new Vector2Int(
+                biome.MinGridXPublic + biome.MapWidth / 2,
+                biome.MinGridYPublic + biome.MapHeight / 2);
         }
 
         private EnemySpawnRuleConfig ResolveBossRule(IList<EnemySpawnRuleConfig> availableEnemyRules)

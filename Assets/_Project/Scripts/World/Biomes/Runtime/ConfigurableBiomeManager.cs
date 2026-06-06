@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 namespace Necrocis
 {
+    public enum BiomeMapSource
+    {
+        Procedural = 0,
+        AuthoredTilemap = 1
+    }
+
     /// <summary>
     /// BiomeConfig로 동작하는 범용 바이옴 매니저
     /// </summary>
@@ -12,9 +18,29 @@ namespace Necrocis
         [Header("Biome Config")]
         [SerializeField] private BiomeConfig config;
 
+        [Header("Map Source")]
+        [SerializeField] private BiomeMapSource mapSource = BiomeMapSource.Procedural;
+        [SerializeField] private Tilemap authoredFloorTilemap;
+        [SerializeField] private Tilemap authoredDropTransitionTilemap;
+        [SerializeField] private Tilemap authoredWaterTilemap;
+        [SerializeField] private Tilemap authoredBlockerTilemap;
+        [SerializeField] private bool useAuthoredTilemapVisuals = true;
+        [SerializeField] private bool spawnAuthoredMapObjects = true;
+        [SerializeField] private bool spawnAuthoredEnemies = true;
+        [SerializeField] private BiomeTileType authoredFloorType = BiomeTileType.Floor;
+        [SerializeField] private BiomeTileType authoredBlockerType = BiomeTileType.Wall;
+        [SerializeField] private int authoredHeightLevel = 0;
+        [SerializeField] private int authoredHighTileHeightLevel = 1;
+        [SerializeField] private string authoredHighTileNameContains = "sand2";
+        [SerializeField] private string authoredTransitionTileNameContains = "벽";
+        [SerializeField] private bool useCustomAuthoredSpawnCell;
+        [SerializeField] private Vector2Int customAuthoredSpawnCell;
+
         private BiomePerlinNoise detailNoise;
         private readonly List<BiomeObjectRuleConfig> runtimeRules = new List<BiomeObjectRuleConfig>();
         private readonly List<EnemySpawnRuleConfig> runtimeEnemyRules = new List<EnemySpawnRuleConfig>();
+        private readonly Dictionary<string, GameObject> resourcePrefabCache = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, Material> resourceMaterialCache = new Dictionary<string, Material>();
         private MidBossArenaController midBossArenaController;
 
         /// <summary>
@@ -45,14 +71,82 @@ namespace Necrocis
             heightNoiseScale = config.heightNoiseScale;
             heightNoiseAmplitude = config.heightNoiseAmplitude;
             heightThreshold = config.heightThreshold;
+            heightCaIterations = config.heightCaIterations;
 
             base.Awake();
         }
 
         protected override void Start()
         {
+            HideAuthoredTilemapRenderersIfChunked();
             base.Start();
             TryCreateMidBossArena();
+            EnsureWorldMapUI();
+        }
+
+        private void EnsureWorldMapUI()
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap || GetComponent<WorldMapUI>() != null)
+            {
+                return;
+            }
+
+            gameObject.AddComponent<WorldMapUI>();
+        }
+
+        public Sprite GetAuthoredMapSprite(int gridX, int gridY)
+        {
+            Vector3Int cell = new Vector3Int(gridX, gridY, 0);
+            Tilemap[] layers =
+            {
+                authoredBlockerTilemap,
+                authoredWaterTilemap,
+                authoredDropTransitionTilemap,
+                authoredFloorTilemap
+            };
+
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i] == null)
+                {
+                    continue;
+                }
+
+                Sprite sprite = layers[i].GetSprite(cell);
+                if (sprite != null)
+                {
+                    return sprite;
+                }
+            }
+
+            return null;
+        }
+
+        private void HideAuthoredTilemapRenderersIfChunked()
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap || useAuthoredTilemapVisuals)
+            {
+                return;
+            }
+
+            SetTilemapRendererEnabled(authoredFloorTilemap, false);
+            SetTilemapRendererEnabled(authoredDropTransitionTilemap, false);
+            SetTilemapRendererEnabled(authoredWaterTilemap, false);
+            SetTilemapRendererEnabled(authoredBlockerTilemap, false);
+        }
+
+        private static void SetTilemapRendererEnabled(Tilemap tilemap, bool enabled)
+        {
+            if (tilemap == null)
+            {
+                return;
+            }
+
+            TilemapRenderer renderer = tilemap.GetComponent<TilemapRenderer>();
+            if (renderer != null)
+            {
+                renderer.enabled = enabled;
+            }
         }
 
         protected override void InitializeNoise()
@@ -64,6 +158,11 @@ namespace Necrocis
 
         protected override TileSample SampleBaseTile(int worldX, int worldY)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return SampleAuthoredTile(worldX, worldY);
+            }
+
             BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
             if (region == null)
             {
@@ -95,6 +194,391 @@ namespace Necrocis
             return new TileSample(type, tile, IsTileWalkable(type));
         }
 
+        protected override int GetBaseHeightLevel(int worldX, int worldY)
+        {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return GetAuthoredHeightLevel(worldX, worldY);
+            }
+
+            return base.GetBaseHeightLevel(worldX, worldY);
+        }
+
+        private int GetAuthoredHeightLevel(int worldX, int worldY)
+        {
+            if (authoredFloorTilemap == null)
+            {
+                return authoredHeightLevel;
+            }
+
+            TileBase floor = authoredFloorTilemap.GetTile(new Vector3Int(worldX, worldY, 0));
+            if (floor != null && !string.IsNullOrEmpty(authoredHighTileNameContains)
+                && floor.name.Contains(authoredHighTileNameContains))
+            {
+                return authoredHighTileHeightLevel;
+            }
+
+            return authoredHeightLevel;
+        }
+
+        protected override void GenerateTiles(Chunk chunk)
+        {
+            if (mapSource == BiomeMapSource.AuthoredTilemap && useAuthoredTilemapVisuals)
+            {
+                return;
+            }
+
+            base.GenerateTiles(chunk);
+            ApplyAuthoredTileTransforms(chunk);
+            ApplyAuthoredTransitionOverlays(chunk);
+        }
+
+        private void ApplyAuthoredTileTransforms(Chunk chunk)
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap || chunk.tilemaps == null)
+            {
+                return;
+            }
+
+            int startX = GetChunkStartX(chunk.chunkX);
+            int startY = GetChunkStartY(chunk.chunkY);
+            for (int ly = 0; ly < chunkSize; ly++)
+            {
+                for (int lx = 0; lx < chunkSize; lx++)
+                {
+                    int gx = startX + lx;
+                    int gy = startY + ly;
+                    Vector3Int sourceCell = new Vector3Int(gx, gy, 0);
+                    Tilemap sourceTilemap = GetAuthoredBaseSourceTilemap(sourceCell);
+                    if (sourceTilemap == null)
+                    {
+                        continue;
+                    }
+
+                    int levelIndex = Mathf.Clamp(GetAuthoredHeightLevel(gx, gy) - MinHeightLevel, 0, chunk.tilemaps.Length - 1);
+                    Tilemap targetTilemap = chunk.tilemaps[levelIndex];
+                    Vector3Int targetCell = new Vector3Int(lx, ly, 0);
+                    if (targetTilemap == null || targetTilemap.GetTile(targetCell) == null)
+                    {
+                        continue;
+                    }
+
+                    targetTilemap.SetTileFlags(targetCell, TileFlags.None);
+                    targetTilemap.SetTransformMatrix(targetCell, sourceTilemap.GetTransformMatrix(sourceCell));
+                }
+            }
+        }
+
+        private Tilemap GetAuthoredBaseSourceTilemap(Vector3Int cell)
+        {
+            if (authoredWaterTilemap != null && authoredWaterTilemap.GetTile(cell) != null)
+            {
+                return authoredWaterTilemap;
+            }
+
+            if (authoredBlockerTilemap != null && authoredBlockerTilemap.GetTile(cell) != null)
+            {
+                return authoredBlockerTilemap;
+            }
+
+            if (authoredFloorTilemap != null && authoredFloorTilemap.GetTile(cell) != null)
+            {
+                return authoredFloorTilemap;
+            }
+
+            if (authoredDropTransitionTilemap != null && authoredDropTransitionTilemap.GetTile(cell) != null)
+            {
+                return authoredDropTransitionTilemap;
+            }
+
+            return null;
+        }
+
+        private void ApplyAuthoredTransitionOverlays(Chunk chunk)
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap
+                || authoredDropTransitionTilemap == null
+                || chunk.cliffTilemaps == null
+                || chunk.cliffTilemaps.Length == 0)
+            {
+                return;
+            }
+
+            int overlayLevelIndex = Mathf.Clamp(authoredHeightLevel - MinHeightLevel, 0, chunk.cliffTilemaps.Length - 1);
+            Tilemap overlayTilemap = chunk.cliffTilemaps[overlayLevelIndex];
+            if (overlayTilemap == null)
+            {
+                return;
+            }
+
+            overlayTilemap.color = Color.white;
+            Transform decorationsRoot = CreateAuthoredDecorationsRoot(chunk);
+            int startX = GetChunkStartX(chunk.chunkX);
+            int startY = GetChunkStartY(chunk.chunkY);
+            for (int ly = 0; ly < chunkSize; ly++)
+            {
+                for (int lx = 0; lx < chunkSize; lx++)
+                {
+                    int gx = startX + lx;
+                    int gy = startY + ly;
+                    TileBase transitionTile = authoredDropTransitionTilemap.GetTile(new Vector3Int(gx, gy, 0));
+                    if (transitionTile == null)
+                    {
+                        continue;
+                    }
+
+                    if (IsAuthoredTransitionTile(transitionTile))
+                    {
+                        Vector3Int targetCell = new Vector3Int(lx, ly, 0);
+                        Vector3Int sourceCell = new Vector3Int(gx, gy, 0);
+                        overlayTilemap.SetTile(targetCell, transitionTile);
+                        overlayTilemap.SetTileFlags(targetCell, TileFlags.None);
+                        overlayTilemap.SetTransformMatrix(
+                            targetCell,
+                            authoredDropTransitionTilemap.GetTransformMatrix(sourceCell));
+                        CreateAuthoredTransitionWall(decorationsRoot, gx, gy);
+                    }
+                    else
+                    {
+                        CreateAuthoredDecoration(decorationsRoot, gx, gy);
+                    }
+                }
+            }
+        }
+
+        private static Transform CreateAuthoredDecorationsRoot(Chunk chunk)
+        {
+            Transform existing = chunk.root.transform.Find("AuthoredDecorations");
+            if (existing != null)
+            {
+                for (int i = existing.childCount - 1; i >= 0; i--)
+                {
+                    Destroy(existing.GetChild(i).gameObject);
+                }
+
+                return existing;
+            }
+
+            GameObject root = new GameObject("AuthoredDecorations");
+            root.transform.SetParent(chunk.root.transform, false);
+            return root.transform;
+        }
+
+        private void CreateAuthoredDecoration(Transform parent, int gridX, int gridY)
+        {
+            Vector3Int cell = new Vector3Int(gridX, gridY, 0);
+            Sprite sprite = authoredDropTransitionTilemap.GetSprite(cell);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject decoration = new GameObject($"AuthoredDecoration_{gridX}_{gridY}");
+            decoration.transform.SetParent(parent, false);
+            decoration.transform.position = GridToWorldWithHeight(gridX, gridY);
+
+            SpriteRenderer renderer = decoration.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = 100;
+
+            Billboard billboard = decoration.AddComponent<Billboard>();
+            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+        }
+
+        private void CreateAuthoredTransitionWall(Transform parent, int gridX, int gridY)
+        {
+            Vector3Int cell = new Vector3Int(gridX, gridY, 0);
+            Sprite sprite = authoredDropTransitionTilemap.GetSprite(cell);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject wall = new GameObject($"AuthoredTransitionWall_{gridX}_{gridY}");
+            wall.transform.SetParent(parent, false);
+            wall.transform.position = GridToWorldWithHeight(gridX, gridY);
+
+            SpriteRenderer renderer = wall.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = 90;
+
+            Billboard billboard = wall.AddComponent<Billboard>();
+            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+        }
+
+        public override Vector3 GetPlayerSpawnPosition()
+        {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                Vector2Int spawn = FindAuthoredSpawnCell();
+                return GridToWorld(spawn.x, spawn.y);
+            }
+
+            return base.GetPlayerSpawnPosition();
+        }
+
+        private Vector2Int FindAuthoredSpawnCell()
+        {
+            if (useCustomAuthoredSpawnCell
+                && TryUseAuthoredSpawnCell(customAuthoredSpawnCell.x, customAuthoredSpawnCell.y, out Vector2Int customSpawn))
+            {
+                return customSpawn;
+            }
+
+            if (IsValidPosition(0, 0) && SampleAuthoredTile(0, 0).walkable)
+            {
+                return Vector2Int.zero;
+            }
+
+            int maxRadius = Mathf.Max(mapWidth, mapHeight);
+            for (int radius = 1; radius <= maxRadius; radius++)
+            {
+                for (int x = -radius; x <= radius; x++)
+                {
+                    if (TryUseAuthoredSpawnCell(x, -radius, out Vector2Int bottom)) return bottom;
+                    if (TryUseAuthoredSpawnCell(x, radius, out Vector2Int top)) return top;
+                }
+
+                for (int y = -radius + 1; y <= radius - 1; y++)
+                {
+                    if (TryUseAuthoredSpawnCell(-radius, y, out Vector2Int left)) return left;
+                    if (TryUseAuthoredSpawnCell(radius, y, out Vector2Int right)) return right;
+                }
+            }
+
+            return Vector2Int.zero;
+        }
+
+        private bool TryUseAuthoredSpawnCell(int x, int y, out Vector2Int cell)
+        {
+            cell = new Vector2Int(x, y);
+            return IsValidPosition(x, y) && SampleAuthoredTile(x, y).walkable;
+        }
+
+        protected override bool IsDropTransitionCell(int x, int y, int referenceLevel)
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap || authoredDropTransitionTilemap == null)
+            {
+                return false;
+            }
+
+            if (referenceLevel <= authoredHeightLevel)
+            {
+                return false;
+            }
+
+            Vector3Int cell = new Vector3Int(x, y, 0);
+            return IsAuthoredTransitionTile(authoredDropTransitionTilemap.GetTile(cell));
+        }
+
+        protected override bool IsValidDropDestination(int x, int y, int currentLevel)
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap)
+            {
+                return base.IsValidDropDestination(x, y, currentLevel);
+            }
+
+            Vector3Int cell = new Vector3Int(x, y, 0);
+            if (authoredWaterTilemap != null && authoredWaterTilemap.GetTile(cell) != null)
+            {
+                return false;
+            }
+
+            if (authoredBlockerTilemap != null && authoredBlockerTilemap.GetTile(cell) != null)
+            {
+                return false;
+            }
+
+            if (authoredDropTransitionTilemap != null
+                && IsAuthoredTransitionTile(authoredDropTransitionTilemap.GetTile(cell)))
+            {
+                return false;
+            }
+
+            if (authoredFloorTilemap == null)
+            {
+                return false;
+            }
+
+            TileBase floor = authoredFloorTilemap.GetTile(cell);
+            return floor != null && floor.name.Contains("sand1");
+        }
+
+        protected override bool IsClimbTransitionCell(int x, int y)
+        {
+            if (mapSource != BiomeMapSource.AuthoredTilemap || authoredDropTransitionTilemap == null)
+            {
+                return false;
+            }
+
+            Vector3Int cell = new Vector3Int(x, y, 0);
+            return IsAuthoredTransitionTile(authoredDropTransitionTilemap.GetTile(cell));
+        }
+
+        private TileSample SampleAuthoredTile(int worldX, int worldY)
+        {
+            Vector3Int cell = new Vector3Int(worldX, worldY, 0);
+
+            if (authoredWaterTilemap != null && authoredWaterTilemap.GetTile(cell) != null)
+            {
+                return new TileSample(BiomeTileType.Puddle, authoredWaterTilemap.GetTile(cell), false);
+            }
+
+            if (authoredBlockerTilemap != null)
+            {
+                TileBase blocker = authoredBlockerTilemap.GetTile(cell);
+                if (blocker != null)
+                {
+                    return new TileSample(authoredBlockerType, blocker, false);
+                }
+            }
+
+            if (authoredFloorTilemap != null)
+            {
+                TileBase floor = authoredFloorTilemap.GetTile(cell);
+                if (floor != null)
+                {
+                    return new TileSample(authoredFloorType, floor, IsTileWalkable(authoredFloorType));
+                }
+            }
+
+            if (authoredDropTransitionTilemap != null)
+            {
+                TileBase transition = authoredDropTransitionTilemap.GetTile(cell);
+                if (transition != null)
+                {
+                    return new TileSample(authoredFloorType, transition, true);
+                }
+            }
+
+            return new TileSample(BiomeTileType.None, null, false);
+        }
+
+        private bool IsAuthoredTransitionTile(TileBase tile)
+        {
+            if (tile == null)
+            {
+                return false;
+            }
+
+            string tileName = tile.name;
+            if (string.IsNullOrEmpty(tileName))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(authoredTransitionTileNameContains)
+                && tileName.Contains(authoredTransitionTileNameContains))
+            {
+                return true;
+            }
+
+            return tileName.Contains("wall")
+                || tileName.Contains("Wall")
+                || tileName.Contains("cliff")
+                || tileName.Contains("Cliff");
+        }
+
         protected override TileBase GetTileAsset(BiomeTileType tileType)
         {
             return config != null ? config.GetTileForType(tileType) : null;
@@ -111,8 +595,25 @@ namespace Necrocis
             return config.regions[index].baseHeight;
         }
 
+        protected override int GetRegionPlateauRise(int regionType)
+        {
+            if (config == null || config.regions == null || config.regions.Count == 0)
+            {
+                return 1;
+            }
+
+            int index = Mathf.Clamp(regionType, 0, config.regions.Count - 1);
+            int rise = config.regions[index].plateauRise;
+            return rise > 0 ? rise : 1;
+        }
+
         protected override int GetWallDepth(int worldX, int worldY)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return 0;
+            }
+
             BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
             if (region == null || region.wallTiles == null) return 0;
             return region.wallTiles.Length;
@@ -120,6 +621,11 @@ namespace Necrocis
 
         protected override TileBase GetWallTile(int worldX, int worldY, int wallRow)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return null;
+            }
+
             BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
             if (region == null || region.wallTiles == null) return null;
             if (wallRow < 0 || wallRow >= region.wallTiles.Length) return null;
@@ -128,14 +634,37 @@ namespace Necrocis
 
         protected override TileBase GetMapEdgeWallTile(int worldX, int worldY)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return null;
+            }
+
             BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
             return region != null ? region.mapEdgeWallTile : null;
         }
 
         protected override int GetMapEdgeWallDepth(int worldX, int worldY)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return 0;
+            }
+
             BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
             return region != null ? region.mapEdgeWallDepth : 0;
+        }
+
+        protected override TileBase GetSideWallTile(int worldX, int worldY)
+        {
+            // Authored maps already contain their intended cliff edges. Generating the
+            // procedural side-wall fallback here adds visible black tiles beside them.
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                return null;
+            }
+
+            BiomeRegionDefinition region = GetRegionDefinition(worldX, worldY);
+            return region != null ? region.sideWallTile : null;
         }
 
         protected override bool IsObjectAreaAllowed(int x, int y)
@@ -147,13 +676,45 @@ namespace Necrocis
             int bottom = Mathf.Max(0, config.marginBottom);
             int top = Mathf.Max(0, config.marginTop);
 
-            return x >= left && x < mapWidth - right && y >= bottom && y < mapHeight - top;
+            return x >= MinGridX + left
+                && x < MaxGridXExclusive - right
+                && y >= MinGridY + bottom
+                && y < MaxGridYExclusive - top;
         }
 
         protected override float GetDensityForRule(ObjectRule rule, int worldX, int worldY, int regionType)
         {
+            if (mapSource == BiomeMapSource.AuthoredTilemap)
+            {
+                bool isEnemySpawner = rule.category == SpawnCategory.EnemySpawner;
+                if ((isEnemySpawner && !spawnAuthoredEnemies)
+                    || (!isEnemySpawner && !spawnAuthoredMapObjects))
+                {
+                    return 0f;
+                }
+            }
+
             float density = base.GetDensityForRule(rule, worldX, worldY, regionType);
             if (density <= 0f)
+            {
+                return 0f;
+            }
+
+            if (mapSource == BiomeMapSource.AuthoredTilemap && !SampleAuthoredTile(worldX, worldY).walkable)
+            {
+                return 0f;
+            }
+
+            if (mapSource == BiomeMapSource.AuthoredTilemap
+                && rule.category == SpawnCategory.EnemySpawner
+                && !IsAuthoredEnemySpawnAllowed(worldX, worldY))
+            {
+                return 0f;
+            }
+
+            if (mapSource == BiomeMapSource.AuthoredTilemap
+                && authoredDropTransitionTilemap != null
+                && IsAuthoredTransitionTile(authoredDropTransitionTilemap.GetTile(new Vector3Int(worldX, worldY, 0))))
             {
                 return 0f;
             }
@@ -164,6 +725,44 @@ namespace Necrocis
             }
 
             return density;
+        }
+
+        private bool IsAuthoredEnemySpawnAllowed(int worldX, int worldY)
+        {
+            Vector3Int cell = new Vector3Int(worldX, worldY, 0);
+            if (authoredWaterTilemap != null && authoredWaterTilemap.GetTile(cell) != null)
+            {
+                return false;
+            }
+
+            if (authoredBlockerTilemap != null && authoredBlockerTilemap.GetTile(cell) != null)
+            {
+                return false;
+            }
+
+            if (authoredDropTransitionTilemap != null
+                && IsAuthoredTransitionTile(authoredDropTransitionTilemap.GetTile(cell)))
+            {
+                return false;
+            }
+
+            return SampleAuthoredTile(worldX, worldY).walkable;
+        }
+
+        public override bool CanSpawnEnemyAt(int x, int y)
+        {
+            if (!base.CanSpawnEnemyAt(x, y))
+            {
+                return false;
+            }
+
+            if (mapSource != BiomeMapSource.AuthoredTilemap)
+            {
+                return !IsInsideMidBossArenaBounds(x, y);
+            }
+
+            return IsAuthoredEnemySpawnAllowed(x, y)
+                && !IsInsideMidBossArenaBounds(x, y);
         }
 
         protected override void BuildObjectRules()
@@ -213,7 +812,8 @@ namespace Necrocis
                         scaleMax = ruleConfig.scaleRange.y,
                         scaleSalt = ruleConfig.scaleSalt,
                         scaleBias = ruleConfig.scaleBias,
-                        spacingPadding = ruleConfig.spacingPadding
+                        spacingPadding = ruleConfig.spacingPadding,
+                        avoidPlayerSpawnRadius = ruleConfig.avoidPlayerSpawnRadius
                     });
 
                     runtimeRules.Add(ruleConfig);
@@ -357,7 +957,7 @@ namespace Necrocis
 
             Vector2Int center = midBossArenaConfig.useCustomCenter
                 ? midBossArenaConfig.centerGrid
-                : new Vector2Int(mapWidth / 2, mapHeight / 2);
+                : new Vector2Int(MinGridX + mapWidth / 2, MinGridY + mapHeight / 2);
 
             int halfWidth = Mathf.Max(4, midBossArenaConfig.arenaSize.x / 2);
             int halfHeight = Mathf.Max(4, midBossArenaConfig.arenaSize.y / 2);
@@ -370,7 +970,9 @@ namespace Necrocis
 
         private void SpawnConfiguredObject(BiomeObjectRuleConfig rule, ChunkSpawnRecord record, Chunk chunk)
         {
-            if (rule.sprites == null || rule.sprites.Length == 0) return;
+            bool hasPrefab = !string.IsNullOrWhiteSpace(rule.resourcePrefabPath);
+            bool hasSprites = rule.sprites != null && rule.sprites.Length > 0;
+            if (!hasPrefab && !hasSprites) return;
 
             int x = record.x;
             int y = record.y;
@@ -380,8 +982,39 @@ namespace Necrocis
             GameObject obj = AcquireObject(poolKey, $"{baseName}_{x}_{y}");
             obj.transform.position = GridToWorldWithHeight(x, y, rule.heightOffset);
 
+            if (hasPrefab)
+            {
+                if (!ConfigurePrefabObject(obj, rule))
+                {
+                    ReleasePooledObject(poolKey, obj);
+                    return;
+                }
+            }
+            else
+            {
+                ConfigureSpriteObject(obj, rule, x, y);
+            }
+
+            ConfigureBillboard(obj, rule.useBillboard);
+            ConfigureYSort(obj, rule.useYSort, rule.sortingOrder);
+            ConfigureCollider(obj, rule);
+            ApplyScale(obj, rule, x, y);
+
+            RegisterObject(chunk, obj, id, poolKey, rule.blocksMovement);
+            ActivateSpawnedObject(obj);
+        }
+
+        private void ConfigureSpriteObject(GameObject obj, BiomeObjectRuleConfig rule, int x, int y)
+        {
             SpriteRenderer sr = GetOrAddComponent<SpriteRenderer>(obj);
+            sr.enabled = true;
             sr.sortingOrder = rule.sortingOrder;
+
+            RuntimePrefabInstance marker = obj.GetComponent<RuntimePrefabInstance>();
+            if (marker != null && marker.instance != null)
+            {
+                marker.instance.SetActive(false);
+            }
 
             if (rule.animate)
             {
@@ -403,14 +1036,117 @@ namespace Necrocis
                 Sprite sprite = SelectSprite(rule, x, y);
                 sr.sprite = sprite;
             }
+        }
 
-            ConfigureBillboard(obj, rule.useBillboard);
-            ConfigureYSort(obj, rule.useYSort, rule.sortingOrder);
-            ConfigureCollider(obj, rule);
-            ApplyScale(obj, rule, x, y);
+        private bool ConfigurePrefabObject(GameObject obj, BiomeObjectRuleConfig rule)
+        {
+            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.enabled = false;
+                sr.sprite = null;
+            }
 
-            RegisterObject(chunk, obj, id, poolKey, rule.blocksMovement);
-            ActivateSpawnedObject(obj);
+            SpriteFrameAnimator anim = obj.GetComponent<SpriteFrameAnimator>();
+            if (anim != null)
+            {
+                anim.Stop();
+                anim.enabled = false;
+            }
+
+            GameObject prefab = LoadResourcePrefab(rule.resourcePrefabPath);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[ConfigurableBiomeManager] Resources prefab를 찾을 수 없습니다: {rule.resourcePrefabPath}");
+                return false;
+            }
+
+            RuntimePrefabInstance marker = GetOrAddComponent<RuntimePrefabInstance>(obj);
+            if (marker.instance == null || marker.resourcePath != rule.resourcePrefabPath)
+            {
+                if (marker.instance != null)
+                {
+                    Destroy(marker.instance);
+                }
+
+                marker.instance = Instantiate(prefab, obj.transform);
+                marker.instance.name = prefab.name;
+                marker.resourcePath = rule.resourcePrefabPath;
+            }
+
+            marker.instance.SetActive(true);
+            marker.instance.transform.localPosition = rule.prefabLocalPosition;
+            marker.instance.transform.localRotation = Quaternion.Euler(rule.prefabRotationEuler);
+            ApplyPrefabMaterial(marker.instance, rule.resourceTexturePath);
+            return true;
+        }
+
+        private GameObject LoadResourcePrefab(string path)
+        {
+            if (resourcePrefabCache.TryGetValue(path, out GameObject cached))
+            {
+                return cached;
+            }
+
+            GameObject prefab = Resources.Load<GameObject>(path);
+            resourcePrefabCache[path] = prefab;
+            return prefab;
+        }
+
+        private void ApplyPrefabMaterial(GameObject instance, string texturePath)
+        {
+            if (instance == null || string.IsNullOrWhiteSpace(texturePath))
+            {
+                return;
+            }
+
+            Material material = LoadResourceMaterial(texturePath);
+            if (material == null)
+            {
+                return;
+            }
+
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                renderers[i].sharedMaterial = material;
+            }
+        }
+
+        private Material LoadResourceMaterial(string texturePath)
+        {
+            if (resourceMaterialCache.TryGetValue(texturePath, out Material cached))
+            {
+                return cached;
+            }
+
+            Texture2D texture = Resources.Load<Texture2D>(texturePath);
+            if (texture == null)
+            {
+                Debug.LogWarning($"[ConfigurableBiomeManager] Resources texture를 찾을 수 없습니다: {texturePath}");
+                return null;
+            }
+
+            texture.filterMode = FilterMode.Point;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null)
+            {
+                shader = Shader.Find("Unlit/Texture");
+            }
+
+            Material material = new Material(shader);
+            if (material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", texture);
+            }
+            else
+            {
+                material.mainTexture = texture;
+            }
+
+            resourceMaterialCache[texturePath] = material;
+            return material;
         }
 
         private void ApplyScale(GameObject obj, BiomeObjectRuleConfig rule, int x, int y)

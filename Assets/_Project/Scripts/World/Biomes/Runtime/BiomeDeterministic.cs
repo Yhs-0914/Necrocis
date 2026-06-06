@@ -27,6 +27,20 @@ namespace Necrocis
             return new Vector2(ox, oy);
         }
 
+        public static float ComputeScale(int seed, int x, int y, int salt, float min, float max, float bias)
+        {
+            if (max < min) (min, max) = (max, min);
+            if (Mathf.Approximately(min, max)) return min;
+
+            float t = Hash01(seed, x, y, salt);
+            float effectiveBias = bias > 0f ? bias : 1f;
+            if (!Mathf.Approximately(effectiveBias, 1f))
+            {
+                t = Mathf.Pow(t, effectiveBias);
+            }
+            return Mathf.Lerp(min, max, t);
+        }
+
         private static uint Hash(uint seed, uint x, uint y, uint salt)
         {
             uint h = seed;

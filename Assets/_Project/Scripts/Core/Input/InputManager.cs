@@ -37,6 +37,7 @@ namespace Necrocis
         public InputAction RangedAttackAction { get; private set; } // 원거리 공격 (W)
         public InputAction Skill1Action { get; private set; }
         public InputAction Skill2Action { get; private set; }
+        public InputAction ClimbAction { get; private set; }
 
         public InputAction Digit1Action { get; private set; }       // 숫자키 1 (레벨업/직업 선택)
         public InputAction Digit2Action { get; private set; }       // 숫자키 2
@@ -45,6 +46,7 @@ namespace Necrocis
         public InputAction Digit5Action { get; private set; }       // 숫자키 5
 
         public InputAction StatWindowAction { get; private set; }   // 스탯창 토글 (O)
+        public InputAction MapAction { get; private set; }
         public InputAction DebugLevelUpAction { get; private set; } // 디버그 레벨업 (P)
 
         private const string RebindKey = "InputRebinds"; // PlayerPrefs 키(리바인딩 저장용)
@@ -99,6 +101,7 @@ namespace Necrocis
             RangedAttackAction = new InputAction("RangedAttack", InputActionType.Button, "<Keyboard>/w");
             Skill1Action = new InputAction("Skill1", InputActionType.Button, "<Keyboard>/e");
             Skill2Action = new InputAction("Skill2", InputActionType.Button, "<Keyboard>/r");
+            ClimbAction = new InputAction("Climb", InputActionType.Button, "<Keyboard>/space");
 
             Digit1Action = new InputAction("Digit1", InputActionType.Button, "<Keyboard>/1");
             Digit2Action = new InputAction("Digit2", InputActionType.Button, "<Keyboard>/2");
@@ -107,6 +110,7 @@ namespace Necrocis
             Digit5Action = new InputAction("Digit5", InputActionType.Button, "<Keyboard>/5");
 
             StatWindowAction = new InputAction("StatWindow", InputActionType.Button, "<Keyboard>/o");
+            MapAction = new InputAction("Map", InputActionType.Button, "<Keyboard>/m");
             DebugLevelUpAction = new InputAction("DebugLevelUp", InputActionType.Button, "<Keyboard>/p");
         }
 
@@ -264,12 +268,14 @@ namespace Necrocis
                 RangedAttackAction,
                 Skill1Action,
                 Skill2Action,
+                ClimbAction,
                 Digit1Action,
                 Digit2Action,
                 Digit3Action,
                 Digit4Action,
                 Digit5Action,
                 StatWindowAction,
+                MapAction,
                 DebugLevelUpAction
             };
         }

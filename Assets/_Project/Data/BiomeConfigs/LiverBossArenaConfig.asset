@@ -17,8 +17,8 @@ MonoBehaviour:
     onlyEnableOnLargeMaps: 1
     minimumMapWidth: 300
     minimumMapHeight: 300
-    useCustomCenter: 0
-    centerGrid: {x: 150, y: 150}
+    useCustomCenter: 1
+    centerGrid: {x: -84, y: -66}
     arenaSize: {x: 26, y: 26}
     wallThicknessInCells: 1
     lockBoundaryInsetInCells: 1
