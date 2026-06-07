@@ -39,10 +39,10 @@ namespace Necrocis
         // 기본 스탯
         private const float BASE_MAX_HEALTH = 10f;
         private const float BASE_MOVE_SPEED = 10f;
-        private const float BASE_ATTACK_POWER = 30f;
+        private const float BASE_ATTACK_POWER = 1f;
         private const float BASE_ATTACK_SPEED = 1f;
         private const float BASE_ATTACK_RANGE = 1f;
-        private const float BASE_MAGIC = 20f;
+        private const float BASE_MAGIC = 1f;
         private const float BASE_SKILL_COOLDOWN_REDUCTION = 0f;
 
         // CharacterStats의 이벤트를 외부에 전달 (중계 패턴)

@@ -372,6 +372,9 @@ namespace Necrocis
             }
 
             Vector3 returnPortalPosition = ResolveReturnPortalPosition();
+            Vector3 bossDeathPos = activeBoss != null
+                ? activeBoss.transform.position
+                : returnPortalPosition;
 
             if (activeBoss != null)
             {
@@ -397,6 +400,7 @@ namespace Necrocis
             }
 
             SpawnReturnPortal(returnPortalPosition);
+            SpawnBonusItemDrop(bossDeathPos);
 
             Debug.Log("[MidBossArena] 중간보스 처치 - 봉쇄 해제, 귀환 포탈 생성");
         }
@@ -467,6 +471,26 @@ namespace Necrocis
 
             ReturnPortal portal = portalObj.AddComponent<ReturnPortal>();
             portal.SetActive(true);
+        }
+
+        private void SpawnBonusItemDrop(Vector3 bossDeathPos)
+        {
+            if (biome == null)
+            {
+                return;
+            }
+
+            WorldItemSpawner spawner = biome.GetComponent<WorldItemSpawner>();
+            if (spawner == null)
+            {
+                spawner = biome.gameObject.AddComponent<WorldItemSpawner>();
+            }
+
+            bool spawnedItem = spawner.TrySpawnSingleRandomItemAt(bossDeathPos);
+            if (!spawnedItem)
+            {
+                Debug.Log("[MidBossArena] 보스 보너스 아이템 드랍 위치를 찾지 못했습니다.");
+            }
         }
 
         private void BuildTrigger()

@@ -68,6 +68,11 @@ namespace Necrocis
 
             if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
             {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+
                 OnDeath?.Invoke();
 
                 PlayerController player = GetComponent<PlayerController>();
@@ -78,13 +83,69 @@ namespace Necrocis
             }
         }
 
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (Stats != null && Stats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects == null || Stats == null)
+            {
+                return false;
+            }
+
+            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            Stats.RestoreHealth(reviveHealth);
+            StartInvincibility(invincibilityDuration, true);
+            return true;
+        }
+
         // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
-        public void TakeDamage(float damageAmount)
+        public void TakeDamage(float damageAmount, EnemyController sourceEnemy = null)
         {
             if (isInvincible || IsDead || damageAmount <= 0f) return;
             if (Stats == null) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects != null)
+            {
+                actualDamage = itemEffects.ProcessIncomingDamage(actualDamage, sourceEnemy);
+            }
+
+            if (actualDamage <= 0f)
+            {
+                return;
+            }
+
+            if (itemEffects != null)
+            {
+                float currentHealth = Stats.CurrentHealth;
+                float maxHealth = Stats.MaxHealth;
+                if (actualDamage >= currentHealth
+                    && itemEffects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
+                {
+                    float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
+                    if (currentHealth > targetHealth)
+                    {
+                        Stats.ApplyDamage(currentHealth - targetHealth);
+                    }
+                    else if (targetHealth > currentHealth)
+                    {
+                        Stats.RestoreHealth(targetHealth - currentHealth);
+                    }
+
+                    StartInvincibility(invincibilityDuration, true);
+                    return;
+                }
+            }
+
             AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
             Stats.ApplyDamage(actualDamage);
 

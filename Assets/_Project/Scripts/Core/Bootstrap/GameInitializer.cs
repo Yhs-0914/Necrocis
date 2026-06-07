@@ -45,6 +45,12 @@ namespace Necrocis
                 gmObj.AddComponent<GameManager>();
             }
 
+            if (FindFirstObjectByType<AudioManager>() == null)
+            {
+                GameObject audioObj = new GameObject("AudioManager");
+                audioObj.AddComponent<AudioManager>();
+            }
+
             // HubRoom 찾기
             if (hubRoom == null)
             {
@@ -132,6 +138,15 @@ namespace Necrocis
         {
             if (playerObj.GetComponent<PlayerAttack>() == null)
                 playerObj.AddComponent<PlayerAttack>();
+
+            if (playerObj.GetComponent<PlayerItemManager>() == null)
+                playerObj.AddComponent<PlayerItemManager>();
+
+            if (playerObj.GetComponent<PlayerItemPickupNotifier>() == null)
+                playerObj.AddComponent<PlayerItemPickupNotifier>();
+
+            if (playerObj.GetComponent<PlayerItemTestPanel>() == null)
+                playerObj.AddComponent<PlayerItemTestPanel>();
 
             if (playerObj.GetComponent<PlayerClassSkillController>() == null)
                 playerObj.AddComponent<PlayerClassSkillController>();

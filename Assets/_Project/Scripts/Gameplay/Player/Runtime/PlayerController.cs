@@ -149,6 +149,7 @@ namespace Necrocis
         public float Magic => playerStats != null ? playerStats.Magic : 0f;
         public float SkillCooldownReduction => playerStats != null ? playerStats.SkillCooldownReduction : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
+        public bool IsMoving => isMoving;
         // ?좊땲???앸챸二쇨린: 李몄“瑜?罹먯떆?섍퀬 湲곕낯 ?곹깭瑜?珥덇린?뷀빀?덈떎.
 
         private void Awake()
@@ -230,7 +231,7 @@ namespace Necrocis
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
-            Debug.Log($"[Player] ?쒖옉 ?꾩튂: {transform.position}");
+            Debug.Log($"[Player] 시작 위치: {transform.position}");
         }
         // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -721,9 +722,20 @@ namespace Necrocis
 
             Health health = GetComponent<Health>();
             if (health != null)
+            {
                 health.TakeDamage(damage);
+            }
             else
-                playerStats?.TakeDamage(damage);
+            {
+                float finalDamage = Mathf.Max(0f, damage);
+                PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+                if (itemEffects != null)
+                {
+                    finalDamage *= itemEffects.GetIncomingDamageMultiplier();
+                }
+
+                playerStats?.TakeDamage(finalDamage);
+            }
         }
         // Heal: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -973,21 +985,54 @@ namespace Necrocis
         // HP 蹂寃?肄쒕갚: ?곕?吏/?뚮났 濡쒓렇 異쒕젰 + HP 0?대㈃ ?щ쭩 泥섎━
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
+            if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
+            {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+            }
+
             if (args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
-                Debug.Log($"[Player] ?쇳빐 {damageTaken} 諛쏆쓬 | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 피해 {damageTaken} 받음 | HP {args.CurrentValue}/{args.MaxValue}");
             }
             else if (args.CurrentValue > args.PreviousValue)
             {
                 float healed = args.CurrentValue - args.PreviousValue;
-                Debug.Log($"[Player] ?뚮났 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
             }
 
             if (!deathHandled && args.CurrentValue <= 0f)
             {
                 HandleDeath();
             }
+        }
+
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (playerStats != null && playerStats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects == null || playerStats == null)
+            {
+                return false;
+            }
+
+            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            playerStats.RuntimeStats.RestoreHealth(reviveHealth);
+            Health health = GetComponent<Health>();
+            health?.GrantTemporaryInvincibility(0.5f);
+            Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
+            return true;
         }
         // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -1008,6 +1053,8 @@ namespace Necrocis
             StopMotion();
             isDashing = false;
             dashVelocity = Vector3.zero;
+            AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.Death);
+            AudioManager.Instance?.StopBgm();
 
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
@@ -1017,7 +1064,6 @@ namespace Necrocis
             if (classSkillController != null)
                 classSkillController.enabled = false;
 
-            AudioManager.Instance?.PlaySFX("PlayerDeath"); // [Sound] 사망
             OnPlayerDied?.Invoke();
 
             if (deathRoutine != null)

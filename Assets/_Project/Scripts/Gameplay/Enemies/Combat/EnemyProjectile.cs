@@ -13,6 +13,7 @@ namespace Necrocis
         private const float MinHitRadius = 0.15f;
 
         private static readonly Stack<EnemyProjectile> Pool = new Stack<EnemyProjectile>();
+        private static readonly List<EnemyProjectile> ActiveProjectiles = new List<EnemyProjectile>();
         private static Transform poolRoot;
 
         private static Sprite defaultProjectileSprite;
@@ -25,6 +26,10 @@ namespace Necrocis
         private float lifeTime;
         private float elapsed;
         private bool launched;
+        private EnemyController ownerEnemy;
+
+        public static IReadOnlyList<EnemyProjectile> ActiveEnemyProjectiles => ActiveProjectiles;
+        public bool IsLaunched => launched && gameObject.activeSelf;
 
         // ─────────────────────────────────
         // 풀링 API
@@ -57,10 +62,14 @@ namespace Necrocis
             proj.launched = false;
             proj.elapsed = 0f;
             proj.gameObject.SetActive(true);
+            if (!ActiveProjectiles.Contains(proj))
+            {
+                ActiveProjectiles.Add(proj);
+            }
             return proj;
         }
 
-        public void Launch(Vector3 direction, float damage, float speed, float lifeTime)
+        public void Launch(Vector3 direction, float damage, float speed, float lifeTime, EnemyController sourceEnemy = null)
         {
             moveDirection = direction.normalized;
             this.damage = damage;
@@ -68,16 +77,24 @@ namespace Necrocis
             this.lifeTime = lifeTime;
             elapsed = 0f;
             launched = true;
+            ownerEnemy = sourceEnemy;
         }
 
         private void ReturnToPool()
         {
             if (!launched && !gameObject.activeSelf) return;
+            ActiveProjectiles.Remove(this);
             launched = false;
+            ownerEnemy = null;
             gameObject.SetActive(false);
             EnsurePoolRoot();
             transform.SetParent(poolRoot, false);
             Pool.Push(this);
+        }
+
+        public void Deflect()
+        {
+            ReturnToPool();
         }
 
         // ─────────────────────────────────
@@ -117,7 +134,7 @@ namespace Necrocis
                 Health playerHealth = player.GetComponent<Health>();
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
-                    playerHealth.TakeDamage(damage);
+                    playerHealth.TakeDamage(damage, ownerEnemy);
                 }
                 ReturnToPool();
             }
@@ -221,6 +238,11 @@ namespace Necrocis
             float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / abSqr);
             Vector2 closest = a + ab * t;
             return (p - closest).sqrMagnitude;
+        }
+
+        private void OnDisable()
+        {
+            ActiveProjectiles.Remove(this);
         }
 
         // ─────────────────────────────────
