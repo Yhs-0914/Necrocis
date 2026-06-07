@@ -65,18 +65,10 @@ namespace Necrocis
                 float dashDuration = dashDistance / Mathf.Max(0.1f, warriorSkill2.dashSpeed);
                 float elapsed = 0f;
 
-                CharacterController cc = playerController.GetComponent<CharacterController>();
-                Rigidbody rb = playerController.GetComponent<Rigidbody>();
-
                 while (elapsed < dashDuration)
                 {
                     float step = warriorSkill2.dashSpeed * Time.deltaTime;
-                    if (cc != null)
-                        cc.Move(dashDir * step);
-                    else if (rb != null)
-                        rb.MovePosition(rb.position + dashDir * step);
-                    else
-                        playerController.transform.position += dashDir * step;
+                    playerController.TryMoveByWorld(dashDir * step);
 
                     elapsed += Time.deltaTime;
                     yield return null;

@@ -15,6 +15,9 @@ namespace Necrocis
         private const float LiverMidBossMinimumMaxHealth = 180f;
         private const float StomachMidBossMinimumMaxHealth = 170f;
         private const float LungMidBossMinimumMaxHealth = 40f;
+        private const float BossContactDamage = 1f;
+        private const float BossContactDamageCooldown = 1f;
+        private const float BossContactPushSpeed = 5f;
 
         private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
@@ -30,7 +33,11 @@ namespace Necrocis
         private EnemySpawnRuleConfig bossRule;
 
         private EnemyController activeBoss;
+        private IntestineBossPattern activeIntestinePattern;
+        private LiverBossPattern activeLiverPattern;
+        private StomachBossPattern activeStomachPattern;
         private LungBossPattern activeLungPattern;
+        private readonly List<MidBossContactDamage> activeContactDamage = new List<MidBossContactDamage>();
         private Vector2Int centerGrid;
         private Vector2Int arenaSize;
         private bool arenaLocked;
@@ -154,6 +161,8 @@ namespace Necrocis
             arenaLocked = true;
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
             ApplyFogVisualState();
+            RecenterBossEncounter();
+            SetBossEncounterActive(true);
 
             if (GameManager.Instance != null)
             {
@@ -184,6 +193,9 @@ namespace Necrocis
             activeBoss.Defeated -= HandleBossDefeated;
             activeBoss.Defeated += HandleBossDefeated;
             ConfigureBiomeSpecificBossPattern(activeBoss, bossSpawnPosition);
+            RegisterBossContactDamage(activeBoss);
+            SetBossEncounterActive(false);
+            RecenterBossEncounter();
 
             Debug.Log($"[MidBossArena] 중간보스 스폰: {bossRule.name} @ {bossSpawnPosition}");
         }
@@ -200,6 +212,9 @@ namespace Necrocis
             LiverBossPattern liverPattern = boss.GetComponent<LiverBossPattern>();
             StomachBossPattern stomachPattern = boss.GetComponent<StomachBossPattern>();
             LungBossPattern lungPattern = GetComponent<LungBossPattern>();
+            activeIntestinePattern = null;
+            activeLiverPattern = null;
+            activeStomachPattern = null;
             activeLungPattern = null;
 
             if (patternType == MidBossPatternType.Intestine)
@@ -225,6 +240,8 @@ namespace Necrocis
                 }
 
                 intestinePattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.intestinePattern);
+                intestinePattern.SetEncounterActive(false);
+                activeIntestinePattern = intestinePattern;
                 return;
             }
 
@@ -251,6 +268,8 @@ namespace Necrocis
                 }
 
                 liverPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.liverPattern);
+                liverPattern.SetEncounterActive(false);
+                activeLiverPattern = liverPattern;
                 return;
             }
 
@@ -277,6 +296,8 @@ namespace Necrocis
                 }
 
                 stomachPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.stomachPattern);
+                stomachPattern.SetEncounterActive(false);
+                activeStomachPattern = stomachPattern;
                 return;
             }
 
@@ -304,6 +325,8 @@ namespace Necrocis
 
                 activeLungPattern = lungPattern;
                 lungPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.lungPattern);
+                lungPattern.SetEncounterActive(false);
+                lungPattern.ForEachEncounterBoss(RegisterBossContactDamage);
                 return;
             }
 
@@ -327,7 +350,78 @@ namespace Necrocis
                 lungPattern.enabled = false;
             }
 
-            boss.SetAiSuppressed(false);
+            boss.SetAiSuppressed(true);
+        }
+
+        private void SetBossEncounterActive(bool active)
+        {
+            bool hasPattern = activeIntestinePattern != null
+                || activeLiverPattern != null
+                || activeStomachPattern != null
+                || activeLungPattern != null;
+
+            if (activeBoss != null && !activeBoss.IsDead)
+            {
+                activeBoss.SetAiSuppressed(!active || hasPattern);
+            }
+
+            activeIntestinePattern?.SetEncounterActive(active);
+            activeLiverPattern?.SetEncounterActive(active);
+            activeStomachPattern?.SetEncounterActive(active);
+            activeLungPattern?.SetEncounterActive(active);
+
+            for (int i = 0; i < activeContactDamage.Count; i++)
+            {
+                if (activeContactDamage[i] != null)
+                {
+                    activeContactDamage[i].SetDamageActive(active && !bossDefeated);
+                }
+            }
+        }
+
+        private void RecenterBossEncounter()
+        {
+            if (activeBoss == null || biome == null || bossRule == null)
+            {
+                return;
+            }
+
+            Vector3 center = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, bossRule.heightOffset);
+            if (activeLungPattern != null)
+            {
+                activeLungPattern.RecenterEncounter();
+                return;
+            }
+
+            activeBoss.transform.position = center;
+        }
+
+        private void RegisterBossContactDamage(EnemyController boss)
+        {
+            if (boss == null)
+            {
+                return;
+            }
+
+            MidBossContactDamage contactDamage = boss.GetComponent<MidBossContactDamage>();
+            if (contactDamage == null)
+            {
+                contactDamage = boss.gameObject.AddComponent<MidBossContactDamage>();
+            }
+
+            contactDamage.Initialize(boss, BossContactDamage, BossContactDamageCooldown, BossContactPushSpeed);
+            contactDamage.SetDamageActive(arenaLocked && !bossDefeated);
+
+            if (!activeContactDamage.Contains(contactDamage))
+            {
+                activeContactDamage.Add(contactDamage);
+            }
+
+            Collider bossCollider = boss.GetComponent<Collider>();
+            if (bossCollider != null)
+            {
+                bossCollider.isTrigger = true;
+            }
         }
 
         private MidBossPatternType ResolveBossPatternType()
@@ -365,6 +459,7 @@ namespace Necrocis
 
             arenaLocked = false;
             bossDefeated = true;
+            SetBossEncounterActive(false);
 
             if (biome != null)
             {
@@ -375,12 +470,15 @@ namespace Necrocis
             Vector3 bossDeathPos = activeBoss != null
                 ? activeBoss.transform.position
                 : returnPortalPosition;
+            EnemyController defeatedBoss = activeBoss;
 
-            if (activeBoss != null)
+            if (defeatedBoss != null)
             {
-                activeBoss.Defeated -= HandleBossDefeated;
+                EnemyProjectile.ReturnProjectilesOwnedBy(defeatedBoss);
+                defeatedBoss.Defeated -= HandleBossDefeated;
                 activeBoss = null;
             }
+
             if (activeLungPattern != null)
             {
                 activeLungPattern.DisposeEncounter();
@@ -697,10 +795,7 @@ namespace Necrocis
                 return arenaConfig.centerGrid;
             }
 
-            // 플레이어 진입 포탈은 (mapWidth/2, y=5) — 아레나를 바로 위에 배치
-            int halfArenaH = Mathf.Max(4, arenaSize.y / 2);
-            int nearEntryY = halfArenaH + 8;
-            return new Vector2Int(biome.MapWidth / 2, nearEntryY);
+            return new Vector2Int(biome.MapWidth / 2, biome.MapHeight / 2);
         }
 
         private EnemySpawnRuleConfig ResolveBossRule(IList<EnemySpawnRuleConfig> availableEnemyRules)
@@ -783,7 +878,7 @@ namespace Necrocis
                 useYSort = true,
                 animationSpeed = 0.16f,
                 addCollider = true,
-                isTrigger = false,
+                isTrigger = true,
                 colliderSize = new Vector3(0.85f, 1.15f, 0.85f),
                 colliderCenter = new Vector3(0f, 0.58f, 0f),
                 idleSprites = new[] { sprite },
@@ -832,6 +927,8 @@ namespace Necrocis
                 boss.moveSpeed *= Mathf.Max(0.01f, bossDefinition.moveSpeedMultiplier);
             }
 
+            ApplyBossScaleToCollision(boss, GetSafeScaleMultiplier(bossDefinition?.scaleMultiplier ?? Vector3.one));
+
             return boss;
         }
 
@@ -874,7 +971,7 @@ namespace Necrocis
                 useYSort = source.useYSort,
                 animationSpeed = source.animationSpeed,
                 addCollider = source.addCollider,
-                isTrigger = source.isTrigger,
+                isTrigger = true,
                 colliderSize = source.colliderSize,
                 colliderCenter = source.colliderCenter,
                 idleSprites = source.idleSprites,
@@ -925,12 +1022,30 @@ namespace Necrocis
 
             if (bossDefinition != null)
             {
-                boss.scale = Vector3.Scale(boss.scale, GetSafeScaleMultiplier(bossDefinition.scaleMultiplier));
+                Vector3 scaleMultiplier = GetSafeScaleMultiplier(bossDefinition.scaleMultiplier);
+                boss.scale = Vector3.Scale(boss.scale, scaleMultiplier);
+                ApplyBossScaleToCollision(boss, scaleMultiplier);
             }
 
             boss.maxHealth = Mathf.Max(boss.maxHealth, GetMinimumBossMaxHealth(bossDefinition));
 
             return boss;
+        }
+
+        private static void ApplyBossScaleToCollision(EnemySpawnRuleConfig boss, Vector3 scaleMultiplier)
+        {
+            if (boss == null)
+            {
+                return;
+            }
+
+            boss.colliderSize = ScaleVector(boss.colliderSize, scaleMultiplier);
+            boss.colliderCenter = ScaleVector(boss.colliderCenter, scaleMultiplier);
+        }
+
+        private static Vector3 ScaleVector(Vector3 value, Vector3 scale)
+        {
+            return new Vector3(value.x * scale.x, value.y * scale.y, value.z * scale.z);
         }
 
         private static Vector3 GetSafeScaleMultiplier(Vector3 scaleMultiplier)

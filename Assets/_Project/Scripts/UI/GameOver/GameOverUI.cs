@@ -54,6 +54,13 @@ namespace Necrocis
 
         private void HandlePlayerDied()
         {
+            PlayerController player = PlayerController.Instance;
+            PlayerDeathScreen deathScreen = player != null ? player.GetComponent<PlayerDeathScreen>() : null;
+            if (deathScreen != null && deathScreen.IsShowing)
+            {
+                return;
+            }
+
             StartCoroutine(ShowRoutine());
         }
 

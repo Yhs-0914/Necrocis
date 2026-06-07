@@ -152,6 +152,7 @@ namespace Necrocis
         private float nextMeleeTime;
         private float nextPhase2AttackTime;
         private bool actionRunning;
+        private bool encounterActive;
         private readonly List<GameObject> activeTempObjects = new List<GameObject>();
 
         public string CurrentPhaseName => phase.ToString();
@@ -168,6 +169,7 @@ namespace Necrocis
             nextMeleeTime = Time.time + 1f;
             nextPhase2AttackTime = phase == BossPhase.Phase2 ? Time.time + 1f : float.PositiveInfinity;
             actionRunning = false;
+            encounterActive = false;
             baseScale = transform.localScale;
             visualRenderer = GetComponentInChildren<SpriteRenderer>();
 
@@ -238,6 +240,7 @@ namespace Necrocis
         {
             StopAllCoroutines();
             actionRunning = false;
+            encounterActive = false;
             transform.localScale = baseScale;
             CleanupPatternObjects();
 
@@ -259,6 +262,27 @@ namespace Necrocis
             actionRunning = false;
             transform.localScale = baseScale;
             CleanupPatternObjects();
+        }
+
+        public void SetEncounterActive(bool active)
+        {
+            if (encounterActive == active)
+            {
+                return;
+            }
+
+            encounterActive = active;
+            StopAllCoroutines();
+            actionRunning = false;
+
+            if (active)
+            {
+                nextChargeTime = Time.time + 1.2f;
+                nextMeleeTime = Time.time + 1f;
+                nextPhase2AttackTime = phase == BossPhase.Phase2
+                    ? Time.time + 1f
+                    : float.PositiveInfinity;
+            }
         }
 
         [ContextMenu("Debug/Force Phase 1")]
@@ -312,6 +336,11 @@ namespace Necrocis
 
         private void Update()
         {
+            if (!encounterActive)
+            {
+                return;
+            }
+
             if (boss == null || boss.IsDead)
             {
                 enabled = false;
@@ -354,7 +383,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
-            if (boss == null || boss.IsDead || actionRunning || phase == BossPhase.Transition || PlayerController.Instance == null)
+            if (!encounterActive || boss == null || boss.IsDead || actionRunning || phase == BossPhase.Transition || PlayerController.Instance == null)
             {
                 return;
             }
@@ -805,21 +834,7 @@ namespace Necrocis
                 return;
             }
 
-            CharacterController controller = player.GetComponent<CharacterController>();
-            if (controller != null && controller.enabled)
-            {
-                controller.Move(displacement);
-                return;
-            }
-
-            Rigidbody body = player.GetComponent<Rigidbody>();
-            if (body != null)
-            {
-                body.MovePosition(body.position + displacement);
-                return;
-            }
-
-            player.transform.position += displacement;
+            player.TryMoveByWorld(displacement);
         }
 
         private IEnumerator FadeAndDestroy(GameObject obj, float duration, Color startColor, float endScale)

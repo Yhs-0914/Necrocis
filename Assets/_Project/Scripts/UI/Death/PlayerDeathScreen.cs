@@ -24,6 +24,8 @@ namespace Necrocis
         private bool isShowing;
         private bool isLoading;
 
+        public bool IsShowing => isShowing;
+
         private void Start()
         {
             EnsureEventSystem();

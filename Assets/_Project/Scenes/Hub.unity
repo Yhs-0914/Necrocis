@@ -10801,6 +10801,10 @@ MonoBehaviour:
   walkFrameRate: 8
   attackAnimDuration: 0.2
   attackFrameRate: 12
+  deathSprites:
+  - {fileID: 21300000, guid: 0531f4b21de89454ea0f10958f0422bb, type: 3}
+  - {fileID: 21300000, guid: e00a56c4538f24d42a88ce826883acfb, type: 3}
+  deathFrameRate: 8
   lockYPosition: 0
   lockedY: -2
   groundOffsetY: -2

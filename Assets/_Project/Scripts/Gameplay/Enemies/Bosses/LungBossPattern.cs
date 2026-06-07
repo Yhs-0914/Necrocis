@@ -162,6 +162,7 @@ namespace Necrocis
         private float nextDiveTime;
         private bool phase2ActionRunning;
         private bool encounterDefeated;
+        private bool encounterActive;
         private Vector3 lastDefeatedPosition;
         private readonly List<GameObject> activeTempObjects = new List<GameObject>();
 
@@ -178,6 +179,7 @@ namespace Necrocis
             baseScale = transform.localScale;
             phase = startInPhase2ForDebug ? BossPhase.Phase2 : BossPhase.Phase1;
             encounterDefeated = false;
+            encounterActive = false;
             phase2ActionRunning = false;
             lastDefeatedPosition = anchor;
             nextWindGustTime = Time.time + 1.2f;
@@ -317,6 +319,7 @@ namespace Necrocis
         public void DisposeEncounter()
         {
             StopAllCoroutines();
+            encounterActive = false;
             CleanupPatternObjects();
             UnbindBrothers();
             enabled = false;
@@ -325,8 +328,61 @@ namespace Necrocis
         private void OnDisable()
         {
             StopAllCoroutines();
+            encounterActive = false;
             CleanupPatternObjects();
             UnbindBrothers();
+        }
+
+        public void SetEncounterActive(bool active)
+        {
+            if (encounterActive == active)
+            {
+                return;
+            }
+
+            encounterActive = active;
+            StopAllCoroutines();
+            CleanupPatternObjects();
+
+            for (int i = 0; i < gasRunning.Length; i++)
+            {
+                gasRunning[i] = false;
+            }
+
+            phase2ActionRunning = false;
+
+            if (active)
+            {
+                nextWindGustTime = Time.time + 1.2f;
+                windGustEndTime = float.NegativeInfinity;
+                nextGasTime[0] = Time.time + 0.8f;
+                nextGasTime[1] = Time.time + 2.2f;
+                nextContactTime[0] = Time.time + 1f;
+                nextContactTime[1] = Time.time + 1f;
+                nextPhase2GasTime = Time.time + 1.2f;
+                nextDiveTime = Time.time + 3f;
+            }
+        }
+
+        public void RecenterEncounter()
+        {
+            PositionBrothers();
+        }
+
+        public void ForEachEncounterBoss(System.Action<EnemyController> action)
+        {
+            if (action == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < brothers.Length; i++)
+            {
+                if (brothers[i] != null)
+                {
+                    action(brothers[i]);
+                }
+            }
         }
 
         private void UnbindBrothers()
@@ -349,6 +405,11 @@ namespace Necrocis
 
         private void Update()
         {
+            if (!encounterActive)
+            {
+                return;
+            }
+
             if (encounterDefeated)
             {
                 return;
@@ -394,7 +455,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
-            if (encounterDefeated || PlayerController.Instance == null)
+            if (!encounterActive || encounterDefeated || PlayerController.Instance == null)
             {
                 return;
             }
@@ -933,22 +994,8 @@ namespace Necrocis
                 direction = Vector3.forward;
             }
 
-            CharacterController controller = player.GetComponent<CharacterController>();
             Vector3 displacement = direction.normalized * distance;
-            if (controller != null && controller.enabled)
-            {
-                controller.Move(displacement);
-                return;
-            }
-
-            Rigidbody body = player.GetComponent<Rigidbody>();
-            if (body != null)
-            {
-                body.MovePosition(body.position + displacement);
-                return;
-            }
-
-            player.transform.position += displacement;
+            player.TryMoveByWorld(displacement);
         }
 
         private IEnumerator FadeAndDestroy(GameObject obj, float duration, Color startColor, float endScale)

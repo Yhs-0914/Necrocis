@@ -719,6 +719,12 @@ namespace Necrocis
             return component;
         }
 
+        private void EnsureCombatEffectsForInventoryChange()
+        {
+            PlayerItemCombatEffects combatEffects = EnsureComponent<PlayerItemCombatEffects>();
+            combatEffects.EnsureActiveForInventoryChange();
+        }
+
         public bool TryAcquireItem(string itemId, out PlayerItemAcquireFailureReason failureReason)
         {
             failureReason = PlayerItemAcquireFailureReason.None;
@@ -755,6 +761,7 @@ namespace Necrocis
                 acquiredItem.Implementation.ApplyTo(playerStats);
             }
 
+            EnsureCombatEffectsForInventoryChange();
             ItemAcquired?.Invoke(this, acquiredItem);
             Debug.Log($"[PlayerItemManager] 아이템 획득: {acquiredItem.DisplayName} ({acquiredItem.ItemId}) [{acquiredItems.Count}/{maxItemSlots}]");
             return true;

@@ -53,7 +53,7 @@ namespace Necrocis
 
     [DisallowMultipleComponent]
     [RequireComponent(typeof(EnemyController))]
-    public class LiverBossPattern : MonoBehaviour
+    public class LiverBossPattern : MonoBehaviour, IBossPatternTempSpriteOwner
     {
         private enum BossPhase
         {
@@ -118,6 +118,7 @@ namespace Necrocis
         private float nextHealingPoseTime;
         private bool actionRunning;
         private bool healingPoseActive;
+        private bool encounterActive;
         private readonly List<GameObject> activeTempObjects = new List<GameObject>();
 
         public void Initialize(EnemyController controller, Vector3 anchor, Transform parent, LiverBossPatternSettings settings = null)
@@ -132,6 +133,7 @@ namespace Necrocis
             nextHealingPoseTime = phase == BossPhase.Phase2 ? Time.time + GetHealingPoseCooldown() : float.PositiveInfinity;
             actionRunning = false;
             healingPoseActive = false;
+            encounterActive = false;
             baseScale = transform.localScale;
             visualRenderer = GetComponentInChildren<SpriteRenderer>();
 
@@ -191,6 +193,7 @@ namespace Necrocis
         {
             StopAllCoroutines();
             healingPoseActive = false;
+            encounterActive = false;
             CleanupPatternObjects();
 
             if (boss != null)
@@ -216,6 +219,27 @@ namespace Necrocis
         }
 
         public string CurrentPhaseName => phase.ToString();
+
+        public void SetEncounterActive(bool active)
+        {
+            if (encounterActive == active)
+            {
+                return;
+            }
+
+            encounterActive = active;
+            StopAllCoroutines();
+            actionRunning = false;
+            healingPoseActive = false;
+
+            if (active)
+            {
+                nextBloodBombTime = Time.time + 1f;
+                nextHealingPoseTime = phase == BossPhase.Phase2
+                    ? Time.time + GetHealingPoseCooldown()
+                    : float.PositiveInfinity;
+            }
+        }
 
         [ContextMenu("Debug/Force Phase 1")]
         public void ForcePhase1ForDebug()
@@ -261,6 +285,11 @@ namespace Necrocis
 
         private void Update()
         {
+            if (!encounterActive)
+            {
+                return;
+            }
+
             if (boss == null || boss.IsDead)
             {
                 enabled = false;
@@ -296,7 +325,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
-            if (boss == null || boss.IsDead || phase == BossPhase.Transition || PlayerController.Instance == null)
+            if (!encounterActive || boss == null || boss.IsDead || phase == BossPhase.Transition || PlayerController.Instance == null)
             {
                 return;
             }
@@ -380,7 +409,7 @@ namespace Necrocis
 
             if (projectile != null)
             {
-                Destroy(projectile);
+                ReleaseTempSprite(projectile);
             }
 
             ExplodeBloodBomb(target);
@@ -480,7 +509,7 @@ namespace Necrocis
                 yield return null;
             }
 
-            Destroy(obj);
+            ReleaseTempSprite(obj);
         }
 
         private void HandleBossDamageTaken(EnemyController damagedBoss, float appliedDamage)
@@ -637,19 +666,18 @@ namespace Necrocis
 
         private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
-            GameObject obj = new GameObject(name);
-            obj.transform.position = position;
-            obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
-            activeTempObjects.Add(obj);
+            return BossPatternVisualPool.Acquire(name, sprite, color, position, scale, sortingOrder, this, activeTempObjects);
+        }
 
-            SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            renderer.sortingOrder = sortingOrder;
+        public void ReleaseTempSprite(GameObject obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
 
-            Billboard billboard = obj.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
-            return obj;
+            activeTempObjects.Remove(obj);
+            BossPatternVisualPool.Release(obj);
         }
 
         private void CleanupPatternObjects()
@@ -658,8 +686,7 @@ namespace Necrocis
             {
                 if (activeTempObjects[i] != null)
                 {
-                    activeTempObjects[i].SetActive(false);
-                    Destroy(activeTempObjects[i]);
+                    BossPatternVisualPool.Release(activeTempObjects[i]);
                 }
             }
 

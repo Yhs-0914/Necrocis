@@ -27,9 +27,41 @@ namespace Necrocis
         private float elapsed;
         private bool launched;
         private EnemyController ownerEnemy;
+        private PlayerController cachedPlayer;
+        private Collider cachedPlayerCollider;
+        private Health cachedPlayerHealth;
 
         public static IReadOnlyList<EnemyProjectile> ActiveEnemyProjectiles => ActiveProjectiles;
         public bool IsLaunched => launched && gameObject.activeSelf;
+
+        public static int ReturnProjectilesOwnedBy(EnemyController owner)
+        {
+            if (owner == null)
+            {
+                return 0;
+            }
+
+            int returnedCount = 0;
+            for (int i = ActiveProjectiles.Count - 1; i >= 0; i--)
+            {
+                EnemyProjectile projectile = ActiveProjectiles[i];
+                if (projectile == null)
+                {
+                    ActiveProjectiles.RemoveAt(i);
+                    continue;
+                }
+
+                if (projectile.ownerEnemy != owner)
+                {
+                    continue;
+                }
+
+                projectile.ReturnToPool();
+                returnedCount++;
+            }
+
+            return returnedCount;
+        }
 
         // ─────────────────────────────────
         // 풀링 API
@@ -126,12 +158,13 @@ namespace Necrocis
             }
 
             // 거리 기반 플레이어 충돌 판정
-            PlayerController player = PlayerController.Instance;
-            if (player == null) return;
-
-            if (IsTouchingPlayer(player, previousPosition, transform.position))
+            if (!TryGetPlayerHitContext(out PlayerController player, out Collider playerCollider, out Health playerHealth))
             {
-                Health playerHealth = player.GetComponent<Health>();
+                return;
+            }
+
+            if (IsTouchingPlayer(player, playerCollider, previousPosition, transform.position))
+            {
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
                     playerHealth.TakeDamage(damage, ownerEnemy);
@@ -140,7 +173,44 @@ namespace Necrocis
             }
         }
 
-        private bool IsTouchingPlayer(PlayerController player, Vector3 previousPosition, Vector3 currentPosition)
+        private bool TryGetPlayerHitContext(out PlayerController player, out Collider playerCollider, out Health playerHealth)
+        {
+            player = PlayerController.Instance;
+            if (player == null)
+            {
+                playerCollider = null;
+                playerHealth = null;
+                cachedPlayer = null;
+                cachedPlayerCollider = null;
+                cachedPlayerHealth = null;
+                return false;
+            }
+
+            if (cachedPlayer != player)
+            {
+                cachedPlayer = player;
+                cachedPlayerCollider = player.HitCollider;
+                cachedPlayerHealth = player.HealthComponent;
+            }
+            else
+            {
+                if (cachedPlayerCollider == null)
+                {
+                    cachedPlayerCollider = player.HitCollider;
+                }
+
+                if (cachedPlayerHealth == null)
+                {
+                    cachedPlayerHealth = player.HealthComponent;
+                }
+            }
+
+            playerCollider = cachedPlayerCollider;
+            playerHealth = cachedPlayerHealth;
+            return true;
+        }
+
+        private bool IsTouchingPlayer(PlayerController player, Collider playerCollider, Vector3 previousPosition, Vector3 currentPosition)
         {
             if (player == null)
             {
@@ -148,12 +218,6 @@ namespace Necrocis
             }
 
             float hitRadius = GetCurrentHitRadius();
-            Collider playerCollider = player.GetComponent<Collider>();
-            if (playerCollider == null)
-            {
-                playerCollider = player.GetComponentInChildren<Collider>();
-            }
-
             if (playerCollider != null && playerCollider.enabled)
             {
                 Bounds playerBounds = playerCollider.bounds;
