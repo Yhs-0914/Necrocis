@@ -109,6 +109,11 @@ namespace Necrocis
         private float lastDashTime = float.NegativeInfinity;
         private Vector3 dashVelocity;
 
+        // [Sound] 발소리 타이머
+        [Header("Sound")]
+        [SerializeField] private float footstepInterval = 0.35f;
+        private float nextFootstepTime;
+
         // 공격 애니메이션 상태
         private bool isPlayingAttackAnim = false;
         private float attackAnimEndTime = 0f;                       // ?대룞 以??щ?
@@ -229,6 +234,12 @@ namespace Necrocis
             HandleInput();
             UpdateAnimation();
             ApplyLockedRotation();
+            // [Sound] 이동 중 발소리
+            if (isMoving && !isDashing && Time.time >= nextFootstepTime)
+            {
+                nextFootstepTime = Time.time + footstepInterval;
+                AudioManager.Instance?.PlaySFX("PlayerFootstep");
+            }
         }
         // ?좊땲???앸챸二쇨린: 臾쇰━ ?ㅽ뀦 湲곕컲 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -684,7 +695,7 @@ namespace Necrocis
                 return;
             }
 
-            float duration = Mathf.Max(0.3f, attackAnimDuration);
+            float duration = Mathf.Max(0.05f, attackAnimDuration);
             SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + duration;
@@ -737,6 +748,7 @@ namespace Necrocis
         {
             isDashing = true;
             lastDashTime = Time.time;
+            AudioManager.Instance?.PlaySFX("PlayerDash"); // [Sound] 대시
 
             Vector3 dir = lastMoveDirection.sqrMagnitude > 0.001f
                 ? lastMoveDirection.normalized
@@ -919,6 +931,7 @@ namespace Necrocis
             if (classSkillController != null)
                 classSkillController.enabled = false;
 
+            AudioManager.Instance?.PlaySFX("PlayerDeath"); // [Sound] 사망
             enabled = false;
             OnPlayerDied?.Invoke();
             Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");

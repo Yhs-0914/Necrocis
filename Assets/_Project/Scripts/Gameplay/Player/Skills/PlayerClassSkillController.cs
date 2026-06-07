@@ -370,6 +370,8 @@ namespace Necrocis
                 return;
             }
 
+            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬1 사용
+
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
@@ -378,6 +380,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("MageSkill1");
                     ExecuteMageSkill1();
                     break;
 
@@ -396,6 +399,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("WarriorSkill1");
                     ExecuteWarriorSkill1Bite();
                     break;
             }
@@ -407,6 +411,8 @@ namespace Necrocis
             {
                 return;
             }
+
+            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬2 사용
 
             switch (currentClass)
             {
@@ -427,6 +433,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("MageSkill2");
                     StartCoroutine(ExecuteMageSkill2(mageSkill2Target));
                     break;
 

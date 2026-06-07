@@ -214,6 +214,11 @@ namespace Necrocis
         /// <summary>
         /// 플레이어 참조 가져오기
         /// </summary>
+        private void Start()
+        {
+            AudioManager.Instance?.PlayBGM("InGame");
+        }
+
         public PlayerController GetPlayer()
         {
             return player;

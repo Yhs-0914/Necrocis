@@ -43,6 +43,8 @@ namespace Necrocis
 
         private IEnumerator ExecuteWarriorSkill2Dash()
         {
+            AudioManager.Instance?.PlaySFX("WarriorSkill2");
+
             // 전방 적 탐색
             if (!TryFindForwardEnemyPoint(warriorSkill2.searchRange, warriorSkill2.searchAngle, out Vector3 targetPoint))
             {

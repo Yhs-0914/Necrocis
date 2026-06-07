@@ -68,6 +68,7 @@ namespace Necrocis
             if (isInvincible || IsDead || damageAmount <= 0f) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
+            AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
             Stats?.ApplyDamage(actualDamage);
 
             StartCoroutine(InvincibilityCoroutine());

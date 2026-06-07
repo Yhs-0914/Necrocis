@@ -94,7 +94,10 @@ namespace Necrocis
                 if (currentLevel == 10 && currentJob == JobType.None)
                     OnJobSelect?.Invoke();
                 else
+                {
+                    AudioManager.Instance?.PlaySFX("LevelUp"); // [Sound] 레벨업
                     OnLevelUp?.Invoke();
+                }
             }
         }
 
@@ -111,7 +114,10 @@ namespace Necrocis
                 if (currentLevel == 10 && currentJob == JobType.None)
                     OnJobSelect?.Invoke();
                 else
+                {
+                    AudioManager.Instance?.PlaySFX("LevelUp");
                     OnLevelUp?.Invoke();
+                }
             }
         }
 
@@ -256,6 +262,7 @@ namespace Necrocis
             }
 
             currentJob = job;
+            AudioManager.Instance?.PlaySFX("JobSelect");
             OnJobChanged?.Invoke(currentJob);
         }
         public static void ResetSelectionHistory() => selectionHistory.Clear();
