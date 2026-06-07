@@ -31,62 +31,15 @@ namespace Necrocis
     {
         private static Dictionary<LevelUpStatChoice, LevelUpStatEffect> statEffects; // 선택지별 효과 매핑
 
-        // 정적 생성자: 클래스 최초 접근 시 자동 초기화
         static LevelUpStatCatalog()
         {
             InitializeStatData();
         }
-        // InitializeStatData: 관련 설정과 상태를 구성합니다.
 
-        // 모든 스탯 선택지의 효과를 정의
         private static void InitializeStatData()
         {
-            statEffects = new Dictionary<LevelUpStatChoice, LevelUpStatEffect>
-            {
-                // 체력 증가: 최대HP +10 (고정값)
-                [LevelUpStatChoice.HealthUp] = new LevelUpStatEffect
-                {
-                    flatStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.MaxHealth] = 10
-                    }
-                },
-                // 이동속도 증가: 이동속도 +3% (퍼센트)
-                [LevelUpStatChoice.SpeedUp] = new LevelUpStatEffect
-                {
-                    percentStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.MoveSpeed] = 3
-                    }
-                },
-                // 공격 증가: 공격력 +3 (고정값)
-                [LevelUpStatChoice.AttackPowerUp] = new LevelUpStatEffect
-                {
-                    flatStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.AttackPower] = 3
-                    }
-                },
-                // 공격속도/사거리 증가: 공격속도 +5%, 사거리 +5% (퍼센트)
-                [LevelUpStatChoice.AttackSpeedRangeUp] = new LevelUpStatEffect
-                {
-                    percentStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.AttackSpeed] = 5,
-                        [CharacterStatType.AttackRange] = 5
-                    }
-                },
-                // 마력 증가: 스킬 데미지 +3% (고정값)
-                [LevelUpStatChoice.MagicUp] = new LevelUpStatEffect
-                {
-                    flatStats = new Dictionary<CharacterStatType, float>
-                    {
-                        [CharacterStatType.Magic] = 3
-                    }
-                }
-            };
+            statEffects = LevelUpManager.Config.BuildStatEffectMap();
         }
-        // GetStatEffect: 필요한 값을 반환합니다.
 
         // 선택지에 해당하는 효과 데이터 반환
         public static LevelUpStatEffect GetStatEffect(LevelUpStatChoice choice)

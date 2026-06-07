@@ -24,6 +24,7 @@ namespace Necrocis
         [SerializeField] private float projectileSpawnHeight = 1f;
         [SerializeField] private float projectileSpawnExtraHeight = 2f;
         [SerializeField] private float projectileRange = 8f;
+        [SerializeField] private float rangedAttackDamage = 10f;
         [SerializeField] private LayerMask rangedTargetMask = ~0;
 
         [Header("Beam")]
@@ -244,7 +245,7 @@ namespace Necrocis
             Vector3 direction = GetAttackDirection();
             PlayerStats stats = PlayerStats.Instance;
             float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
-            float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, 10f) + flatDamageBonus;
+            float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, rangedAttackDamage) + flatDamageBonus;
             float unstableMultiplier = 1f;
             if (itemEffects != null)
             {

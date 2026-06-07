@@ -168,7 +168,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
     m_Mode: 3
@@ -10454,6 +10454,7 @@ GameObject:
   - component: {fileID: 1905923581}
   - component: {fileID: 1905923582}
   - component: {fileID: 1905923583}
+  - component: {fileID: 1905923584}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -10926,6 +10927,7 @@ MonoBehaviour:
   projectileSpawnHeight: 1
   projectileSpawnExtraHeight: 2
   projectileRange: 8
+  rangedAttackDamage: 10
   rangedTargetMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -11094,7 +11096,6 @@ MonoBehaviour:
   canvasSortingOrder: 120
   canvasReferenceResolution: {x: 1920, y: 1080}
   compensatePlayerScaleForCanvas: 1
-  unlockLevel: 10
   pauseGameWhileOpen: 1
   overlayColor: {r: 0, g: 0, b: 0, a: 0.85}
   uiScaleMultiplier: 2.5
@@ -11134,12 +11135,6 @@ MonoBehaviour:
   magicSprite: {fileID: 21300000, guid: 6a5784ff6c5ccca4d87d51a847604b33, type: 3}
   moveSpeedSprite: {fileID: 21300000, guid: d764b305a477c7f4cb1f2c9023c82ddb, type: 3}
   maxHealthSprite: {fileID: 21300000, guid: 3aa8fa2cc64275d4796e87f3cdc972b8, type: 3}
-  attackPowerFlatIncrease: 1
-  attackRangePercentIncrease: 1
-  attackSpeedPercentIncrease: 1
-  magicFlatIncrease: 1
-  moveSpeedPercentIncrease: 1
-  maxHealthFlatIncrease: 1
 --- !u!114 &1905923582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11593,6 +11588,18 @@ MonoBehaviour:
   startingItemIds: []
   autoPopulateBasicProjectileItems: 1
   enablePickupNotification: 1
+--- !u!114 &1905923584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905923568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c2962c98552ce543bdbfb71c63f2aad, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerItemCombatEffects
 --- !u!1 &1926015053
 GameObject:
   m_ObjectHideFlags: 0

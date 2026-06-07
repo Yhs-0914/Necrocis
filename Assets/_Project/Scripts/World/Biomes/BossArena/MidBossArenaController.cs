@@ -10,15 +10,6 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class MidBossArenaController : MonoBehaviour
     {
-        private const float DefaultMidBossMinimumMaxHealth = 250f;
-        private const float IntestineMidBossMinimumMaxHealth = 500f;
-        private const float LiverMidBossMinimumMaxHealth = 180f;
-        private const float StomachMidBossMinimumMaxHealth = 170f;
-        private const float LungMidBossMinimumMaxHealth = 40f;
-        private const float BossContactDamage = 1f;
-        private const float BossContactDamageCooldown = 1f;
-        private const float BossContactPushSpeed = 5f;
-
         private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
@@ -94,6 +85,8 @@ namespace Necrocis
             if (!arenaLocked || bossDefeated)
                 return;
 
+            EnforcePlayerInsidePlayableBounds();
+
             if (activeLungPattern != null)
             {
                 if (activeLungPattern.IsEncounterDefeated)
@@ -108,6 +101,16 @@ namespace Necrocis
             {
                 UnlockArena();
             }
+        }
+
+        private void LateUpdate()
+        {
+            if (!arenaLocked || bossDefeated)
+            {
+                return;
+            }
+
+            EnforcePlayerInsidePlayableBounds();
         }
 
         private void OnTriggerEnter(Collider other)
@@ -409,7 +412,16 @@ namespace Necrocis
                 contactDamage = boss.gameObject.AddComponent<MidBossContactDamage>();
             }
 
-            contactDamage.Initialize(boss, BossContactDamage, BossContactDamageCooldown, BossContactPushSpeed);
+            if (arenaConfig == null)
+            {
+                return;
+            }
+
+            contactDamage.Initialize(
+                boss,
+                arenaConfig.bossContactDamage,
+                arenaConfig.bossContactDamageCooldown,
+                arenaConfig.bossContactPushSpeed);
             contactDamage.SetDamageActive(arenaLocked && !bossDefeated);
 
             if (!activeContactDamage.Contains(contactDamage))
@@ -723,6 +735,36 @@ namespace Necrocis
                 && worldPosition.z <= centerWorld.z + halfDepth;
         }
 
+        public static bool TryClampPlayerMovementInsideLockedArena(
+            Vector3 currentPosition,
+            Vector3 desiredPosition,
+            float margin,
+            out Vector3 clampedPosition)
+        {
+            clampedPosition = desiredPosition;
+            MidBossArenaController arena = FindLockedArenaForMovement(currentPosition, desiredPosition);
+            if (arena == null)
+            {
+                return false;
+            }
+
+            clampedPosition = arena.ClampToPlayableBounds(desiredPosition, margin);
+            return true;
+        }
+
+        public static bool TryClampPositionInsideLockedArena(Vector3 position, float margin, out Vector3 clampedPosition)
+        {
+            clampedPosition = position;
+            MidBossArenaController arena = FindLockedArenaForPosition(position) ?? FindSingleLockedArena();
+            if (arena == null)
+            {
+                return false;
+            }
+
+            clampedPosition = arena.ClampToPlayableBounds(position, margin);
+            return true;
+        }
+
         public static bool IsPlayerInsideLockedArena(Vector3 playerPosition)
         {
             for (int i = 0; i < ActiveArenas.Count; i++)
@@ -740,6 +782,137 @@ namespace Necrocis
             }
 
             return false;
+        }
+
+        private static MidBossArenaController FindLockedArenaForMovement(Vector3 currentPosition, Vector3 desiredPosition)
+        {
+            MidBossArenaController fallback = null;
+
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena == null || !arena.IsLocked)
+                {
+                    continue;
+                }
+
+                if (fallback == null)
+                {
+                    fallback = arena;
+                }
+
+                if (arena.ContainsWorldPosition(currentPosition) || arena.ContainsWorldPosition(desiredPosition))
+                {
+                    return arena;
+                }
+            }
+
+            return CountLockedArenas() == 1 ? fallback : null;
+        }
+
+        private static MidBossArenaController FindLockedArenaForPosition(Vector3 position)
+        {
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena == null || !arena.IsLocked)
+                {
+                    continue;
+                }
+
+                if (arena.ContainsWorldPosition(position))
+                {
+                    return arena;
+                }
+            }
+
+            return null;
+        }
+
+        private static MidBossArenaController FindSingleLockedArena()
+        {
+            MidBossArenaController single = null;
+            int count = 0;
+
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena == null || !arena.IsLocked)
+                {
+                    continue;
+                }
+
+                single = arena;
+                count++;
+            }
+
+            return count == 1 ? single : null;
+        }
+
+        private static int CountLockedArenas()
+        {
+            int count = 0;
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena != null && arena.IsLocked)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private Vector3 ClampToPlayableBounds(Vector3 worldPosition, float margin)
+        {
+            if (biome == null || arenaConfig == null)
+            {
+                return worldPosition;
+            }
+
+            Vector3 centerWorld = biome.GridToWorld(centerGrid.x, centerGrid.y);
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            float wallPadding = (Mathf.Max(1, arenaConfig.wallThicknessInCells) + GetLockBoundaryInsetCells()) * tileSize;
+            float extraMargin = Mathf.Max(0f, margin);
+            float halfWidth = Mathf.Max(tileSize * 0.5f, arenaSize.x * tileSize * 0.5f - wallPadding - extraMargin);
+            float halfDepth = Mathf.Max(tileSize * 0.5f, arenaSize.y * tileSize * 0.5f - wallPadding - extraMargin);
+
+            worldPosition.x = Mathf.Clamp(worldPosition.x, centerWorld.x - halfWidth, centerWorld.x + halfWidth);
+            worldPosition.z = Mathf.Clamp(worldPosition.z, centerWorld.z - halfDepth, centerWorld.z + halfDepth);
+            return worldPosition;
+        }
+
+        private void EnforcePlayerInsidePlayableBounds()
+        {
+            PlayerController player = PlayerController.Instance;
+            if (player == null)
+            {
+                return;
+            }
+
+            float margin = GetPlayerClampMargin(player);
+            Vector3 currentPosition = player.transform.position;
+            Vector3 clampedPosition = ClampToPlayableBounds(currentPosition, margin);
+            Vector3 planarDelta = clampedPosition - currentPosition;
+            planarDelta.y = 0f;
+            if (planarDelta.sqrMagnitude <= 0.000001f)
+            {
+                return;
+            }
+
+            player.SpawnAt(clampedPosition);
+        }
+
+        private static float GetPlayerClampMargin(PlayerController player)
+        {
+            Collider hitCollider = player != null ? player.HitCollider : null;
+            if (hitCollider == null)
+            {
+                return 0.55f;
+            }
+
+            return Mathf.Max(0.35f, Mathf.Max(hitCollider.bounds.extents.x, hitCollider.bounds.extents.z) + 0.2f);
         }
 
         private void BuildBoundaryCellCache()
@@ -841,95 +1014,59 @@ namespace Necrocis
 
         private EnemySpawnRuleConfig BuildRuntimeBossRule(MidBossDefinition bossDefinition, MidBossPatternType patternType)
         {
-            string bossName = !string.IsNullOrWhiteSpace(bossDefinition?.displayName)
-                ? bossDefinition.displayName
-                : patternType == MidBossPatternType.Liver ? "LiverBoss" : patternType == MidBossPatternType.Stomach ? "StomachBoss" : patternType == MidBossPatternType.Lung ? "LungBoss" : "MidBoss";
-            Sprite sprite = GetRuntimeBossSprite();
-
-            EnemySpawnRuleConfig boss = new EnemySpawnRuleConfig
+            EnemySpawnRuleConfig source = bossDefinition?.bossRule ?? new EnemySpawnRuleConfig
             {
-                name = bossName,
-                density = 0f,
-                minDistance = 0f,
-                poissonSalt = patternType == MidBossPatternType.Liver ? 7102 : patternType == MidBossPatternType.Stomach ? 7203 : patternType == MidBossPatternType.Lung ? 7304 : 7001,
-                allowedRegions = new List<int>(),
-                maxAlive = 1,
-                activationRadius = 0f,
-                respawnCooldown = 0f,
-                spawnRadius = 0f,
-                moveSpeed = patternType == MidBossPatternType.Liver ? 1f : patternType == MidBossPatternType.Stomach ? 0.5f : patternType == MidBossPatternType.Lung ? 1f : 1.5f,
-                stoppingDistance = 0.1f,
-                wanderRadius = 4f,
-                chaseRadius = 16f,
-                leashRadius = 24f,
-                idleDelayRange = new Vector2(0.5f, 1.2f),
-                maxHealth = GetMinimumBossMaxHealth(bossDefinition),
-                attackDamage = patternType == MidBossPatternType.Liver ? 2f : patternType == MidBossPatternType.Stomach ? 3f : patternType == MidBossPatternType.Lung ? 2f : 1f,
-                attackRange = patternType == MidBossPatternType.Liver ? 7f : patternType == MidBossPatternType.Stomach ? 1.6f : patternType == MidBossPatternType.Lung ? 7f : 1.5f,
-                attackCooldown = 1f,
-                expReward = 0,
-                additionalBaseStats = new List<CharacterStatValue>(),
-                separationDistance = 0f,
-                separationStrength = 0f,
-                heightOffset = 0f,
-                scale = Vector3.Scale(Vector3.one, GetSafeScaleMultiplier(bossDefinition?.scaleMultiplier ?? Vector3.one)),
-                sortingOrder = 1800,
-                useBillboard = true,
-                useYSort = true,
-                animationSpeed = 0.16f,
-                addCollider = true,
-                isTrigger = true,
-                colliderSize = new Vector3(0.85f, 1.15f, 0.85f),
-                colliderCenter = new Vector3(0f, 0.58f, 0f),
-                idleSprites = new[] { sprite },
-                moveSprites = new[] { sprite },
-                attackSprites = new[] { sprite },
-                attackSpritesUp = System.Array.Empty<Sprite>(),
-                attackSpritesDown = System.Array.Empty<Sprite>(),
-                attackAnimationSpeed = 0.12f,
-                isRanged = false,
-                projectileSpeed = 8f,
-                projectileLifeTime = 3f,
-                projectileSprite = null,
-                projectileScale = new Vector3(0.4f, 0.4f, 0.4f),
-                projectileSpawnOffset = 0.5f,
-                expandColliderOnAttack = false,
-                attackColliderSize = new Vector3(2f, 2f, 2f),
-                attackColliderCenter = new Vector3(0f, 0.58f, 0f),
-                deathSprites = new[] { sprite },
-                deathAnimationSpeed = 0.15f,
-                isElite = false,
-                tintColor = Color.white,
-                killTriggerEnemyName = string.Empty,
-                killTriggerCount = 0,
-                splitsOnDeath = false,
-                splitCount = 0,
-                splitEnemyName = string.Empty,
-                splitVfxSprites = System.Array.Empty<Sprite>(),
-                splitVfxScale = 3f,
-                splitVfxSpeed = 0.08f,
-                splitVfxDuration = 0.6f,
-                chargesAtPlayer = false,
-                chargeSpeed = 6f,
-                chargeAccelTime = 0.3f,
-                leavesDebrisOnDeath = false,
-                debrisDuration = 5f,
-                debrisAggroRadius = 8f,
-                debrisVfxSprites = System.Array.Empty<Sprite>(),
-                debrisVfxScale = 15f,
-                debrisVfxSpeed = 0.12f
+                name = GetDefaultRuntimeBossName(patternType)
             };
 
-            if (bossDefinition != null && bossDefinition.overrideStats)
+            EnemySpawnRuleConfig boss = BuildBossRule(source, bossDefinition);
+            if (boss == null)
             {
-                boss.maxHealth *= Mathf.Max(0.01f, bossDefinition.maxHealthMultiplier);
-                boss.attackDamage *= Mathf.Max(0.01f, bossDefinition.attackDamageMultiplier);
-                boss.moveSpeed *= Mathf.Max(0.01f, bossDefinition.moveSpeedMultiplier);
+                return null;
             }
 
-            ApplyBossScaleToCollision(boss, GetSafeScaleMultiplier(bossDefinition?.scaleMultiplier ?? Vector3.one));
-
+            EnsureRuntimeBossSprites(boss, GetRuntimeBossSprite());
             return boss;
+        }
+
+        private static string GetDefaultRuntimeBossName(MidBossPatternType patternType)
+        {
+            return patternType switch
+            {
+                MidBossPatternType.Liver => "LiverBoss",
+                MidBossPatternType.Stomach => "StomachBoss",
+                MidBossPatternType.Lung => "LungBoss",
+                MidBossPatternType.Intestine => "IntestineBoss",
+                _ => "MidBoss"
+            };
+        }
+
+        private static void EnsureRuntimeBossSprites(EnemySpawnRuleConfig boss, Sprite sprite)
+        {
+            if (boss == null || sprite == null)
+            {
+                return;
+            }
+
+            if (boss.idleSprites == null || boss.idleSprites.Length == 0)
+            {
+                boss.idleSprites = new[] { sprite };
+            }
+
+            if (boss.moveSprites == null || boss.moveSprites.Length == 0)
+            {
+                boss.moveSprites = boss.idleSprites;
+            }
+
+            if (boss.attackSprites == null || boss.attackSprites.Length == 0)
+            {
+                boss.attackSprites = boss.idleSprites;
+            }
+
+            if (boss.deathSprites == null || boss.deathSprites.Length == 0)
+            {
+                boss.deathSprites = boss.idleSprites;
+            }
         }
 
         private EnemySpawnRuleConfig BuildBossRule(EnemySpawnRuleConfig source, MidBossDefinition bossDefinition)
@@ -1027,7 +1164,7 @@ namespace Necrocis
                 ApplyBossScaleToCollision(boss, scaleMultiplier);
             }
 
-            boss.maxHealth = Mathf.Max(boss.maxHealth, GetMinimumBossMaxHealth(bossDefinition));
+            boss.maxHealth = Mathf.Max(boss.maxHealth, GetConfiguredMinimumBossMaxHealth(bossDefinition));
 
             return boss;
         }
@@ -1073,22 +1210,14 @@ namespace Necrocis
                     || (rule.deathSprites != null && rule.deathSprites.Length > 0));
         }
 
-        private float GetMinimumBossMaxHealth(MidBossDefinition bossDefinition)
+        private static float GetConfiguredMinimumBossMaxHealth(MidBossDefinition bossDefinition)
         {
             if (bossDefinition != null && bossDefinition.minimumMaxHealth > 0f)
             {
                 return bossDefinition.minimumMaxHealth;
             }
 
-            MidBossPatternType patternType = ResolveBossPatternType();
-            return patternType switch
-            {
-                MidBossPatternType.Intestine => IntestineMidBossMinimumMaxHealth,
-                MidBossPatternType.Liver => LiverMidBossMinimumMaxHealth,
-                MidBossPatternType.Stomach => StomachMidBossMinimumMaxHealth,
-                MidBossPatternType.Lung => LungMidBossMinimumMaxHealth,
-                _ => DefaultMidBossMinimumMaxHealth
-            };
+            return 0f;
         }
 
         private void ApplyFogVisualState()

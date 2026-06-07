@@ -50,14 +50,6 @@ public class LevelUpStackChoiceUI : MonoBehaviour
     [SerializeField] private Sprite moveSpeedSprite;
     [SerializeField] private Sprite maxHealthSprite;
 
-    [Header("Stat Values")]
-    [SerializeField] private float attackPowerFlatIncrease = 3f;
-    [SerializeField] private float attackRangePercentIncrease = 5f;
-    [SerializeField] private float attackSpeedPercentIncrease = 5f;
-    [SerializeField] private float magicFlatIncrease = 3f;
-    [SerializeField] private float moveSpeedPercentIncrease = 3f;
-    [SerializeField] private float maxHealthFlatIncrease = 10f;
-
     private readonly List<StackStatType> currentChoices = new List<StackStatType>(VisibleChoiceCount);
     private readonly Dictionary<Button, UnityEngine.Events.UnityAction> boundButtonActions = new Dictionary<Button, UnityEngine.Events.UnityAction>();
 
@@ -242,38 +234,35 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
         string source = $"LevelUpStackChoiceUI_{statType}_{selectionSerial++}";
         PlayerItemManager itemManager = PlayerItemManager.Instance ?? playerStats.GetComponent<PlayerItemManager>();
-        const bool bioGambleFeatureEnabled = false;
-        bool hasBioGamble = bioGambleFeatureEnabled
+        LevelProgressionConfig config = LevelUpManager.Config;
+        bool hasBioGamble = config != null
+            && config.bioGambleEnabled
             && itemManager != null
             && itemManager.ContainsItem(PlayerItemCombatEffects.BioGambleId);
         if (hasBioGamble)
         {
-            int randomDelta = Random.Range(-2, 4);
+            int minDelta = config.bioGambleMinDelta;
+            int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
+            int randomDelta = Random.Range(minDelta, maxDelta + 1);
             ApplyBioGambleStat(playerStats, statType, randomDelta, source);
             return;
         }
 
-        switch (statType)
+        CharacterStatType characterStatType = ToCharacterStatType(statType);
+        if (config == null || !config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
         {
-            case StackStatType.AttackPower:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackPower, attackPowerFlatIncrease, CharacterStatModifierMode.Flat, source));
-                break;
-            case StackStatType.AttackRange:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackRange, attackRangePercentIncrease / 100f, CharacterStatModifierMode.PercentAdd, source));
-                break;
-            case StackStatType.AttackSpeed:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackSpeed, attackSpeedPercentIncrease / 100f, CharacterStatModifierMode.PercentAdd, source));
-                break;
-            case StackStatType.Magic:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.Magic, magicFlatIncrease, CharacterStatModifierMode.Flat, source));
-                break;
-            case StackStatType.MoveSpeed:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MoveSpeed, moveSpeedPercentIncrease / 100f, CharacterStatModifierMode.PercentAdd, source));
-                break;
-            case StackStatType.MaxHealth:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MaxHealth, maxHealthFlatIncrease, CharacterStatModifierMode.Flat, source));
-                playerStats.Heal(maxHealthFlatIncrease);
-                break;
+            Debug.LogWarning($"[LevelUpStackChoiceUI] Missing level-up stat config for {characterStatType}.");
+            return;
+        }
+
+        float modifierValue = config.GetRuntimeModifierValue(valueConfig);
+        playerStats.ApplyModifier(new CharacterStatModifier(characterStatType, modifierValue, valueConfig.mode, source));
+        if (valueConfig.healWhenPositive
+            && characterStatType == CharacterStatType.MaxHealth
+            && valueConfig.mode == CharacterStatModifierMode.Flat
+            && valueConfig.value > 0f)
+        {
+            playerStats.Heal(valueConfig.value);
         }
     }
 
@@ -794,6 +783,20 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             StackStatType.MoveSpeed => LevelUpStatChoice.SpeedUp,
             StackStatType.MaxHealth => LevelUpStatChoice.HealthUp,
             _ => LevelUpStatChoice.HealthUp
+        };
+    }
+
+    private static CharacterStatType ToCharacterStatType(StackStatType statType)
+    {
+        return statType switch
+        {
+            StackStatType.AttackPower => CharacterStatType.AttackPower,
+            StackStatType.AttackRange => CharacterStatType.AttackRange,
+            StackStatType.AttackSpeed => CharacterStatType.AttackSpeed,
+            StackStatType.Magic => CharacterStatType.Magic,
+            StackStatType.MoveSpeed => CharacterStatType.MoveSpeed,
+            StackStatType.MaxHealth => CharacterStatType.MaxHealth,
+            _ => CharacterStatType.MaxHealth
         };
     }
 }

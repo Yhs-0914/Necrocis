@@ -28,8 +28,6 @@ namespace Necrocis
         private const string SkillEffectFallbackPoolName = "__SkillEffectFallbackSphere";
         private const string SkillAttachedEffectFallbackPoolName = "__SkillAttachedEffectFallbackSphere";
         private const string ArcherSkill2FallbackProjectilePoolName = "__ArcherSkill2FallbackCylinder";
-        private const int Skill1UnlockLevel = 10;
-        private const int Skill2UnlockLevel = 20;
 
         private enum ProjectileDirectionReferenceAxis
         {
@@ -484,9 +482,10 @@ namespace Necrocis
 
         private bool CanUseSkillSlot(SkillSlot slot)
         {
-            int requiredLevel = slot == SkillSlot.Skill1 ? Skill1UnlockLevel : Skill2UnlockLevel;
+            int skillSlotIndex = slot == SkillSlot.Skill1 ? 1 : 2;
+            int requiredLevel = LevelUpManager.GetSkillUnlockLevel(skillSlotIndex);
             int currentLevel = LevelUpManager.GetCurrentLevel();
-            if (currentLevel >= requiredLevel)
+            if (LevelUpManager.IsSkillUnlocked(skillSlotIndex))
             {
                 return true;
             }

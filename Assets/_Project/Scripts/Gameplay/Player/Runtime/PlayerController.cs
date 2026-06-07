@@ -622,6 +622,13 @@ namespace Necrocis
         {
             transform.position = position;
 
+            if (rb != null)
+            {
+                rb.position = position;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
             if (characterController != null)
             {
                 characterController.enabled = false;

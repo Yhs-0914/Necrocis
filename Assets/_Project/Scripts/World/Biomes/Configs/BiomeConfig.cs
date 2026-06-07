@@ -335,6 +335,11 @@ namespace Necrocis
         public Sprite returnPortalSprite;
         public Vector3 returnPortalScale = Vector3.one;
 
+        [Header("Boss Contact")]
+        public float bossContactDamage = 1f;
+        public float bossContactDamageCooldown = 1f;
+        public float bossContactPushSpeed = 5f;
+
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();
     }
@@ -357,7 +362,7 @@ namespace Necrocis
         public Vector3 scaleMultiplier = Vector3.one;
 
         [Header("Boss Health")]
-        [Tooltip("0이면 바이옴/패턴 기본 최소 체력을 사용합니다.")]
+        [Tooltip("0이면 bossRule의 maxHealth를 그대로 사용합니다. 0보다 크면 최소 체력으로 보정합니다.")]
         public float minimumMaxHealth = 0f;
 
         [Header("Pattern Settings")]

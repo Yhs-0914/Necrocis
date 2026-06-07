@@ -24,20 +24,19 @@ namespace Necrocis
         private static int currentExp = 0;     // 현재 누적 경험치
         private static int expRequired = 100;  // 다음 레벨까지 필요 경험치
 
-        private const int MAX_LEVEL = 30;          // 최대 레벨
-        private const int BASE_EXP = 100;          // 기본 필요 경험치
-        private const float EXP_MULTIPLIER = 1.25f; // 레벨당 필요 경험치 증가 배율
-        private const int ENEMY_KILL_EXP = 10;     // 잡몹 처치 고정 경험치
+        private static LevelProgressionConfig progressionConfig;
+        private static bool expRequirementInitialized;
 
         public static Action OnLevelUp;       // 레벨업 이벤트 (LevelUpUI가 구독)
-        public static Action OnJobSelect;     // 직업 선택 이벤트 (레벨 10에서 발생)
+        public static Action OnJobSelect;     // 직업 선택 이벤트 (config의 jobSelectionLevel에서 발생)
         public static Action<JobType> OnJobChanged; // 직업 확정 이벤트 (전직 완료 시 발생)
         public static Action<int> OnExpGained; // 경험치 획득 이벤트 (ExpBarUI가 구독)
 
         // 경험치 추가 (레벨별 배율 적용 후 누적)
         public static void AddExp(int baseAmount)
         {
-            if (currentLevel >= MAX_LEVEL) return;
+            EnsureExpRequirementInitialized();
+            if (currentLevel >= Config.MaxLevel) return;
 
             float multiplier = GetExpMultiplier();                     // 레벨 구간별 경험치 배율
             int actualExp = Mathf.RoundToInt(baseAmount * multiplier); // 실제 획득 경험치
@@ -51,28 +50,20 @@ namespace Necrocis
         // 적 처치 시 고정 경험치 지급 (배율/개별 보상값 미적용)
         public static void AddEnemyKillExp()
         {
-            if (currentLevel >= MAX_LEVEL) return;
-            if (currentLevel == 10 && currentJob == JobType.None) return;
+            EnsureExpRequirementInitialized();
+            if (currentLevel >= Config.MaxLevel) return;
+            if (IsWaitingForJobSelection()) return;
 
-            currentExp += ENEMY_KILL_EXP;
-            OnExpGained?.Invoke(ENEMY_KILL_EXP);
+            int enemyKillExp = Config.EnemyKillExp;
+            currentExp += enemyKillExp;
+            OnExpGained?.Invoke(enemyKillExp);
 
             CheckLevelUp();
         }
 
-        // 레벨 구간별 경험치 배율
-        // 1~9: 2배 (초반 빠른 성장), 10: 0배 (직업 선택 전 경험치 차단)
-        // 11~20: 1배 (기본), 21+: 0.8배 (후반 성장 둔화)
         private static float GetExpMultiplier()
         {
-            if (currentLevel <= 9)
-                return 2.0f;
-            else if (currentLevel == 10)
-                return currentJob == JobType.None ? 0f : 1f;
-            else if (currentLevel <= 20)
-                return 1.0f;
-            else
-                return 0.8f;
+            return Config.GetExpGainMultiplier(currentLevel, currentJob);
         }
 
         private static int pendingLevelUps; // 대기 중인 레벨업 수 (한번에 여러 레벨 오를 때)
@@ -80,7 +71,8 @@ namespace Necrocis
         // 레벨업 가능 여부 확인 (한번에 여러 레벨 오를 수 있으므로 while 사용)
         private static void CheckLevelUp()
         {
-            while (currentExp >= expRequired && currentLevel < MAX_LEVEL)
+            EnsureExpRequirementInitialized();
+            while (currentExp >= expRequired && currentLevel < Config.MaxLevel)
             {
                 currentExp -= expRequired;
                 currentLevel++;
@@ -91,7 +83,7 @@ namespace Necrocis
             if (pendingLevelUps > 0)
             {
                 pendingLevelUps--;
-                if (currentLevel == 10 && currentJob == JobType.None)
+                if (IsWaitingForJobSelection())
                     OnJobSelect?.Invoke();
                 else
                 {
@@ -111,7 +103,7 @@ namespace Necrocis
             if (pendingLevelUps > 0)
             {
                 pendingLevelUps--;
-                if (currentLevel == 10 && currentJob == JobType.None)
+                if (IsWaitingForJobSelection())
                     OnJobSelect?.Invoke();
                 else
                 {
@@ -123,15 +115,17 @@ namespace Necrocis
 
         private static void CalculateExpRequired()
         {
-            expRequired = Mathf.RoundToInt(BASE_EXP * Mathf.Pow(EXP_MULTIPLIER, currentLevel - 2));
+            expRequired = Config.GetRequiredExpForCurrentLevel(currentLevel);
+            expRequirementInitialized = true;
         }
 
         public static void DebugLevelUp()
         {
-            if (currentLevel >= MAX_LEVEL) return;
+            EnsureExpRequirementInitialized();
+            if (currentLevel >= Config.MaxLevel) return;
             currentLevel++;
             CalculateExpRequired();
-            if (currentLevel == 10 && currentJob == JobType.None)
+            if (IsWaitingForJobSelection())
                 OnJobSelect?.Invoke();
             else
                 OnLevelUp?.Invoke();
@@ -139,8 +133,23 @@ namespace Necrocis
 
         public static int GetCurrentLevel() => currentLevel;
         public static int GetCurrentExp() => currentExp;
-        public static int GetExpRequired() => expRequired;
-        public static float GetExpProgress() => (float)currentExp / expRequired;
+        public static int GetExpRequired()
+        {
+            EnsureExpRequirementInitialized();
+            return expRequired;
+        }
+        public static float GetExpProgress()
+        {
+            EnsureExpRequirementInitialized();
+            return (float)currentExp / expRequired;
+        }
+        public static int GetJobSelectionLevel() => Config.JobSelectionLevel;
+        public static int GetSkillUnlockLevel(int skillSlotIndex) => Config.GetSkillUnlockLevel(skillSlotIndex);
+        public static bool IsSkillUnlocked(int skillSlotIndex)
+        {
+            return currentJob != JobType.None
+                && currentLevel >= GetSkillUnlockLevel(skillSlotIndex);
+        }
 
         // ─────────────────────────────────
         // 직업 시스템
@@ -159,7 +168,7 @@ namespace Necrocis
 
         public static List<LevelUpStatChoice> GetRandomChoices()
         {
-            if (currentLevel >= 11 && currentJob != JobType.None)
+            if (currentLevel >= Config.JobBasedChoiceStartLevel && currentJob != JobType.None)
                 return GetJobBasedChoices();
 
             return GetRandomFourChoices();
@@ -267,5 +276,38 @@ namespace Necrocis
         }
         public static void ResetSelectionHistory() => selectionHistory.Clear();
         public static JobType GetCurrentJob() => currentJob;
+
+        internal static LevelProgressionConfig Config
+        {
+            get
+            {
+                if (progressionConfig == null)
+                {
+                    progressionConfig = Resources.Load<LevelProgressionConfig>(LevelProgressionConfig.DefaultResourcePath);
+                    if (progressionConfig == null)
+                    {
+                        progressionConfig = ScriptableObject.CreateInstance<LevelProgressionConfig>();
+                        progressionConfig.hideFlags = HideFlags.HideAndDontSave;
+                    }
+                }
+
+                return progressionConfig;
+            }
+        }
+
+        private static void EnsureExpRequirementInitialized()
+        {
+            if (expRequirementInitialized)
+            {
+                return;
+            }
+
+            CalculateExpRequired();
+        }
+
+        private static bool IsWaitingForJobSelection()
+        {
+            return currentLevel == Config.JobSelectionLevel && currentJob == JobType.None;
+        }
     }
 }

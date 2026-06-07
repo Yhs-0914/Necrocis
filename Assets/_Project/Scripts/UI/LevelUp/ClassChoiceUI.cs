@@ -23,7 +23,6 @@ public class ClassChoiceUI : MonoBehaviour
     [SerializeField] private bool compensatePlayerScaleForCanvas = true;
 
     [Header("Settings")]
-    [SerializeField] private int unlockLevel = 10;
     [SerializeField] private bool pauseGameWhileOpen = true;
     [SerializeField] private Color overlayColor = new Color(0f, 0f, 0f, 0.85f);
     [SerializeField] private float uiScaleMultiplier = 1f;
@@ -97,7 +96,7 @@ public class ClassChoiceUI : MonoBehaviour
             return;
         }
 
-        if (forceShow || LevelUpManager.GetCurrentLevel() >= unlockLevel)
+        if (forceShow || LevelUpManager.GetCurrentLevel() >= LevelUpManager.GetJobSelectionLevel())
         {
             ShowUI();
         }

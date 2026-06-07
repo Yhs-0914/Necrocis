@@ -37,6 +37,11 @@ MonoBehaviour:
     interiorFogRevealedAlpha: 0
     fogRevealDuration: 1.4
     interiorFogSortingOrderOffset: 3000
+    returnPortalSprite: {fileID: 0}
+    returnPortalScale: {x: 1, y: 1, z: 1}
+    bossContactDamage: 1
+    bossContactDamageCooldown: 1
+    bossContactPushSpeed: 5
     boss:
       displayName: StomachBoss
       useCustomBossRule: 1
@@ -56,7 +61,7 @@ MonoBehaviour:
         chaseRadius: 16
         leashRadius: 24
         idleDelayRange: {x: 0.5, y: 1.2}
-        maxHealth: 170
+        maxHealth: 10
         attackDamage: 3
         attackRange: 1.6
         attackCooldown: 1
@@ -140,6 +145,7 @@ MonoBehaviour:
         debrisAggroRadius: 8
         debrisVfxSprites: []
         debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
       useEnemyRuleFallback: 1
       fallbackEnemyRuleIndex: 0
       patternType: 4
@@ -148,7 +154,7 @@ MonoBehaviour:
       attackDamageMultiplier: 1
       moveSpeedMultiplier: 1
       scaleMultiplier: {x: 4, y: 4, z: 4}
-      minimumMaxHealth: 170
+      minimumMaxHealth: 0
       intestinePattern:
         phase2HealthRatio: 0.5
         phase1FleeDistance: 7
@@ -173,6 +179,7 @@ MonoBehaviour:
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
+        parasiteAttackRange: 1.1
         parasiteAttackCooldown: 1.3
         parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
         stompMinDelay: 7
@@ -246,12 +253,13 @@ MonoBehaviour:
         acidArcHeight: 0.8
         acidProjectileScale: 0.9
         acidHitRadius: 1.15
-        suctionRange: 6
-        suctionDuration: 0.65
-        suctionStopDistance: 1.05
+        suctionRange: 4.2
+        suctionDuration: 0.4
+        suctionStopDistance: 1
+        spitDelay: 0.35
+        spitReturnDuration: 0.18
         shortRangeDamage: 5
-        shortRangeRadius: 1.8
-        spitKnockbackDistance: 1.6
+        shortRangeRadius: 2.2
         phase1Color: {r: 0.62, g: 0.55, b: 0.34, a: 1}
         phase2Color: {r: 0.42, g: 0.78, b: 0.2, a: 1}
         chargeColor: {r: 0.95, g: 0.78, b: 0.22, a: 1}
@@ -259,6 +267,50 @@ MonoBehaviour:
         acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
         suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
         leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      lungPattern:
+        phase1BrotherHealth: 40
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        windGustMoveSpeed: 3
+        windGustInterval: 5
+        windGustDuration: 1.25
+        brotherSpacing: 3.2
+        phase1GasRange: 7
+        phase1GasCooldown: 3.5
+        phase1GasKnockback: 1
+        phase2MaxHealth: 100
+        phase2AttackDamage: 4
+        phase2MoveSpeed: 1.5
+        phase2GasRange: 10
+        phase2GasCooldown: 4
+        phase2GasKnockback: 1.2
+        diveCooldown: 8
+        diveWindup: 0.55
+        diveTravelTime: 0.65
+        diveArcHeight: 4
+        diveLandingRadius: 1.45
+        diveLandingDamage: 3
+        diveKnockback: 1.4
+        gasProjectileSpeed: 8
+        gasProjectileRadius: 0.7
+        gasProjectileScale: 1
+        gasWindup: 0.25
+        phase1ContactDamage: 1
+        phase2ContactDamage: 2
+        contactRadius: 1.05
+        contactCooldown: 1.1
+        phase1PreferredDistance: 5.2
+        phase2PreferredDistance: 4.2
+        roamRadius: 10
+        brotherAColor: {r: 0.68, g: 0.86, b: 1, a: 1}
+        brotherBColor: {r: 0.78, g: 0.72, b: 1, a: 1}
+        enragedColor: {r: 0.45, g: 0.95, b: 1, a: 1}
+        gasColor: {r: 0.72, g: 0.95, b: 0.9, a: 0.72}
+        windColor: {r: 0.78, g: 0.9, b: 1, a: 0.34}
+        diveColor: {r: 0.5, g: 0.85, b: 1, a: 0.42}
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1

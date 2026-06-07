@@ -46,12 +46,13 @@ namespace Necrocis
         public float acidHitRadius = 1.15f;
 
         [Header("Suck And Spit")]
-        public float suctionRange = 6f;
-        public float suctionDuration = 0.65f;
-        public float suctionStopDistance = 1.05f;
+        public float suctionRange = 4.2f;
+        public float suctionDuration = 0.4f;
+        public float suctionStopDistance = 1f;
+        public float spitDelay = 0.35f;
+        public float spitReturnDuration = 0.18f;
         public float shortRangeDamage = 5f;
-        public float shortRangeRadius = 1.8f;
-        public float spitKnockbackDistance = 1.6f;
+        public float shortRangeRadius = 2.2f;
 
         [Header("Temporary Visuals")]
         public Color phase1Color = new Color(0.62f, 0.55f, 0.34f, 1f);
@@ -78,6 +79,15 @@ namespace Necrocis
             Transition,
             Phase2
         }
+
+        private enum Phase2PatternRequest
+        {
+            Auto,
+            AcidSpray,
+            SuckAndSpit
+        }
+
+        private const float ArenaMovementClampExtraMargin = 0.2f;
 
         [Header("Phase")]
         [SerializeField, Range(0.1f, 0.9f)] private float phase2HealthRatio = 0.65f;
@@ -118,12 +128,13 @@ namespace Necrocis
         [SerializeField] private float acidHitRadius = 1.15f;
 
         [Header("Suck And Spit")]
-        [SerializeField] private float suctionRange = 6f;
-        [SerializeField] private float suctionDuration = 0.65f;
-        [SerializeField] private float suctionStopDistance = 1.05f;
+        [SerializeField] private float suctionRange = 4.2f;
+        [SerializeField] private float suctionDuration = 0.4f;
+        [SerializeField] private float suctionStopDistance = 1f;
+        [SerializeField] private float spitDelay = 0.35f;
+        [SerializeField] private float spitReturnDuration = 0.18f;
         [SerializeField] private float shortRangeDamage = 5f;
-        [SerializeField] private float shortRangeRadius = 1.8f;
-        [SerializeField] private float spitKnockbackDistance = 1.6f;
+        [SerializeField] private float shortRangeRadius = 2.2f;
 
         [Header("Temporary Visuals")]
         [SerializeField] private Color phase1Color = new Color(0.62f, 0.55f, 0.34f, 1f);
@@ -221,9 +232,10 @@ namespace Necrocis
             suctionRange = settings.suctionRange;
             suctionDuration = settings.suctionDuration;
             suctionStopDistance = settings.suctionStopDistance;
+            spitDelay = settings.spitDelay;
+            spitReturnDuration = settings.spitReturnDuration;
             shortRangeDamage = settings.shortRangeDamage;
             shortRangeRadius = settings.shortRangeRadius;
-            spitKnockbackDistance = settings.spitKnockbackDistance;
             phase1Color = settings.phase1Color;
             phase2Color = settings.phase2Color;
             chargeColor = settings.chargeColor;
@@ -324,14 +336,14 @@ namespace Necrocis
         public void RunAcidSprayForDebug()
         {
             ForcePhase2ForDebug();
-            StartCoroutine(Phase2AttackRoutine(true));
+            StartCoroutine(Phase2AttackRoutine(Phase2PatternRequest.AcidSpray));
         }
 
         [ContextMenu("Debug/Run Suck And Spit")]
         public void RunSuckAndSpitForDebug()
         {
             ForcePhase2ForDebug();
-            StartCoroutine(Phase2AttackRoutine(false));
+            StartCoroutine(Phase2AttackRoutine(Phase2PatternRequest.SuckAndSpit));
         }
 
         private void Update()
@@ -377,7 +389,7 @@ namespace Necrocis
             }
             else if (phase == BossPhase.Phase2 && Time.time >= nextPhase2AttackTime)
             {
-                StartCoroutine(Phase2AttackRoutine(Random.value < 0.55f));
+                StartCoroutine(Phase2AttackRoutine());
             }
         }
 
@@ -506,7 +518,7 @@ namespace Necrocis
             actionRunning = false;
         }
 
-        private IEnumerator Phase2AttackRoutine(bool preferAcid)
+        private IEnumerator Phase2AttackRoutine(Phase2PatternRequest request = Phase2PatternRequest.Auto)
         {
             actionRunning = true;
             nextPhase2AttackTime = Time.time + GetPhase2PatternInterval();
@@ -515,9 +527,13 @@ namespace Necrocis
             bool canAcid = IsPlayerWithinRange(player, acidRange);
             bool canSuck = IsPlayerWithinRange(player, suctionRange);
 
-            if (preferAcid && canAcid)
+            if (request == Phase2PatternRequest.AcidSpray)
             {
                 yield return AcidSprayRoutine();
+            }
+            else if (request == Phase2PatternRequest.SuckAndSpit)
+            {
+                yield return SuckAndSpitRoutine();
             }
             else if (canSuck)
             {
@@ -627,11 +643,47 @@ namespace Necrocis
                 yield return null;
             }
 
+            elapsed = 0f;
+            float delay = Mathf.Max(0f, spitDelay);
+            while (elapsed < delay)
+            {
+                elapsed += Time.deltaTime;
+                MovePlayerBy(player, pullTarget - player.transform.position);
+
+                float pulse = 1f + Mathf.Sin(elapsed * 18f) * 0.04f;
+                transform.localScale = new Vector3(baseScale.x * 1.12f, baseScale.y * 0.9f, baseScale.z) * pulse;
+                yield return null;
+            }
+
             if (IsPlayerWithinRange(player, shortRangeRadius))
             {
                 player.TakeDamage(shortRangeDamage);
-                ApplyPlayerKnockback(player, transform.position, spitKnockbackDistance);
             }
+
+            yield return SpitPlayerBackToStart(player, startPosition);
+        }
+
+        private IEnumerator SpitPlayerBackToStart(PlayerController player, Vector3 targetPosition)
+        {
+            if (player == null)
+            {
+                yield break;
+            }
+
+            targetPosition.y = player.transform.position.y;
+            Vector3 returnStart = player.transform.position;
+            float elapsed = 0f;
+            float duration = Mathf.Max(0.01f, spitReturnDuration);
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                Vector3 desired = Vector3.Lerp(returnStart, targetPosition, t);
+                MovePlayerBy(player, desired - player.transform.position);
+                yield return null;
+            }
+
+            MovePlayerBy(player, targetPosition - player.transform.position);
         }
 
         private void SplashAcid(Vector3 center)
@@ -834,7 +886,115 @@ namespace Necrocis
                 return;
             }
 
+            Vector3 currentPosition = player.transform.position;
+            Vector3 desiredPosition = currentPosition + displacement;
+            float clampMargin = GetPlayerArenaClampMargin(player);
+            if (MidBossArenaController.TryClampPlayerMovementInsideLockedArena(
+                    currentPosition,
+                    desiredPosition,
+                    clampMargin,
+                    out Vector3 clampedDesiredPosition))
+            {
+                displacement = clampedDesiredPosition - currentPosition;
+                displacement.y = 0f;
+                if (displacement.sqrMagnitude <= 0.000001f)
+                {
+                    CorrectPlayerBackIntoLockedArena(player, clampMargin);
+                    return;
+                }
+            }
+            else if (TryClampPositionInsideActiveMap(desiredPosition, clampMargin, out clampedDesiredPosition))
+            {
+                displacement = clampedDesiredPosition - currentPosition;
+                displacement.y = 0f;
+                if (displacement.sqrMagnitude <= 0.000001f)
+                {
+                    CorrectPlayerBackIntoActiveMap(player, clampMargin);
+                    return;
+                }
+            }
+
             player.TryMoveByWorld(displacement);
+            CorrectPlayerBackIntoLockedArena(player, clampMargin);
+            CorrectPlayerBackIntoActiveMap(player, clampMargin);
+        }
+
+        private static float GetPlayerArenaClampMargin(PlayerController player)
+        {
+            Collider hitCollider = player != null ? player.HitCollider : null;
+            if (hitCollider == null)
+            {
+                return 0.55f;
+            }
+
+            return Mathf.Max(0.35f, Mathf.Max(hitCollider.bounds.extents.x, hitCollider.bounds.extents.z) + ArenaMovementClampExtraMargin);
+        }
+
+        private static void CorrectPlayerBackIntoLockedArena(PlayerController player, float margin)
+        {
+            if (player == null)
+            {
+                return;
+            }
+
+            Vector3 currentPosition = player.transform.position;
+            if (!MidBossArenaController.TryClampPositionInsideLockedArena(currentPosition, margin, out Vector3 correctedPosition))
+            {
+                return;
+            }
+
+            Vector3 planarDelta = correctedPosition - currentPosition;
+            planarDelta.y = 0f;
+            if (planarDelta.sqrMagnitude <= 0.000001f)
+            {
+                return;
+            }
+
+            player.SpawnAt(correctedPosition);
+        }
+
+        private static void CorrectPlayerBackIntoActiveMap(PlayerController player, float margin)
+        {
+            if (player == null)
+            {
+                return;
+            }
+
+            Vector3 currentPosition = player.transform.position;
+            if (!TryClampPositionInsideActiveMap(currentPosition, margin, out Vector3 correctedPosition))
+            {
+                return;
+            }
+
+            Vector3 planarDelta = correctedPosition - currentPosition;
+            planarDelta.y = 0f;
+            if (planarDelta.sqrMagnitude <= 0.000001f)
+            {
+                return;
+            }
+
+            player.SpawnAt(correctedPosition);
+        }
+
+        private static bool TryClampPositionInsideActiveMap(Vector3 position, float margin, out Vector3 clampedPosition)
+        {
+            clampedPosition = position;
+            BiomeManager biome = BiomeManager.Active;
+            if (biome == null || biome.MapWidth <= 0 || biome.MapHeight <= 0)
+            {
+                return false;
+            }
+
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            float safeMargin = Mathf.Max(0f, margin);
+            float minX = safeMargin;
+            float minZ = safeMargin;
+            float maxX = Mathf.Max(minX, biome.MapWidth * tileSize - safeMargin);
+            float maxZ = Mathf.Max(minZ, biome.MapHeight * tileSize - safeMargin);
+
+            clampedPosition.x = Mathf.Clamp(position.x, minX, maxX);
+            clampedPosition.z = Mathf.Clamp(position.z, minZ, maxZ);
+            return true;
         }
 
         private IEnumerator FadeAndDestroy(GameObject obj, float duration, Color startColor, float endScale)

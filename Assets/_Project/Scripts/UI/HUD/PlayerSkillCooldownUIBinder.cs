@@ -7,8 +7,6 @@ using UnityEngine.UI;
 public class PlayerSkillCooldownUIBinder : MonoBehaviour
 {
     private static PlayerSkillCooldownUIBinder persistentInstance;
-    private const int Skill1UnlockLevel = 10;
-    private const int Skill2UnlockLevel = 20;
 
     [Header("References")]
     [SerializeField] private PlayerClassSkillController skillController;
@@ -216,16 +214,8 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
 
     private bool IsSlotUnlocked(PlayerClassSkillController.SkillSlot slot)
     {
-        int level = LevelUpManager.GetCurrentLevel();
-        bool hasSelectedJob = LevelUpManager.GetCurrentJob() != JobType.None;
-        if (!hasSelectedJob)
-        {
-            return false;
-        }
-
-        return slot == PlayerClassSkillController.SkillSlot.Skill1
-            ? level >= Skill1UnlockLevel
-            : level >= Skill2UnlockLevel;
+        int skillSlotIndex = slot == PlayerClassSkillController.SkillSlot.Skill1 ? 1 : 2;
+        return LevelUpManager.IsSkillUnlocked(skillSlotIndex);
     }
 
     private SkillCooldownUI GetTargetUI(PlayerClassSkillController.SkillSlot slot)

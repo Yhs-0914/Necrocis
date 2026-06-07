@@ -37,6 +37,7 @@ namespace Necrocis
         public float parasiteMaxHealth = 6f;
         public float parasiteMoveSpeed = 2.3f;
         public float parasiteAttackDamage = 1f;
+        public float parasiteAttackRange = 1.1f;
         public float parasiteAttackCooldown = 1.3f;
         public Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
 
@@ -119,6 +120,7 @@ namespace Necrocis
         [SerializeField] private float parasiteMaxHealth = 6f;
         [SerializeField] private float parasiteMoveSpeed = 2.3f;
         [SerializeField] private float parasiteAttackDamage = 1f;
+        [SerializeField] private float parasiteAttackRange = 1.1f;
         [SerializeField] private float parasiteAttackCooldown = 1.3f;
         [SerializeField] private Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
 
@@ -206,6 +208,7 @@ namespace Necrocis
             parasiteMaxHealth = settings.parasiteMaxHealth;
             parasiteMoveSpeed = settings.parasiteMoveSpeed;
             parasiteAttackDamage = settings.parasiteAttackDamage;
+            parasiteAttackRange = settings.parasiteAttackRange;
             parasiteAttackCooldown = settings.parasiteAttackCooldown;
             parasiteScale = settings.parasiteScale;
             stompMinDelay = settings.stompMinDelay;
@@ -749,7 +752,7 @@ namespace Necrocis
                 idleDelayRange = new Vector2(0.1f, 0.35f),
                 maxHealth = parasiteMaxHealth,
                 attackDamage = parasiteAttackDamage,
-                attackRange = 1.1f,
+                attackRange = parasiteAttackRange,
                 attackCooldown = parasiteAttackCooldown,
                 expReward = 0,
                 separationDistance = 0.7f,

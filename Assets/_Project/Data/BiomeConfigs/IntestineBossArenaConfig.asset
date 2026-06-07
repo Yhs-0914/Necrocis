@@ -37,6 +37,9 @@ MonoBehaviour:
     interiorFogRevealedAlpha: 0
     fogRevealDuration: 1.4
     interiorFogSortingOrderOffset: 3000
+    bossContactDamage: 1
+    bossContactDamageCooldown: 1
+    bossContactPushSpeed: 5
     boss:
       displayName: IntestineBoss
       useCustomBossRule: 0
@@ -56,7 +59,7 @@ MonoBehaviour:
         chaseRadius: 6
         leashRadius: 8
         idleDelayRange: {x: 0.5, y: 1.5}
-        maxHealth: 30
+        maxHealth: 10
         attackDamage: 2
         attackRange: 1.5
         attackCooldown: 1
@@ -119,7 +122,7 @@ MonoBehaviour:
       attackDamageMultiplier: 1
       moveSpeedMultiplier: 1
       scaleMultiplier: {x: 4, y: 4, z: 4}
-      minimumMaxHealth: 100
+      minimumMaxHealth: 0
       intestinePattern:
         phase2HealthRatio: 0.5
         phase1FleeDistance: 7
@@ -144,6 +147,7 @@ MonoBehaviour:
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
+        parasiteAttackRange: 1.1
         parasiteAttackCooldown: 1.3
         parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
         stompMinDelay: 7
