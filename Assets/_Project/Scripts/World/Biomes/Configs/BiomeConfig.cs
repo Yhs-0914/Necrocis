@@ -331,6 +331,10 @@ namespace Necrocis
         public float fogRevealDuration = 1.4f;
         public int interiorFogSortingOrderOffset = 3000;
 
+        [Header("Return Portal")]
+        public Sprite returnPortalSprite;
+        public Vector3 returnPortalScale = Vector3.one;
+
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();
     }

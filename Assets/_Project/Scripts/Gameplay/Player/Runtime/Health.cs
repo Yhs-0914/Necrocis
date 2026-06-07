@@ -85,6 +85,7 @@ namespace Necrocis
             if (Stats == null) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
+            AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
             Stats.ApplyDamage(actualDamage);
 
             if (!IsDead)

@@ -14,6 +14,7 @@ namespace Necrocis
         {
             enemy.SetMoveAnimation();
             enemy.StartCharge();
+            AudioManager.Instance?.PlaySFX("EnemyCharge");
         }
 
         public void Update(EnemyController enemy, float deltaTime)

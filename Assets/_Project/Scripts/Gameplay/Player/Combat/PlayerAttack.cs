@@ -26,11 +26,13 @@ namespace Necrocis
         [SerializeField] private LayerMask rangedTargetMask = ~0;
 
         [Header("Shared")]
+        [SerializeField] private float meleeCooldown  = 0.2f;
         [SerializeField] private float attackCooldown = 0.3f;
         [SerializeField] private bool enableDebugLogs;
 
         private PlayerController playerController;
-        private float lastAttackTime = float.NegativeInfinity; // 마지막 공격 시간 (초기값을 -∞로 설정하여 첫 공격 즉시 가능)
+        private float lastAttackTime  = float.NegativeInfinity;
+        private float lastMeleeTime   = float.NegativeInfinity; // 마지막 공격 시간 (초기값을 -∞로 설정하여 첫 공격 즉시 가능)
         private readonly HashSet<EnemyController> meleeHitEnemies = new HashSet<EnemyController>();
         private Collider[] meleeOverlapResults;
 
@@ -93,12 +95,10 @@ namespace Necrocis
 
             if (input.MeleeAttackAction.WasPressedThisFrame())
             {
-                if (!canAttack)
-                {
-                    return;
-                }
+                float effectiveMeleeCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(meleeCooldown, stats);
+                if (Time.time < lastMeleeTime + effectiveMeleeCooldown) return;
 
-                lastAttackTime = Time.time;
+                lastMeleeTime = Time.time;
                 MeleeAttack();
                 return;
             }
@@ -137,6 +137,7 @@ namespace Necrocis
         // 근거리 공격: 방향 앞에 OverlapBox를 생성하여 범위 내 적에게 데미지
         private void MeleeAttack()
         {
+            AudioManager.Instance?.PlaySFX("MeleeAttack"); // [Sound] 근거리 공격
             PlayerStats stats = PlayerStats.Instance;
             playerController?.PlayAttackAnimation(true);
             Vector3 direction = GetAttackDirection();
@@ -203,6 +204,7 @@ namespace Necrocis
         // 원거리 공격: 오브젝트 풀에서 투사체를 가져와 발사
         private void RangedAttack()
         {
+            AudioManager.Instance?.PlaySFX("RangedAttack"); // [Sound] 원거리 공격
             playerController?.PlayAttackAnimation(false);
             PlayerProjectilePool pooler = ResolveObjectPooler();
             if (pooler == null)
@@ -238,6 +240,7 @@ namespace Necrocis
             float effectiveProjectileRange = PlayerCombatCalculator.GetBasicAttackRange(projectileRange, stats);
 
             proj.Launch(direction, damage, rangedTargetMask, effectiveProjectileRange);
+            projectile.GetComponent<ProjectileDirectionalSprite>()?.SetDirection(direction);
             if (enableDebugLogs)
             {
                 Debug.Log($"[PlayerAttack] Bullet fired toward {direction}");

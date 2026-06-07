@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -16,9 +17,9 @@ namespace Necrocis
         [SerializeField] private float hitCheckHeightOffset = 0.75f;
         [SerializeField] private float hitCheckVerticalHalfHeight = 2.5f;
 
-        private Vector3 moveDirection; // 이동 방향 (정규화)
+        private Vector3 moveDirection;
         private float flightHeight;
-        private float damage;          // 적에게 가할 데미지
+        private float damage;
         private float deactivateTime;
         private bool hasImpacted;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];

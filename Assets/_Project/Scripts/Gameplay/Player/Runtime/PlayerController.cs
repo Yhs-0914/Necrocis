@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,6 +7,8 @@ namespace Necrocis
 {
     public class PlayerController : MonoBehaviour
     {
+        public static event System.Action OnPlayerDied;
+
         private static PlayerController instance;
 
         public static PlayerController Instance
@@ -78,6 +80,12 @@ namespace Necrocis
         [SerializeField] private Sprite[] rangedUpLeft;
         [SerializeField] private Sprite[] rangedUpRight;
 
+        [Header("Dash")]
+        [SerializeField] private float dashSpeed = 20f;
+        [SerializeField] private float dashDuration = 0.15f;
+        [SerializeField] private float dashCooldown = 0.8f;
+        [SerializeField] private bool invincibleDuringDash = true;
+
         [Header("Animation Settings")]
         [SerializeField] private float idleFrameRate = 4f;
         [SerializeField] private float walkFrameRate = 8f;
@@ -97,6 +105,16 @@ namespace Necrocis
         private Direction currentDirection = Direction.Up;      // ?꾩옱 諛붾씪蹂대뒗 諛⑺뼢
         private Vector3 lastMoveDirection = Vector3.forward;
         private bool isMoving = false;
+
+        // 대시 상태
+        private bool isDashing = false;
+        private float lastDashTime = float.NegativeInfinity;
+        private Vector3 dashVelocity;
+
+        // [Sound] 발소리 타이머
+        [Header("Sound")]
+        [SerializeField] private float footstepInterval = 0.35f;
+        private float nextFootstepTime;
 
         // 공격 애니메이션 상태
         private bool isPlayingAttackAnim = false;
@@ -184,10 +202,12 @@ namespace Necrocis
             EnsureDeathScreen();
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
         }
 
         private void OnDestroy()
         {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
             if (instance == this)
             {
                 instance = null;
@@ -220,6 +240,12 @@ namespace Necrocis
             HandleInput();
             UpdateAnimation();
             ApplyLockedRotation();
+            // [Sound] 이동 중 발소리
+            if (isMoving && !isDashing && Time.time >= nextFootstepTime)
+            {
+                nextFootstepTime = Time.time + footstepInterval;
+                AudioManager.Instance?.PlaySFX("PlayerFootstep");
+            }
         }
         // ?좊땲???앸챸二쇨린: 臾쇰━ ?ㅽ뀦 湲곕컲 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -262,6 +288,12 @@ namespace Necrocis
             }
 
             // 諛⑺뼢 寃곗젙 (留덉?留??낅젰 諛⑺뼢 ?좎?)
+            // 대시 입력 (Shift)
+            if (input.DashAction.WasPressedThisFrame() && !isDashing && Time.time >= lastDashTime + dashCooldown)
+            {
+                StartCoroutine(DashCoroutine());
+            }
+
             if (isMoving)
             {
                 UpdateDirection(moveInput.x, moveInput.y);
@@ -392,6 +424,12 @@ namespace Necrocis
             if (IsControlBlocked())
             {
                 StopMotion();
+                return;
+            }
+
+            if (isDashing)
+            {
+                ApplyMove(dashVelocity * Time.fixedDeltaTime);
                 return;
             }
 
@@ -679,6 +717,7 @@ namespace Necrocis
         public void TakeDamage(float damage)
         {
             if (deathHandled) return;
+            if (isDashing && invincibleDuringDash) return;
 
             Health health = GetComponent<Health>();
             if (health != null)
@@ -732,7 +771,7 @@ namespace Necrocis
                 return;
             }
 
-            float duration = Mathf.Max(0.3f, attackAnimDuration);
+            float duration = Mathf.Max(0.05f, attackAnimDuration);
             SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + duration;
@@ -779,6 +818,24 @@ namespace Necrocis
             if (absZ >= absX)
                 return z > 0 ? rangedUp : rangedDown;
             return x > 0 ? rangedRight : rangedLeft;
+        }
+
+        private IEnumerator DashCoroutine()
+        {
+            isDashing = true;
+            lastDashTime = Time.time;
+            AudioManager.Instance?.PlaySFX("PlayerDash"); // [Sound] 대시
+
+            Vector3 dir = lastMoveDirection.sqrMagnitude > 0.001f
+                ? lastMoveDirection.normalized
+                : DirectionToVector(currentDirection);
+            dir.y = 0f;
+            dashVelocity = dir * dashSpeed;
+
+            yield return new WaitForSeconds(dashDuration);
+
+            isDashing = false;
+            dashVelocity = Vector3.zero;
         }
 
         public void FaceDirection(Direction direction)
@@ -841,6 +898,39 @@ namespace Necrocis
         private void OnDisable()
         {
             LevelUpManager.OnJobChanged -= HandleJobChanged;
+        }
+
+        private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (!deathHandled) return;
+
+            deathHandled = false;
+            movement = Vector3.zero;
+            isMoving = false;
+            isDashing = false;
+            dashVelocity = Vector3.zero;
+
+            if (rb != null)
+            {
+                rb.isKinematic = false;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            if (characterController != null)
+                characterController.enabled = true;
+
+            enabled = true;
+
+            PlayerAttack attack = GetComponent<PlayerAttack>();
+            if (attack != null) attack.enabled = true;
+
+            PlayerClassSkillController classSkill = GetComponent<PlayerClassSkillController>();
+            if (classSkill != null) classSkill.enabled = true;
+
+            Health health = GetComponent<Health>();
+            if (health != null) health.ResetHealth();
+            else if (playerStats != null) playerStats.RuntimeStats?.ResetHealthToMax();
         }
 
         private void HandleJobChanged(JobType job)
@@ -916,6 +1006,8 @@ namespace Necrocis
         {
             deathHandled = true;
             StopMotion();
+            isDashing = false;
+            dashVelocity = Vector3.zero;
 
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
@@ -924,6 +1016,9 @@ namespace Necrocis
             PlayerClassSkillController classSkillController = GetComponent<PlayerClassSkillController>();
             if (classSkillController != null)
                 classSkillController.enabled = false;
+
+            AudioManager.Instance?.PlaySFX("PlayerDeath"); // [Sound] 사망
+            OnPlayerDied?.Invoke();
 
             if (deathRoutine != null)
                 StopCoroutine(deathRoutine);

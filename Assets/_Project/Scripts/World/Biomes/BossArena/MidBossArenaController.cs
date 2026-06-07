@@ -430,15 +430,22 @@ namespace Necrocis
                 : Vector3.one;
 
             SpriteRenderer sr = portalObj.AddComponent<SpriteRenderer>();
-            sr.sprite = returnPortalConfig != null && returnPortalConfig.sprite != null
+            bool hasConfiguredSprite = returnPortalConfig != null && returnPortalConfig.sprite != null;
+            bool hasArenaSprite = !hasConfiguredSprite && arenaConfig != null && arenaConfig.returnPortalSprite != null;
+            sr.sprite = hasConfiguredSprite
                 ? returnPortalConfig.sprite
-                : GetFogSprite();
-            sr.color = returnPortalConfig != null && returnPortalConfig.sprite != null
+                : hasArenaSprite ? arenaConfig.returnPortalSprite : GetFogSprite();
+            sr.color = hasConfiguredSprite || hasArenaSprite
                 ? Color.white
                 : new Color(0.6f, 0.2f, 1f, 0.85f);
             sr.sortingOrder = returnPortalConfig != null
                 ? returnPortalConfig.sortingOrder
                 : arenaConfig != null ? arenaConfig.sortingOrder : 3500;
+
+            if (returnPortalConfig == null && hasArenaSprite)
+            {
+                portalObj.transform.localScale = GetSafeScaleMultiplier(arenaConfig.returnPortalScale);
+            }
 
             if (returnPortalConfig == null || returnPortalConfig.useBillboard)
             {
@@ -666,7 +673,10 @@ namespace Necrocis
                 return arenaConfig.centerGrid;
             }
 
-            return new Vector2Int(biome.MapWidth / 2, biome.MapHeight / 2);
+            // 플레이어 진입 포탈은 (mapWidth/2, y=5) — 아레나를 바로 위에 배치
+            int halfArenaH = Mathf.Max(4, arenaSize.y / 2);
+            int nearEntryY = halfArenaH + 8;
+            return new Vector2Int(biome.MapWidth / 2, nearEntryY);
         }
 
         private EnemySpawnRuleConfig ResolveBossRule(IList<EnemySpawnRuleConfig> availableEnemyRules)
