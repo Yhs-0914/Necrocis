@@ -62,7 +62,7 @@ namespace Necrocis
         [SerializeField] protected float heightStep = 0.5f;
         [SerializeField] protected float cliffOverlayOffset = 0.01f;
         [SerializeField] protected Color cliffTint = new Color(0.6f, 0.6f, 0.6f, 1f);
-        [SerializeField] protected float playerHeightOffset = -2f;
+        [SerializeField] protected float playerHeightOffset = 0f;
 
         [Header("디버그")]
         [SerializeField] private bool enableDebugLogs = false;

@@ -7,6 +7,8 @@ namespace Necrocis
 {
     public class PlayerController : MonoBehaviour
     {
+        private const int PlayerBaseSortingOrder = 30000;
+
         private static PlayerController instance;
 
         public static PlayerController Instance
@@ -166,7 +168,7 @@ namespace Necrocis
             }
 
             // ?ㅽ봽?쇱씠??湲곕낯 ?ㅼ젙
-            spriteRenderer.color = Color.white;
+            EnsurePlayerRendererVisible();
 
             Billboard billboard = spriteRenderer.GetComponent<Billboard>();
             if (billboard == null)
@@ -180,7 +182,7 @@ namespace Necrocis
             {
                 ySort = spriteRenderer.gameObject.AddComponent<SpriteYSort>();
             }
-            ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
+            ySort.Configure(PlayerBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
             ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
             CreateClimbPrompt();
 
@@ -355,7 +357,21 @@ namespace Necrocis
             if (currentAnimation != null && currentAnimation.Length > 0)
             {
                 spriteRenderer.sprite = currentAnimation[0];
+                EnsurePlayerRendererVisible();
             }
+        }
+
+        private void EnsurePlayerRendererVisible()
+        {
+            if (spriteRenderer == null)
+            {
+                return;
+            }
+
+            spriteRenderer.enabled = true;
+            spriteRenderer.forceRenderingOff = false;
+            spriteRenderer.color = Color.white;
+            spriteRenderer.sortingOrder = PlayerBaseSortingOrder;
         }
 
         /// <summary>
