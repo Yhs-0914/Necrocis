@@ -11276,69 +11276,69 @@ MonoBehaviour:
     displayName: "\uB3C5\uC131 \uC810\uB9C9"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC \uC911\uB3C5 \uD53C\uD574 \uBD80\uC5EC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9986fc82441c47119bb568655973acd9, type: 3}
     implementation: {fileID: 0}
   - itemId: freezing_nerve
     displayName: "\uBE59\uACB0 \uC2E0\uACBD"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC \uC801 \uC774\uB3D9\uC18D\uB3C4
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 2dae7275370f4782bbefcadb7758e704, type: 3}
     implementation: {fileID: 0}
   - itemId: hemorrhage_organ
     displayName: "\uCD9C\uD608 \uAE30\uAD00"
     description: "\uC801\uC911 \uC2DC \uC9C0\uC18D \uCD9C\uD608 \uD53C\uD574"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 48f6cc999e9a45039fc8eceffc54f26a, type: 3}
     implementation: {fileID: 0}
   - itemId: overheated_organ
     displayName: "\uACFC\uC5F4 \uAE30\uAD00"
     description: "\uACC4\uC18D \uACF5\uACA9 \uC2DC \uACF5\uACA9\uC18D\uB3C4 \uC99D\uAC00,
       \uACFC\uC5F4 \uC2DC \uD3ED\uBC1C \uD53C\uD574"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: a2eef1bb211a4210ab5619137abc7952, type: 3}
     implementation: {fileID: 0}
   - itemId: mutant_eye
     displayName: "\uB3CC\uC5F0\uBCC0\uC774 \uC548\uAD6C"
     description: "\uC804\uBC29 180\uB3C4 \uBC94\uC704\uB85C \uBB34\uC791\uC704 \uBC1C\uC0AC,
       \uACF5\uACA9\uB825 +5"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 02864ace75954328bb1c8ad1c7e6d6c7, type: 3}
     implementation: {fileID: 0}
   - itemId: organ_tentacle
     displayName: "\uC7A5\uAE30 \uCD09\uC218"
     description: "\uC8FC\uBCC0 \uC801 \uC790\uB3D9 \uACF5\uACA9, \uB300\uC2E0 \uAE30\uBCF8
       \uACF5\uACA9 \uC57D\uD654"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 30ea581a77ed4f50b423105a66d8f601, type: 3}
     implementation: {fileID: 0}
   - itemId: rampage_bloodflow
     displayName: "\uD3ED\uC8FC \uD608\uB958"
     description: "\uC774\uB3D9 \uC911 \uACF5\uACA9\uB825 \uC99D\uAC00, \uBA48\uCD94\uBA74
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ac6f186a235348a0bfbfdfde74c06175, type: 3}
     implementation: {fileID: 0}
   - itemId: muscle_spasm
     displayName: "\uADFC\uC721 \uACBD\uB828"
     description: "\uADFC\uC811 \uACF5\uACA9 \uBC94\uC704 \uC99D\uAC00, \uACF5\uACA9\uC18D\uB3C4
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: da1db62dc85d4ff8b3718e999489bbae, type: 3}
     implementation: {fileID: 0}
   - itemId: unstable_core
     displayName: "\uBD88\uC548\uC815 \uD575"
     description: "\uACF5\uACA9\uB825\uC774 \uB79C\uB364\uD558\uAC8C \uD06C\uAC8C
       \uBCC0\uB3D9\uB428"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 0238764490da4eb7b6b4775811a9ca1f, type: 3}
     implementation: {fileID: 0}
   - itemId: bio_resonance
     displayName: "\uC0DD\uCCB4 \uACF5\uBA85"
     description: "\uAC19\uC740 \uC801 \uC5F0\uC18D \uACF5\uACA9 \uC2DC \uD574\uB2F9
       \uC801\uC5D0\uAC8C \uD53C\uD574\uB7C9 \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 08005822b1914de0bee328b21739e6af, type: 3}
     implementation: {fileID: 0}
   - itemId: blood_pressure_burst
     displayName: "\uD608\uC555 \uD3ED\uBC1C"
