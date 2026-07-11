@@ -686,6 +686,38 @@ namespace Necrocis
     {
         private static Sprite circleSprite;
         private static Material spriteMaterial;
+        private static readonly Dictionary<string, Sprite> ResourceSprites = new Dictionary<string, Sprite>();
+
+        public static Sprite LoadResourceSprite(string resourcePath, float pixelsPerUnit = 100f)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return null;
+            }
+
+            if (ResourceSprites.TryGetValue(resourcePath, out Sprite cachedSprite))
+            {
+                return cachedSprite;
+            }
+
+            Sprite sprite = Resources.Load<Sprite>(resourcePath);
+            if (sprite == null)
+            {
+                Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+                if (texture != null)
+                {
+                    sprite = Sprite.Create(
+                        texture,
+                        new Rect(0f, 0f, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f),
+                        Mathf.Max(1f, pixelsPerUnit));
+                    sprite.name = texture.name;
+                }
+            }
+
+            ResourceSprites[resourcePath] = sprite;
+            return sprite;
+        }
 
         public static Sprite GetCircleSprite()
         {

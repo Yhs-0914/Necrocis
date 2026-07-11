@@ -39,6 +39,13 @@ namespace Necrocis
         [SerializeField, Min(0f)] private float cellProliferationDelay = 0.5f;
         [SerializeField] private bool enableDebugLogs;
 
+        [Header("Attack Visuals")]
+        [SerializeField] private string meleeSlashSpriteResourcePath = "AttackVisuals/basic_melee_slash";
+        [SerializeField] private float meleeSlashLifetime = 0.18f;
+        [SerializeField] private float meleeSlashScale = 0.95f;
+        [SerializeField] private float meleeSlashHeightOffset = 2f;
+        [SerializeField] private int meleeSlashSortingOrder = 5050;
+
         private PlayerController playerController;
         private PlayerItemCombatEffects itemEffects;
         private float lastAttackTime = float.NegativeInfinity;
@@ -47,6 +54,8 @@ namespace Necrocis
         private readonly HashSet<EnemyController> beamHitEnemies = new HashSet<EnemyController>();
         private Collider[] meleeOverlapResults;
         private Collider[] beamOverlapResults;
+        private Sprite meleeSlashSprite;
+        private bool meleeSlashSpriteLoadAttempted;
 
         private void Awake()
         {
@@ -180,6 +189,7 @@ namespace Necrocis
             float baseDamage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage) + flatDamageBonus;
             float finalDamage = baseDamage * damageMultiplier * unstableMultiplier;
             itemEffects?.NotifyBasicAttackPerformed(finalDamage, meleeTargetMask, effectiveAttackOffset + effectiveDepth, direction);
+            SpawnMeleeSlashVisual(boxCenter, direction, effectiveWidth, effectiveDepth);
 
             EnsureMeleeOverlapBuffer();
             meleeHitEnemies.Clear();
@@ -211,6 +221,120 @@ namespace Necrocis
                 enemy.TakeDamage(appliedDamage);
                 itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+            }
+        }
+
+        private void SpawnMeleeSlashVisual(Vector3 center, Vector3 direction, float effectiveWidth, float effectiveDepth)
+        {
+            Sprite sprite = GetMeleeSlashSprite();
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject visualObject = new GameObject("BasicMeleeSlashVisual");
+            visualObject.transform.position = new Vector3(center.x, transform.position.y + meleeSlashHeightOffset, center.z);
+            visualObject.transform.localScale = Vector3.one * GetMeleeSlashWorldScale(sprite, effectiveWidth, effectiveDepth);
+            visualObject.transform.rotation = GetScreenAlignedRotation(direction);
+
+            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = meleeSlashSortingOrder;
+            StartCoroutine(FadeAndDestroyMeleeSlash(renderer, Mathf.Max(0.02f, meleeSlashLifetime)));
+        }
+
+        private Sprite GetMeleeSlashSprite()
+        {
+            if (meleeSlashSpriteLoadAttempted)
+            {
+                return meleeSlashSprite;
+            }
+
+            meleeSlashSpriteLoadAttempted = true;
+            if (string.IsNullOrWhiteSpace(meleeSlashSpriteResourcePath))
+            {
+                return null;
+            }
+
+            meleeSlashSprite = TextureSpriteCache.LoadResourceSprite(meleeSlashSpriteResourcePath);
+            if (meleeSlashSprite == null)
+            {
+                Debug.LogWarning($"[PlayerAttack] Resources/{meleeSlashSpriteResourcePath} sprite not found.");
+            }
+
+            return meleeSlashSprite;
+        }
+
+        private float GetMeleeSlashWorldScale(Sprite sprite, float effectiveWidth, float effectiveDepth)
+        {
+            if (sprite == null)
+            {
+                return Mathf.Max(0.05f, meleeSlashScale);
+            }
+
+            float spriteWorldSize = Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y);
+            if (spriteWorldSize <= 0.0001f)
+            {
+                return Mathf.Max(0.05f, meleeSlashScale);
+            }
+
+            float targetWorldSize = Mathf.Max(0.1f, Mathf.Max(effectiveWidth, effectiveDepth) * meleeSlashScale);
+            return Mathf.Max(0.05f, targetWorldSize / spriteWorldSize);
+        }
+
+        private static Quaternion GetScreenAlignedRotation(Vector3 worldDirection)
+        {
+            worldDirection.y = 0f;
+            if (worldDirection.sqrMagnitude <= 0.0001f)
+            {
+                worldDirection = Vector3.forward;
+            }
+
+            Camera activeCamera = DontStarveCamera.GetActiveCamera();
+            if (activeCamera == null)
+            {
+                float fallbackAngle = Mathf.Atan2(worldDirection.z, worldDirection.x) * Mathf.Rad2Deg;
+                return Quaternion.Euler(90f, 0f, fallbackAngle);
+            }
+
+            Vector3 projectedDirection = Vector3.ProjectOnPlane(worldDirection.normalized, activeCamera.transform.forward);
+            if (projectedDirection.sqrMagnitude <= 0.0001f)
+            {
+                return activeCamera.transform.rotation;
+            }
+
+            projectedDirection.Normalize();
+            float x = Vector3.Dot(projectedDirection, activeCamera.transform.right);
+            float y = Vector3.Dot(projectedDirection, activeCamera.transform.up);
+            float rollAngle = Mathf.Atan2(y, x) * Mathf.Rad2Deg;
+            return activeCamera.transform.rotation * Quaternion.AngleAxis(rollAngle, Vector3.forward);
+        }
+
+        private static IEnumerator FadeAndDestroyMeleeSlash(SpriteRenderer renderer, float lifetime)
+        {
+            if (renderer == null)
+            {
+                yield break;
+            }
+
+            Color baseColor = renderer.color;
+            float startTime = Time.time;
+            while (renderer != null)
+            {
+                float elapsed = Time.time - startTime;
+                if (elapsed >= lifetime)
+                {
+                    break;
+                }
+
+                float alpha = Mathf.Lerp(baseColor.a, 0f, elapsed / lifetime);
+                renderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+                yield return null;
+            }
+
+            if (renderer != null)
+            {
+                Destroy(renderer.gameObject);
             }
         }
 
@@ -369,7 +493,13 @@ namespace Necrocis
             }
 
             proj.Launch(forward, damage, rangedTargetMask, range, itemEffects, spawnKind);
-            projectile.GetComponent<ProjectileDirectionalSprite>()?.SetDirection(forward);
+            ProjectileDirectionalSprite directionalSprite = projectile.GetComponent<ProjectileDirectionalSprite>();
+            if (directionalSprite == null)
+            {
+                directionalSprite = projectile.AddComponent<ProjectileDirectionalSprite>();
+            }
+
+            directionalSprite.SetDirection(forward);
         }
 
         private void FireBeam(Vector3 direction, float damage, float range)
