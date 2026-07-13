@@ -184,7 +184,7 @@ namespace Necrocis
         [SerializeField] private float skillHitHeightOffset = 0.75f;
         [SerializeField] private float skillHitVerticalHalfHeight = 4f;
         [SerializeField, Min(1)] private int maxAreaSkillHitTargets = 32;
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool enableDebugLogs;
 
         [Header("Mage")]
         [SerializeField] private MageSkill1Config mageSkill1 = new MageSkill1Config();

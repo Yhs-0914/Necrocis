@@ -564,12 +564,12 @@ namespace Necrocis
             if (returnPortalConfig == null || returnPortalConfig.useBillboard)
             {
                 Billboard billboard = portalObj.AddComponent<Billboard>();
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
 
             SpriteYSort ySort = portalObj.AddComponent<SpriteYSort>();
             ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
-            ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
+            ySort.SetUpdateMode(SpriteYSort.UpdateMode.Once);
 
             if (returnPortalConfig == null || returnPortalConfig.addCollider)
             {
@@ -1112,7 +1112,11 @@ namespace Necrocis
                 colliderSize = source.colliderSize,
                 colliderCenter = source.colliderCenter,
                 idleSprites = source.idleSprites,
+                idleSpritesUp = source.idleSpritesUp,
+                idleSpritesDown = source.idleSpritesDown,
                 moveSprites = source.moveSprites,
+                moveSpritesUp = source.moveSpritesUp,
+                moveSpritesDown = source.moveSpritesDown,
                 attackSprites = source.attackSprites,
                 attackSpritesUp = source.attackSpritesUp,
                 attackSpritesDown = source.attackSpritesDown,
@@ -1205,7 +1209,11 @@ namespace Necrocis
         {
             return rule != null
                 && ((rule.idleSprites != null && rule.idleSprites.Length > 0)
+                    || (rule.idleSpritesUp != null && rule.idleSpritesUp.Length > 0)
+                    || (rule.idleSpritesDown != null && rule.idleSpritesDown.Length > 0)
                     || (rule.moveSprites != null && rule.moveSprites.Length > 0)
+                    || (rule.moveSpritesUp != null && rule.moveSpritesUp.Length > 0)
+                    || (rule.moveSpritesDown != null && rule.moveSpritesDown.Length > 0)
                     || (rule.attackSprites != null && rule.attackSprites.Length > 0)
                     || (rule.deathSprites != null && rule.deathSprites.Length > 0));
         }

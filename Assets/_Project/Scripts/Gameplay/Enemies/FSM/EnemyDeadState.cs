@@ -16,7 +16,6 @@ namespace Necrocis
             enemy.GrantExp();
 
             // 엘리트 사망 특수 효과 (분열, 잔해 등)
-            UnityEngine.Debug.Log($"[EnemyDead] Enter - IsElite={enemy.IsElite}, name={enemy.gameObject.name}");
             if (enemy.IsElite)
             {
                 enemy.HandleEliteDeath();

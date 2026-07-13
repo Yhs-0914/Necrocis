@@ -14,6 +14,7 @@ namespace Necrocis
         private const int HitBufferSize = 8;
         private const int ExplosionBufferSize = 24;
         private const int ObstacleHitBufferSize = 12;
+        private const string ExplosionVisualPoolName = "Projectile.ExplosiveBloodCellVisual";
 
         [SerializeField] private float speed = 15f;
         [SerializeField] private float lifeTime = 3f;
@@ -154,11 +155,12 @@ namespace Necrocis
 
         private void Update()
         {
+            float deltaTime = Time.deltaTime;
             if (spawnKind == SpawnKind.Normal && itemEffects != null)
             {
                 if (itemEffects.HasHomingCell)
                 {
-                    ApplyHoming(Time.deltaTime);
+                    ApplyHoming(deltaTime);
                 }
 
                 if (itemEffects.HasRefluxOrgan)
@@ -167,16 +169,18 @@ namespace Necrocis
                 }
             }
 
-            Vector3 step = moveDirection * currentSpeed * Time.deltaTime;
-            if (!TryReflectFromObstacleCollider(ref step))
+            float stepDistance = currentSpeed * deltaTime;
+            Vector3 step = moveDirection * stepDistance;
+            bool reflected = TryReflectFromObstacleCollider(ref step);
+            if (!reflected)
             {
-                TryReflectFromBiome(ref step);
+                reflected = TryReflectFromBiome(ref step);
             }
 
             Vector3 nextPosition = transform.position + step;
             nextPosition.y = flightHeight;
             transform.position = nextPosition;
-            traveledDistance += step.magnitude;
+            traveledDistance += reflected ? step.magnitude : stepDistance;
 
             if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
             {
@@ -257,6 +261,7 @@ namespace Necrocis
 
             currentHitCount++;
             enemy.TakeDamage(appliedDamage);
+            CombatVfx.PlayProjectileImpact(transform.position, moveDirection);
 
             if (itemEffects != null)
             {
@@ -630,16 +635,14 @@ namespace Necrocis
 
         private static void SpawnExplosionVisual(Vector3 center, float radius)
         {
-            GameObject fx = new GameObject("ExplosiveBloodCellFx");
-            fx.transform.position = new Vector3(center.x, center.y + 0.08f, center.z);
-
-            SpriteRenderer renderer = fx.AddComponent<SpriteRenderer>();
-            renderer.sprite = TextureSpriteCache.GetCircleSprite();
-            renderer.color = new Color(1f, 0.26f, 0.12f, 0.55f);
-            renderer.sortingOrder = 5100;
-
-            fx.transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
-            Object.Destroy(fx, 0.2f);
+            PlayerItemCombatEffects.SpawnPooledCircleVisual(
+                ExplosionVisualPoolName,
+                "ExplosiveBloodCellFx",
+                new Vector3(center.x, center.y + 0.08f, center.z),
+                Mathf.Max(0.2f, radius * 2f),
+                new Color(1f, 0.26f, 0.12f, 0.55f),
+                5100,
+                0.2f);
         }
 
         private float GetRemainingRange()

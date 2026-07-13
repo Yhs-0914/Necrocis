@@ -78,33 +78,59 @@ MonoBehaviour:
         colliderSize: {x: 0.75, y: 1.1, z: 0.75}
         colliderCenter: {x: 0, y: 0.55, z: 0}
         idleSprites:
-        - {fileID: -1137617529, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: 47732035, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: -2112942602, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: 201702834, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: 736631994, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: 1225240302, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: -468804449, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
-        - {fileID: -1337087085, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+        - {fileID: 121100001, guid: 3d21b100014c94b86b2531677a936835, type: 3}
+        - {fileID: 121100002, guid: 3d21b100014c94b86b2531677a936835, type: 3}
+        - {fileID: 121100003, guid: 3d21b100014c94b86b2531677a936835, type: 3}
+        - {fileID: 121100004, guid: 3d21b100014c94b86b2531677a936835, type: 3}
+        idleSpritesUp:
+        - {fileID: 121120001, guid: 0cd95e4a7a8364dc48ae87ca46d60d39, type: 3}
+        - {fileID: 121120002, guid: 0cd95e4a7a8364dc48ae87ca46d60d39, type: 3}
+        - {fileID: 121120003, guid: 0cd95e4a7a8364dc48ae87ca46d60d39, type: 3}
+        - {fileID: 121120004, guid: 0cd95e4a7a8364dc48ae87ca46d60d39, type: 3}
+        idleSpritesDown:
+        - {fileID: 121110001, guid: 91c0cc25430ea436a997ea073a96fc79, type: 3}
+        - {fileID: 121110002, guid: 91c0cc25430ea436a997ea073a96fc79, type: 3}
+        - {fileID: 121110003, guid: 91c0cc25430ea436a997ea073a96fc79, type: 3}
+        - {fileID: 121110004, guid: 91c0cc25430ea436a997ea073a96fc79, type: 3}
         moveSprites:
-        - {fileID: 1979966403, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: 1534210158, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: -1876251983, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: -1605393171, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: 987380077, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: 135733936, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: -686505990, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: 109867631, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
-        - {fileID: 373557875, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+        - {fileID: 121200001, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        - {fileID: 121200002, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        - {fileID: 121200003, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        - {fileID: 121200004, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        - {fileID: 121200005, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        - {fileID: 121200006, guid: f3f4bab5e2041446fbe41f390618d3b5, type: 3}
+        moveSpritesUp:
+        - {fileID: 121220001, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        - {fileID: 121220002, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        - {fileID: 121220003, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        - {fileID: 121220004, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        - {fileID: 121220005, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        - {fileID: 121220006, guid: f78de34e9833e41d58f5cf7783b1da5a, type: 3}
+        moveSpritesDown:
+        - {fileID: 121210001, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
+        - {fileID: 121210002, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
+        - {fileID: 121210003, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
+        - {fileID: 121210004, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
+        - {fileID: 121210005, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
+        - {fileID: 121210006, guid: f58d43ac75d154bba8f13be84ea77a51, type: 3}
         attackSprites:
-        - {fileID: -219287335, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        - {fileID: -971799592, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        - {fileID: -775118714, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        - {fileID: 413590118, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        - {fileID: 1668681315, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        - {fileID: 22756975, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
-        attackSpritesUp: []
-        attackSpritesDown: []
+        - {fileID: 121300001, guid: a35f707e98dda49b993ad98de43ea743, type: 3}
+        - {fileID: 121300002, guid: a35f707e98dda49b993ad98de43ea743, type: 3}
+        - {fileID: 121300003, guid: a35f707e98dda49b993ad98de43ea743, type: 3}
+        - {fileID: 121300004, guid: a35f707e98dda49b993ad98de43ea743, type: 3}
+        - {fileID: 121300005, guid: a35f707e98dda49b993ad98de43ea743, type: 3}
+        attackSpritesUp:
+        - {fileID: 121320001, guid: d6add9ae175cd42cb8f4c8ee5d66406f, type: 3}
+        - {fileID: 121320002, guid: d6add9ae175cd42cb8f4c8ee5d66406f, type: 3}
+        - {fileID: 121320003, guid: d6add9ae175cd42cb8f4c8ee5d66406f, type: 3}
+        - {fileID: 121320004, guid: d6add9ae175cd42cb8f4c8ee5d66406f, type: 3}
+        - {fileID: 121320005, guid: d6add9ae175cd42cb8f4c8ee5d66406f, type: 3}
+        attackSpritesDown:
+        - {fileID: 121310001, guid: d40fe6c235dd049d79f6de547300802e, type: 3}
+        - {fileID: 121310002, guid: d40fe6c235dd049d79f6de547300802e, type: 3}
+        - {fileID: 121310003, guid: d40fe6c235dd049d79f6de547300802e, type: 3}
+        - {fileID: 121310004, guid: d40fe6c235dd049d79f6de547300802e, type: 3}
+        - {fileID: 121310005, guid: d40fe6c235dd049d79f6de547300802e, type: 3}
         attackAnimationSpeed: 0.12
         isRanged: 0
         projectileSpeed: 8
@@ -186,8 +212,6 @@ MonoBehaviour:
         stompDamage: 2
         stompSlowRatio: 0.3
         stompSlowDuration: 3
-        phase1Color: {r: 0.72, g: 0.45, b: 0.24, a: 1}
-        phase2Color: {r: 0.95, g: 0.32, b: 0.18, a: 1}
         dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
         parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
         shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
@@ -213,12 +237,32 @@ MonoBehaviour:
         healingPoseCooldown: 15
         healingPoseDuration: 5
         damageHealRatio: 0.7
+        healingPoseLowerSprites:
+        - {fileID: 121410001, guid: 2caf16a45a2e146e89d727451742b87b, type: 3}
+        - {fileID: 121410002, guid: 2caf16a45a2e146e89d727451742b87b, type: 3}
+        - {fileID: 121410003, guid: 2caf16a45a2e146e89d727451742b87b, type: 3}
+        - {fileID: 121410004, guid: 2caf16a45a2e146e89d727451742b87b, type: 3}
+        healingPoseLowerSpritesDown:
+        - {fileID: 121430001, guid: e092d6329b7724effb8d2aad8a8062f5, type: 3}
+        - {fileID: 121430002, guid: e092d6329b7724effb8d2aad8a8062f5, type: 3}
+        - {fileID: 121430003, guid: e092d6329b7724effb8d2aad8a8062f5, type: 3}
+        - {fileID: 121430004, guid: e092d6329b7724effb8d2aad8a8062f5, type: 3}
+        healingPoseRaiseSprites:
+        - {fileID: 121400001, guid: 2225b95fbb7734a3ea5c7109f83b9737, type: 3}
+        - {fileID: 121400002, guid: 2225b95fbb7734a3ea5c7109f83b9737, type: 3}
+        - {fileID: 121400003, guid: 2225b95fbb7734a3ea5c7109f83b9737, type: 3}
+        - {fileID: 121400004, guid: 2225b95fbb7734a3ea5c7109f83b9737, type: 3}
+        - {fileID: 121400005, guid: 2225b95fbb7734a3ea5c7109f83b9737, type: 3}
+        healingPoseRaiseSpritesDown:
+        - {fileID: 121420001, guid: 14278e58409d646b481616d3dda1a1d4, type: 3}
+        - {fileID: 121420002, guid: 14278e58409d646b481616d3dda1a1d4, type: 3}
+        - {fileID: 121420003, guid: 14278e58409d646b481616d3dda1a1d4, type: 3}
+        - {fileID: 121420004, guid: 14278e58409d646b481616d3dda1a1d4, type: 3}
+        - {fileID: 121420005, guid: 14278e58409d646b481616d3dda1a1d4, type: 3}
+        healingPoseAnimationSpeed: 0.12
         phase1PreferredDistanceRatio: 0.72
         phase2PreferredDistance: 2.6
         roamRadius: 9
-        phase1Color: {r: 0.78, g: 0.08, b: 0.12, a: 1}
-        phase2Color: {r: 0.52, g: 0.05, b: 0.1, a: 1}
-        healingPoseColor: {r: 1, g: 0.38, b: 0.52, a: 1}
         bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
         explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
         startInPhase2ForDebug: 0

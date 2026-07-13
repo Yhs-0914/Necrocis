@@ -9,7 +9,10 @@ namespace Necrocis
         {
             if (config == null || !config.isElite) return;
 
-            Debug.Log($"[EliteDeath] {config.name} 사망 처리 시작 - splitsOnDeath={config.splitsOnDeath}, leavesDebris={config.leavesDebrisOnDeath}");
+            if (logDamageToConsole)
+            {
+                Debug.Log($"[EliteDeath] {config.name} 사망 처리 시작 - splitsOnDeath={config.splitsOnDeath}, leavesDebris={config.leavesDebrisOnDeath}");
+            }
 
             // 육아종: 분열
             if (config.splitsOnDeath)
@@ -27,7 +30,10 @@ namespace Necrocis
 
         private void SpawnSplitEnemies()
         {
-            Debug.Log($"[EliteDeath] SpawnSplitEnemies 호출 - splitEnemyName='{config.splitEnemyName}'");
+            if (logDamageToConsole)
+            {
+                Debug.Log($"[EliteDeath] SpawnSplitEnemies 호출 - splitEnemyName='{config.splitEnemyName}'");
+            }
 
             if (string.IsNullOrEmpty(config.splitEnemyName))
             {
@@ -42,7 +48,10 @@ namespace Necrocis
                 return;
             }
 
-            Debug.Log($"[EliteDeath] 분열 설정 찾음: {splitConfig.name}, splitCount={config.splitCount}");
+            if (logDamageToConsole)
+            {
+                Debug.Log($"[EliteDeath] 분열 설정 찾음: {splitConfig.name}, splitCount={config.splitCount}");
+            }
 
             Vector3 deathPos = GetCurrentPosition();
 
@@ -50,12 +59,18 @@ namespace Necrocis
             Sprite[] vfxSprites = LoadVoidShieldSprites();
             if (vfxSprites != null && vfxSprites.Length > 0)
             {
-                Debug.Log($"[EliteDeath] VoidShield 이펙트 재생 시작 ({vfxSprites.Length}프레임)");
+                if (logDamageToConsole)
+                {
+                    Debug.Log($"[EliteDeath] VoidShield 이펙트 재생 시작 ({vfxSprites.Length}프레임)");
+                }
                 SpawnSplitVfxThenSpawn(deathPos, splitConfig, vfxSprites);
             }
             else
             {
-                Debug.Log("[EliteDeath] VoidShield 스프라이트 없음, 즉시 분열");
+                if (logDamageToConsole)
+                {
+                    Debug.Log("[EliteDeath] VoidShield 스프라이트 없음, 즉시 분열");
+                }
                 DoSpawnSplitEnemies(deathPos, splitConfig);
             }
         }
@@ -172,7 +187,10 @@ namespace Necrocis
 
         private void DoSpawnSplitEnemies(Vector3 deathPos, EnemySpawnRuleConfig splitConfig, int count, Transform spawnParent)
         {
-            Debug.Log($"[EliteDeath] DoSpawnSplitEnemies: count={count}, deathPos={deathPos}, parent={spawnParent?.name}");
+            if (logDamageToConsole)
+            {
+                Debug.Log($"[EliteDeath] DoSpawnSplitEnemies: count={count}, deathPos={deathPos}, parent={spawnParent?.name}");
+            }
 
             BiomeManager biome = BiomeManager.Active;
             int poolId = GetPoolArchetypeId(splitConfig);
@@ -196,7 +214,10 @@ namespace Necrocis
                 // 직접 적 생성 (스포너 없이 즉시)
                 EnemyController split = Acquire(spawnParent, $"{splitConfig.name}_Split_{i}", poolId);
                 split.Configure(null, splitConfig, spawnPos, spawnPos);
-                Debug.Log($"[EliteDeath] 분열 적 #{i} 생성 완료: {split.gameObject.name} at {spawnPos}");
+                if (logDamageToConsole)
+                {
+                    Debug.Log($"[EliteDeath] 분열 적 #{i} 생성 완료: {split.gameObject.name} at {spawnPos}");
+                }
             }
         }
 

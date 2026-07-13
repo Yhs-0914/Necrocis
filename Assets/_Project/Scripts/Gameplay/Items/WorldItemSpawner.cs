@@ -502,7 +502,7 @@ namespace Necrocis
                 renderer.sortingOrder = sortingOrder;
 
                 Billboard billboard = itemObject.AddComponent<Billboard>();
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
             else
             {

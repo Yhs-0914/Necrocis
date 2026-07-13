@@ -197,7 +197,7 @@ namespace Necrocis
             }
 
             Billboard billboard = itemObject.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+            billboard.SetUpdateMode(Billboard.UpdateMode.Once);
 
             SetItemLocalPosition(new Vector3(0f, itemRestHeight * 0.15f, 0f));
         }

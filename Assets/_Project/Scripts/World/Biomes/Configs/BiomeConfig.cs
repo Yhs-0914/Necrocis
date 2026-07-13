@@ -233,8 +233,12 @@ namespace Necrocis
         public Vector3 colliderCenter = new Vector3(0f, 0.55f, 0f);
 
         [Header("Sprites - Idle / Move")]
-        public Sprite[] idleSprites;
-        public Sprite[] moveSprites;
+        public Sprite[] idleSprites;           // 기본 방향 / 좌우는 flipX로 처리
+        public Sprite[] idleSpritesUp;         // 상방 대기
+        public Sprite[] idleSpritesDown;       // 하방 대기
+        public Sprite[] moveSprites;           // 기본 방향 / 좌우는 flipX로 처리
+        public Sprite[] moveSpritesUp;         // 상방 이동
+        public Sprite[] moveSpritesDown;       // 하방 이동
 
         [Header("Sprites - Attack")]
         public Sprite[] attackSprites;         // 기본 공격 (좌우는 flipX로 처리)

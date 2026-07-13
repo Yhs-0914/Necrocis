@@ -454,7 +454,7 @@ namespace Necrocis
                 }
                 billboard.enabled = true;
                 billboard.ResetBaseLocalPosition(obj.transform.localPosition);
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
             else if (billboard != null)
             {
