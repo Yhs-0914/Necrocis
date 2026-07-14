@@ -10933,7 +10933,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   beamOverlapBufferSize: 48
   beamVerticalHalfHeight: 2.5
-  beamHeightOffset: 0.8
+  beamHeightOffset: -0.3
   beamVisualDuration: 0.1
   attackCooldown: 1
   cellProliferationDelay: 0.5

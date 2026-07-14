@@ -634,11 +634,14 @@ namespace Necrocis
             fx.transform.position = new Vector3(center.x, center.y + 0.08f, center.z);
 
             SpriteRenderer renderer = fx.AddComponent<SpriteRenderer>();
-            renderer.sprite = TextureSpriteCache.GetCircleSprite();
-            renderer.color = new Color(1f, 0.26f, 0.12f, 0.55f);
-            renderer.sortingOrder = 5100;
+            Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/explosive_blood_cell_effect");
+            renderer.sprite = effectSprite != null ? effectSprite : TextureSpriteCache.GetCircleSprite();
+            renderer.color = effectSprite != null ? Color.white : new Color(1f, 0.26f, 0.12f, 0.55f);
+            renderer.sortingOrder = 1100;
 
-            fx.transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
+            fx.transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
+                renderer.sprite,
+                Mathf.Max(0.2f, radius * 2f * 0.85f));
             Object.Destroy(fx, 0.2f);
         }
 
@@ -687,6 +690,7 @@ namespace Necrocis
         private static Sprite circleSprite;
         private static Material spriteMaterial;
         private static readonly Dictionary<string, Sprite> ResourceSprites = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<string, Material> ResourceSpriteMaterials = new Dictionary<string, Material>();
 
         public static Sprite LoadResourceSprite(string resourcePath, float pixelsPerUnit = 100f)
         {
@@ -717,6 +721,42 @@ namespace Necrocis
 
             ResourceSprites[resourcePath] = sprite;
             return sprite;
+        }
+
+        public static float GetUniformScaleForWorldSize(Sprite sprite, float targetWorldSize)
+        {
+            float spriteSize = sprite != null
+                ? Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y)
+                : 1f;
+            return Mathf.Max(0.01f, targetWorldSize) / Mathf.Max(0.0001f, spriteSize);
+        }
+
+        public static Material GetResourceSpriteMaterial(string resourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return GetSpriteMaterial();
+            }
+
+            if (ResourceSpriteMaterials.TryGetValue(resourcePath, out Material cachedMaterial))
+            {
+                return cachedMaterial;
+            }
+
+            Sprite sprite = LoadResourceSprite(resourcePath);
+            Material baseMaterial = GetSpriteMaterial();
+            if (sprite == null || baseMaterial == null)
+            {
+                return baseMaterial;
+            }
+
+            Material material = new Material(baseMaterial)
+            {
+                name = $"Runtime_{sprite.name}_Material",
+                mainTexture = sprite.texture
+            };
+            ResourceSpriteMaterials[resourcePath] = material;
+            return material;
         }
 
         public static Sprite GetCircleSprite()

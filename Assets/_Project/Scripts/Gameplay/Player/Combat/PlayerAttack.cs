@@ -30,8 +30,9 @@ namespace Necrocis
         [Header("Beam")]
         [SerializeField, Min(1)] private int beamOverlapBufferSize = 48;
         [SerializeField] private float beamVerticalHalfHeight = 2.5f;
-        [SerializeField] private float beamHeightOffset = 0.8f;
+        [SerializeField] private float beamHeightOffset = -0.3f;
         [SerializeField] private float beamVisualDuration = 0.1f;
+        [SerializeField] private string beamTextureResourcePath = "ItemEffects/beam_organ_beam";
 
         [Header("Shared")]
         [SerializeField] private float meleeCooldown  = 0.2f;
@@ -56,6 +57,9 @@ namespace Necrocis
         private Collider[] beamOverlapResults;
         private Sprite meleeSlashSprite;
         private bool meleeSlashSpriteLoadAttempted;
+        private Texture2D beamTexture;
+        private Material beamMaterial;
+        private bool beamTextureLoadAttempted;
 
         private void Awake()
         {
@@ -559,30 +563,68 @@ namespace Necrocis
             line.SetPosition(0, start);
             line.SetPosition(1, end);
             line.useWorldSpace = true;
-            line.numCapVertices = 6;
-            line.startWidth = Mathf.Max(0.05f, radius * 1.45f);
-            line.endWidth = Mathf.Max(0.03f, radius * 1.1f);
-            line.material = TextureSpriteCache.GetSpriteMaterial();
+            line.numCapVertices = 0;
+            line.textureMode = LineTextureMode.Stretch;
+            float visualWidth = Mathf.Max(0.05f, radius * 2f);
+            line.startWidth = visualWidth;
+            line.endWidth = visualWidth;
 
-            Color baseColor = new Color(1f, 0.24f, 0.15f, 0.85f);
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(baseColor, 0f),
-                    new GradientColorKey(new Color(1f, 0.7f, 0.2f, 1f), 0.55f),
-                    new GradientColorKey(baseColor, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0.95f, 0f),
-                    new GradientAlphaKey(0.65f, 0.8f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            line.colorGradient = gradient;
+            Material material = GetBeamMaterial();
+            if (material != null)
+            {
+                line.sharedMaterial = material;
+            }
+
+            line.startColor = Color.white;
+            line.endColor = Color.white;
             line.sortingOrder = 5005;
 
             Destroy(fx, Mathf.Max(0.05f, beamVisualDuration));
+        }
+
+        private Material GetBeamMaterial()
+        {
+            if (beamMaterial != null)
+            {
+                return beamMaterial;
+            }
+
+            Material baseMaterial = TextureSpriteCache.GetSpriteMaterial();
+            if (baseMaterial == null)
+            {
+                return null;
+            }
+
+            if (!beamTextureLoadAttempted)
+            {
+                beamTextureLoadAttempted = true;
+                if (!string.IsNullOrWhiteSpace(beamTextureResourcePath))
+                {
+                    Sprite beamSprite = TextureSpriteCache.LoadResourceSprite(beamTextureResourcePath);
+                    beamTexture = beamSprite != null
+                        ? beamSprite.texture
+                        : Resources.Load<Texture2D>(beamTextureResourcePath);
+                }
+
+                if (beamTexture == null)
+                {
+                    Debug.LogWarning($"[PlayerAttack] Resources/{beamTextureResourcePath} beam texture not found. Using the fallback line material.");
+                }
+            }
+
+            if (beamTexture == null)
+            {
+                return baseMaterial;
+            }
+
+            beamTexture.wrapMode = TextureWrapMode.Clamp;
+            beamTexture.filterMode = FilterMode.Point;
+            beamMaterial = new Material(baseMaterial)
+            {
+                name = "BeamOrganMaterial",
+                mainTexture = beamTexture
+            };
+            return beamMaterial;
         }
 
         private static PlayerProjectilePool ResolveObjectPooler()
@@ -660,6 +702,15 @@ namespace Necrocis
             }
 
             return true;
+        }
+
+        private void OnDestroy()
+        {
+            if (beamMaterial != null)
+            {
+                Destroy(beamMaterial);
+                beamMaterial = null;
+            }
         }
 
         private void OnDrawGizmosSelected()
