@@ -85,6 +85,10 @@ namespace Necrocis
             Health playerHealth = PlayerController.Instance.GetComponent<Health>();
             if (playerHealth == null) return;
 
+            if (!ignoreMidBossArenaRestriction)
+            {
+                AudioManager.Instance?.PlaySFX("EnemyAttack");
+            }
             playerHealth.TakeDamage(damage);
         }
 
@@ -109,6 +113,10 @@ namespace Necrocis
             }
 
             EnemyProjectile proj = EnemyProjectile.Acquire(spawnPos, projSprite, config.projectileScale);
+            if (!ignoreMidBossArenaRestriction)
+            {
+                AudioManager.Instance?.PlaySFX("EnemyAttack");
+            }
             proj.Launch(dir, damage, config.projectileSpeed, config.projectileLifeTime);
         }
 
@@ -129,8 +137,19 @@ namespace Necrocis
             stats.ApplyDamage(finalDamage);
             if (stats.IsDead)
             {
+                if (!ignoreMidBossArenaRestriction)
+                {
+                    AudioManager.Instance?.PlaySFX("EnemyDeath");
+                }
                 RaiseDefeated();
                 ChangeState(EnemyDeadState.Instance);
+            }
+            else
+            {
+                if (!ignoreMidBossArenaRestriction)
+                {
+                    AudioManager.Instance?.PlaySFX("EnemyHit");
+                }
             }
         }
 

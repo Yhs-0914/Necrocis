@@ -390,6 +390,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("ArcherSkill1");
                     ExecuteArcherSkill1FanShot();
                     break;
 
@@ -448,6 +449,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("ArcherSkill2");
                     StartCoroutine(ExecuteArcherSkill2());
                     break;
 

@@ -166,6 +166,7 @@ namespace Necrocis
             }
 
             ApplyPhaseVisual();
+            AudioManager.Instance?.PlaySFX("BossRoar");
             enabled = true;
         }
 
@@ -392,6 +393,7 @@ namespace Necrocis
         {
             phase = BossPhase.Transition;
             actionRunning = true;
+            AudioManager.Instance?.PlaySFX("BossPhaseChange");
 
             float elapsed = 0f;
             float duration = 1.1f;
@@ -422,6 +424,7 @@ namespace Necrocis
             nextDungTime = Time.time + GetPhase1DungCooldown();
             yield return new WaitForSeconds(Mathf.Max(0f, dungPreDelay));
 
+            AudioManager.Instance?.PlaySFX("IntestineSkill1");
             Vector3 dropPosition = transform.position - GetDirectionToPlayer() * 0.7f;
             SpawnDungHazard(dropPosition, true);
 
@@ -440,6 +443,7 @@ namespace Necrocis
                 : transform.position + GetDirectionToPlayer() * 4f;
             target.y = GetGroundHeight(target) + 0.05f;
 
+            AudioManager.Instance?.PlaySFX("IntestineSkill2");
             GameObject projectile = CreateTempSpriteObject("IntestineBoss_DungProjectile", GetDungSprite(), dungColor, start, 0.7f, 5000);
             float elapsed = 0f;
             float duration = Mathf.Max(0.1f, throwTravelTime);
@@ -483,6 +487,7 @@ namespace Necrocis
             }
 
             transform.localScale = originalScale;
+            AudioManager.Instance?.PlaySFX("IntestineLand");
             SpawnShockwave(transform.position, stompRadius);
 
             PlayerController player = PlayerController.Instance;

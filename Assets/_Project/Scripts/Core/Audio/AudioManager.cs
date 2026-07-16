@@ -11,7 +11,7 @@ namespace Necrocis
         private static readonly (string key, string file, float vol, float pitchVar)[] SfxEntries =
         {
             ("PlayerFootstep", "Audio/Player/캐릭터 이동",    1f, 0.08f),
-            ("PlayerDash",     "Audio/Player/dash",           0.4f, 0.05f),
+            ("PlayerDash",     "Audio/Player/player_dash",    0.4f, 0.05f),
             ("PlayerHit",      "Audio/Player/피격",           1f, 0.05f),
             ("PlayerDeath",    "Audio/Player/플레이어 사망",  1f, 0f),
             ("MeleeAttack",    "Audio/Player/근거리 박치기",  1f, 0.05f),
@@ -20,10 +20,31 @@ namespace Necrocis
             ("LevelUp",        "Audio/Player/레벨업",         1f, 0f),
             ("SkillUse",       "Audio/Player/스킬 사용",      1f, 0f),
             ("JobSelect",      "Audio/Player/직업 선택",      1f, 0f),
-            ("WarriorSkill1",  "Audio/Player/전사 1차",       1f, 0f),
-            ("WarriorSkill2",  "Audio/Player/전사 2차",       1f, 0f),
-            ("MageSkill1",     "Audio/Player/법사 1차",       1f, 0f),
-            ("MageSkill2",     "Audio/Player/법사 2차",       1f, 0f),
+            ("WarriorSkill1",  "Audio/Player/전사 E스킬",      1f, 0f),
+            ("WarriorSkill2",  "Audio/Player/전사 R스킬",      1f, 0f),
+            ("MageSkill1",     "Audio/Player/마법사 E스킬",    2f, 0f),
+            ("MageSkill2",     "Audio/Player/마법사 R스킬",    1f, 0f),
+            ("ArcherSkill1",   "Audio/Player/아처 E스킬",      1f, 0f),
+            ("ArcherSkill2",   "Audio/Player/아처 R스킬",      1f, 0f),
+            ("EnemyAttack",    "Audio/Monster/몬스터 타격",    1f, 0.05f),
+            ("EnemyHit",       "Audio/Monster/몬스터 피격",    1f, 0.05f),
+            ("EnemyDeath",     "Audio/Monster/몬스터 사망",    1f, 0.05f),
+            ("BossRoar",       "Audio/Boss/보스 으르렁",              1f, 0f),
+            ("BossPhaseChange","Audio/Boss/보스 페이즈 전환",         1f, 0f),
+            ("IntestineSkill1","Audio/Boss/장1",                     1f, 0f),
+            ("IntestineSkill2","Audio/Boss/장1-2",                   1f, 0f),
+            ("IntestineLand",  "Audio/Boss/장2 착지",                 1f, 0f),
+            ("LiverBloodThrow","Audio/Boss/간1 피던지기",             1f, 0f),
+            ("LiverBloodBurst","Audio/Boss/간1 혈액 폭발",            1f, 0f),
+            ("StomachImpact",  "Audio/Boss/위 보스 기본 임팩트",       1f, 0f),
+            ("StomachHeadbutt","Audio/Boss/위 페이즈1 박치기",         1f, 0f),
+            ("StomachCharge",  "Audio/Boss/위 페이즈1 스킬 전 차징",   1f, 0f),
+            ("StomachAcidReady","Audio/Boss/위 페이즈2 산성 발사준비", 1f, 0f),
+            ("StomachAcidFire","Audio/Boss/위 페이즈2 산성발사 찐",    1f, 0f),
+            ("LungPhase2",     "Audio/Boss/폐 2",                     1f, 0f),
+            ("LungAccelerate", "Audio/Boss/폐 가속",                  1f, 0f),
+            ("LungHighSpeed",  "Audio/Boss/폐1고속이동",              1f, 0f),
+            ("LungPhase2Skill","Audio/Boss/폐2-1",                   1f, 0f),
             ("BossDeath",      "Audio/보스몬스터 사망",       0.8f, 0f),
             ("BossDung",       "Audio/보스 오물",             0.4f, 0f),
         };
@@ -32,6 +53,7 @@ namespace Necrocis
         private static readonly (string key, string file, float vol)[] BgmEntries =
         {
             ("InGame", "Audio/BGM1", 0.3f),
+            ("IntestineMap", "Audio/Boss/맵 장1", 0.3f),
         };
 
         [Header("볼륨")]
