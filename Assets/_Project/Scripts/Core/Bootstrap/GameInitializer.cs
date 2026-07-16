@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Necrocis
 {
@@ -43,6 +44,12 @@ namespace Necrocis
             {
                 GameObject gmObj = new GameObject("GameManager");
                 gmObj.AddComponent<GameManager>();
+            }
+
+            if (FindFirstObjectByType<AudioManager>() == null)
+            {
+                GameObject audioObj = new GameObject("AudioManager");
+                audioObj.AddComponent<AudioManager>();
             }
 
             // HubRoom 찾기
@@ -133,6 +140,15 @@ namespace Necrocis
             if (playerObj.GetComponent<PlayerAttack>() == null)
                 playerObj.AddComponent<PlayerAttack>();
 
+            if (playerObj.GetComponent<PlayerItemManager>() == null)
+                playerObj.AddComponent<PlayerItemManager>();
+
+            if (playerObj.GetComponent<PlayerItemPickupNotifier>() == null)
+                playerObj.AddComponent<PlayerItemPickupNotifier>();
+
+            if (playerObj.GetComponent<PlayerItemTestPanel>() == null)
+                playerObj.AddComponent<PlayerItemTestPanel>();
+
             if (playerObj.GetComponent<PlayerClassSkillController>() == null)
                 playerObj.AddComponent<PlayerClassSkillController>();
 
@@ -147,6 +163,9 @@ namespace Necrocis
 
             if (playerObj.GetComponent<PlayerHeartUI>() == null)
                 playerObj.AddComponent<PlayerHeartUI>();
+
+            if (playerObj.GetComponent<PlayerDeathScreen>() == null)
+                playerObj.AddComponent<PlayerDeathScreen>();
 
             if (playerObj.GetComponent<global::LevelUpStackChoiceUI>() == null)
                 playerObj.AddComponent<global::LevelUpStackChoiceUI>();
@@ -216,7 +235,16 @@ namespace Necrocis
         /// </summary>
         private void Start()
         {
-            AudioManager.Instance?.PlayBGM("InGame");
+            if (SceneManager.GetActiveScene().name == SceneLoader.SCENE_HUB)
+            {
+                AudioManager.Instance?.PlayBGM("Hub");
+                return;
+            }
+
+            if (BiomeManager.Active == null || BiomeManager.Active.BiomeType == BiomeType.None)
+            {
+                AudioManager.Instance?.PlayBGM("InGame");
+            }
         }
 
         public PlayerController GetPlayer()

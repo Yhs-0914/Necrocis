@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -36,6 +37,7 @@ namespace Necrocis
         public float parasiteMaxHealth = 6f;
         public float parasiteMoveSpeed = 2.3f;
         public float parasiteAttackDamage = 1f;
+        public float parasiteAttackRange = 1.1f;
         public float parasiteAttackCooldown = 1.3f;
         public Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
 
@@ -48,8 +50,6 @@ namespace Necrocis
         public float stompSlowDuration = 3f;
 
         [Header("Temporary Visuals")]
-        public Color phase1Color = new Color(0.72f, 0.45f, 0.24f, 1f);
-        public Color phase2Color = new Color(0.95f, 0.32f, 0.18f, 1f);
         public Color dungColor = new Color(0.34f, 0.18f, 0.08f, 0.95f);
         public Color parasiteColor = new Color(0.62f, 0.88f, 0.36f, 1f);
         public Color shockwaveColor = new Color(0.65f, 0.38f, 0.18f, 0.45f);
@@ -62,7 +62,7 @@ namespace Necrocis
 
     [DisallowMultipleComponent]
     [RequireComponent(typeof(EnemyController))]
-    public class IntestineBossPattern : MonoBehaviour
+    public class IntestineBossPattern : MonoBehaviour, IBossPatternTempSpriteOwner
     {
         private enum BossPhase
         {
@@ -108,8 +108,6 @@ namespace Necrocis
         [SerializeField] private float stompSlowDuration = 3f;
 
         [Header("Temporary Visuals")]
-        [SerializeField] private Color phase1Color = new Color(0.72f, 0.45f, 0.24f, 1f);
-        [SerializeField] private Color phase2Color = new Color(0.95f, 0.32f, 0.18f, 1f);
         [SerializeField] private Color dungColor = new Color(0.34f, 0.18f, 0.08f, 0.95f);
         [SerializeField] private Color parasiteColor = new Color(0.62f, 0.88f, 0.36f, 1f);
         [SerializeField] private Color shockwaveColor = new Color(0.65f, 0.38f, 0.18f, 0.45f);
@@ -118,6 +116,7 @@ namespace Necrocis
         [SerializeField] private float parasiteMaxHealth = 6f;
         [SerializeField] private float parasiteMoveSpeed = 2.3f;
         [SerializeField] private float parasiteAttackDamage = 1f;
+        [SerializeField] private float parasiteAttackRange = 1.1f;
         [SerializeField] private float parasiteAttackCooldown = 1.3f;
         [SerializeField] private Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
 
@@ -141,6 +140,9 @@ namespace Necrocis
         private float nextDungTime;
         private float nextStompTime;
         private bool actionRunning;
+        private bool encounterActive;
+        private readonly List<GameObject> activeTempObjects = new List<GameObject>();
+        private readonly List<EnemyController> activeSummons = new List<EnemyController>();
 
         public void Initialize(EnemyController controller, Vector3 anchor, Transform parent, IntestineBossPatternSettings settings = null)
         {
@@ -156,6 +158,7 @@ namespace Necrocis
                 ? Time.time + GetStompCooldown()
                 : float.PositiveInfinity;
             actionRunning = false;
+            encounterActive = false;
             baseScale = transform.localScale;
             visualRenderer = GetComponentInChildren<SpriteRenderer>();
             runtimeParasiteRule = null;
@@ -163,10 +166,11 @@ namespace Necrocis
             if (boss != null)
             {
                 boss.SetAiSuppressed(true);
+                boss.Defeated -= HandleBossDefeated;
+                boss.Defeated += HandleBossDefeated;
             }
 
             ApplyPhaseVisual();
-            AudioManager.Instance?.PlaySFX("BossRoar");
             enabled = true;
         }
 
@@ -200,6 +204,7 @@ namespace Necrocis
             parasiteMaxHealth = settings.parasiteMaxHealth;
             parasiteMoveSpeed = settings.parasiteMoveSpeed;
             parasiteAttackDamage = settings.parasiteAttackDamage;
+            parasiteAttackRange = settings.parasiteAttackRange;
             parasiteAttackCooldown = settings.parasiteAttackCooldown;
             parasiteScale = settings.parasiteScale;
             stompMinDelay = settings.stompMinDelay;
@@ -208,8 +213,6 @@ namespace Necrocis
             stompDamage = settings.stompDamage;
             stompSlowRatio = settings.stompSlowRatio;
             stompSlowDuration = settings.stompSlowDuration;
-            phase1Color = settings.phase1Color;
-            phase2Color = settings.phase2Color;
             dungColor = settings.dungColor;
             parasiteColor = settings.parasiteColor;
             shockwaveColor = settings.shockwaveColor;
@@ -220,13 +223,52 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            StopAllCoroutines();
+            CleanupPatternObjects();
+            encounterActive = false;
+
             if (boss != null)
             {
+                boss.Defeated -= HandleBossDefeated;
                 boss.SetAiSuppressed(false);
             }
         }
 
+        private void HandleBossDefeated(EnemyController defeatedBoss)
+        {
+            if (defeatedBoss != boss)
+            {
+                return;
+            }
+
+            StopAllCoroutines();
+            actionRunning = false;
+            transform.localScale = baseScale;
+            CleanupPatternObjects();
+        }
+
         public string CurrentPhaseName => phase.ToString();
+
+        public void SetEncounterActive(bool active)
+        {
+            if (encounterActive == active)
+            {
+                return;
+            }
+
+            encounterActive = active;
+            StopAllCoroutines();
+            actionRunning = false;
+
+            if (active)
+            {
+                AudioManager.Instance?.PlaySFX("BossRoar");
+                nextDungTime = Time.time + 1f;
+                nextStompTime = phase == BossPhase.Phase2
+                    ? Time.time + GetStompCooldown()
+                    : float.PositiveInfinity;
+            }
+        }
 
         [ContextMenu("Debug/Force Phase 1")]
         public void ForcePhase1ForDebug()
@@ -275,6 +317,11 @@ namespace Necrocis
 
         private void Update()
         {
+            if (!encounterActive)
+            {
+                return;
+            }
+
             if (boss == null || boss.IsDead)
             {
                 enabled = false;
@@ -311,7 +358,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
-            if (boss == null || boss.IsDead || phase == BossPhase.Transition || PlayerController.Instance == null)
+            if (!encounterActive || boss == null || boss.IsDead || phase == BossPhase.Transition || PlayerController.Instance == null)
             {
                 return;
             }
@@ -402,11 +449,6 @@ namespace Necrocis
                 elapsed += Time.deltaTime;
                 float pulse = 1f + Mathf.Sin(elapsed * 22f) * 0.12f;
                 transform.localScale = baseScale * pulse;
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase1Color, phase2Color, Mathf.PingPong(elapsed * 6f, 1f));
-                }
-
                 yield return null;
             }
 
@@ -463,7 +505,7 @@ namespace Necrocis
 
             if (projectile != null)
             {
-                Destroy(projectile);
+                ReleaseTempSprite(projectile);
             }
 
             SpawnDungHazard(target, true);
@@ -474,6 +516,7 @@ namespace Necrocis
         {
             actionRunning = true;
             nextStompTime = Time.time + GetStompCooldown();
+            boss?.PlayAttackAnimationOnly();
 
             Vector3 originalScale = baseScale;
             float elapsed = 0f;
@@ -532,6 +575,7 @@ namespace Necrocis
                 parasite.Configure(null, rule, center, spawnPosition);
                 parasite.SetIgnoreMidBossArenaRestriction(true);
                 ApplyParasiteVisual(parasite);
+                activeSummons.Add(parasite);
             }
         }
 
@@ -568,7 +612,7 @@ namespace Necrocis
                 yield return null;
             }
 
-            Destroy(obj);
+            ReleaseTempSprite(obj);
         }
 
         private void ApplyPhaseVisual()
@@ -580,7 +624,7 @@ namespace Necrocis
 
             if (visualRenderer != null)
             {
-                visualRenderer.color = phase == BossPhase.Phase2 ? phase2Color : phase1Color;
+                visualRenderer.color = Color.white;
             }
         }
 
@@ -640,20 +684,44 @@ namespace Necrocis
             status.ApplyMoveSpeedSlow(slowRatio, duration);
         }
 
-        private static GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
+        private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
-            GameObject obj = new GameObject(name);
-            obj.transform.position = position;
-            obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
+            return BossPatternVisualPool.Acquire(name, sprite, color, position, scale, sortingOrder, this, activeTempObjects);
+        }
 
-            SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            renderer.sortingOrder = sortingOrder;
+        public void ReleaseTempSprite(GameObject obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
 
-            Billboard billboard = obj.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
-            return obj;
+            activeTempObjects.Remove(obj);
+            BossPatternVisualPool.Release(obj);
+        }
+
+        private void CleanupPatternObjects()
+        {
+            for (int i = 0; i < activeTempObjects.Count; i++)
+            {
+                if (activeTempObjects[i] != null)
+                {
+                    BossPatternVisualPool.Release(activeTempObjects[i]);
+                }
+            }
+
+            activeTempObjects.Clear();
+
+            for (int i = 0; i < activeSummons.Count; i++)
+            {
+                EnemyController summon = activeSummons[i];
+                if (summon != null && summon.gameObject.activeInHierarchy && !summon.IsDead)
+                {
+                    summon.ReleaseToPool();
+                }
+            }
+
+            activeSummons.Clear();
         }
 
         private EnemySpawnRuleConfig GetParasiteRule()
@@ -679,7 +747,7 @@ namespace Necrocis
                 idleDelayRange = new Vector2(0.1f, 0.35f),
                 maxHealth = parasiteMaxHealth,
                 attackDamage = parasiteAttackDamage,
-                attackRange = 1.1f,
+                attackRange = parasiteAttackRange,
                 attackCooldown = parasiteAttackCooldown,
                 expReward = 0,
                 separationDistance = 0.7f,
@@ -804,20 +872,33 @@ namespace Necrocis
 
             public void Initialize(IntestineBossPattern owner, float damage, float slowRatio, float slowDuration, float radius, float lifeTime, bool spawnParasites, float parasiteDelay)
             {
+                StopAllCoroutines();
                 this.owner = owner;
                 this.damage = damage;
                 this.slowRatio = slowRatio;
                 this.slowDuration = slowDuration;
                 this.radius = Mathf.Max(0.05f, radius);
+                hasHitPlayer = false;
                 this.spawnParasites = spawnParasites;
                 this.parasiteDelay = Mathf.Max(0f, parasiteDelay);
                 destroyTime = Time.time + Mathf.Max(0.2f, lifeTime);
 
-                SphereCollider collider = gameObject.AddComponent<SphereCollider>();
+                SphereCollider collider = GetComponent<SphereCollider>();
+                if (collider == null)
+                {
+                    collider = gameObject.AddComponent<SphereCollider>();
+                }
+
+                collider.enabled = true;
                 collider.isTrigger = true;
                 collider.radius = this.radius;
 
-                Rigidbody body = gameObject.AddComponent<Rigidbody>();
+                Rigidbody body = GetComponent<Rigidbody>();
+                if (body == null)
+                {
+                    body = gameObject.AddComponent<Rigidbody>();
+                }
+
                 body.useGravity = false;
                 body.isKinematic = true;
 
@@ -831,7 +912,7 @@ namespace Necrocis
             {
                 if (Time.time >= destroyTime)
                 {
-                    Destroy(gameObject);
+                    ReleaseSelf();
                     return;
                 }
 
@@ -879,6 +960,32 @@ namespace Necrocis
                 {
                     owner.SpawnParasites(transform.position);
                 }
+            }
+
+            private void ReleaseSelf()
+            {
+                BossPatternTempSprite tempSprite = GetComponent<BossPatternTempSprite>();
+                if (tempSprite != null)
+                {
+                    tempSprite.Release();
+                    return;
+                }
+
+                if (owner != null)
+                {
+                    owner.ReleaseTempSprite(gameObject);
+                }
+                else
+                {
+                    BossPatternVisualPool.Release(gameObject);
+                }
+            }
+
+            private void OnDisable()
+            {
+                StopAllCoroutines();
+                owner = null;
+                hasHitPlayer = false;
             }
         }
     }

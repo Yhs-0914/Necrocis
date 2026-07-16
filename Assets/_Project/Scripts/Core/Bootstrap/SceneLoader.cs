@@ -128,11 +128,35 @@ namespace Necrocis
 
                 if (player != null)
                 {
+                    player.UnlockY();
                     player.SpawnAt(new Vector3(16f, -2f, 7f));
+                    SnapCameraToPlayer(player.transform);
                 }
             }
 
             // TODO: 페이드 인 효과 추가 가능
+        }
+
+        private void SnapCameraToPlayer(Transform playerTransform)
+        {
+            if (playerTransform == null)
+            {
+                return;
+            }
+
+            DontStarveCamera followCamera = DontStarveCamera.Instance;
+            if (followCamera == null)
+            {
+                followCamera = FindFirstObjectByType<DontStarveCamera>();
+            }
+
+            if (followCamera == null)
+            {
+                return;
+            }
+
+            followCamera.SetTarget(playerTransform);
+            followCamera.SnapToTarget();
         }
 
         /// <summary>

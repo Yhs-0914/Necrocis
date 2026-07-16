@@ -85,6 +85,14 @@ namespace Necrocis
 
             return midBossArena;
         }
+
+        [Header("Return Portal")]
+        public BiomeReturnPortalConfig returnPortal = new BiomeReturnPortalConfig();
+
+        public BiomeReturnPortalConfig GetReturnPortalConfig()
+        {
+            return returnPortal;
+        }
     }
 
     [System.Serializable]
@@ -151,6 +159,25 @@ namespace Necrocis
     }
 
     [System.Serializable]
+    public class BiomeReturnPortalConfig
+    {
+        public bool enabled = true;
+        public string name = "ReturnPortal";
+        public BiomeObjectKind poolKind = BiomeObjectKind.Portal;
+        public Sprite sprite;
+        public int sortingOrder = 1000;
+        public bool useCustomPosition = true;
+        public Vector2Int gridPosition = new Vector2Int(0, 4);
+        public float heightOffset = 0f;
+        public bool useBillboard = true;
+        public Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
+        public bool addCollider = true;
+        public bool isTrigger = true;
+        public Vector3 colliderSize = new Vector3(2f, 2f, 2f);
+        public Vector3 colliderCenter = Vector3.zero;
+    }
+
+    [System.Serializable]
     public class EnemySpawnRuleConfig
     {
         public string name = "Enemy";
@@ -179,7 +206,7 @@ namespace Necrocis
 
         [Header("Combat")]
         public float maxHealth = 30f;
-        public float attackDamage = 10f;
+        public float attackDamage = 1f;
         public float attackRange = 1.5f;
         public float attackCooldown = 1f;
         public int expReward = 10;
@@ -206,8 +233,12 @@ namespace Necrocis
         public Vector3 colliderCenter = new Vector3(0f, 0.55f, 0f);
 
         [Header("Sprites - Idle / Move")]
-        public Sprite[] idleSprites;
-        public Sprite[] moveSprites;
+        public Sprite[] idleSprites;           // 기본 방향 / 좌우는 flipX로 처리
+        public Sprite[] idleSpritesUp;         // 상방 대기
+        public Sprite[] idleSpritesDown;       // 하방 대기
+        public Sprite[] moveSprites;           // 기본 방향 / 좌우는 flipX로 처리
+        public Sprite[] moveSpritesUp;         // 상방 이동
+        public Sprite[] moveSpritesDown;       // 하방 이동
 
         [Header("Sprites - Attack")]
         public Sprite[] attackSprites;         // 기본 공격 (좌우는 flipX로 처리)
@@ -308,6 +339,11 @@ namespace Necrocis
         public Sprite returnPortalSprite;
         public Vector3 returnPortalScale = Vector3.one;
 
+        [Header("Boss Contact")]
+        public float bossContactDamage = 1f;
+        public float bossContactDamageCooldown = 1f;
+        public float bossContactPushSpeed = 5f;
+
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();
     }
@@ -330,17 +366,23 @@ namespace Necrocis
         public Vector3 scaleMultiplier = Vector3.one;
 
         [Header("Boss Health")]
-        [Tooltip("0이면 바이옴/패턴 기본 최소 체력을 사용합니다.")]
+        [Tooltip("0이면 bossRule의 maxHealth를 그대로 사용합니다. 0보다 크면 최소 체력으로 보정합니다.")]
         public float minimumMaxHealth = 0f;
 
         [Header("Pattern Settings")]
         public IntestineBossPatternSettings intestinePattern = new IntestineBossPatternSettings();
+        public LiverBossPatternSettings liverPattern = new LiverBossPatternSettings();
+        public StomachBossPatternSettings stomachPattern = new StomachBossPatternSettings();
+        public LungBossPatternSettings lungPattern = new LungBossPatternSettings();
     }
 
     public enum MidBossPatternType
     {
         Auto,
         None,
-        Intestine
+        Intestine,
+        Liver,
+        Stomach,
+        Lung
     }
 }

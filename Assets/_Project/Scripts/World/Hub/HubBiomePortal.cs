@@ -11,12 +11,14 @@ namespace Necrocis
         [Header("포털 설정")]
         [SerializeField] private BiomeType targetBiome = BiomeType.None;
         [SerializeField] private bool isActive = true;
+        [SerializeField] private bool isCleared;
         [SerializeField] private float interactionRadius = 2f;
 
         [Header("시각 효과")]
         [SerializeField] private SpriteRenderer portalRenderer;
         [SerializeField] private Color activeColor = Color.cyan;
         [SerializeField] private Color inactiveColor = Color.gray;
+        [SerializeField] private Color clearedColor = Color.gray;
         [SerializeField] private ParticleSystem portalEffect;
 
         [Header("이벤트")]
@@ -24,6 +26,7 @@ namespace Necrocis
 
         public BiomeType TargetBiome => targetBiome;
         public bool IsActive => isActive;
+        public bool IsCleared => isCleared;
 
         private void Awake()
         {
@@ -114,6 +117,21 @@ namespace Necrocis
         public void SetActive(bool active)
         {
             isActive = active;
+            if (active)
+            {
+                isCleared = false;
+            }
+
+            UpdateVisuals();
+        }
+
+        /// <summary>
+        /// 바이옴 클리어 상태 표시
+        /// </summary>
+        public void SetCleared(bool cleared)
+        {
+            isCleared = cleared;
+            isActive = !cleared;
             UpdateVisuals();
         }
 
@@ -145,6 +163,7 @@ namespace Necrocis
         {
             BiomeData data = BiomeData.GetBiomeData(targetBiome);
             Debug.Log($"[HubBiomePortal] {data.displayName} 바이옴으로 이동! (크기: {data.mapSize.x}x{data.mapSize.y})");
+            AudioManager.Instance?.PlaySFX("PortalEnter");
 
             // 포털 진입 시 비활성화
             SetActive(false);
@@ -175,7 +194,7 @@ namespace Necrocis
         {
             if (portalRenderer != null)
             {
-                portalRenderer.color = isActive ? activeColor : inactiveColor;
+                portalRenderer.color = isCleared ? clearedColor : (isActive ? activeColor : inactiveColor);
             }
 
             if (portalEffect != null)

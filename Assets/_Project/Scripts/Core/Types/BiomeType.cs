@@ -25,6 +25,11 @@ namespace Necrocis
         InFinalBoss     // 대뇌 맵 (최종 보스)
     }
 
+    public enum GameDifficulty
+    {
+        Normal = 0
+    }
+
     /// <summary>
     /// 바이옴 데이터 (크기, 디버프 등)
     /// </summary>

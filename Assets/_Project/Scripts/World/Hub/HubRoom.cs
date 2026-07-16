@@ -174,7 +174,7 @@ namespace Necrocis
         }
 
         /// <summary>
-        /// 클리어된 바이옴의 포털을 비활성화
+        /// 클리어된 바이옴의 포털을 회색 비활성 상태로 표시
         /// </summary>
         private void RefreshPortalStates()
         {
@@ -183,7 +183,7 @@ namespace Necrocis
             {
                 if (portals[i] == null) continue;
                 bool cleared = GameManager.Instance != null && GameManager.Instance.HasRelic(biomes[i]);
-                portals[i].SetActive(!cleared);
+                portals[i].SetCleared(cleared);
             }
         }
 

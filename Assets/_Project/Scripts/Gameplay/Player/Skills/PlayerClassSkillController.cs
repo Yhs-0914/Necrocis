@@ -28,8 +28,6 @@ namespace Necrocis
         private const string SkillEffectFallbackPoolName = "__SkillEffectFallbackSphere";
         private const string SkillAttachedEffectFallbackPoolName = "__SkillAttachedEffectFallbackSphere";
         private const string ArcherSkill2FallbackProjectilePoolName = "__ArcherSkill2FallbackCylinder";
-        private const int Skill1UnlockLevel = 10;
-        private const int Skill2UnlockLevel = 20;
 
         private enum ProjectileDirectionReferenceAxis
         {
@@ -153,7 +151,7 @@ namespace Necrocis
             public float damage = 6f;
             public float bleedDuration = 3f;
             public float bleedTickInterval = 1f;
-            public float bleedTickDamage = 1.5f;
+            public float bleedTickDamage = 2f;
             public GameObject hitEffectPrefab;
             public float hitEffectLifetime = 0.5f;
             public float fallbackEffectScale = 0.8f;
@@ -186,7 +184,7 @@ namespace Necrocis
         [SerializeField] private float skillHitHeightOffset = 0.75f;
         [SerializeField] private float skillHitVerticalHalfHeight = 4f;
         [SerializeField, Min(1)] private int maxAreaSkillHitTargets = 32;
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool enableDebugLogs;
 
         [Header("Mage")]
         [SerializeField] private MageSkill1Config mageSkill1 = new MageSkill1Config();
@@ -370,8 +368,6 @@ namespace Necrocis
                 return;
             }
 
-            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬1 사용
-
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
@@ -412,8 +408,6 @@ namespace Necrocis
             {
                 return;
             }
-
-            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬2 사용
 
             switch (currentClass)
             {
@@ -469,6 +463,7 @@ namespace Necrocis
             float now = Time.time;
             if (now < nextReadyTime)
             {
+                AudioManager.Instance?.PlaySFX("SkillCooldown");
                 if (enableDebugLogs)
                 {
                     float remain = Mathf.Max(0f, nextReadyTime - now);
@@ -480,15 +475,17 @@ namespace Necrocis
 
             float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
             nextReadyTime = now + effectiveCooldown;
+            AudioManager.Instance?.PlaySFX("SkillUse");
             CooldownStarted?.Invoke(slot, effectiveCooldown);
             return true;
         }
 
         private bool CanUseSkillSlot(SkillSlot slot)
         {
-            int requiredLevel = slot == SkillSlot.Skill1 ? Skill1UnlockLevel : Skill2UnlockLevel;
+            int skillSlotIndex = slot == SkillSlot.Skill1 ? 1 : 2;
+            int requiredLevel = LevelUpManager.GetSkillUnlockLevel(skillSlotIndex);
             int currentLevel = LevelUpManager.GetCurrentLevel();
-            if (currentLevel >= requiredLevel)
+            if (LevelUpManager.IsSkillUnlocked(skillSlotIndex))
             {
                 return true;
             }

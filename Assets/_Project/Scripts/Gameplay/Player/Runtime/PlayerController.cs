@@ -91,6 +91,8 @@ namespace Necrocis
         [SerializeField] private float walkFrameRate = 8f;
         [SerializeField] private float attackAnimDuration = 0.3f;
         [SerializeField] private float attackFrameRate = 12f;
+        [SerializeField] private Sprite[] deathSprites;
+        [SerializeField] private float deathFrameRate = 8f;
 
         [Header("Position Lock")]
         [SerializeField] private bool lockYPosition = false;
@@ -114,6 +116,9 @@ namespace Necrocis
         [SerializeField] private float footstepInterval = 0.35f;
         private float nextFootstepTime;
 
+        [Header("Debug")]
+        [SerializeField] private bool enableDebugLogs;
+
         // 공격 애니메이션 상태
         private bool isPlayingAttackAnim = false;
         private float attackAnimEndTime = 0f;                       // ?대룞 以??щ?
@@ -128,10 +133,14 @@ namespace Necrocis
         private Vector3 movement;                  // ?대룞 踰≫꽣
         private Rigidbody rb;                      // 臾쇰━ 而댄룷?뚰듃 (?덉쑝硫??ъ슜)
         private CharacterController characterController; // CharacterController (?덉쑝硫??곗꽑 ?ъ슜)
+        private Collider cachedHitCollider;
+        private Health cachedHealth;
         private PlayerStats playerStats;           // ?ㅽ꺈 而댄룷?뚰듃 李몄“
         private bool playerStatsConfigured;        // 湲곕낯 ?ㅽ꺈 ?ㅼ젙 ?꾨즺 ?щ?
         private bool playerStatsEventsBound;       // HP 蹂寃??대깽??援щ룆 ?щ?
         private bool deathHandled;                 // ?щ쭩 泥섎━ ?꾨즺 ?щ? (以묐났 諛⑹?)
+        private bool isPlayingDeathAnimation;
+        private Coroutine deathRoutine;
 
         // ?몃? ?묎렐???꾨줈?쇳떚 (PlayerStats媛 ?놁쑝硫??덉쟾??湲곕낯媛?諛섑솚)
         public PlayerStats Stats => playerStats;
@@ -145,6 +154,36 @@ namespace Necrocis
         public float Magic => playerStats != null ? playerStats.Magic : 0f;
         public float SkillCooldownReduction => playerStats != null ? playerStats.SkillCooldownReduction : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
+        public bool IsMoving => isMoving;
+        public Collider HitCollider
+        {
+            get
+            {
+                if (cachedHitCollider == null)
+                {
+                    cachedHitCollider = GetComponent<Collider>();
+                    if (cachedHitCollider == null)
+                    {
+                        cachedHitCollider = GetComponentInChildren<Collider>();
+                    }
+                }
+
+                return cachedHitCollider;
+            }
+        }
+
+        public Health HealthComponent
+        {
+            get
+            {
+                if (cachedHealth == null)
+                {
+                    cachedHealth = GetComponent<Health>();
+                }
+
+                return cachedHealth;
+            }
+        }
         // ?좊땲???앸챸二쇨린: 李몄“瑜?罹먯떆?섍퀬 湲곕낯 ?곹깭瑜?珥덇린?뷀빀?덈떎.
 
         private void Awake()
@@ -180,7 +219,7 @@ namespace Necrocis
             {
                 billboard = spriteRenderer.gameObject.AddComponent<Billboard>();
             }
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+            billboard.SetUpdateMode(Billboard.UpdateMode.Once);
 
             SpriteYSort ySort = spriteRenderer.GetComponent<SpriteYSort>();
             if (ySort == null)
@@ -195,6 +234,7 @@ namespace Necrocis
             characterController = GetComponent<CharacterController>();
             EnsurePlayerStats();
             EnsureClassSkillController();
+            EnsureDeathScreen();
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -225,12 +265,16 @@ namespace Necrocis
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
-            Debug.Log($"[Player] ?쒖옉 ?꾩튂: {transform.position}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[Player] 시작 위치: {transform.position}");
+            }
         }
         // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
         private void Update()
         {
+            SyncDeathState();
             HandleInput();
             UpdateAnimation();
             ApplyLockedRotation();
@@ -245,6 +289,7 @@ namespace Necrocis
 
         private void FixedUpdate()
         {
+            SyncDeathState();
             Move();
             ApplyLockedY();
             ApplyLockedRotation();
@@ -263,10 +308,9 @@ namespace Necrocis
                 return;
             }
 
-            if (deathHandled)
+            if (IsControlBlocked())
             {
-                movement = Vector3.zero;
-                isMoving = false;
+                StopMotion();
                 return;
             }
 
@@ -388,6 +432,11 @@ namespace Necrocis
                 return;
             }
 
+            if (isPlayingDeathAnimation)
+            {
+                return;
+            }
+
             if (currentAnimation == null || currentAnimation.Length == 0) return;
 
             frameTimer += Time.deltaTime;
@@ -410,9 +459,15 @@ namespace Necrocis
         /// </summary>
         private void Move()
         {
+            if (IsControlBlocked())
+            {
+                StopMotion();
+                return;
+            }
+
             if (isDashing)
             {
-                ApplyMove(dashVelocity * Time.fixedDeltaTime);
+                TryMoveWithHeight(dashVelocity * Time.fixedDeltaTime);
                 return;
             }
 
@@ -493,6 +548,36 @@ namespace Necrocis
 
             return false;
         }
+
+        public bool TryMoveByWorld(Vector3 displacement)
+        {
+            displacement.y = 0f;
+            float distance = displacement.magnitude;
+            if (distance <= 0.000001f)
+            {
+                return true;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            float maxStep = biome != null
+                ? Mathf.Max(0.05f, biome.TileSize * 0.45f)
+                : distance;
+            int stepCount = Mathf.Max(1, Mathf.CeilToInt(distance / maxStep));
+            Vector3 step = displacement / stepCount;
+            bool movedAny = false;
+
+            for (int i = 0; i < stepCount; i++)
+            {
+                if (!TryMoveWithHeight(step))
+                {
+                    break;
+                }
+
+                movedAny = true;
+            }
+
+            return movedAny;
+        }
         // ApplyMove: 蹂寃??ы빆???고???媛앹껜??諛섏쁺?⑸땲??
 
         // ?ㅼ젣 ?대룞 ?곸슜: CharacterController > Rigidbody > Transform ?곗꽑?쒖쐞
@@ -512,12 +597,43 @@ namespace Necrocis
             }
         }
 
+        private bool IsControlBlocked()
+        {
+            return deathHandled || IsDead;
+        }
+
+        private void SyncDeathState()
+        {
+            if (!deathHandled && IsDead)
+            {
+                HandleDeath();
+            }
+        }
+
+        private void StopMotion()
+        {
+            movement = Vector3.zero;
+            isMoving = false;
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+        }
+
         /// <summary>
         /// ?ㅽ룿 ?꾩튂濡??대룞
         /// </summary>
         public void SpawnAt(Vector3 position)
         {
             transform.position = position;
+
+            if (rb != null)
+            {
+                rb.position = position;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
 
             if (characterController != null)
             {
@@ -527,6 +643,41 @@ namespace Necrocis
             }
 
             ApplyLockedY();
+            ApplyLockedRotation();
+        }
+
+        public void ReviveForRespawn()
+        {
+            deathHandled = false;
+            movement = Vector3.zero;
+            isMoving = false;
+            isPlayingAttackAnim = false;
+            isPlayingDeathAnimation = false;
+            if (deathRoutine != null)
+            {
+                StopCoroutine(deathRoutine);
+                deathRoutine = null;
+            }
+
+            EnsurePlayerStats();
+
+            Health health = GetComponent<Health>();
+            if (health != null)
+                health.ResetHealth();
+            else
+                playerStats.RuntimeStats.ResetHealthToMax();
+
+            PlayerAttack attack = GetComponent<PlayerAttack>();
+            if (attack != null)
+                attack.enabled = true;
+
+            PlayerClassSkillController classSkillController = GetComponent<PlayerClassSkillController>();
+            if (classSkillController != null)
+                classSkillController.enabled = true;
+
+            enabled = true;
+            ApplyJobVisual(LevelUpManager.GetCurrentJob());
+            SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
         }
         // LockY: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
@@ -645,9 +796,20 @@ namespace Necrocis
 
             Health health = GetComponent<Health>();
             if (health != null)
+            {
                 health.TakeDamage(damage);
+            }
             else
-                playerStats?.TakeDamage(damage);
+            {
+                float finalDamage = Mathf.Max(0f, damage);
+                PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+                if (itemEffects != null)
+                {
+                    finalDamage *= itemEffects.GetIncomingDamageMultiplier();
+                }
+
+                playerStats?.TakeDamage(finalDamage);
+            }
         }
         // Heal: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -691,7 +853,10 @@ namespace Necrocis
             Sprite[] sprites = isMelee ? GetMeleeSprites() : GetRangedSprites();
             if (sprites == null || sprites.Length == 0)
             {
-                Debug.LogWarning($"[PlayerController] 공격 스프라이트 미할당 - isMelee:{isMelee} dir:{lastMoveDirection}");
+                if (enableDebugLogs)
+                {
+                    Debug.LogWarning($"[PlayerController] 공격 스프라이트 미할당 - isMelee:{isMelee} dir:{lastMoveDirection}");
+                }
                 return;
             }
 
@@ -699,7 +864,10 @@ namespace Necrocis
             SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + duration;
-            Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
+            }
         }
 
         private Sprite[] GetMeleeSprites()
@@ -755,6 +923,7 @@ namespace Necrocis
                 : DirectionToVector(currentDirection);
             dir.y = 0f;
             dashVelocity = dir * dashSpeed;
+            CombatVfx.PlayDash(transform, spriteRenderer, dir, dashDuration);
 
             yield return new WaitForSeconds(dashDuration);
 
@@ -801,6 +970,17 @@ namespace Necrocis
             {
                 gameObject.AddComponent<PlayerClassSkillController>();
             }
+        }
+
+        private PlayerDeathScreen EnsureDeathScreen()
+        {
+            PlayerDeathScreen deathScreen = GetComponent<PlayerDeathScreen>();
+            if (deathScreen == null)
+            {
+                deathScreen = gameObject.AddComponent<PlayerDeathScreen>();
+            }
+
+            return deathScreen;
         }
 
         private void OnEnable()
@@ -886,42 +1066,79 @@ namespace Necrocis
         // HP 蹂寃?肄쒕갚: ?곕?吏/?뚮났 濡쒓렇 異쒕젰 + HP 0?대㈃ ?щ쭩 泥섎━
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
-            if (args.CurrentValue < args.PreviousValue)
+            if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
+            {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+            }
+
+            if (enableDebugLogs && args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
-                Debug.Log($"[Player] ?쇳빐 {damageTaken} 諛쏆쓬 | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 피해 {damageTaken} 받음 | HP {args.CurrentValue}/{args.MaxValue}");
             }
-            else if (args.CurrentValue > args.PreviousValue)
+            else if (enableDebugLogs && args.CurrentValue > args.PreviousValue)
             {
                 float healed = args.CurrentValue - args.PreviousValue;
-                Debug.Log($"[Player] ?뚮났 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
+                Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
             }
 
             if (!deathHandled && args.CurrentValue <= 0f)
             {
-                Die();
+                HandleDeath();
             }
         }
+
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (playerStats != null && playerStats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
+            if (itemEffects == null || playerStats == null)
+            {
+                return false;
+            }
+
+            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            playerStats.RuntimeStats.RestoreHealth(reviveHealth);
+            Health health = GetComponent<Health>();
+            health?.GrantTemporaryInvincibility(0.5f);
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
+            }
+            return true;
+        }
         // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
+
+        public void HandleDeath()
+        {
+            if (deathHandled)
+            {
+                return;
+            }
+
+            Die();
+        }
 
         // ?щ쭩 泥섎━: ?대룞/怨듦꺽 鍮꾪솢?깊솕, ?湲??좊땲硫붿씠???꾪솚
         private void Die()
         {
             deathHandled = true;
-            movement = Vector3.zero;
-            isMoving = false;
-
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = true;
-            }
-
-            if (characterController != null)
-                characterController.enabled = false;
-
-            SetAnimation(idleSprites, idleFrameRate);
+            StopMotion();
+            isDashing = false;
+            dashVelocity = Vector3.zero;
+            AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.Death);
+            AudioManager.Instance?.StopBgm();
 
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
@@ -931,10 +1148,130 @@ namespace Necrocis
             if (classSkillController != null)
                 classSkillController.enabled = false;
 
-            AudioManager.Instance?.PlaySFX("PlayerDeath"); // [Sound] 사망
-            enabled = false;
+            if (deathRoutine != null)
+                StopCoroutine(deathRoutine);
+            deathRoutine = StartCoroutine(PlayDeathThenShowGameOver());
+
+            if (enableDebugLogs)
+            {
+                Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+            }
+        }
+
+        private IEnumerator PlayDeathThenShowGameOver()
+        {
+            Sprite[] deathFrames = ResolveDeathAnimationFrames();
+            if (deathFrames.Length > 0)
+            {
+                isPlayingDeathAnimation = true;
+                float frameDuration = 1f / Mathf.Max(1f, deathFrameRate);
+                for (int i = 0; i < deathFrames.Length; i++)
+                {
+                    if (spriteRenderer != null && deathFrames[i] != null)
+                    {
+                        spriteRenderer.sprite = deathFrames[i];
+                    }
+
+                    yield return new WaitForSeconds(frameDuration);
+                }
+            }
+            else
+            {
+                SetAnimation(idleSprites, idleFrameRate);
+            }
+
+            isPlayingDeathAnimation = false;
+            EnsureDeathScreen().ShowDeath();
             OnPlayerDied?.Invoke();
-            Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+            deathRoutine = null;
+        }
+
+        private Sprite[] ResolveDeathAnimationFrames()
+        {
+            if (deathSprites == null || deathSprites.Length == 0)
+            {
+                return System.Array.Empty<Sprite>();
+            }
+
+            Sprite selectedSheet = SelectDirectionalDeathSheet();
+            if (TryCreateFramesFromDeathSheet(selectedSheet, out Sprite[] sheetFrames))
+            {
+                return sheetFrames;
+            }
+
+            List<Sprite> frames = new List<Sprite>(deathSprites.Length);
+            for (int i = 0; i < deathSprites.Length; i++)
+            {
+                if (deathSprites[i] != null)
+                {
+                    frames.Add(deathSprites[i]);
+                }
+            }
+
+            return frames.ToArray();
+        }
+
+        private Sprite SelectDirectionalDeathSheet()
+        {
+            if (deathSprites.Length >= 2
+                && IsHorizontalDeathSheet(deathSprites[0])
+                && IsHorizontalDeathSheet(deathSprites[1]))
+            {
+                Vector3 facing = GetLogicalFacingDirection();
+                return facing.z > 0.1f ? deathSprites[1] : deathSprites[0];
+            }
+
+            return deathSprites[0];
+        }
+
+        private static bool TryCreateFramesFromDeathSheet(Sprite sheetSprite, out Sprite[] frames)
+        {
+            frames = System.Array.Empty<Sprite>();
+            if (!IsHorizontalDeathSheet(sheetSprite) || sheetSprite.texture == null)
+            {
+                return false;
+            }
+
+            Rect sheetRect = sheetSprite.rect;
+            int frameSize = Mathf.RoundToInt(sheetRect.height);
+            int frameCount = Mathf.RoundToInt(sheetRect.width) / frameSize;
+            if (frameCount <= 1)
+            {
+                return false;
+            }
+
+            frames = new Sprite[frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                Rect frameRect = new Rect(
+                    sheetRect.x + frameSize * i,
+                    sheetRect.y,
+                    frameSize,
+                    frameSize);
+
+                frames[i] = Sprite.Create(
+                    sheetSprite.texture,
+                    frameRect,
+                    new Vector2(0.5f, 0.5f),
+                    sheetSprite.pixelsPerUnit,
+                    0,
+                    SpriteMeshType.FullRect);
+                frames[i].name = $"{sheetSprite.name}_{i}";
+            }
+
+            return true;
+        }
+
+        private static bool IsHorizontalDeathSheet(Sprite sprite)
+        {
+            if (sprite == null)
+            {
+                return false;
+            }
+
+            int width = Mathf.RoundToInt(sprite.rect.width);
+            int height = Mathf.RoundToInt(sprite.rect.height);
+            return height > 0 && width >= height * 2 && width % height == 0;
         }
     }
 }

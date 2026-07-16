@@ -14,12 +14,17 @@ namespace Necrocis
                 return false;
             }
 
-            float distToPlayer = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
-            if (distToPlayer > config.chaseRadius) return false;
+            float chaseRadius = config.chaseRadius;
+            if (chaseRadius < 0f
+                || GetPlanarDistanceSqr(GetCurrentPosition(), playerTransform.position) > chaseRadius * chaseRadius)
+            {
+                return false;
+            }
 
             // leash 안에 있는 플레이어만 추격
-            float playerToAnchor = GetPlanarDistance(playerTransform.position, anchorPosition);
-            return playerToAnchor <= config.leashRadius;
+            float leashRadius = config.leashRadius;
+            return leashRadius >= 0f
+                && GetPlanarDistanceSqr(playerTransform.position, anchorPosition) <= leashRadius * leashRadius;
         }
 
 
@@ -30,14 +35,20 @@ namespace Necrocis
             {
                 return false;
             }
-            float dist = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
-            return dist <= config.attackRange;
+            float effectiveAttackRange = config.isRanged
+                ? config.attackRange
+                : GetEffectiveMeleeAttackRange(PlayerController.Instance);
+            return effectiveAttackRange >= 0f
+                && GetPlanarDistanceSqr(GetCurrentPosition(), playerTransform.position)
+                    <= effectiveAttackRange * effectiveAttackRange;
         }
 
 
         public bool IsOutOfLeash()
         {
-            return GetPlanarDistance(GetCurrentPosition(), anchorPosition) > config.leashRadius;
+            float leashRadius = config.leashRadius;
+            return leashRadius < 0f
+                || GetPlanarDistanceSqr(GetCurrentPosition(), anchorPosition) > leashRadius * leashRadius;
         }
 
 
@@ -129,10 +140,7 @@ namespace Necrocis
                 return false;
             }
 
-            if (spriteRenderer != null && Mathf.Abs(step.x) > 0.001f)
-            {
-                spriteRenderer.flipX = step.x < 0f;
-            }
+            UpdateFacingFromVector(step);
 
             // 이동 애니메이션 전환
             if (!usingMoveAnimation)
@@ -192,7 +200,23 @@ namespace Necrocis
                 return false;
             }
 
-            return TryMove(GetCurrentPosition(), step);
+            bool moved = TryMove(GetCurrentPosition(), step);
+            if (!moved)
+            {
+                return false;
+            }
+
+            if (!attackAnimPlaying)
+            {
+                UpdateFacingFromVector(step);
+            }
+
+            if (!attackAnimPlaying && !usingMoveAnimation)
+            {
+                SetMoveAnimation();
+            }
+
+            return true;
         }
 
         public void StartCharge()
@@ -208,9 +232,7 @@ namespace Necrocis
             chargeCurrentSpeed = 0f;
             isCharging = true;
 
-            // 방향에 따라 스프라이트 반전
-            if (spriteRenderer != null)
-                spriteRenderer.flipX = chargeDirection.x < 0f;
+            UpdateFacingFromVector(chargeDirection);
         }
 
         public bool UpdateCharge(float deltaTime)
@@ -531,11 +553,63 @@ namespace Necrocis
         }
 
 
-        private static float GetPlanarDistance(Vector3 a, Vector3 b)
+        private static float GetPlanarDistanceSqr(Vector3 a, Vector3 b)
         {
-            a.y = 0f;
-            b.y = 0f;
-            return Vector3.Distance(a, b);
+            float deltaX = a.x - b.x;
+            float deltaZ = a.z - b.z;
+            return deltaX * deltaX + deltaZ * deltaZ;
+        }
+
+
+        private float GetEffectiveMeleeAttackRange(PlayerController player)
+        {
+            if (config == null)
+            {
+                return 0f;
+            }
+
+            float bodyContactRange = GetMeleeContactRange(config.colliderSize, player);
+            Vector3 activeAttackSize = config.expandColliderOnAttack
+                ? config.attackColliderSize
+                : config.colliderSize;
+            float attackContactRange = GetMeleeContactRange(activeAttackSize, player);
+            float minRange = Mathf.Max(0.25f, bodyContactRange);
+            float maxRange = Mathf.Max(minRange, attackContactRange);
+
+            if (config.attackRange <= 0f)
+            {
+                return maxRange;
+            }
+
+            return Mathf.Clamp(config.attackRange, minRange, maxRange);
+        }
+
+
+        private float GetMeleeContactRange(Vector3 localSize, PlayerController player)
+        {
+            Vector3 scaledSize = Vector3.Scale(localSize, Abs(transform.lossyScale));
+            float enemyReach = Mathf.Max(scaledSize.x, scaledSize.z) * 0.5f;
+            float playerRadius = GetPlayerPlanarRadius(player);
+            return enemyReach + playerRadius + 0.2f;
+        }
+
+
+        private static float GetPlayerPlanarRadius(PlayerController player)
+        {
+            if (player == null)
+            {
+                return 0.45f;
+            }
+
+            Collider playerCollider = player.HitCollider;
+
+            if (playerCollider == null || !playerCollider.enabled)
+            {
+                return 0.45f;
+            }
+
+            Bounds bounds = playerCollider.bounds;
+            return Mathf.Max(bounds.extents.x, bounds.extents.z);
         }
 
     }

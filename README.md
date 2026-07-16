@@ -11,6 +11,43 @@
 - 포털 시스템과 8방향 공격 스프라이트는 `gustlr` 변경을 가져왔다.
 - 보스 몹 구현은 기존 `kjh4845` 장 보스 작업을 유지했다.
 
+## Boss Create 작업 요약
+
+이번 작업에서는 장 보스 기준으로 간, 위, 폐 보스를 추가하고 보스 공통 전투 흐름을 정리했다.
+
+추가 보스:
+
+- 간 보스: 혈액 폭탄 투척, 공격력 감소 디버프, 2페이즈 회복 포즈 패턴을 구현했다.
+- 위 보스: 1페이즈 돌진, 2페이즈 소화액 원거리 공격과 흡입/토해내기 단거리 공격을 구현했다.
+- 폐 보스: 형제 보스 구조를 추가하고, 한 명이 죽으면 남은 보스가 광폭화되는 2페이즈를 구현했다.
+
+보스방/진행 규칙:
+
+- 장, 간, 위, 폐 보스 모두 보스방 가두리와 안개 설정을 공통 구조로 사용한다.
+- 보스 처치 후 귀환 포털은 보스 사망 위치가 아니라 보스방 중앙에 생성된다.
+- 허브에서 클리어된 바이옴 포털은 회색 비활성 상태로 표시된다.
+- 보스가 공격 또는 시전 중 사망하면 남아 있는 투사체, 임시 이펙트, 소환물을 즉시 정리한다.
+
+전투 판정/체력 UI:
+
+- 플레이어 원거리 공격이 보스나 일반 몹을 단일 타격했을 때 관통하지 않고 사라지도록 보정했다.
+- 플레이어 HP는 정수 단위로만 저장, 피해, 회복되도록 정리했다.
+- 하트 UI는 `1 HP = 반칸` 기준으로 정수 HP와 일치하게 표시된다.
+- 플레이어에게 들어가는 보스 피해 기본값과 데미지 틱 기본값에서 소수점 피해를 제거했다.
+
+관련 코드 및 설정:
+
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/IntestineBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/LiverBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/StomachBossPattern.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Bosses/LungBossPattern.cs`
+- `Assets/_Project/Scripts/World/Biomes/BossArena/MidBossArenaController.cs`
+- `Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs`
+- `Assets/_Project/Scripts/World/Hub/HubRoom.cs`
+- `Assets/_Project/Scripts/Core/Stats/CharacterStats.cs`
+- `Assets/_Project/Scripts/UI/HUD/PlayerHeartUI.cs`
+- `Assets/_Project/Data/BiomeConfigs/*BossArenaConfig.asset`
+
 ## 스탯 시스템
 
 플레이어 기본 스탯을 `PlayerStats` 중심으로 다시 정리했다.
@@ -276,6 +313,87 @@ ScriptableObject 기반 플레이어 아이템 베이스를 추가했다.
 - `PerlinNoise` -> `BiomePerlinNoise`
 - `AnimatedSprite` -> `SpriteFrameAnimator`
 - `PlayerStatDefinitions` -> `PlayerItemStatDefinitions`
+
+## 2026-05-19 추가 작업
+
+플레이어 사망, 피격 피드백, 피격 판정, 체력 UI 표시 기준을 다시 정리했다.
+
+### 플레이어 사망 처리
+
+- 노말 난이도 기준을 `GameDifficulty.Normal`로 추가했다.
+- 노말 난이도에서 플레이어가 사망하면 레벨과 스탯을 초기화하지 않고 허브로 복귀하도록 구성했다.
+- 사망 시 `PlayerDeathScreen`을 통해 사망 화면을 표시한다.
+- 사망 화면은 `Resources/UI/Death/death_screen.png` 이미지를 사용한다.
+- 이미지 안의 `Return to Hub` 영역을 투명 버튼으로 살려서 허브 복귀 입력으로 사용한다.
+- HP가 0이 되면 이동 입력, 물리 속도, 기본 공격, 스킬 입력을 즉시 차단한다.
+- 사망 애니메이션 스프라이트가 할당되어 있으면 애니메이션 재생 후 사망 화면을 표시하고, 없으면 바로 사망 화면으로 넘어간다.
+- 허브 복귀 시 바이옴에서 사용하던 Y 위치 잠금을 해제한 뒤 허브 스폰 위치로 이동한다.
+
+관련 코드 및 리소스:
+
+- `Assets/_Project/Scripts/Gameplay/Player/Runtime/PlayerController.cs`
+- `Assets/_Project/Scripts/Gameplay/Player/Runtime/Health.cs`
+- `Assets/_Project/Scripts/UI/Death/PlayerDeathScreen.cs`
+- `Assets/_Project/Resources/UI/Death/death_screen.png`
+- `Assets/_Project/Scripts/Core/Bootstrap/GameInitializer.cs`
+- `Assets/_Project/Scripts/Core/Bootstrap/GameManager.cs`
+- `Assets/_Project/Scripts/Core/Bootstrap/SceneLoader.cs`
+- `Assets/_Project/Scripts/Core/Types/BiomeType.cs`
+
+### 피격 피드백과 무적 시간
+
+- 플레이어가 데미지를 받으면 스프라이트가 짧게 붉은색으로 깜빡인다.
+- 피격 후 기본 무적 시간은 0.5초다.
+- 무적 중에는 추가 데미지를 받지 않는다.
+- 사망, 비활성화, 체력 리셋 시 스프라이트 색상과 무적 상태를 원래대로 복구한다.
+- 레벨업 등 외부에서 부여하는 임시 무적은 플래시 없이 무적만 적용한다.
+
+관련 코드:
+
+- `Assets/_Project/Scripts/Gameplay/Player/Runtime/Health.cs`
+
+### 플레이어 피격 판정 정리
+
+- 잔몹 근접 공격은 실제 공격 가능 범위와 콜라이더 기반 접촉 범위를 함께 사용하도록 보정했다.
+- 근접 공격은 공격 애니메이션 종료 시점에 플레이어가 여전히 유효 범위 안에 있을 때만 데미지를 적용한다.
+- 잔몹 원거리 투사체는 이전 프레임 위치와 현재 위치 사이의 경로를 검사해 빠른 투사체가 플레이어를 통과하는 누락을 줄였다.
+- 투사체 판정 반경은 고정 과대값 대신 투사체 스케일 기반으로 계산하고 최소값만 둔다.
+- 기본 공격 입력도 플레이어 HP가 0이면 더 이상 처리하지 않도록 차단했다.
+
+관련 코드:
+
+- `Assets/_Project/Scripts/Gameplay/Enemies/Core/Behaviors/EnemyMovement.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Core/Behaviors/EnemyCombat.cs`
+- `Assets/_Project/Scripts/Gameplay/Enemies/Combat/EnemyProjectile.cs`
+- `Assets/_Project/Scripts/Gameplay/Player/Combat/PlayerAttack.cs`
+
+### 체력 UI와 잔몹 데미지 기준
+
+- 최종 기준은 하트 1개 = 2 HP다.
+- 잔몹 기본 데미지는 1로 맞췄다.
+- 이 기준에서 잔몹 피격 1회는 하트 반 칸 감소로 표시된다.
+- `PlayerHeartUI`는 `Health.OnHealthChanged` 이벤트의 실제 현재 HP와 최대 HP 값을 받아 표시한다.
+- Hub 씬에 직렬화된 `PlayerHeartUI` 설정도 하트 1개 = 2 HP 기준으로 맞췄다.
+- 장 바이옴 일반 적 설정과 이전 BiomeConfig 내부 enemy rule fallback 값도 같은 데미지 기준으로 맞췄다.
+- 보스 데미지는 별도 보스 설정값을 유지했다.
+
+관련 코드 및 설정:
+
+- `Assets/_Project/Scripts/UI/HUD/PlayerHeartUI.cs`
+- `Assets/_Project/Scenes/Hub.unity`
+- `Assets/_Project/Data/BiomeConfigs/IntestineEnemySpawnConfig.asset`
+- `Assets/_Project/Data/BiomeConfigs/IntestineBiomeConfig.asset`
+- `Assets/_Project/Scripts/World/Biomes/Configs/BiomeConfig.cs`
+
+### 카메라와 HUD 위치 조정
+
+- 메인 카메라 기준에서 플레이어가 화면 중앙에 오도록 카메라 추적 오프셋 계산을 조정했다.
+- 플레이어 체력 UI 크기를 줄이고 좌상단 위치를 정리했다.
+
+관련 코드:
+
+- `Assets/_Project/Scripts/Presentation/Camera/DontStarveCamera.cs`
+- `Assets/_Project/Scripts/UI/HUD/PlayerHeartUI.cs`
 
 ## 설정 위치
 

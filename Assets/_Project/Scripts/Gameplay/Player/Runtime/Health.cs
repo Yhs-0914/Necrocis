@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Necrocis
 {
@@ -11,9 +12,16 @@ namespace Necrocis
     public class Health : MonoBehaviour
     {
         [Tooltip("피격 후 무적 시간(초)")]
-        [SerializeField] private float invincibilityDuration = 0.2f;
+        [SerializeField] private float invincibilityDuration = 0.5f;
+        [SerializeField] private float hitFlashInterval = 0.08f;
+        [SerializeField] private Color hitFlashColor = new Color(1f, 0.18f, 0.12f, 1f);
 
         private bool isInvincible; // 현재 무적 상태인지
+        private Coroutine invincibilityRoutine;
+        private readonly List<SpriteRenderer> cachedSpriteRenderers = new List<SpriteRenderer>();
+        private readonly List<Color> cachedSpriteColors = new List<Color>();
+        private PlayerController playerController;
+        private PlayerItemCombatEffects itemEffects;
 
         // PlayerStats의 CharacterStats를 참조 (PlayerStats가 아직 없으면 null 반환)
         private CharacterStats Stats => PlayerStats.Instance?.RuntimeStats;
@@ -21,11 +29,23 @@ namespace Necrocis
         public float CurrentHealth => Stats?.CurrentHealth ?? 0f;
         public float MaxHealth => Stats?.MaxHealth ?? 0f;
         public bool IsDead => Stats?.IsDead ?? false;
+        public bool IsInvincible => isInvincible;
 
         public event Action<float, float> OnHealthChanged; // HP 변경 시 (현재HP, 최대HP)
         public event Action OnDeath;                         // 사망 시
 
         private bool subscribed; // CharacterStats 이벤트 구독 완료 여부
+
+        private void Awake()
+        {
+            playerController = GetComponent<PlayerController>();
+            if (playerController == null)
+            {
+                playerController = GetComponentInParent<PlayerController>();
+            }
+
+            itemEffects = GetComponent<PlayerItemCombatEffects>();
+        }
 
         private void OnEnable()
         {
@@ -52,6 +72,8 @@ namespace Necrocis
             if (Stats != null)
                 Stats.HealthChanged -= HandleHealthChanged;
             subscribed = false;
+            StopInvincibilityRoutine();
+            RestoreSpriteColors();
         }
 
         private void HandleHealthChanged(CharacterStats sender, CharacterHealthChangedEventArgs args)
@@ -59,19 +81,95 @@ namespace Necrocis
             OnHealthChanged?.Invoke(args.CurrentValue, args.MaxValue);
 
             if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
+            {
+                if (TryReviveFromSplitRegeneration(args.MaxValue))
+                {
+                    return;
+                }
+
                 OnDeath?.Invoke();
+
+                playerController?.HandleDeath();
+            }
+        }
+
+        private bool TryReviveFromSplitRegeneration(float maxHealth)
+        {
+            if (Stats != null && Stats.CurrentHealth > 0f)
+            {
+                return true;
+            }
+
+            PlayerItemCombatEffects effects = ResolveItemEffects();
+            if (effects == null || Stats == null)
+            {
+                return false;
+            }
+
+            if (!effects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            {
+                return false;
+            }
+
+            Stats.RestoreHealth(reviveHealth);
+            StartInvincibility(invincibilityDuration, true);
+            return true;
         }
 
         // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
-        public void TakeDamage(float damageAmount)
+        public void TakeDamage(float damageAmount, EnemyController sourceEnemy = null)
         {
             if (isInvincible || IsDead || damageAmount <= 0f) return;
+            if (Stats == null) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
-            AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
-            Stats?.ApplyDamage(actualDamage);
+            PlayerItemCombatEffects effects = ResolveItemEffects();
+            if (effects != null)
+            {
+                actualDamage = effects.ProcessIncomingDamage(actualDamage, sourceEnemy);
+            }
 
-            StartCoroutine(InvincibilityCoroutine());
+            if (actualDamage <= 0f)
+            {
+                return;
+            }
+
+            if (effects != null)
+            {
+                float currentHealth = Stats.CurrentHealth;
+                float maxHealth = Stats.MaxHealth;
+                if (actualDamage >= currentHealth
+                    && effects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
+                {
+                    float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
+                    if (currentHealth > targetHealth)
+                    {
+                        Stats.ApplyDamage(currentHealth - targetHealth);
+                    }
+                    else if (targetHealth > currentHealth)
+                    {
+                        Stats.RestoreHealth(targetHealth - currentHealth);
+                    }
+
+                    StartInvincibility(invincibilityDuration, true);
+                    return;
+                }
+            }
+
+            AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
+            float appliedDamage = Stats.ApplyDamage(actualDamage);
+            if (appliedDamage > 0f)
+            {
+                Vector3 sourcePosition = sourceEnemy != null
+                    ? sourceEnemy.transform.position
+                    : transform.position - Vector3.forward;
+                CombatVfx.PlayPlayerHit(transform, sourcePosition, appliedDamage, IsDead);
+            }
+
+            if (!IsDead)
+            {
+                StartInvincibility(invincibilityDuration, true);
+            }
         }
 
         public void Heal(float amount)
@@ -82,28 +180,146 @@ namespace Necrocis
 
         public void ResetHealth()
         {
-            isInvincible = false;
+            StopInvincibilityRoutine();
+            RestoreSpriteColors();
             Stats?.ResetHealthToMax();
         }
 
         // 외부에서 호출 가능한 임시 무적 부여 (레벨업 후 등)
         public void GrantTemporaryInvincibility(float duration)
         {
-            StartCoroutine(InvincibilityCoroutine(duration));
+            StartInvincibility(duration, false);
         }
 
-        private IEnumerator InvincibilityCoroutine()
+        private void StartInvincibility(float duration, bool flash)
+        {
+            StopInvincibilityRoutine();
+
+            if (duration <= 0f)
+            {
+                isInvincible = false;
+                RestoreSpriteColors();
+                return;
+            }
+
+            invincibilityRoutine = StartCoroutine(InvincibilityCoroutine(duration, flash));
+        }
+
+        private IEnumerator InvincibilityCoroutine(float duration, bool flash)
         {
             isInvincible = true;
-            yield return new WaitForSeconds(invincibilityDuration);
+
+            if (!flash)
+            {
+                yield return new WaitForSeconds(duration);
+                isInvincible = false;
+                invincibilityRoutine = null;
+                yield break;
+            }
+
+            CacheSpriteRenderers();
+            float elapsed = 0f;
+            float nextFlashTime = 0f;
+            bool flashOn = true;
+            float interval = Mathf.Max(0.03f, hitFlashInterval);
+
+            while (elapsed < duration && !IsDead)
+            {
+                if (elapsed >= nextFlashTime)
+                {
+                    if (flashOn)
+                        ApplySpriteColor(hitFlashColor);
+                    else
+                        ApplyOriginalSpriteColors();
+
+                    flashOn = !flashOn;
+                    nextFlashTime += interval;
+                }
+
+                yield return null;
+                elapsed += Time.deltaTime;
+            }
+
+            RestoreSpriteColors();
+            isInvincible = false;
+            invincibilityRoutine = null;
+        }
+
+        private void StopInvincibilityRoutine()
+        {
+            if (invincibilityRoutine != null)
+            {
+                StopCoroutine(invincibilityRoutine);
+                invincibilityRoutine = null;
+            }
+
             isInvincible = false;
         }
 
-        private IEnumerator InvincibilityCoroutine(float duration)
+        private void CacheSpriteRenderers()
         {
-            isInvincible = true;
-            yield return new WaitForSeconds(duration);
-            isInvincible = false;
+            cachedSpriteRenderers.Clear();
+            GetComponentsInChildren(true, cachedSpriteRenderers);
+            cachedSpriteColors.Clear();
+            if (cachedSpriteRenderers.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < cachedSpriteRenderers.Count; i++)
+            {
+                cachedSpriteColors.Add(cachedSpriteRenderers[i] != null
+                    ? cachedSpriteRenderers[i].color
+                    : Color.white);
+            }
+        }
+
+        private void ApplySpriteColor(Color color)
+        {
+            for (int i = 0; i < cachedSpriteRenderers.Count; i++)
+            {
+                if (cachedSpriteRenderers[i] != null)
+                {
+                    cachedSpriteRenderers[i].color = color;
+                }
+            }
+        }
+
+        private void RestoreSpriteColors()
+        {
+            if (cachedSpriteRenderers.Count == 0 || cachedSpriteColors.Count == 0)
+            {
+                return;
+            }
+
+            ApplyOriginalSpriteColors();
+        }
+
+        private void ApplyOriginalSpriteColors()
+        {
+            if (cachedSpriteRenderers.Count == 0 || cachedSpriteColors.Count == 0)
+            {
+                return;
+            }
+
+            int count = Mathf.Min(cachedSpriteRenderers.Count, cachedSpriteColors.Count);
+            for (int i = 0; i < count; i++)
+            {
+                if (cachedSpriteRenderers[i] != null)
+                {
+                    cachedSpriteRenderers[i].color = cachedSpriteColors[i];
+                }
+            }
+        }
+
+        private PlayerItemCombatEffects ResolveItemEffects()
+        {
+            if (itemEffects == null)
+            {
+                itemEffects = GetComponent<PlayerItemCombatEffects>();
+            }
+
+            return itemEffects;
         }
     }
 }

@@ -29,7 +29,7 @@ MonoBehaviour:
     leashRadius: 14
     idleDelayRange: {x: 0.8, y: 1.6}
     maxHealth: 6
-    attackDamage: 0.5
+    attackDamage: 1
     attackRange: 4
     attackCooldown: 1
     expReward: 10
@@ -76,7 +76,7 @@ MonoBehaviour:
     attackSpritesDown: []
     attackAnimationSpeed: 0.12
     expandColliderOnAttack: 1
-    attackColliderSize: {x: 3, y: 2, z: 3}
+    attackColliderSize: {x: 2.2, y: 2, z: 2.2}
     attackColliderCenter: {x: 0, y: 0.55, z: 0}
     deathSprites:
     - {fileID: -2111205726, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
@@ -125,7 +125,7 @@ MonoBehaviour:
     leashRadius: 10
     idleDelayRange: {x: 0.4, y: 1.1}
     maxHealth: 6
-    attackDamage: 0.5
+    attackDamage: 1
     attackRange: 1.5
     attackCooldown: 1
     expReward: 10
@@ -228,7 +228,7 @@ MonoBehaviour:
     leashRadius: 14
     idleDelayRange: {x: 0.6, y: 1.4}
     maxHealth: 4
-    attackDamage: 0.8
+    attackDamage: 1
     attackRange: 7
     attackCooldown: 1.5
     expReward: 15
@@ -243,8 +243,8 @@ MonoBehaviour:
     animationSpeed: 0.14
     addCollider: 1
     isTrigger: 0
-    colliderSize: {x: 0.6, y: 0.9, z: 0.6}
-    colliderCenter: {x: 0, y: 0.45, z: 0}
+    colliderSize: {x: 0.9, y: 1.5, z: 0.9}
+    colliderCenter: {x: 0, y: 0.75, z: 0}
     idleSprites:
     - {fileID: 355525813, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -777785260, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}

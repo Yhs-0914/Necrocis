@@ -17,6 +17,10 @@ namespace Necrocis
         private GameObject uiRoot;     // UI Canvas 루트
         private Text contentText;      // 모든 스탯 정보를 표시하는 단일 Text
         private bool isShowing;        // 현재 표시 중 여부
+        private CharacterStats subscribedStats;
+        private readonly System.Text.StringBuilder statTextBuilder = new System.Text.StringBuilder(384);
+        private string positiveColorHex;
+        private string negativeColorHex;
 
         // 표시할 스탯 순서 정의
         private static readonly CharacterStatType[] displayStats = new CharacterStatType[]
@@ -35,30 +39,51 @@ namespace Necrocis
         {
             BuildUI();
             uiRoot.SetActive(false);
+            TryBindStats();
+        }
+
+        private void OnEnable()
+        {
+            LevelUpManager.OnLevelUp += HandleProgressionChanged;
+            LevelUpManager.OnJobSelect += HandleProgressionChanged;
+            LevelUpManager.OnJobChanged += HandleJobChanged;
+            TryBindStats();
+        }
+
+        private void OnDisable()
+        {
+            LevelUpManager.OnLevelUp -= HandleProgressionChanged;
+            LevelUpManager.OnJobSelect -= HandleProgressionChanged;
+            LevelUpManager.OnJobChanged -= HandleJobChanged;
+            UnbindStats();
         }
         // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
         // O키로 토글, 열려 있으면 매 프레임 스탯 갱신
         private void Update()
         {
+            if (subscribedStats == null)
+            {
+                TryBindStats();
+            }
+
             var input = InputManager.Instance;
             if (input == null) return;
 
             if (input.StatWindowAction.WasPressedThisFrame())
             {
+                AudioManager.Instance?.PlaySFX("StatWindow");
                 if (isShowing)
                     Hide();
                 else
                     Show();
             }
-
-            if (isShowing)
-                RefreshStats(); // 실시간 갱신 (레벨업 중에도 변경사항 반영)
         }
         // Show: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Show()
         {
+            TryBindStats();
             RefreshStats();
             uiRoot.SetActive(true);
             isShowing = true;
@@ -76,15 +101,15 @@ namespace Necrocis
         // 기본값 대비 증감분을 색상으로 표시 (초록: 증가, 빨강: 감소)
         private void RefreshStats()
         {
-            if (PlayerStats.Instance == null) return;
-
-            var stats = PlayerStats.Instance.RuntimeStats;
+            CharacterStats stats = subscribedStats != null
+                ? subscribedStats
+                : PlayerStats.Instance?.RuntimeStats;
             if (stats == null) return;
 
-            string posHex = ColorUtility.ToHtmlStringRGB(positiveColor);
-            string negHex = ColorUtility.ToHtmlStringRGB(negativeColor);
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            positiveColorHex ??= ColorUtility.ToHtmlStringRGB(positiveColor);
+            negativeColorHex ??= ColorUtility.ToHtmlStringRGB(negativeColor);
+            System.Text.StringBuilder sb = statTextBuilder;
+            sb.Clear();
 
             // 레벨
             sb.AppendLine($"<color=#FFD933><b>스탯 정보</b></color>");
@@ -103,7 +128,7 @@ namespace Necrocis
             float hpDiff = maxHp - hpBase;
             sb.Append($"체력: {hp:F0}/{maxHp:F0}");
             if (Mathf.Abs(hpDiff) > 0.01f)
-                sb.Append(hpDiff > 0 ? $" <color=#{posHex}>(+{hpDiff:F1})</color>" : $" <color=#{negHex}>({hpDiff:F1})</color>");
+                sb.Append(hpDiff > 0 ? $" <color=#{positiveColorHex}>(+{hpDiff:F1})</color>" : $" <color=#{negativeColorHex}>({hpDiff:F1})</color>");
             sb.AppendLine();
 
             // 나머지 스탯
@@ -118,14 +143,73 @@ namespace Necrocis
                 if (Mathf.Abs(diff) > 0.01f)
                 {
                     if (diff > 0)
-                        sb.Append($" <color=#{posHex}>(+{diff:F1})</color>");
+                        sb.Append($" <color=#{positiveColorHex}>(+{diff:F1})</color>");
                     else
-                        sb.Append($" <color=#{negHex}>({diff:F1})</color>");
+                        sb.Append($" <color=#{negativeColorHex}>({diff:F1})</color>");
                 }
                 sb.AppendLine();
             }
 
             contentText.text = sb.ToString();
+        }
+
+        private void TryBindStats()
+        {
+            CharacterStats currentStats = PlayerStats.Instance?.RuntimeStats;
+            if (currentStats == subscribedStats)
+            {
+                return;
+            }
+
+            UnbindStats();
+            subscribedStats = currentStats;
+            if (subscribedStats == null)
+            {
+                return;
+            }
+
+            subscribedStats.StatChanged += HandleStatChanged;
+            subscribedStats.HealthChanged += HandleHealthChanged;
+        }
+
+        private void UnbindStats()
+        {
+            if (subscribedStats == null)
+            {
+                return;
+            }
+
+            subscribedStats.StatChanged -= HandleStatChanged;
+            subscribedStats.HealthChanged -= HandleHealthChanged;
+            subscribedStats = null;
+        }
+
+        private void HandleStatChanged(CharacterStats _, CharacterStatChangedEventArgs __)
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs __)
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleProgressionChanged()
+        {
+            RefreshIfVisible();
+        }
+
+        private void HandleJobChanged(JobType _)
+        {
+            RefreshIfVisible();
+        }
+
+        private void RefreshIfVisible()
+        {
+            if (isShowing)
+            {
+                RefreshStats();
+            }
         }
         // GetStatName: 필요한 값을 반환합니다.
 

@@ -34,8 +34,16 @@ namespace Necrocis
         [SerializeField] private Color barColor = new Color(0.3f, 0.7f, 1f, 1f);
         [SerializeField] private Color bgColor = new Color(0.15f, 0.15f, 0.15f, 0.8f);
 
+        private static readonly Vector2 ResponsiveReferenceResolution = new Vector2(1920f, 1080f);
+        private const float ResponsiveMatchWidthOrHeight = 0.5f;
+        private const float ExpBarBottomMargin = -150f;
+        private const float ExpBarWidth = 1160f;
+        private const float ExpBarHeight = 540f;
+
         private static GameObject persistentCanvas;
         private bool runtimeUIBuilt;
+        private int lastAppliedScreenWidth = -1;
+        private int lastAppliedScreenHeight = -1;
 
         private void Awake()
         {
@@ -45,12 +53,14 @@ namespace Necrocis
         private void Start()
         {
             EnsureUIReady();
+            ApplyResponsiveLayout();
             UpdateDisplay();
         }
 
         private void OnEnable()
         {
             EnsureUIReady();
+            ApplyResponsiveLayout();
             LevelUpManager.OnExpGained += OnExpGained;
             LevelUpManager.OnLevelUp += OnLevelUp;
             SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -62,6 +72,16 @@ namespace Necrocis
             LevelUpManager.OnExpGained -= OnExpGained;
             LevelUpManager.OnLevelUp -= OnLevelUp;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        private void LateUpdate()
+        {
+            if (lastAppliedScreenWidth == Screen.width && lastAppliedScreenHeight == Screen.height)
+            {
+                return;
+            }
+
+            ApplyResponsiveLayout();
         }
 
         private void OnExpGained(int amount)
@@ -77,6 +97,7 @@ namespace Necrocis
         private void HandleSceneLoaded(Scene _, LoadSceneMode __)
         {
             EnsureUIReady();
+            ApplyResponsiveLayout();
             UpdateDisplay();
         }
 
@@ -364,6 +385,58 @@ namespace Necrocis
             GameObject canvasObject = canvas.gameObject;
             persistentCanvas = canvasObject;
             DontDestroyOnLoad(canvasObject);
+        }
+
+        private void ApplyResponsiveLayout()
+        {
+            Canvas canvas = null;
+            if (fillImage != null)
+            {
+                canvas = fillImage.GetComponentInParent<Canvas>(true);
+            }
+
+            if (canvas == null && levelText != null)
+            {
+                canvas = levelText.GetComponentInParent<Canvas>(true);
+            }
+
+            if (canvas == null && expText != null)
+            {
+                canvas = expText.GetComponentInParent<Canvas>(true);
+            }
+
+            if (canvas == null)
+            {
+                return;
+            }
+
+            CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler != null)
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = ResponsiveReferenceResolution;
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = Mathf.Clamp01(ResponsiveMatchWidthOrHeight);
+            }
+
+            RectTransform barRoot = fillImage != null
+                ? fillImage.transform.parent as RectTransform
+                : canvas.transform.Find("Image") as RectTransform;
+
+            if (barRoot == null)
+            {
+                return;
+            }
+
+            barRoot.localScale = Vector3.one;
+            barRoot.anchorMin = new Vector2(0.5f, 0f);
+            barRoot.anchorMax = new Vector2(0.5f, 0f);
+            barRoot.pivot = new Vector2(0.5f, 0f);
+            barRoot.anchoredPosition = new Vector2(0f, ExpBarBottomMargin);
+            barRoot.sizeDelta = new Vector2(ExpBarWidth, ExpBarHeight);
+
+            lastAppliedScreenWidth = Screen.width;
+            lastAppliedScreenHeight = Screen.height;
         }
 
         private static GameObject CreateUIElement(string name, Transform parent)

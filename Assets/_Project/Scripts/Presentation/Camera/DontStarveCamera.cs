@@ -31,10 +31,14 @@ namespace Necrocis
 
         [Header("카메라 설정")]
         [SerializeField] private bool useOrthographic = true;  // Orthographic 사용 (돈스타브 스타일)
+        [SerializeField] private bool allowHdr = false;
         [SerializeField] private float height = 10f;           // 카메라 높이
         [SerializeField] private float distance = 5f;          // 뒤로 떨어진 거리
         [SerializeField] private float angle = 45f;            // 내려다보는 각도
         [SerializeField] private float smoothSpeed = 5f;       // 부드러운 이동
+        [SerializeField] private bool centerTargetInView = true;
+        [SerializeField] private bool useTargetRendererCenter = true;
+        [SerializeField] private float targetForwardScreenOffset = 0f;
 
         [Header("줌 (Orthographic = Size, Perspective = Height)")]
         [SerializeField] private float orthoSize = 5f;         // Orthographic 크기
@@ -42,8 +46,18 @@ namespace Necrocis
         [SerializeField] private float minZoom = 3f;
         [SerializeField] private float maxZoom = 10f;
 
+        [Header("전투 피드백")]
+        [SerializeField, Min(0f)] private float maximumCombatShake = 0.32f;
+        [SerializeField, Min(1f)] private float combatShakeFrequency = 34f;
+
         private Camera cam;
         private Vector3 offset;
+        private Transform cachedRendererTarget;
+        private Renderer[] cachedTargetRenderers;
+        private Vector3 appliedCombatShakeOffset;
+        private float combatShakeAmplitude;
+        private float combatShakeDuration;
+        private float combatShakeEndTime;
 
         public static Camera GetActiveCamera()
         {
@@ -96,9 +110,26 @@ namespace Necrocis
             HandleZoom();
 
             // 부드러운 추적
-            Vector3 desiredPosition = target.position + offset;
-            Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
-            transform.position = smoothedPosition;
+            Vector3 desiredPosition = GetTargetViewCenter() + offset;
+            Vector3 unshakenPosition = transform.position - appliedCombatShakeOffset;
+            Vector3 smoothedPosition = Vector3.Lerp(unshakenPosition, desiredPosition, smoothSpeed * Time.deltaTime);
+            appliedCombatShakeOffset = EvaluateCombatShake();
+            transform.position = smoothedPosition + appliedCombatShakeOffset;
+        }
+
+        public void AddCombatImpulse(float strength, float duration)
+        {
+            if (strength <= 0f || duration <= 0f)
+            {
+                return;
+            }
+
+            float clampedStrength = Mathf.Min(Mathf.Max(0f, maximumCombatShake), strength);
+            combatShakeAmplitude = Mathf.Min(
+                Mathf.Max(0f, maximumCombatShake),
+                combatShakeAmplitude + clampedStrength);
+            combatShakeDuration = Mathf.Max(combatShakeDuration, duration);
+            combatShakeEndTime = Mathf.Max(combatShakeEndTime, Time.unscaledTime + duration);
         }
 
         /// <summary>
@@ -106,6 +137,12 @@ namespace Necrocis
         /// </summary>
         private void CalculateOffset()
         {
+            if (centerTargetInView)
+            {
+                float angleRadians = Mathf.Max(1f, Mathf.Abs(angle)) * Mathf.Deg2Rad;
+                distance = Mathf.Max(0f, height / Mathf.Tan(angleRadians) - targetForwardScreenOffset);
+            }
+
             offset = new Vector3(0, height, -distance);
         }
 
@@ -118,6 +155,7 @@ namespace Necrocis
             if (cam != null)
             {
                 cam.orthographic = useOrthographic;
+                cam.allowHDR = allowHdr;
                 if (useOrthographic)
                 {
                     cam.orthographicSize = orthoSize;
@@ -130,7 +168,7 @@ namespace Necrocis
             // 초기 위치
             if (target != null)
             {
-                transform.position = target.position + offset;
+                transform.position = GetTargetViewCenter() + offset;
             }
         }
 
@@ -169,6 +207,7 @@ namespace Necrocis
         public void SetTarget(Transform newTarget)
         {
             target = newTarget;
+            InvalidateRendererCache();
         }
 
         private bool TryAssignDefaultTarget()
@@ -182,6 +221,7 @@ namespace Necrocis
             if (player != null)
             {
                 target = player.transform;
+                InvalidateRendererCache();
                 return true;
             }
 
@@ -189,6 +229,7 @@ namespace Necrocis
             if (playerObject != null)
             {
                 target = playerObject.transform;
+                InvalidateRendererCache();
             }
 
             return target != null;
@@ -209,8 +250,88 @@ namespace Necrocis
         {
             if (target != null)
             {
-                transform.position = target.position + offset;
+                transform.position = GetTargetViewCenter() + offset;
+                appliedCombatShakeOffset = Vector3.zero;
             }
+        }
+
+        private Vector3 EvaluateCombatShake()
+        {
+            float remaining = combatShakeEndTime - Time.unscaledTime;
+            if (remaining <= 0f || combatShakeAmplitude <= 0f)
+            {
+                combatShakeAmplitude = 0f;
+                combatShakeDuration = 0f;
+                combatShakeEndTime = 0f;
+                return Vector3.zero;
+            }
+
+            float normalized = Mathf.Clamp01(remaining / Mathf.Max(0.01f, combatShakeDuration));
+            float damping = normalized * normalized;
+            float sample = Time.unscaledTime * Mathf.Max(1f, combatShakeFrequency);
+            float horizontal = Mathf.PerlinNoise(sample, 7.13f) * 2f - 1f;
+            float vertical = Mathf.PerlinNoise(11.71f, sample * 1.07f) * 2f - 1f;
+            Vector3 screenPlaneOffset = transform.right * horizontal + transform.up * vertical * 0.62f;
+            return screenPlaneOffset * combatShakeAmplitude * damping;
+        }
+
+        private Vector3 GetTargetViewCenter()
+        {
+            if (target == null || !useTargetRendererCenter)
+            {
+                return target != null ? target.position : Vector3.zero;
+            }
+
+            Renderer[] renderers = GetCachedTargetRenderers();
+            if (renderers == null || renderers.Length == 0)
+            {
+                return target.position;
+            }
+
+            bool hasBounds = false;
+            Bounds bounds = default;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer == null || !renderer.enabled)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            return hasBounds ? bounds.center : target.position;
+        }
+
+        private Renderer[] GetCachedTargetRenderers()
+        {
+            if (target == null)
+            {
+                return null;
+            }
+
+            if (cachedRendererTarget != target || cachedTargetRenderers == null)
+            {
+                cachedRendererTarget = target;
+                cachedTargetRenderers = target.GetComponentsInChildren<Renderer>();
+            }
+
+            return cachedTargetRenderers;
+        }
+
+        private void InvalidateRendererCache()
+        {
+            cachedRendererTarget = null;
+            cachedTargetRenderers = null;
         }
 
 #if UNITY_EDITOR

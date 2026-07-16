@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   midBossArena:
     enabled: 1
-    onlyEnableOnLargeMaps: 1
+    onlyEnableOnLargeMaps: 0
     minimumMapWidth: 300
     minimumMapHeight: 300
     useCustomCenter: 0
@@ -37,17 +37,135 @@ MonoBehaviour:
     interiorFogRevealedAlpha: 0
     fogRevealDuration: 1.4
     interiorFogSortingOrderOffset: 3000
+    returnPortalSprite: {fileID: 0}
+    returnPortalScale: {x: 1, y: 1, z: 1}
+    bossContactDamage: 1
+    bossContactDamageCooldown: 1
+    bossContactPushSpeed: 5
     boss:
-      displayName: MidBoss
-      useCustomBossRule: 0
+      displayName: StomachBoss
+      useCustomBossRule: 1
+      bossRule:
+        name: StomachBoss
+        density: 0
+        minDistance: 8
+        poissonSalt: 7203
+        allowedRegions:
+        maxAlive: 1
+        activationRadius: 0
+        respawnCooldown: 0
+        spawnRadius: 0
+        moveSpeed: 0.5
+        stoppingDistance: 0.1
+        wanderRadius: 4
+        chaseRadius: 16
+        leashRadius: 24
+        idleDelayRange: {x: 0.5, y: 1.2}
+        maxHealth: 10
+        attackDamage: 3
+        attackRange: 1.6
+        attackCooldown: 1
+        expReward: 0
+        additionalBaseStats: []
+        separationDistance: 0
+        separationStrength: 0
+        heightOffset: 0
+        scale: {x: 1.1, y: 1.1, z: 1.1}
+        sortingOrder: 1000
+        useBillboard: 1
+        useYSort: 1
+        animationSpeed: 0.14
+        addCollider: 1
+        isTrigger: 0
+        colliderSize: {x: 0.8, y: 1.15, z: 0.8}
+        colliderCenter: {x: 0, y: 0.58, z: 0}
+        idleSprites:
+        - {fileID: 123110001, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110002, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110003, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110004, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        idleSpritesUp:
+        - {fileID: 123120001, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120002, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120003, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120004, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        idleSpritesDown:
+        - {fileID: 123100001, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100002, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100003, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100004, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        moveSprites:
+        - {fileID: 123110001, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110002, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110003, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        - {fileID: 123110004, guid: 4f877c539aa844a09b1fc7a35fd2800d, type: 3}
+        moveSpritesUp:
+        - {fileID: 123120001, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120002, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120003, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        - {fileID: 123120004, guid: b03f7353acba24ed39fd49de9203cc50, type: 3}
+        moveSpritesDown:
+        - {fileID: 123200001, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200002, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200003, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200004, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200005, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200006, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200007, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        - {fileID: 123200008, guid: a0727c488d0be46ff8ae6835b6671a76, type: 3}
+        attackSprites:
+        - {fileID: 123300001, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        - {fileID: 123300002, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        - {fileID: 123300003, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        - {fileID: 123300004, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        - {fileID: 123300005, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        - {fileID: 123300006, guid: e3b0a703ad1c645c78237194005d7e92, type: 3}
+        attackSpritesUp: []
+        attackSpritesDown: []
+        attackAnimationSpeed: 0.1
+        isRanged: 0
+        projectileSpeed: 8
+        projectileLifeTime: 3
+        projectileSprite: {fileID: 0}
+        projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+        projectileSpawnOffset: 0.5
+        expandColliderOnAttack: 0
+        attackColliderSize: {x: 2, y: 2, z: 2}
+        attackColliderCenter: {x: 0, y: 0.55, z: 0}
+        deathSprites:
+        - {fileID: 123100001, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100002, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100003, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        - {fileID: 123100004, guid: 33c3ab42869654526b4729147e14dd90, type: 3}
+        deathAnimationSpeed: 0.15
+        isElite: 0
+        tintColor: {r: 1, g: 1, b: 1, a: 1}
+        killTriggerEnemyName:
+        killTriggerCount: 0
+        splitsOnDeath: 0
+        splitCount: 0
+        splitEnemyName:
+        splitVfxSprites: []
+        splitVfxScale: 3
+        splitVfxSpeed: 0.08
+        splitVfxDuration: 0.6
+        chargesAtPlayer: 0
+        chargeSpeed: 6
+        chargeAccelTime: 0.3
+        leavesDebrisOnDeath: 0
+        debrisDuration: 5
+        debrisAggroRadius: 8
+        debrisVfxSprites: []
+        debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
       useEnemyRuleFallback: 1
       fallbackEnemyRuleIndex: 0
-      patternType: 0
+      patternType: 4
       overrideStats: 0
       maxHealthMultiplier: 1
       attackDamageMultiplier: 1
       moveSpeedMultiplier: 1
-      scaleMultiplier: {x: 1, y: 1, z: 1}
+      scaleMultiplier: {x: 4, y: 4, z: 4}
       minimumMaxHealth: 0
       intestinePattern:
         phase2HealthRatio: 0.5
@@ -73,6 +191,7 @@ MonoBehaviour:
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
+        parasiteAttackRange: 1.1
         parasiteAttackCooldown: 1.3
         parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
         stompMinDelay: 7
@@ -81,11 +200,132 @@ MonoBehaviour:
         stompDamage: 2
         stompSlowRatio: 0.3
         stompSlowDuration: 3
-        phase1Color: {r: 0.72, g: 0.45, b: 0.24, a: 1}
-        phase2Color: {r: 0.95, g: 0.32, b: 0.18, a: 1}
         dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
         parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
         shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      liverPattern:
+        phase2HealthRatio: 0.5
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        phase2AttackDamage: 2
+        phase2MoveSpeed: 1.5
+        bloodBombRange: 7
+        bloodBombExplosionRadius: 2.5
+        bloodBombFuseTime: 1
+        bloodBombCooldown: 4
+        attackPowerDebuffRatio: 0.15
+        attackPowerDebuffDuration: 5
+        bloodBombArcHeight: 1.4
+        bloodBombProjectileScale: 4
+        bloodBombSprite: {fileID: 473467103, guid: a71f4732a4349ab45b4b1d038597c5f8, type: 3}
+        healingPosePreDelay: 1
+        healingPoseCooldown: 15
+        healingPoseDuration: 5
+        damageHealRatio: 0.7
+        phase1PreferredDistanceRatio: 0.72
+        phase2PreferredDistance: 2.6
+        roamRadius: 9
+        bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
+        explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      stomachPattern:
+        phase2HealthRatio: 0.65
+        phase1AttackDamage: 3
+        phase1MoveSpeed: 0.5
+        phase2AttackDamage: 3
+        phase2MoveSpeed: 1
+        phase1MeleeRange: 1.6
+        phase1MeleeCooldown: 1.7
+        chargeSpeed: 4
+        chargeCooldown: 5
+        chargeDamage: 4
+        chargeKnockbackDistance: 2
+        chargeWindup: 0.35
+        chargeDuration: 1.2
+        chargeHitRadius: 1.25
+        phase2PatternInterval: 3
+        phase2PreferredDistance: 4
+        roamRadius: 9
+        acidRange: 9
+        acidDamage: 2
+        acidDebuffDuration: 5
+        acidTickInterval: 1
+        acidTickDamage: 1
+        acidProjectileTravelTime: 0.55
+        acidArcHeight: 0.8
+        acidProjectileScale: 0.9
+        acidHitRadius: 1.15
+        suctionRange: 4.2
+        suctionDuration: 0.4
+        suctionStopDistance: 1
+        spitDelay: 0.35
+        spitReturnDuration: 0.18
+        shortRangeDamage: 5
+        shortRangeRadius: 2.2
+        suctionAttackSprites:
+        - {fileID: 123400001, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400002, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400003, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400004, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400005, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400006, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400007, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400008, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400009, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400010, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400011, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        - {fileID: 123400012, guid: c1a8a52684c44d47aa5f900191ee3601, type: 3}
+        suctionAttackAnimationSpeed: 0.08
+        acidColor: {r: 0.55, g: 0.95, b: 0.15, a: 0.95}
+        acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
+        suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
+        leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      lungPattern:
+        phase1BrotherHealth: 40
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        windGustMoveSpeed: 3
+        windGustInterval: 5
+        windGustDuration: 1.25
+        brotherSpacing: 3.2
+        phase1GasRange: 7
+        phase1GasCooldown: 3.5
+        phase1GasKnockback: 1
+        phase2MaxHealth: 100
+        phase2AttackDamage: 4
+        phase2MoveSpeed: 1.5
+        phase2GasRange: 10
+        phase2GasCooldown: 4
+        phase2GasKnockback: 1.2
+        diveCooldown: 8
+        diveWindup: 0.55
+        diveTravelTime: 0.65
+        diveArcHeight: 4
+        diveLandingRadius: 1.45
+        diveLandingDamage: 3
+        diveKnockback: 1.4
+        gasProjectileSpeed: 8
+        gasProjectileRadius: 0.7
+        gasProjectileScale: 1
+        gasWindup: 0.25
+        phase1ContactDamage: 1
+        phase2ContactDamage: 2
+        contactRadius: 1.05
+        contactCooldown: 1.1
+        phase1PreferredDistance: 5.2
+        phase2PreferredDistance: 4.2
+        roamRadius: 10
+        gasColor: {r: 0.72, g: 0.95, b: 0.9, a: 0.72}
+        windColor: {r: 0.78, g: 0.9, b: 1, a: 0.34}
+        diveColor: {r: 0.5, g: 0.85, b: 1, a: 0.42}
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1

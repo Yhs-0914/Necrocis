@@ -36,15 +36,6 @@ namespace Necrocis
         private CharacterStats runtimeStats; // 실제 스탯 데이터를 관리하는 CharacterStats 컴포넌트
         private bool initialized;             // 기본 스탯 초기화 완료 여부
 
-        // 기본 스탯
-        private const float BASE_MAX_HEALTH = 10f;
-        private const float BASE_MOVE_SPEED = 10f;
-        private const float BASE_ATTACK_POWER = 30f;
-        private const float BASE_ATTACK_SPEED = 1f;
-        private const float BASE_ATTACK_RANGE = 1f;
-        private const float BASE_MAGIC = 20f;
-        private const float BASE_SKILL_COOLDOWN_REDUCTION = 0f;
-
         // CharacterStats의 이벤트를 외부에 전달 (중계 패턴)
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged
         {
@@ -116,16 +107,7 @@ namespace Necrocis
 
         private void ApplyDefaultBaseStats(bool resetCurrentHealth)
         {
-            RuntimeStats.ConfigureBaseStats(new CharacterStatValue[]
-            {
-                new CharacterStatValue(CharacterStatType.MaxHealth, BASE_MAX_HEALTH),
-                new CharacterStatValue(CharacterStatType.MoveSpeed, BASE_MOVE_SPEED),
-                new CharacterStatValue(CharacterStatType.AttackPower, BASE_ATTACK_POWER),
-                new CharacterStatValue(CharacterStatType.AttackSpeed, BASE_ATTACK_SPEED),
-                new CharacterStatValue(CharacterStatType.AttackRange, BASE_ATTACK_RANGE),
-                new CharacterStatValue(CharacterStatType.Magic, BASE_MAGIC),
-                new CharacterStatValue(CharacterStatType.SkillCooldownReduction, BASE_SKILL_COOLDOWN_REDUCTION),
-            }, resetCurrentHealth);
+            RuntimeStats.ConfigureBaseStats(LevelUpManager.Config.BuildPlayerBaseStats(), resetCurrentHealth);
         }
         // ConfigureBaseStats: 관련 설정과 상태를 구성합니다.
 
@@ -135,10 +117,10 @@ namespace Necrocis
                 moveSpeed,
                 maxHealth,
                 attackPower,
-                BASE_ATTACK_SPEED,
-                BASE_ATTACK_RANGE,
-                BASE_MAGIC,
-                BASE_SKILL_COOLDOWN_REDUCTION,
+                LevelUpManager.Config.GetPlayerBaseStat(CharacterStatType.AttackSpeed),
+                LevelUpManager.Config.GetPlayerBaseStat(CharacterStatType.AttackRange),
+                LevelUpManager.Config.GetPlayerBaseStat(CharacterStatType.Magic),
+                LevelUpManager.Config.GetPlayerBaseStat(CharacterStatType.SkillCooldownReduction),
                 resetCurrentHealth);
         }
 

@@ -58,6 +58,7 @@ namespace Necrocis
         private void ReturnToHub()
         {
             Debug.Log("[ReturnPortal] 허브로 귀환!");
+            AudioManager.Instance?.PlaySFX("PortalEnter");
 
             if (GameManager.Instance != null)
             {

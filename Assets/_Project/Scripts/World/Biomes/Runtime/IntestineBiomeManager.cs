@@ -278,7 +278,7 @@ namespace Necrocis
             if (billboard != null && billboard.enabled)
             {
                 billboard.ResetBaseLocalPosition(obj.transform.localPosition);
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
 
             SpriteYSort sorter = obj.GetComponent<SpriteYSort>();

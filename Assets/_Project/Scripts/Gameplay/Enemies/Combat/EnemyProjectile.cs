@@ -10,9 +10,10 @@ namespace Necrocis
     public class EnemyProjectile : MonoBehaviour
     {
         private const string PoolRootName = "__EnemyProjectilePool";
-        private const float HitRadius = 0.8f;
+        private const float MinHitRadius = 0.15f;
 
         private static readonly Stack<EnemyProjectile> Pool = new Stack<EnemyProjectile>();
+        private static readonly List<EnemyProjectile> ActiveProjectiles = new List<EnemyProjectile>();
         private static Transform poolRoot;
 
         private static Sprite defaultProjectileSprite;
@@ -25,6 +26,42 @@ namespace Necrocis
         private float lifeTime;
         private float elapsed;
         private bool launched;
+        private EnemyController ownerEnemy;
+        private PlayerController cachedPlayer;
+        private Collider cachedPlayerCollider;
+        private Health cachedPlayerHealth;
+
+        public static IReadOnlyList<EnemyProjectile> ActiveEnemyProjectiles => ActiveProjectiles;
+        public bool IsLaunched => launched && gameObject.activeSelf;
+
+        public static int ReturnProjectilesOwnedBy(EnemyController owner)
+        {
+            if (owner == null)
+            {
+                return 0;
+            }
+
+            int returnedCount = 0;
+            for (int i = ActiveProjectiles.Count - 1; i >= 0; i--)
+            {
+                EnemyProjectile projectile = ActiveProjectiles[i];
+                if (projectile == null)
+                {
+                    ActiveProjectiles.RemoveAt(i);
+                    continue;
+                }
+
+                if (projectile.ownerEnemy != owner)
+                {
+                    continue;
+                }
+
+                projectile.ReturnToPool();
+                returnedCount++;
+            }
+
+            return returnedCount;
+        }
 
         // ─────────────────────────────────
         // 풀링 API
@@ -57,10 +94,14 @@ namespace Necrocis
             proj.launched = false;
             proj.elapsed = 0f;
             proj.gameObject.SetActive(true);
+            if (!ActiveProjectiles.Contains(proj))
+            {
+                ActiveProjectiles.Add(proj);
+            }
             return proj;
         }
 
-        public void Launch(Vector3 direction, float damage, float speed, float lifeTime)
+        public void Launch(Vector3 direction, float damage, float speed, float lifeTime, EnemyController sourceEnemy = null)
         {
             moveDirection = direction.normalized;
             this.damage = damage;
@@ -68,16 +109,24 @@ namespace Necrocis
             this.lifeTime = lifeTime;
             elapsed = 0f;
             launched = true;
+            ownerEnemy = sourceEnemy;
         }
 
         private void ReturnToPool()
         {
             if (!launched && !gameObject.activeSelf) return;
+            ActiveProjectiles.Remove(this);
             launched = false;
+            ownerEnemy = null;
             gameObject.SetActive(false);
             EnsurePoolRoot();
             transform.SetParent(poolRoot, false);
             Pool.Push(this);
+        }
+
+        public void Deflect()
+        {
+            ReturnToPool();
         }
 
         // ─────────────────────────────────
@@ -96,6 +145,8 @@ namespace Necrocis
                 return;
             }
 
+            Vector3 previousPosition = transform.position;
+
             // 이동
             transform.position += moveDirection * speed * Time.deltaTime;
 
@@ -103,23 +154,164 @@ namespace Necrocis
             Camera activeCamera = DontStarveCamera.GetActiveCamera();
             if (activeCamera != null)
             {
-                transform.rotation = activeCamera.transform.rotation;
+                Quaternion cameraRotation = activeCamera.transform.rotation;
+                if (transform.rotation != cameraRotation)
+                {
+                    transform.rotation = cameraRotation;
+                }
             }
 
             // 거리 기반 플레이어 충돌 판정
-            if (PlayerController.Instance == null) return;
-
-            Vector3 toPlayer = PlayerController.Instance.transform.position - transform.position;
-            toPlayer.y = 0f;
-            if (toPlayer.sqrMagnitude <= HitRadius * HitRadius)
+            if (!TryGetPlayerHitContext(out PlayerController player, out Collider playerCollider, out Health playerHealth))
             {
-                Health playerHealth = PlayerController.Instance.GetComponent<Health>();
+                return;
+            }
+
+            if (IsTouchingPlayer(player, playerCollider, previousPosition, transform.position))
+            {
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
-                    playerHealth.TakeDamage(damage);
+                    playerHealth.TakeDamage(damage, ownerEnemy);
                 }
+                CombatVfx.PlayHostileProjectileImpact(transform.position, moveDirection);
                 ReturnToPool();
             }
+        }
+
+        private bool TryGetPlayerHitContext(out PlayerController player, out Collider playerCollider, out Health playerHealth)
+        {
+            player = PlayerController.Instance;
+            if (player == null)
+            {
+                playerCollider = null;
+                playerHealth = null;
+                cachedPlayer = null;
+                cachedPlayerCollider = null;
+                cachedPlayerHealth = null;
+                return false;
+            }
+
+            if (cachedPlayer != player)
+            {
+                cachedPlayer = player;
+                cachedPlayerCollider = player.HitCollider;
+                cachedPlayerHealth = player.HealthComponent;
+            }
+            else
+            {
+                if (cachedPlayerCollider == null)
+                {
+                    cachedPlayerCollider = player.HitCollider;
+                }
+
+                if (cachedPlayerHealth == null)
+                {
+                    cachedPlayerHealth = player.HealthComponent;
+                }
+            }
+
+            playerCollider = cachedPlayerCollider;
+            playerHealth = cachedPlayerHealth;
+            return true;
+        }
+
+        private bool IsTouchingPlayer(PlayerController player, Collider playerCollider, Vector3 previousPosition, Vector3 currentPosition)
+        {
+            if (player == null)
+            {
+                return false;
+            }
+
+            float hitRadius = GetCurrentHitRadius();
+            if (playerCollider != null && playerCollider.enabled)
+            {
+                Bounds playerBounds = playerCollider.bounds;
+                return SegmentIntersectsExpandedBoundsPlanar(previousPosition, currentPosition, playerBounds, hitRadius);
+            }
+
+            float fallbackRadius = hitRadius + 0.35f;
+            return SegmentDistanceSqrPlanar(previousPosition, currentPosition, player.transform.position) <= fallbackRadius * fallbackRadius;
+        }
+
+        private float GetCurrentHitRadius()
+        {
+            Vector3 scale = transform.lossyScale;
+            float visualRadius = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z)) * 0.5f;
+            return Mathf.Max(MinHitRadius, visualRadius);
+        }
+
+        private static bool SegmentIntersectsExpandedBoundsPlanar(Vector3 start, Vector3 end, Bounds bounds, float expansion)
+        {
+            float minX = bounds.min.x - expansion;
+            float maxX = bounds.max.x + expansion;
+            float minZ = bounds.min.z - expansion;
+            float maxZ = bounds.max.z + expansion;
+
+            if (PointInsideBoundsPlanar(start, minX, maxX, minZ, maxZ)
+                || PointInsideBoundsPlanar(end, minX, maxX, minZ, maxZ))
+            {
+                return true;
+            }
+
+            Vector3 delta = end - start;
+            float tMin = 0f;
+            float tMax = 1f;
+            if (!ClipSegmentAxis(start.x, delta.x, minX, maxX, ref tMin, ref tMax))
+            {
+                return false;
+            }
+
+            return ClipSegmentAxis(start.z, delta.z, minZ, maxZ, ref tMin, ref tMax);
+        }
+
+        private static bool PointInsideBoundsPlanar(Vector3 point, float minX, float maxX, float minZ, float maxZ)
+        {
+            return point.x >= minX && point.x <= maxX
+                && point.z >= minZ && point.z <= maxZ;
+        }
+
+        private static bool ClipSegmentAxis(float start, float delta, float min, float max, ref float tMin, ref float tMax)
+        {
+            if (Mathf.Abs(delta) < 0.00001f)
+            {
+                return start >= min && start <= max;
+            }
+
+            float inv = 1f / delta;
+            float t1 = (min - start) * inv;
+            float t2 = (max - start) * inv;
+            if (t1 > t2)
+            {
+                float tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
+
+            tMin = Mathf.Max(tMin, t1);
+            tMax = Mathf.Min(tMax, t2);
+            return tMin <= tMax;
+        }
+
+        private static float SegmentDistanceSqrPlanar(Vector3 start, Vector3 end, Vector3 point)
+        {
+            Vector2 a = new Vector2(start.x, start.z);
+            Vector2 b = new Vector2(end.x, end.z);
+            Vector2 p = new Vector2(point.x, point.z);
+            Vector2 ab = b - a;
+            float abSqr = ab.sqrMagnitude;
+            if (abSqr <= 0.00001f)
+            {
+                return (p - a).sqrMagnitude;
+            }
+
+            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / abSqr);
+            Vector2 closest = a + ab * t;
+            return (p - closest).sqrMagnitude;
+        }
+
+        private void OnDisable()
+        {
+            ActiveProjectiles.Remove(this);
         }
 
         // ─────────────────────────────────

@@ -27,7 +27,11 @@ namespace Necrocis
 
         [Header("게임 상태")]
         [SerializeField] private GameState currentState = GameState.InHub;
+        [SerializeField] private GameDifficulty currentDifficulty = GameDifficulty.Normal;
         [SerializeField] private BiomeType currentBiome = BiomeType.None;
+
+        [Header("성능")]
+        [SerializeField, Min(-1)] private int targetFrameRate = 60;
 
         [Header("보스 부산물 (목) 수집 현황")]
         [SerializeField] private bool hasIntestineRelic = false;  // 장 보스 부산물
@@ -48,6 +52,8 @@ namespace Necrocis
 
         // 프로퍼티
         public GameState CurrentState => currentState;
+        public GameDifficulty CurrentDifficulty => currentDifficulty;
+        public bool IsNormalDifficulty => currentDifficulty == GameDifficulty.Normal;
         public BiomeType CurrentBiome => currentBiome;
         public int CollectedRelicCount => (hasIntestineRelic ? 1 : 0) + (hasLiverRelic ? 1 : 0)
                                         + (hasStomachRelic ? 1 : 0) + (hasLungRelic ? 1 : 0);
@@ -63,6 +69,8 @@ namespace Necrocis
 
             Instance = this;
             EnsureEventsInitialized();
+            LoadPersistentBossProgress();
+            Application.targetFrameRate = targetFrameRate > 0 ? targetFrameRate : -1;
             DontDestroyOnLoad(gameObject);
         }
 
@@ -128,6 +136,8 @@ namespace Necrocis
                 case BiomeType.Lung: hasLungRelic = true; break;
             }
 
+            BossProgress.MarkDefeated(biome);
+
             Debug.Log($"[GameManager] {biome} 부산물 획득! (총 {CollectedRelicCount}/4)");
 
             if (HasAllRelics)
@@ -150,6 +160,28 @@ namespace Necrocis
                 BiomeType.Lung => hasLungRelic,
                 _ => false
             };
+        }
+
+        public void ResetBossProgress()
+        {
+            BossProgress.ResetAll();
+            hasIntestineRelic = false;
+            hasLiverRelic = false;
+            hasStomachRelic = false;
+            hasLungRelic = false;
+            intestineEntryCount = 0;
+            liverEntryCount = 0;
+            stomachEntryCount = 0;
+            lungEntryCount = 0;
+            Debug.Log("[GameManager] 보스 클리어 기록을 초기화했습니다.");
+        }
+
+        private void LoadPersistentBossProgress()
+        {
+            hasIntestineRelic |= BossProgress.IsDefeated(BiomeType.Intestine);
+            hasLiverRelic |= BossProgress.IsDefeated(BiomeType.Liver);
+            hasStomachRelic |= BossProgress.IsDefeated(BiomeType.Stomach);
+            hasLungRelic |= BossProgress.IsDefeated(BiomeType.Lung);
         }
 
         /// <summary>

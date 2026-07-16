@@ -924,11 +924,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: ca2e1ca2-654a-4741-bd27-993c669796fe
+  cloudProjectId: 410a3cb9-66e6-42bb-a4de-17adda4a213f
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Nc_Map
-  organizationId: yuhyeongsig20020914
+  projectName: Necrocis
+  organizationId: hoon3771
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

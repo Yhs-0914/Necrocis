@@ -54,6 +54,13 @@ namespace Necrocis
 
         private void HandlePlayerDied()
         {
+            PlayerController player = PlayerController.Instance;
+            PlayerDeathScreen deathScreen = player != null ? player.GetComponent<PlayerDeathScreen>() : null;
+            if (deathScreen != null && deathScreen.IsShowing)
+            {
+                return;
+            }
+
             StartCoroutine(ShowRoutine());
         }
 
@@ -77,6 +84,7 @@ namespace Necrocis
 
         private void Restart()
         {
+            AudioManager.Instance?.PlaySFX("ButtonClick");
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
 
