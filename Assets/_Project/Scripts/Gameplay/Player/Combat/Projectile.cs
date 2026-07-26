@@ -635,14 +635,16 @@ namespace Necrocis
 
         private static void SpawnExplosionVisual(Vector3 center, float radius)
         {
+            Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/explosive_blood_cell_effect");
             PlayerItemCombatEffects.SpawnPooledCircleVisual(
                 ExplosionVisualPoolName,
                 "ExplosiveBloodCellFx",
                 new Vector3(center.x, center.y + 0.08f, center.z),
-                Mathf.Max(0.2f, radius * 2f),
-                new Color(1f, 0.26f, 0.12f, 0.55f),
+                Mathf.Max(0.2f, radius * 2f * 0.85f),
+                effectSprite != null ? Color.white : new Color(1f, 0.26f, 0.12f, 0.55f),
                 5100,
-                0.2f);
+                0.2f,
+                effectSprite);
         }
 
         private float GetRemainingRange()
@@ -689,6 +691,75 @@ namespace Necrocis
     {
         private static Sprite circleSprite;
         private static Material spriteMaterial;
+        private static readonly Dictionary<string, Sprite> ResourceSprites = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<string, Material> ResourceSpriteMaterials = new Dictionary<string, Material>();
+
+        public static Sprite LoadResourceSprite(string resourcePath, float pixelsPerUnit = 100f)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return null;
+            }
+
+            if (ResourceSprites.TryGetValue(resourcePath, out Sprite cachedSprite))
+            {
+                return cachedSprite;
+            }
+
+            Sprite sprite = Resources.Load<Sprite>(resourcePath);
+            if (sprite == null)
+            {
+                Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+                if (texture != null)
+                {
+                    sprite = Sprite.Create(
+                        texture,
+                        new Rect(0f, 0f, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f),
+                        Mathf.Max(1f, pixelsPerUnit));
+                    sprite.name = texture.name;
+                }
+            }
+
+            ResourceSprites[resourcePath] = sprite;
+            return sprite;
+        }
+
+        public static float GetUniformScaleForWorldSize(Sprite sprite, float targetWorldSize)
+        {
+            float spriteSize = sprite != null
+                ? Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y)
+                : 1f;
+            return Mathf.Max(0.01f, targetWorldSize) / Mathf.Max(0.0001f, spriteSize);
+        }
+
+        public static Material GetResourceSpriteMaterial(string resourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return GetSpriteMaterial();
+            }
+
+            if (ResourceSpriteMaterials.TryGetValue(resourcePath, out Material cachedMaterial))
+            {
+                return cachedMaterial;
+            }
+
+            Sprite sprite = LoadResourceSprite(resourcePath);
+            Material baseMaterial = GetSpriteMaterial();
+            if (sprite == null || baseMaterial == null)
+            {
+                return baseMaterial;
+            }
+
+            Material material = new Material(baseMaterial)
+            {
+                name = $"Runtime_{sprite.name}_Material",
+                mainTexture = sprite.texture
+            };
+            ResourceSpriteMaterials[resourcePath] = material;
+            return material;
+        }
 
         public static Sprite GetCircleSprite()
         {

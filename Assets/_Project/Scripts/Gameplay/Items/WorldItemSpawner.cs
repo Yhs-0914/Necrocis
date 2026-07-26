@@ -256,6 +256,68 @@ namespace Necrocis
             return true;
         }
 
+        public bool TrySpawnItemAt(
+            string itemId,
+            Vector3 worldPosition,
+            bool snapToWalkableGround = true,
+            bool ignoreBiomeScope = false)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            PlayerItemManager itemManager = PlayerItemManager.Instance;
+            if (itemManager == null)
+            {
+                return false;
+            }
+
+            if (itemManager.ItemEntries == null || itemManager.ItemEntries.Count == 0)
+            {
+                itemManager.PopulateBasicProjectileTemplateItems();
+            }
+
+            if (!itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry) || entry == null)
+            {
+                return false;
+            }
+
+            BiomeManager biome = BiomeManager.Active;
+            if (!ignoreBiomeScope && spawnOnlyInIntestine && (biome == null || biome.BiomeType != BiomeType.Intestine))
+            {
+                return false;
+            }
+
+            Vector3 spawnPos = worldPosition;
+            if (snapToWalkableGround && biome != null)
+            {
+                Vector2Int grid = biome.WorldToGrid(worldPosition);
+                if (biome.IsValidPosition(grid.x, grid.y) && biome.IsWalkable(grid.x, grid.y))
+                {
+                    spawnPos = biome.GridToWorld(grid.x, grid.y);
+                    spawnPos.y = biome.GetGroundHeight(grid.x, grid.y) + itemGroundOffset;
+                }
+                else if (!TryFindNearestWalkableSpawnPosition(biome, worldPosition, 2.5f, out spawnPos))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                spawnPos.y += itemGroundOffset;
+            }
+
+            SpawnItemObject(entry, spawnPos);
+            spawnedPositions.Add(spawnPos);
+            return true;
+        }
+
+        public void SetAutoSpawnOnStart(bool enabled)
+        {
+            autoSpawnOnStart = enabled;
+        }
+
         private List<PlayerItemManager.PlayerItemEntry> BuildCandidates(IReadOnlyList<PlayerItemManager.PlayerItemEntry> entries)
         {
             List<PlayerItemManager.PlayerItemEntry> result = new List<PlayerItemManager.PlayerItemEntry>();
@@ -306,6 +368,36 @@ namespace Necrocis
                 {
                     return true;
                 }
+            }
+
+            spawnPosition = default;
+            return false;
+        }
+
+        private bool TryFindNearestWalkableSpawnPosition(
+            BiomeManager biome,
+            Vector3 centerWorldPosition,
+            float radius,
+            out Vector3 spawnPosition)
+        {
+            float safeRadius = Mathf.Max(0.5f, radius);
+            for (int i = 0; i < maxPositionAttemptsPerItem; i++)
+            {
+                Vector2 offset = Random.insideUnitCircle * safeRadius;
+                Vector3 candidateWorld = new Vector3(
+                    centerWorldPosition.x + offset.x,
+                    centerWorldPosition.y,
+                    centerWorldPosition.z + offset.y);
+
+                Vector2Int grid = biome.WorldToGrid(candidateWorld);
+                if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
+                {
+                    continue;
+                }
+
+                spawnPosition = biome.GridToWorld(grid.x, grid.y);
+                spawnPosition.y = biome.GetGroundHeight(grid.x, grid.y) + itemGroundOffset;
+                return true;
             }
 
             spawnPosition = default;

@@ -42,11 +42,10 @@ namespace Necrocis
             endTime = startTime + lifeDuration;
             nextTickTime = Time.time;
             EnsureVisual();
-            visualRenderer.sprite = TextureSpriteCache.GetCircleSprite();
-            visualRenderer.color = new Color(0.32f, 0.95f, 0.28f, 0.42f);
-            visualRenderer.sortingOrder = 1200;
             visualRenderer.enabled = true;
-            transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
+            transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
+                visualRenderer != null ? visualRenderer.sprite : null,
+                Mathf.Max(0.2f, radius * 2f * 0.85f));
         }
 
         private void Update()
@@ -111,6 +110,12 @@ namespace Necrocis
                 visualRenderer = gameObject.AddComponent<SpriteRenderer>();
             }
 
+            Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/acidic_rupture_effect");
+            visualRenderer.sprite = effectSprite != null ? effectSprite : TextureSpriteCache.GetCircleSprite();
+            visualRenderer.color = effectSprite != null
+                ? new Color(1f, 1f, 1f, 0.72f)
+                : new Color(0.32f, 0.95f, 0.28f, 0.42f);
+            visualRenderer.sortingOrder = 1200;
         }
 
         private void UpdateVisual()
@@ -122,9 +127,12 @@ namespace Necrocis
 
             float elapsed = Mathf.Clamp01((Time.time - startTime) / Mathf.Max(0.01f, lifeDuration));
             float pulse = 1f + Mathf.Sin(Time.time * 8f) * 0.05f;
-            transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f) * pulse;
+            float effectScale = TextureSpriteCache.GetUniformScaleForWorldSize(
+                visualRenderer.sprite,
+                Mathf.Max(0.2f, radius * 2f * 0.85f));
+            transform.localScale = Vector3.one * effectScale * pulse;
             Color color = visualRenderer.color;
-            color.a = Mathf.Lerp(0.42f, 0.08f, elapsed);
+            color.a = Mathf.Lerp(0.72f, 0.08f, elapsed);
             visualRenderer.color = color;
         }
 

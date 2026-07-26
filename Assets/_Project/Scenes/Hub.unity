@@ -10933,7 +10933,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   beamOverlapBufferSize: 48
   beamVerticalHalfHeight: 2.5
-  beamHeightOffset: 0.8
+  beamHeightOffset: -0.3
   beamVisualDuration: 0.1
   attackCooldown: 1
   cellProliferationDelay: 0.5
@@ -11184,309 +11184,309 @@ MonoBehaviour:
     displayName: "\uC774\uC911\uD575"
     description: "\uBC1C\uC0AC\uCCB4 2\uAC1C \uBC1C\uC0AC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 0fdf7b5b219f4ad1982fc647c05a9b8a, type: 3}
     implementation: {fileID: 0}
   - itemId: triple_core
     displayName: "\uC0BC\uC911\uD575"
     description: "\uBC1C\uC0AC\uCCB4 3\uAC1C \uBC1C\uC0AC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 5dd1a4e6e42049c2a47562b7c4f40f2a, type: 3}
     implementation: {fileID: 0}
   - itemId: homing_cell
     displayName: "\uC720\uB3C4 \uC138\uD3EC"
     description: "\uC801\uC744 \uCD94\uC801\uD558\uB294 \uC720\uB3C4 \uD22C\uC0AC\uCCB4"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 81d1d7f20f304bb0be0a9cf202b92d1a, type: 3}
     implementation: {fileID: 0}
   - itemId: hypertrophy_cell
     displayName: "\uBE44\uB300 \uC138\uD3EC"
     description: "\uD22C\uC0AC\uCCB4 \uD06C\uAE30 \uC99D\uAC00 + \uACF5\uACA9 \uBC94\uC704
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: c4f57f7fd6eb454f8d5d6f18f5bc5b2d, type: 3}
     implementation: {fileID: 0}
   - itemId: reflux_organ
     displayName: "\uC5ED\uB958 \uC7A5\uAE30"
     description: "\uD22C\uC0AC\uCCB4\uAC00 \uB418\uB3CC\uC544\uC624\uB294 \uBD80\uBA54\uB791
       \uD615\uD0DC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9a7e0131c7664cdb94ca5f2cf389a101, type: 3}
     implementation: {fileID: 0}
   - itemId: piercing_mucus
     displayName: "\uAD00\uD1B5 \uC810\uC561"
     description: "\uC801 \uC5EC\uB7EC \uBA85\uC744 \uAD00\uD1B5\uD558\uB294 \uACF5\uACA9"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: b6629a0e59624c9a8df06efecc705d51, type: 3}
     implementation: {fileID: 0}
   - itemId: laryngeal_nerve
     displayName: "\uD6C4\uB450 \uC2E0\uACBD"
     description: "\uB4A4\uCABD\uC73C\uB85C \uCD94\uAC00 \uD22C\uC0AC\uCCB4 \uBC1C\uC0AC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 7c24bb9d53fa45fda66af0e0bde10276, type: 3}
     implementation: {fileID: 0}
   - itemId: beam_organ
     displayName: "\uAD11\uC120 \uAE30\uAD00"
     description: "\uC77C\uBC18 \uD22C\uC0AC\uCCB4 \uB300\uC2E0 \uB808\uC774\uC800
       \uACF5\uACA9"
     category: 0
-    icon: {fileID: 1227240970}
+    icon: {fileID: 21300000, guid: 0a725d4bc1ca43be955108ef3f6b412c, type: 3}
     implementation: {fileID: 0}
   - itemId: split_tissue
     displayName: "\uBD84\uC5F4 \uC870\uC9C1"
     description: "\uC801 \uBA85\uC911 \uC2DC \uC591\uC606\uC73C\uB85C \uCD94\uAC00
       \uD22C\uC0AC\uCCB4 \uC0DD\uC131"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: f22457e2296c4e5bb8a989d08d3fe3a4, type: 3}
     implementation: {fileID: 0}
   - itemId: explosive_blood_cell
     displayName: "\uD3ED\uBC1C \uD608\uAD6C"
     description: "\uD22C\uC0AC\uCCB4\uAC00 \uBC94\uC704 \uD3ED\uBC1C \uACF5\uACA9\uC73C\uB85C
       \uBCC0\uACBD"
     category: 0
-    icon: {fileID: 1821789685}
+    icon: {fileID: 21300000, guid: 2c49df8a280c4f168256c5b1f1b28011, type: 3}
     implementation: {fileID: 0}
   - itemId: acidic_rupture
     displayName: "\uC0B0\uC131 \uD30C\uC5F4"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC \uBC14\uB2E5\uC5D0 \uC9C0\uC18D
       \uD53C\uD574 \uC7A5\uD310 \uC0DD\uC131"
     category: 0
-    icon: {fileID: 1578741164}
+    icon: {fileID: 21300000, guid: 4bb260e9caea4c50a97fc2e6f9af41de, type: 3}
     implementation: {fileID: 0}
   - itemId: cell_proliferation
     displayName: "\uC138\uD3EC \uC99D\uC2DD"
     description: "\uC77C\uC815 \uD655\uB960\uB85C \uACF5\uACA9\uC774 \uD55C \uBC88
       \uB354 \uBC1C\uB3D9"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 93a5bb1467774edb80e4cc9f0f9586f7, type: 3}
     implementation: {fileID: 0}
   - itemId: pulse_bullet
     displayName: "\uB9E5\uB3D9 \uD0C4\uD658"
     description: "\uD22C\uC0AC\uCCB4\uAC00 \uBA40\uB9AC\uAC08\uC218\uB85D \uD06C\uAE30\uAC00
       \uC99D\uAC00\uD558\uAC70\uB098 \uC791\uC544\uC9D0"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 65c749a76f734243b63c76d5d1d43c62, type: 3}
     implementation: {fileID: 0}
   - itemId: vascular_reflection
     displayName: "\uD608\uAD00 \uBC18\uC0AC"
     description: "\uBCBD\uC5D0 \uD295\uAE30\uB294 \uBC18\uC0AC \uD22C\uC0AC\uCCB4"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: e8a3d94111ab4dd2b70352572c158a16, type: 3}
     implementation: {fileID: 0}
   - itemId: toxic_mucosa
     displayName: "\uB3C5\uC131 \uC810\uB9C9"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC \uC911\uB3C5 \uD53C\uD574 \uBD80\uC5EC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9986fc82441c47119bb568655973acd9, type: 3}
     implementation: {fileID: 0}
   - itemId: freezing_nerve
     displayName: "\uBE59\uACB0 \uC2E0\uACBD"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC \uC801 \uC774\uB3D9\uC18D\uB3C4
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 2dae7275370f4782bbefcadb7758e704, type: 3}
     implementation: {fileID: 0}
   - itemId: hemorrhage_organ
     displayName: "\uCD9C\uD608 \uAE30\uAD00"
     description: "\uC801\uC911 \uC2DC \uC9C0\uC18D \uCD9C\uD608 \uD53C\uD574"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 48f6cc999e9a45039fc8eceffc54f26a, type: 3}
     implementation: {fileID: 0}
   - itemId: overheated_organ
     displayName: "\uACFC\uC5F4 \uAE30\uAD00"
     description: "\uACC4\uC18D \uACF5\uACA9 \uC2DC \uACF5\uACA9\uC18D\uB3C4 \uC99D\uAC00,
       \uACFC\uC5F4 \uC2DC \uD3ED\uBC1C \uD53C\uD574"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: a2eef1bb211a4210ab5619137abc7952, type: 3}
     implementation: {fileID: 0}
   - itemId: mutant_eye
     displayName: "\uB3CC\uC5F0\uBCC0\uC774 \uC548\uAD6C"
     description: "\uC804\uBC29 180\uB3C4 \uBC94\uC704\uB85C \uBB34\uC791\uC704 \uBC1C\uC0AC,
       \uACF5\uACA9\uB825 +5"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 02864ace75954328bb1c8ad1c7e6d6c7, type: 3}
     implementation: {fileID: 0}
   - itemId: organ_tentacle
     displayName: "\uC7A5\uAE30 \uCD09\uC218"
     description: "\uC8FC\uBCC0 \uC801 \uC790\uB3D9 \uACF5\uACA9, \uB300\uC2E0 \uAE30\uBCF8
       \uACF5\uACA9 \uC57D\uD654"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 30ea581a77ed4f50b423105a66d8f601, type: 3}
     implementation: {fileID: 0}
   - itemId: rampage_bloodflow
     displayName: "\uD3ED\uC8FC \uD608\uB958"
     description: "\uC774\uB3D9 \uC911 \uACF5\uACA9\uB825 \uC99D\uAC00, \uBA48\uCD94\uBA74
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ac6f186a235348a0bfbfdfde74c06175, type: 3}
     implementation: {fileID: 0}
   - itemId: muscle_spasm
     displayName: "\uADFC\uC721 \uACBD\uB828"
     description: "\uADFC\uC811 \uACF5\uACA9 \uBC94\uC704 \uC99D\uAC00, \uACF5\uACA9\uC18D\uB3C4
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: da1db62dc85d4ff8b3718e999489bbae, type: 3}
     implementation: {fileID: 0}
   - itemId: unstable_core
     displayName: "\uBD88\uC548\uC815 \uD575"
     description: "\uACF5\uACA9\uB825\uC774 \uB79C\uB364\uD558\uAC8C \uD06C\uAC8C
       \uBCC0\uB3D9\uB428"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 0238764490da4eb7b6b4775811a9ca1f, type: 3}
     implementation: {fileID: 0}
   - itemId: bio_resonance
     displayName: "\uC0DD\uCCB4 \uACF5\uBA85"
     description: "\uAC19\uC740 \uC801 \uC5F0\uC18D \uACF5\uACA9 \uC2DC \uD574\uB2F9
       \uC801\uC5D0\uAC8C \uD53C\uD574\uB7C9 \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 08005822b1914de0bee328b21739e6af, type: 3}
     implementation: {fileID: 0}
   - itemId: blood_pressure_burst
     displayName: "\uD608\uC555 \uD3ED\uBC1C"
     description: "\uCCB4\uB825\uC774 \uB0AE\uC744\uC218\uB85D \uACF5\uACA9\uC18D\uB3C4
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: bf1c77e0f1a348268cc2ef88efd45fe6, type: 3}
     implementation: {fileID: 0}
   - itemId: void_cell
     displayName: "\uACF5\uD5C8 \uC138\uD3EC"
     description: "\uACF5\uACA9 \uC2DC \uC77C\uC815 \uD655\uB960\uB85C \uC21C\uAC04\uC774\uB3D9
       \uD0C4\uD658 \uC0DD\uC131"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 44b4c21f87dc4d1980ec7aa03b0977b4, type: 3}
     implementation: {fileID: 0}
   - itemId: forbidden_growth
     displayName: "\uAE08\uB2E8 \uC131\uC7A5"
     description: "\uCCB4\uB825 -4, \uACF5\uACA9\uB825 +6 \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: a0bf5a6d28c64823b020d59972591ee2, type: 3}
     implementation: {fileID: 0}
   - itemId: overclock_nerve
     displayName: "\uACFC\uC18D \uC2E0\uACBD"
     description: "\uCCB4\uB825 -2, \uC774\uB3D9\uC18D\uB3C4 +4 \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: d4b0d7a6e8b94e12a5b9c77fa6d42430, type: 3}
     implementation: {fileID: 0}
   - itemId: blood_contract
     displayName: "\uD53C\uC758 \uACC4\uC57D"
     description: "\uC801 10\uBA85 \uCC98\uCE58 \uC2DC \uCCB4\uB825 +1 \uC99D\uAC00,
       \uB300\uC2E0 \uBC1B\uB294 \uD53C\uD574 1.5\uBC30"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 7e0fe0ed2b824d7d9fdc4f25b49b77bd, type: 3}
     implementation: {fileID: 0}
   - itemId: hyperplasia_heart
     displayName: "\uACFC\uC99D\uC2DD \uC2EC\uC7A5"
     description: "\uCCB4\uB825\uC774 \uB0AE\uC744\uC218\uB85D \uACF5\uACA9\uB825
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: e9365419c64b46c9aa094fe60ef9d0ce, type: 3}
     implementation: {fileID: 0}
   - itemId: decay_organ
     displayName: "\uBD80\uD328 \uC7A5\uAE30"
     description: "\uC2DC\uAC04\uC774 \uC9C0\uB0A0\uC218\uB85D \uACF5\uACA9\uB825
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 9b3e06a4a4c74590918318573745d224, type: 3}
     implementation: {fileID: 0}
   - itemId: rupture_muscle
     displayName: "\uD30C\uC5F4 \uADFC\uC721"
     description: "\uACF5\uACA9\uD560\uC218\uB85D \uAC15\uD574\uC9C0\uC9C0\uB9CC \uC774\uB3D9\uC18D\uB3C4
       \uAC10\uC18C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 64519f00218d4dc5945148c55ee65576, type: 3}
     implementation: {fileID: 0}
   - itemId: imperfect_regeneration
     displayName: "\uBD88\uC644\uC804 \uC7AC\uC0DD"
     description: "\uCCB4\uB825 -4, \uD53C\uD574\uB97C \uBC1B\uC73C\uBA74 3\uCD08
       \uD6C4 \uCCB4\uB825 +1 \uD68C\uBCF5 (15\uCD08 \uCFE8\uD0C0\uC784)"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: b8585326984a471c81e363552ede00cc, type: 3}
     implementation: {fileID: 0}
   - itemId: severance_reflex
     displayName: "\uC808\uB2E8 \uBC18\uC0AC"
     description: "\uD53C\uACA9 \uC9C1\uD6C4 \uACF5\uACA9\uB825 +6"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: edba15146bde460caf3d26ebb02fdcb4, type: 3}
     implementation: {fileID: 0}
   - itemId: bio_gamble
     displayName: "\uC0DD\uCCB4 \uB3C4\uBC15"
     description: "\uB808\uBCA8\uC5C5 \uC120\uD0DD \uC2DC \uC2A4\uD0EF\uC774 -2~+3
       \uBC94\uC704\uC5D0\uC11C \uB79C\uB364 \uC99D\uAC10"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 3975e26e5a454500bb016c167ad152e7, type: 3}
     implementation: {fileID: 0}
   - itemId: exoskeleton
     displayName: "\uC678\uACE8\uACA9"
     description: "\uBC1B\uB294 \uD53C\uD574 30% \uAC10\uC18C, \uB300\uC2E0 \uC774\uB3D9\uC18D\uB3C4
       -2"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 1c06e224706e4e41ae9ffc85e79707bc, type: 3}
     implementation: {fileID: 0}
   - itemId: platelet_membrane
     displayName: "\uD608\uC18C\uD310 \uB9C9"
     description: "30\uCD08\uB9C8\uB2E4 \uBCF4\uD638\uB9C9 1 \uC0DD\uC131"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ac5d40ecd9bc4f81aeb5db68f9ff801b, type: 3}
     implementation: {fileID: 0}
   - itemId: recovery_factor
     displayName: "\uD68C\uBCF5 \uC778\uC790"
     description: "45\uCD08\uB2F9 \uCCB4\uB825 +1 \uD68C\uBCF5"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: ea4f76c79d6e4826af2526d2eb2ab3fa, type: 3}
     implementation: {fileID: 0}
   - itemId: reflective_skin
     displayName: "\uBC18\uC0AC \uD53C\uBD80"
     description: "\uD53C\uACA9 \uC2DC \uC801\uC5D0\uAC8C \uD53C\uD574 \uBC18\uC0AC"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 515cafcd131d46d5b031bd4d409ee9b0, type: 3}
     implementation: {fileID: 0}
   - itemId: bio_barrier
     displayName: "\uC0DD\uCCB4 \uC7A5\uB9C9"
     description: "\uC774\uB3D9\uD558\uC9C0 \uC54A\uC73C\uBA74 \uD53C\uD574 \uAC10\uC18C
       \uC99D\uAC00 (\uCD5C\uB300 50%)"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: bd715116c6d946a18bd57a4363532296, type: 3}
     implementation: {fileID: 0}
   - itemId: split_regeneration
     displayName: "\uBD84\uC5F4 \uC7AC\uC0DD"
     description: "\uCCB4\uB825 0\uC774 \uB420 \uB54C \uC791\uC740 \uCCB4\uB825\uC73C\uB85C
       \uBD80\uD65C"
     category: 0
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: b7e6394cf9d64f5aacfe52a31e639e7c, type: 3}
     implementation: {fileID: 0}
   - itemId: infected_host
     displayName: "\uAC10\uC5FC \uC219\uC8FC"
     description: "\uC7A1\uBAB9 \uCC98\uCE58 \uC2DC \uC77C\uC815 \uD655\uB960\uB85C
       \uC9E7\uC740 \uC2DC\uAC04 \uC544\uAD70 \uC0DD\uCCB4 \uC0DD\uC131"
     category: 0
-    icon: {fileID: 1038747510}
+    icon: {fileID: 21300000, guid: 2b9e25cfeeef435eac4f4788c2beae32, type: 3}
     implementation: {fileID: 0}
   - itemId: spore_colony
     displayName: "\uD3EC\uC790 \uAD70\uC9D1"
     description: "\uC77C\uC815 \uC2DC\uAC04\uB9C8\uB2E4 \uC801\uC5D0\uAC8C \uB2EC\uB824\uB4DC\uB294
       \uC791\uC740 \uD3EC\uC790 \uC0DD\uBA85\uCCB4 \uC18C\uD658"
     category: 0
-    icon: {fileID: 820603017}
+    icon: {fileID: 21300000, guid: 1fd0bb7116fe498ba24b0558dc0b04c4, type: 3}
     implementation: {fileID: 0}
   - itemId: blood_drone
     displayName: "\uD608\uC561 \uB4DC\uB860"
     description: "\uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0\uC744 \uB5A0\uB2E4\uB2C8\uBA70
       \uAC00\uAE4C\uC6B4 \uC801\uC744 \uC790\uB3D9 \uCD94\uC801 \uACF5\uACA9"
     category: 0
-    icon: {fileID: 825262854}
+    icon: {fileID: 21300000, guid: 1f4bbe17d34a41efbfeacca751dc798a, type: 3}
     implementation: {fileID: 0}
   - itemId: guardian_organ
     displayName: "\uC218\uD638 \uC7A5\uAE30"
     description: "\uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
       \uC801 \uD22C\uC0AC\uCCB4\uB97C \uBC29\uC5B4"
     category: 0
-    icon: {fileID: 1812382005}
+    icon: {fileID: 21300000, guid: 1b6965b707da40f08ab8f6391cf9312f, type: 3}
     implementation: {fileID: 0}
   - itemId: tentacle_colony
     displayName: "\uCD09\uC218 \uAD70\uCCB4"
     description: "\uC8FC\uBCC0 \uC801\uC744 \uC8FC\uAE30\uC801\uC73C\uB85C \uC18D\uBC15\uD574
       \uC774\uB3D9\uC744 \uD06C\uAC8C \uBC29\uD574"
     category: 0
-    icon: {fileID: 304695666}
+    icon: {fileID: 21300000, guid: 40925b61970b44f4bb0771f2324091c4, type: 3}
     implementation: {fileID: 0}
   - itemId: electric_neural_network
     displayName: "\uC804\uAE30 \uC2E0\uACBD\uB9DD"
@@ -11494,96 +11494,96 @@ MonoBehaviour:
       \uC804\uB958\uAC00 \uD280\uC5B4 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uC5F0\uC1C4
       \uD53C\uD574"
     category: 0
-    icon: {fileID: 177175553}
+    icon: {fileID: 21300000, guid: 79ccd4e44605424b904bacee6d233d5d, type: 3}
     implementation: {fileID: 0}
   - itemId: infection_transference
     displayName: "\uAC10\uC5FC \uC804\uC774"
     description: "\uC801 \uC0AC\uB9DD \uC2DC \uC8FC\uBCC0 \uC801 3\uBA85\uC5D0\uAC8C
       3\uCD08 \uAC10\uC5FC \uD53C\uD574 \uBD80\uC5EC"
     category: 0
-    icon: {fileID: 339464816}
+    icon: {fileID: 21300000, guid: 44c180ca917c49a9a6025e11944cb3a6, type: 3}
     implementation: {fileID: 0}
   - itemId: macrophage
     displayName: "\uB300\uC2DD \uC138\uD3EC"
     description: "\uC801 \uCC98\uCE58 \uC2DC 5\uCD08 \uB3D9\uC548 \uACF5\uACA9\uB825
       \uC99D\uAC00 (\uCD5C\uB300 3\uC2A4\uD0DD)"
     category: 0
-    icon: {fileID: 370868322}
+    icon: {fileID: 21300000, guid: 9b0c2139036f4cd4a9bc0b31cfc7c1dc, type: 3}
     implementation: {fileID: 0}
   - itemId: gluttonous_organ
     displayName: "\uD3ED\uC2DD \uC7A5\uAE30"
     description: "\uC801 \uCC98\uCE58 \uC2DC 3\uCD08 \uB3D9\uC548 \uC774\uB3D9\uC18D\uB3C4
       \uC99D\uAC00 (\uCD5C\uB300 4\uC2A4\uD0DD)"
     category: 0
-    icon: {fileID: 190917129}
+    icon: {fileID: 21300000, guid: 235474cec8ea4c9b9b40cd93bfffbbc8, type: 3}
     implementation: {fileID: 0}
   - itemId: heart_sniper
     displayName: "\uC2EC\uC7A5 \uC800\uACA9"
     description: "\uCCB4\uB825 \uB192\uC740 \uC801\uC5D0\uAC8C \uC9C1\uC811 \uACF5\uACA9
       \uD53C\uD574 \uC99D\uAC00"
     category: 0
-    icon: {fileID: 1298620802}
+    icon: {fileID: 21300000, guid: ca1bb1b767904f3db5d0b69dcbf1fc7b, type: 3}
     implementation: {fileID: 0}
   - itemId: bloodflow_acceleration
     displayName: "\uD608\uB958 \uAC00\uC18D"
     description: "\uBCF4\uC2A4/\uC5D8\uB9AC\uD2B8 \uADFC\uCC98\uC5D0\uC11C \uACF5\uACA9\uC18D\uB3C4
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 1447787748}
+    icon: {fileID: 21300000, guid: 304747b797864b1fa1386ba975331c2d, type: 3}
     implementation: {fileID: 0}
   - itemId: focused_nerve
     displayName: "\uC9D1\uC911 \uC2E0\uACBD"
     description: "\uC8FC\uBCC0 \uC801\uC774 \uC801\uC744\uC218\uB85D \uACF5\uACA9\uB825
       \uC99D\uAC00"
     category: 0
-    icon: {fileID: 527776987}
+    icon: {fileID: 21300000, guid: 298d285e577e42a895bc20ba5738ceae, type: 3}
     implementation: {fileID: 0}
   - itemId: execution_instinct
     displayName: "\uCC98\uD615 \uBCF8\uB2A5"
     description: "\uD53C\uD574 \uD6C4 \uCCB4\uB825 \uB0AE\uC740 \uC801\uC744 \uD655\uB960
       \uCC98\uD615"
     category: 0
-    icon: {fileID: 1636239783}
+    icon: {fileID: 21300000, guid: 486ccc7133284a47a64f0ad5e95cfa36, type: 3}
     implementation: {fileID: 0}
   - itemId: berserk_cell
     displayName: "\uAD11\uD3ED \uC138\uD3EC"
     description: "\uBCF4\uC2A4\uC804 \uC9C4\uC785 \uC2DC \uC7A0\uC2DC \uC2A4\uD0EF
       \uC0C1\uC2B9"
     category: 0
-    icon: {fileID: 766124876}
+    icon: {fileID: 21300000, guid: bb50b60bc68046478ebcc0893f470801, type: 3}
     implementation: {fileID: 0}
   - itemId: unstable_cell
     displayName: "\uBD88\uC548\uC815 \uC138\uD3EC"
     description: "\uD22C\uC0AC\uCCB4 \uC18D\uB3C4 \uB79C\uB364, \uB290\uB9B0 \uD0C4
       \uD53C\uD574 2\uBC30"
     category: 0
-    icon: {fileID: 412477363}
+    icon: {fileID: 21300000, guid: a1a40e325ce64e12a81f09b18f96cd98, type: 3}
     implementation: {fileID: 0}
   - itemId: grotesque_growth
     displayName: "\uAE30\uAD34 \uC131\uC7A5"
     description: "10\uCD08\uB9C8\uB2E4 \uD06C\uAE30\uC640 \uC2A4\uD0EF\uC774 \uB79C\uB364
       \uBCC0\uD654"
     category: 0
-    icon: {fileID: 530088183}
+    icon: {fileID: 21300000, guid: 8758da4361e84648830e30f74074f09b, type: 3}
     implementation: {fileID: 0}
   - itemId: mutation_rampage
     displayName: "\uB3CC\uC5F0\uBCC0\uC774 \uD3ED\uC8FC"
     description: "15\uCD08\uB9C8\uB2E4 7\uCD08 \uB79C\uB364 \uBC84\uD504/\uB514\uBC84\uD504"
     category: 0
-    icon: {fileID: 1831317133}
+    icon: {fileID: 21300000, guid: 9d4c40e93e804cc585eeee9f04224548, type: 3}
     implementation: {fileID: 0}
   - itemId: parasitic_bomb
     displayName: "\uAE30\uC0DD \uD3ED\uD0C4"
     description: "\uC801 \uCC98\uCE58 \uC2DC \uD655\uB960\uB85C \uD50C\uB808\uC774\uC5B4
       \uC8FC\uBCC0 \uD3ED\uBC1C"
     category: 0
-    icon: {fileID: 956321119}
+    icon: {fileID: 21300000, guid: aeee8a2e20324ab69bb150c9b2e87f30, type: 3}
     implementation: {fileID: 0}
   - itemId: frenzy_hormone
     displayName: "\uAD11\uB780 \uD638\uB974\uBAAC"
     description: "\uD53C\uACA9 \uC2DC \uC9E7\uAC8C \uB79C\uB364 \uB2A5\uB825 \uAC15\uD654"
     category: 0
-    icon: {fileID: 618663454}
+    icon: {fileID: 21300000, guid: ee0b8c6b690b4141934f6d2bbea51407, type: 3}
     implementation: {fileID: 0}
   startingItemIds: []
   autoPopulateBasicProjectileItems: 1
