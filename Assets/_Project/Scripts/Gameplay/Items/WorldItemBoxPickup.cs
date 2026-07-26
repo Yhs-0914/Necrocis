@@ -13,6 +13,7 @@ namespace Necrocis
         [SerializeField] private Sprite openSprite;
         [SerializeField] private Sprite itemSprite;
         [SerializeField, Min(0.05f)] private float revealDuration = 0.6f;
+        [SerializeField, Min(0f)] private float openedBoxHideDelay = 2f;
         [SerializeField, Min(0f)] private float itemRestHeight = 0.8f;
         [SerializeField, Min(0f)] private float itemPopHeight = 1.6f;
         [SerializeField] private int itemSortingOrderOffset = 1;
@@ -24,6 +25,7 @@ namespace Necrocis
         private bool readyToPickup;
         private bool collected;
         private bool slotsFullLogged;
+        private bool boxHideScheduled;
 
         public void Initialize(
             string itemId,
@@ -102,6 +104,8 @@ namespace Necrocis
                 boxRenderer.sprite = openSprite;
             }
 
+            ScheduleBoxHide();
+
             if (itemRenderer != null)
             {
                 itemRenderer.enabled = true;
@@ -130,6 +134,27 @@ namespace Necrocis
             opening = false;
         }
 
+        private void ScheduleBoxHide()
+        {
+            if (boxHideScheduled || openedBoxHideDelay <= 0f)
+            {
+                return;
+            }
+
+            boxHideScheduled = true;
+            StartCoroutine(HideBoxRendererAfterDelay());
+        }
+
+        private IEnumerator HideBoxRendererAfterDelay()
+        {
+            yield return new WaitForSeconds(openedBoxHideDelay);
+
+            if (boxRenderer != null)
+            {
+                boxRenderer.enabled = false;
+            }
+        }
+
         private void TryPickup(PlayerController player)
         {
             PlayerItemManager itemManager = player.GetComponent<PlayerItemManager>();
@@ -140,6 +165,11 @@ namespace Necrocis
 
             if (itemManager.TryAcquireItem(itemId, out PlayerItemAcquireFailureReason failure))
             {
+                AudioManager.Instance?.PlaySFX("ItemPickup");
+                if (itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry))
+                {
+                    AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
+                }
                 collected = true;
                 Destroy(gameObject);
                 return;
@@ -197,7 +227,7 @@ namespace Necrocis
             }
 
             Billboard billboard = itemObject.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+            billboard.SetUpdateMode(Billboard.UpdateMode.Once);
 
             SetItemLocalPosition(new Vector3(0f, itemRestHeight * 0.15f, 0f));
         }

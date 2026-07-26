@@ -128,7 +128,10 @@ namespace Necrocis
             if (IsWaitingForJobSelection())
                 OnJobSelect?.Invoke();
             else
+            {
+                AudioManager.Instance?.PlaySFX("LevelUp");
                 OnLevelUp?.Invoke();
+            }
         }
 
         public static int GetCurrentLevel() => currentLevel;

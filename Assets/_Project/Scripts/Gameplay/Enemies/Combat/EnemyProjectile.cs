@@ -154,7 +154,11 @@ namespace Necrocis
             Camera activeCamera = DontStarveCamera.GetActiveCamera();
             if (activeCamera != null)
             {
-                transform.rotation = activeCamera.transform.rotation;
+                Quaternion cameraRotation = activeCamera.transform.rotation;
+                if (transform.rotation != cameraRotation)
+                {
+                    transform.rotation = cameraRotation;
+                }
             }
 
             // 거리 기반 플레이어 충돌 판정
@@ -169,6 +173,7 @@ namespace Necrocis
                 {
                     playerHealth.TakeDamage(damage, ownerEnemy);
                 }
+                CombatVfx.PlayHostileProjectileImpact(transform.position, moveDirection);
                 ReturnToPool();
             }
         }

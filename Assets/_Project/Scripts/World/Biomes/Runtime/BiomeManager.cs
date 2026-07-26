@@ -84,6 +84,9 @@ namespace Necrocis
 
         private readonly Dictionary<ObjectPoolKey, Stack<GameObject>> objectPool = new Dictionary<ObjectPoolKey, Stack<GameObject>>();
         private readonly Stack<GameObject> chunkRootPool = new Stack<GameObject>();
+        private readonly HashSet<GameObject> chunkObjectReleaseSet = new HashSet<GameObject>();
+        private readonly List<GameObject> chunkObjectReleaseBuffer = new List<GameObject>();
+        private readonly List<Vector2Int> occupiedCellBuffer = new List<Vector2Int>();
         private Transform pooledChunkRootsParent;
         private Dictionary<BiomeObjectKind, int> poolLimitLookup;
         private int pooledObjectCount;

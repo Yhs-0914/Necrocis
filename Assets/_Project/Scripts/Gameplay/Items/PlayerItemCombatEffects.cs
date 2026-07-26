@@ -73,11 +73,24 @@ namespace Necrocis
         private const string OverheatExplosionVisualPoolName = "PlayerItem.OverheatExplosionVisual";
         private const string SporeBurstVisualPoolName = "PlayerItem.SporeBurstVisual";
         private const string GuardianBlockVisualPoolName = "PlayerItem.GuardianBlockVisual";
-        private const string TentacleAnchorVisualPoolName = "PlayerItem.TentacleAnchorVisual";
+        private const string TentacleBindVisualPoolName = "PlayerItem.TentacleBindVisual";
         private const string LineVisualPoolName = "PlayerItem.LineVisual";
         private const string BloodDronePoolName = "PlayerItem.BloodDrone";
         private const string GuardianOrganPoolName = "PlayerItem.GuardianOrgan";
         private const string BloodDroneProjectilePoolName = "PlayerItem.BloodDroneProjectile";
+        private const string BioSummonPoolName = "PlayerItem.BioSummon";
+        private const string OverheatedOrganEffectPath = "ItemEffects/overheated_organ_effect";
+        private const string OrganTentacleEffectPath = "ItemEffects/organ_tentacle_effect";
+        private const string PlateletMembraneEffectPath = "ItemEffects/platelet_membrane_effect";
+        private const string InfectedHostEffectPath = "ItemEffects/infected_host_effect";
+        private const string SporeColonyEffectPath = "ItemEffects/spore_colony_effect";
+        private const string BloodDroneEffectPath = "ItemEffects/blood_drone_effect";
+        private const string GuardianOrganEffectPath = "ItemEffects/guardian_organ_effect";
+        private const string TentacleColonyEffectPath = "ItemEffects/tentacle_colony_effect";
+        private const string TentacleColonyConnectionEffectPath = "ItemEffects/tentacle_colony_connection_effect";
+        private const string ElectricNeuralNetworkEffectPath = "ItemEffects/electric_neural_network_effect";
+        private const string InfectionTransferenceEffectPath = "ItemEffects/infection_transference_effect";
+        private const string ParasiticBombEffectPath = "ItemEffects/parasitic_bomb_effect";
 
         [Header("Multi Shot")]
         [SerializeField] private float doubleShotSpreadAngle = 7f;
@@ -298,8 +311,10 @@ namespace Necrocis
         private Material plateletMembraneOutlineMaterial;
         private SpriteRenderer plateletMembraneOutlineTarget;
         private SpriteRenderer plateletMembraneOutlineRenderer;
+        private SpriteRenderer plateletMembraneEffectRenderer;
         private bool plateletMembraneShaderWarningLogged;
         private SpriteRenderer playerVisualSpriteRenderer;
+        private readonly List<SpriteRenderer> playerSpriteRendererBuffer = new List<SpriteRenderer>();
         private float rampageMoveAccumulatedTime;
         private float rampageIdleAccumulatedTime;
         private int rampageAttackBonus;
@@ -379,6 +394,7 @@ namespace Necrocis
         private static readonly Func<GameObject> CreateBloodDroneFunc = CreateBloodDroneObject;
         private static readonly Func<GameObject> CreateGuardianOrganFunc = CreateGuardianOrganObject;
         private static readonly Func<GameObject> CreateBloodDroneProjectileFunc = CreateBloodDroneProjectileObject;
+        private static readonly Func<GameObject> CreateBioSummonFunc = CreateBioSummonObject;
         private int macrophageStacks;
         private float macrophageExpireTime = float.NegativeInfinity;
         private float macrophageAppliedAttackBonus;
@@ -2128,11 +2144,12 @@ namespace Necrocis
                 "ElectricChainVisual",
                 start + Vector3.up * 0.45f,
                 end + Vector3.up * 0.45f,
-                new Color(0.38f, 0.86f, 1f, 0.95f),
-                new Color(0.9f, 1f, 1f, 0.45f),
-                0.11f,
-                0.04f,
-                0.18f);
+                Color.white,
+                Color.white,
+                0.24f,
+                0.18f,
+                0.18f,
+                ElectricNeuralNetworkEffectPath);
         }
 
         private void SpawnInfectionTransferVisual(Vector3 start, Vector3 end)
@@ -2141,11 +2158,12 @@ namespace Necrocis
                 "InfectionTransferVisual",
                 start + Vector3.up * 0.35f,
                 end + Vector3.up * 0.35f,
-                new Color(0.34f, 1f, 0.28f, 0.72f),
-                new Color(0.34f, 1f, 0.28f, 0.18f),
-                0.07f,
-                0.025f,
-                0.25f);
+                Color.white,
+                Color.white,
+                0.2f,
+                0.14f,
+                0.25f,
+                InfectionTransferenceEffectPath);
         }
 
         private void SpawnParasiticBombVisual(Vector3 center, float radius)
@@ -2155,9 +2173,10 @@ namespace Necrocis
                 "ParasiticBombVisual",
                 new Vector3(center.x, center.y + 1.35f, center.z),
                 Mathf.Max(0.2f, radius * 2f),
-                new Color(0.88f, 0.12f, 0.68f, 0.55f),
-                5200,
-                0.22f);
+                Color.white,
+                1100,
+                0.22f,
+                TextureSpriteCache.LoadResourceSprite(ParasiticBombEffectPath));
         }
 
         private void SpawnLineVisual(
@@ -2168,7 +2187,9 @@ namespace Necrocis
             Color endColor,
             float startWidth,
             float endWidth,
-            float duration)
+            float duration,
+            string textureResourcePath = null,
+            int sortingOrder = 5230)
         {
             GameObject lineObject = RuntimePool.Acquire(LineVisualPoolName, CreateLineVisualFunc);
             if (lineObject == null)
@@ -2191,10 +2212,15 @@ namespace Necrocis
             line.SetPosition(1, end);
             line.startWidth = Mathf.Max(0.01f, startWidth);
             line.endWidth = Mathf.Max(0.01f, endWidth);
-            line.sharedMaterial = GetRuntimeLineMaterial();
+            line.sharedMaterial = string.IsNullOrWhiteSpace(textureResourcePath)
+                ? GetRuntimeLineMaterial()
+                : TextureSpriteCache.GetResourceSpriteMaterial(textureResourcePath);
+            line.textureMode = LineTextureMode.Stretch;
+            line.alignment = LineAlignment.View;
+            line.numCapVertices = 0;
             line.startColor = startColor;
             line.endColor = endColor;
-            line.sortingOrder = 5230;
+            line.sortingOrder = sortingOrder;
 
             RuntimePool.EnsureAutoReturn(lineObject)?.Schedule(Mathf.Max(0.02f, duration));
         }
@@ -2360,13 +2386,19 @@ namespace Necrocis
             Vector3 desiredPosition = transform.position + new Vector3(offset2D.x, 0f, offset2D.y).normalized * 1.2f;
             Vector3 spawnPosition = ResolveGroundSpawnPosition(desiredPosition, 0.15f);
             float damage = GetCompanionBaseDamage() * Mathf.Max(0.05f, sporeDamageMultiplier);
+            Sprite sporeSprite = TextureSpriteCache.LoadResourceSprite(SporeColonyEffectPath);
+            if (sporeSprite == null)
+            {
+                sporeSprite = TextureSpriteCache.GetCircleSprite();
+            }
+
             SpawnBioSummon(
                 PlayerBioSummon.SummonKind.Spore,
                 spawnPosition,
-                TextureSpriteCache.GetCircleSprite(),
+                sporeSprite,
                 null,
-                Vector3.one * 0.65f,
-                new Color(0.52f, 1f, 0.45f, 0.9f),
+                Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(sporeSprite, 0.65f),
+                Color.white,
                 damage,
                 Mathf.Max(0.1f, sporeLifetime),
                 Mathf.Max(0.1f, sporeSearchRadius),
@@ -2389,9 +2421,15 @@ namespace Necrocis
             float attackInterval,
             bool destroyOnAttack)
         {
-            GameObject summonObject = new GameObject(kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly");
+            GameObject summonObject = RuntimePool.Acquire(BioSummonPoolName, CreateBioSummonFunc);
+            if (summonObject == null || !summonObject.TryGetComponent(out PlayerBioSummon summon))
+            {
+                RuntimePool.Release(summonObject);
+                return;
+            }
+
+            summonObject.name = kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly";
             summonObject.transform.position = position;
-            PlayerBioSummon summon = summonObject.AddComponent<PlayerBioSummon>();
             summon.Initialize(this, kind, sprite, attackSprites, visualScale, color, damage, lifetime, searchRadius, attackRadius, attackInterval, destroyOnAttack);
             activeBioSummons.Add(summon);
         }
@@ -2438,23 +2476,26 @@ namespace Necrocis
             Vector3 anchorPosition = GetPlayerVisualCenter() + Vector3.up * 0.15f;
 
             SpawnPooledCircleVisual(
-                TentacleAnchorVisualPoolName,
-                "TentacleColonyAnchor",
-                anchorPosition,
-                0.34f,
-                new Color(0.22f, 0.58f, 1f, 0.95f),
-                5220,
-                duration);
+                TentacleBindVisualPoolName,
+                "TentacleColonyBind",
+                targetPosition + Vector3.up * 0.4f,
+                1.45f,
+                Color.white,
+                5225,
+                duration,
+                TextureSpriteCache.LoadResourceSprite(TentacleColonyEffectPath));
 
             SpawnLineVisual(
                 "TentacleColonyLine",
                 anchorPosition,
                 targetPosition + Vector3.up * 0.35f,
-                new Color(0.22f, 0.58f, 1f, 0.9f),
-                new Color(0.22f, 0.58f, 1f, 0.2f),
-                0.08f,
-                0.035f,
-                duration);
+                Color.white,
+                Color.white,
+                0.32f,
+                0.2f,
+                duration,
+                TentacleColonyConnectionEffectPath,
+                4900);
 
         }
 
@@ -2462,7 +2503,7 @@ namespace Necrocis
         {
             for (int i = activeBioSummons.Count - 1; i >= 0; i--)
             {
-                if (activeBioSummons[i] == null)
+                if (activeBioSummons[i] == null || !activeBioSummons[i].gameObject.activeInHierarchy)
                 {
                     activeBioSummons.RemoveAt(i);
                 }
@@ -2490,7 +2531,7 @@ namespace Necrocis
             {
                 if (activeBioSummons[i] != null)
                 {
-                    Destroy(activeBioSummons[i].gameObject);
+                    activeBioSummons[i].ReleaseToPool();
                 }
             }
 
@@ -2764,14 +2805,15 @@ namespace Necrocis
             return runtimeLineMaterial;
         }
 
-        private static void SpawnPooledCircleVisual(
+        internal static void SpawnPooledCircleVisual(
             string poolName,
             string objectName,
             Vector3 position,
             float scale,
             Color color,
             int sortingOrder,
-            float duration)
+            float duration,
+            Sprite effectSprite = null)
         {
             GameObject visualObject = RuntimePool.Acquire(poolName, CreateCircleVisualFunc);
             if (visualObject == null)
@@ -2781,7 +2823,6 @@ namespace Necrocis
 
             visualObject.name = objectName;
             visualObject.transform.position = position;
-            visualObject.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
 
             SpriteRenderer renderer = GetOrAddSpriteRenderer(visualObject);
             if (renderer == null)
@@ -2791,9 +2832,12 @@ namespace Necrocis
             }
 
             renderer.enabled = true;
-            renderer.sprite = TextureSpriteCache.GetCircleSprite();
+            renderer.sprite = effectSprite != null ? effectSprite : TextureSpriteCache.GetCircleSprite();
             renderer.color = color;
             renderer.sortingOrder = sortingOrder;
+            visualObject.transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
+                renderer.sprite,
+                Mathf.Max(0.01f, scale));
 
             RuntimePool.EnsureAutoReturn(visualObject)?.Schedule(Mathf.Max(0.02f, duration));
         }
@@ -2835,6 +2879,25 @@ namespace Necrocis
             GameObject obj = new GameObject("BloodDroneProjectile");
             obj.AddComponent<PlayerBioProjectile>();
             return obj;
+        }
+
+        private static GameObject CreateBioSummonObject()
+        {
+            GameObject obj = new GameObject("PlayerBioSummon");
+            obj.AddComponent<SpriteRenderer>();
+            obj.AddComponent<PlayerBioSummon>();
+            return obj;
+        }
+
+        private void ReleaseBioSummon(PlayerBioSummon summon)
+        {
+            if (summon == null)
+            {
+                return;
+            }
+
+            activeBioSummons.Remove(summon);
+            RuntimePool.Release(summon.gameObject);
         }
 
         private static SpriteRenderer GetOrAddSpriteRenderer(GameObject obj)
@@ -3080,6 +3143,20 @@ namespace Necrocis
                 enemy.TakeDamage(adjustedDamage);
                 TryApplyPostDamageExecutionInstinct(enemy, adjustedDamage);
                 ApplyCommonOnHitEffects(enemy, adjustedDamage, enemy.transform.position);
+                Vector3 tentacleStart = GetPlayerVisualCenter();
+                Vector3 tentacleEnd = enemy.transform.position + Vector3.up * 0.4f;
+                Vector3 tentacleMidpoint = (tentacleStart + tentacleEnd) * 0.5f;
+                Vector3 extendedHalfLength = (tentacleEnd - tentacleStart) * 0.625f;
+                SpawnLineVisual(
+                    "OrganTentacleStrike",
+                    tentacleMidpoint - extendedHalfLength,
+                    tentacleMidpoint + extendedHalfLength,
+                    Color.white,
+                    Color.white,
+                    0.52f,
+                    0.24f,
+                    0.2f,
+                    OrganTentacleEffectPath);
                 hitCount++;
             }
         }
@@ -3538,10 +3615,6 @@ namespace Necrocis
             }
 
             EnsurePlateletMembraneOutlineMaterial();
-            if (plateletMembraneOutlineMaterial == null)
-            {
-                return;
-            }
 
             if (playerVisualSpriteRenderer == null)
             {
@@ -3561,23 +3634,43 @@ namespace Necrocis
                 plateletMembraneOutlineTarget = playerVisualSpriteRenderer;
             }
 
-            plateletMembraneOutlineMaterial.SetColor(OutlineColorId, new Color(0.72f, 0.74f, 0.76f, 1f));
-            plateletMembraneOutlineMaterial.SetFloat(OutlineSizeId, 1.25f);
-            plateletMembraneOutlineMaterial.SetFloat(OutlineExpandId, 0f);
-            EnsurePlateletMembraneOutlineRenderer(playerVisualSpriteRenderer);
-            if (plateletMembraneOutlineRenderer == null)
+            if (plateletMembraneOutlineMaterial != null)
             {
-                return;
+                plateletMembraneOutlineMaterial.SetColor(OutlineColorId, new Color(0.72f, 0.74f, 0.76f, 1f));
+                plateletMembraneOutlineMaterial.SetFloat(OutlineSizeId, 1.25f);
+                plateletMembraneOutlineMaterial.SetFloat(OutlineExpandId, 0f);
+                EnsurePlateletMembraneOutlineRenderer(playerVisualSpriteRenderer);
+                if (plateletMembraneOutlineRenderer != null)
+                {
+                    plateletMembraneOutlineRenderer.sprite = playerVisualSpriteRenderer.sprite;
+                    plateletMembraneOutlineRenderer.flipX = playerVisualSpriteRenderer.flipX;
+                    plateletMembraneOutlineRenderer.flipY = playerVisualSpriteRenderer.flipY;
+                    plateletMembraneOutlineRenderer.color = Color.white;
+                    plateletMembraneOutlineRenderer.sortingLayerID = playerVisualSpriteRenderer.sortingLayerID;
+                    plateletMembraneOutlineRenderer.sortingOrder = playerVisualSpriteRenderer.sortingOrder - 1;
+                    plateletMembraneOutlineRenderer.sharedMaterial = plateletMembraneOutlineMaterial;
+                    plateletMembraneOutlineRenderer.enabled = true;
+                }
             }
 
-            plateletMembraneOutlineRenderer.sprite = playerVisualSpriteRenderer.sprite;
-            plateletMembraneOutlineRenderer.flipX = playerVisualSpriteRenderer.flipX;
-            plateletMembraneOutlineRenderer.flipY = playerVisualSpriteRenderer.flipY;
-            plateletMembraneOutlineRenderer.color = Color.white;
-            plateletMembraneOutlineRenderer.sortingLayerID = playerVisualSpriteRenderer.sortingLayerID;
-            plateletMembraneOutlineRenderer.sortingOrder = playerVisualSpriteRenderer.sortingOrder - 1;
-            plateletMembraneOutlineRenderer.sharedMaterial = plateletMembraneOutlineMaterial;
-            plateletMembraneOutlineRenderer.enabled = true;
+            EnsurePlateletMembraneEffectRenderer(playerVisualSpriteRenderer);
+            if (plateletMembraneEffectRenderer != null)
+            {
+                Sprite membraneSprite = plateletMembraneEffectRenderer.sprite;
+                float targetWorldSize = Mathf.Max(
+                    playerVisualSpriteRenderer.bounds.size.x,
+                    playerVisualSpriteRenderer.bounds.size.y) * 1.35f;
+                Vector3 parentScale = playerVisualSpriteRenderer.transform.lossyScale;
+                float parentUniformScale = Mathf.Max(
+                    0.0001f,
+                    Mathf.Max(Mathf.Abs(parentScale.x), Mathf.Abs(parentScale.y)));
+                float worldScale = TextureSpriteCache.GetUniformScaleForWorldSize(membraneSprite, targetWorldSize);
+                plateletMembraneEffectRenderer.transform.localScale = Vector3.one * (worldScale / parentUniformScale);
+                plateletMembraneEffectRenderer.sortingLayerID = playerVisualSpriteRenderer.sortingLayerID;
+                plateletMembraneEffectRenderer.sortingOrder = playerVisualSpriteRenderer.sortingOrder + 2;
+                plateletMembraneEffectRenderer.color = Color.white;
+                plateletMembraneEffectRenderer.enabled = true;
+            }
         }
 
         private void EnsurePlateletMembraneOutlineMaterial()
@@ -3612,7 +3705,13 @@ namespace Necrocis
                 plateletMembraneOutlineRenderer.enabled = false;
             }
 
+            if (plateletMembraneEffectRenderer != null)
+            {
+                plateletMembraneEffectRenderer.enabled = false;
+            }
+
             plateletMembraneOutlineRenderer = null;
+            plateletMembraneEffectRenderer = null;
             plateletMembraneOutlineTarget = null;
         }
 
@@ -3643,6 +3742,28 @@ namespace Necrocis
             plateletMembraneOutlineRenderer.enabled = false;
         }
 
+        private void EnsurePlateletMembraneEffectRenderer(SpriteRenderer sourceRenderer)
+        {
+            if (sourceRenderer == null || plateletMembraneEffectRenderer != null)
+            {
+                return;
+            }
+
+            Transform existing = sourceRenderer.transform.Find("PlateletMembraneVisual");
+            plateletMembraneEffectRenderer = existing != null ? existing.GetComponent<SpriteRenderer>() : null;
+            if (plateletMembraneEffectRenderer == null)
+            {
+                GameObject effectObject = new GameObject("PlateletMembraneVisual");
+                effectObject.transform.SetParent(sourceRenderer.transform, false);
+                effectObject.transform.localPosition = Vector3.zero;
+                effectObject.transform.localRotation = Quaternion.identity;
+                plateletMembraneEffectRenderer = effectObject.AddComponent<SpriteRenderer>();
+            }
+
+            plateletMembraneEffectRenderer.sprite = TextureSpriteCache.LoadResourceSprite(PlateletMembraneEffectPath);
+            plateletMembraneEffectRenderer.enabled = plateletMembraneEffectRenderer.sprite != null;
+        }
+
         private static void CleanupPlateletMembraneLegacyVisuals(Transform sourceTransform)
         {
             if (sourceTransform == null)
@@ -3661,6 +3782,7 @@ namespace Necrocis
                 string childName = child.name;
                 if (childName == "PlateletMembraneOverlay"
                     || childName == "PlateletMembraneOutline"
+                    || childName == "PlateletMembraneVisual"
                     || childName.StartsWith("PlateletMembraneOutline_"))
                 {
                     Destroy(child.gameObject);
@@ -3706,10 +3828,16 @@ namespace Necrocis
 
         private SpriteRenderer FindPlayerSpriteRenderer()
         {
-            SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
+            if (playerVisualSpriteRenderer != null)
             {
-                SpriteRenderer renderer = renderers[i];
+                return playerVisualSpriteRenderer;
+            }
+
+            playerSpriteRendererBuffer.Clear();
+            GetComponentsInChildren(true, playerSpriteRendererBuffer);
+            for (int i = 0; i < playerSpriteRendererBuffer.Count; i++)
+            {
+                SpriteRenderer renderer = playerSpriteRendererBuffer[i];
                 if (renderer == null)
                 {
                     continue;
@@ -3721,7 +3849,8 @@ namespace Necrocis
                     continue;
                 }
 
-                return renderer;
+                playerVisualSpriteRenderer = renderer;
+                return playerVisualSpriteRenderer;
             }
 
             return null;
@@ -3735,9 +3864,10 @@ namespace Necrocis
                 "OverheatExplosionFx",
                 center,
                 1.6f,
-                new Color(1f, 0.22f, 0.1f, 0.86f),
+                Color.white,
                 5300,
-                0.2f);
+                0.2f,
+                TextureSpriteCache.LoadResourceSprite(OverheatedOrganEffectPath));
         }
 
         private Vector3 GetPlayerVisualCenter()
@@ -3783,6 +3913,7 @@ namespace Necrocis
             private bool destroyOnAttack;
             private Sprite idleSprite;
             private Sprite[] attackSprites;
+            private SpriteRenderer infectionMarkerRenderer;
             private float attackVisualEndTime;
             private float attackVisualFrameTime;
 
@@ -3810,26 +3941,77 @@ namespace Necrocis
                 this.attackInterval = Mathf.Max(0.05f, attackInterval);
                 this.destroyOnAttack = destroyOnAttack;
                 this.attackSprites = attackSprites;
+                target = null;
+                nextAttackTime = 0f;
+                attackVisualEndTime = 0f;
+                attackVisualFrameTime = 0f;
                 moveSpeed = kind == SummonKind.Spore ? 5.2f : 3.2f;
                 expireTime = Time.time + Mathf.Max(0.1f, lifetime);
 
-                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                if (spriteRenderer == null)
+                {
+                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
+                }
                 idleSprite = sprite != null ? sprite : TextureSpriteCache.GetCircleSprite();
                 spriteRenderer.sprite = idleSprite;
                 spriteRenderer.color = color;
                 spriteRenderer.sortingOrder = kind == SummonKind.Spore ? 5100 : 5050;
+                spriteRenderer.enabled = true;
                 transform.localScale = visualScale;
+                SyncBillboard();
+
+                if (kind == SummonKind.InfectedHost)
+                {
+                    EnsureInfectionMarker();
+                }
+                else if (infectionMarkerRenderer != null)
+                {
+                    infectionMarkerRenderer.enabled = false;
+                }
+            }
+
+            private void EnsureInfectionMarker()
+            {
+                Sprite markerSprite = TextureSpriteCache.LoadResourceSprite(InfectedHostEffectPath);
+                if (markerSprite == null)
+                {
+                    return;
+                }
+
+                GameObject markerObject;
+                if (infectionMarkerRenderer == null)
+                {
+                    markerObject = new GameObject("InfectedHostMarker");
+                    markerObject.transform.SetParent(transform, false);
+                    infectionMarkerRenderer = markerObject.AddComponent<SpriteRenderer>();
+                }
+                else
+                {
+                    markerObject = infectionMarkerRenderer.gameObject;
+                }
+
+                markerObject.transform.localPosition = Vector3.zero;
+                markerObject.transform.localRotation = Quaternion.identity;
+                infectionMarkerRenderer.sprite = markerSprite;
+                infectionMarkerRenderer.color = Color.white;
+                infectionMarkerRenderer.sortingOrder = spriteRenderer.sortingOrder + 1;
+                infectionMarkerRenderer.enabled = true;
+
+                float parentScale = Mathf.Max(
+                    0.0001f,
+                    Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.y)));
+                float markerScale = TextureSpriteCache.GetUniformScaleForWorldSize(markerSprite, 0.48f);
+                markerObject.transform.localScale = Vector3.one * (markerScale / parentScale);
             }
 
             private void Update()
             {
                 if (owner == null || Time.time >= expireTime)
                 {
-                    Destroy(gameObject);
+                    ReleaseToPool();
                     return;
                 }
 
-                SyncBillboard();
                 UpdateAttackVisual();
                 if (!IsEnemyTargetable(target))
                 {
@@ -3863,8 +4045,22 @@ namespace Necrocis
                 if (destroyOnAttack)
                 {
                     SpawnBurstVisual();
-                    Destroy(gameObject);
+                    ReleaseToPool();
                 }
+            }
+
+            public void ReleaseToPool()
+            {
+                PlayerItemCombatEffects currentOwner = owner;
+                owner = null;
+                target = null;
+                if (currentOwner != null)
+                {
+                    currentOwner.ReleaseBioSummon(this);
+                    return;
+                }
+
+                RuntimePool.Release(gameObject);
             }
 
             private void StartAttackVisual()
@@ -3935,7 +4131,8 @@ namespace Necrocis
                     0.9f,
                     new Color(0.52f, 1f, 0.45f, 0.45f),
                     5150,
-                    0.18f);
+                    0.18f,
+                    TextureSpriteCache.LoadResourceSprite(SporeColonyEffectPath));
             }
 
             private void SyncBillboard()
@@ -3945,6 +4142,13 @@ namespace Necrocis
                 {
                     transform.rotation = activeCamera.transform.rotation;
                 }
+            }
+
+            private void OnDisable()
+            {
+                owner = null;
+                target = null;
+                attackSprites = null;
             }
         }
 
@@ -3966,11 +4170,13 @@ namespace Necrocis
                     spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
                 }
 
-                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.color = new Color(0.95f, 0.08f, 0.18f, 0.92f);
+                Sprite droneSprite = TextureSpriteCache.LoadResourceSprite(BloodDroneEffectPath);
+                spriteRenderer.sprite = droneSprite != null ? droneSprite : TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.color = droneSprite != null ? Color.white : new Color(0.95f, 0.08f, 0.18f, 0.92f);
                 spriteRenderer.sortingOrder = 5300;
                 spriteRenderer.enabled = true;
-                transform.localScale = Vector3.one * 0.68f;
+                transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(spriteRenderer.sprite, 0.68f);
+                SyncBillboard();
             }
 
             public void ClearOwner()
@@ -3990,7 +4196,6 @@ namespace Necrocis
                 float radians = angle * Mathf.Deg2Rad;
                 Vector3 offset = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.bloodDroneOrbitRadius);
                 transform.position = owner.transform.position + offset + Vector3.up * 0.45f;
-                SyncBillboard();
 
                 if (Time.time < nextFireTime)
                 {
@@ -4029,6 +4234,8 @@ namespace Necrocis
             private SpriteRenderer spriteRenderer;
             private float angle;
             private float nextBlockTime;
+            private Vector3 cameraRight = Vector3.right;
+            private Vector3 cameraUp = Vector3.up;
 
             public void Initialize(PlayerItemCombatEffects owner)
             {
@@ -4041,11 +4248,13 @@ namespace Necrocis
                     spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
                 }
 
-                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.color = new Color(0.68f, 0.82f, 1f, 0.95f);
+                Sprite guardianSprite = TextureSpriteCache.LoadResourceSprite(GuardianOrganEffectPath);
+                spriteRenderer.sprite = guardianSprite != null ? guardianSprite : TextureSpriteCache.GetCircleSprite();
+                spriteRenderer.color = guardianSprite != null ? Color.white : new Color(0.68f, 0.82f, 1f, 0.95f);
                 spriteRenderer.sortingOrder = 5350;
                 spriteRenderer.enabled = true;
-                transform.localScale = Vector3.one * 0.82f;
+                transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(spriteRenderer.sprite, 0.82f);
+                CacheCameraBasis();
             }
 
             public void ClearOwner()
@@ -4063,17 +4272,12 @@ namespace Necrocis
 
                 angle += Time.deltaTime * 260f;
                 float radians = angle * Mathf.Deg2Rad;
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                Vector3 right = activeCamera != null ? activeCamera.transform.right : Vector3.right;
-                Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
                 Vector3 center = owner.GetPlayerVisualCenter();
-                Vector3 offset = (right * Mathf.Cos(radians) + up * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
+                Vector3 offset = (cameraRight * Mathf.Cos(radians) + cameraUp * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
                 transform.position = center + offset;
                 spriteRenderer.color = Time.time >= nextBlockTime
-                    ? new Color(0.68f, 0.82f, 1f, 0.95f)
-                    : new Color(0.35f, 0.48f, 0.7f, 0.45f);
-                SyncBillboard();
-
+                    ? Color.white
+                    : new Color(0.45f, 0.55f, 0.7f, 0.5f);
                 if (Time.time < nextBlockTime)
                 {
                     return;
@@ -4122,12 +4326,20 @@ namespace Necrocis
                     0.16f);
             }
 
-            private void SyncBillboard()
+            private void CacheCameraBasis()
             {
                 Camera activeCamera = DontStarveCamera.GetActiveCamera();
                 if (activeCamera != null)
                 {
+                    cameraRight = activeCamera.transform.right;
+                    cameraUp = activeCamera.transform.up;
                     transform.rotation = activeCamera.transform.rotation;
+                }
+                else
+                {
+                    cameraRight = Vector3.right;
+                    cameraUp = Vector3.up;
+                    transform.rotation = Quaternion.identity;
                 }
             }
 
@@ -4180,6 +4392,11 @@ namespace Necrocis
                 spriteRenderer.sortingOrder = 5320;
                 spriteRenderer.enabled = true;
                 transform.localScale = Vector3.one * 0.22f;
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
             }
 
             private void Update()
@@ -4200,11 +4417,6 @@ namespace Necrocis
                 }
 
                 transform.position += toTarget.normalized * speed * Time.deltaTime;
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    transform.rotation = activeCamera.transform.rotation;
-                }
             }
 
             private void ReleaseSelf()

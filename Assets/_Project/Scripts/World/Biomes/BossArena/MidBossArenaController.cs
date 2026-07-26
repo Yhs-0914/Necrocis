@@ -166,6 +166,8 @@ namespace Necrocis
             ApplyFogVisualState();
             RecenterBossEncounter();
             SetBossEncounterActive(true);
+            AudioManager.Instance?.PlayTimedSFX("BossSpawn", 5f);
+            PlayBossEncounterImpactSfx();
 
             if (GameManager.Instance != null)
             {
@@ -472,6 +474,7 @@ namespace Necrocis
             arenaLocked = false;
             bossDefeated = true;
             SetBossEncounterActive(false);
+            PlayBossDeathSfx();
 
             if (biome != null)
             {
@@ -513,6 +516,43 @@ namespace Necrocis
             SpawnBonusItemDrop(bossDeathPos);
 
             Debug.Log("[MidBossArena] 중간보스 처치 - 봉쇄 해제, 귀환 포탈 생성");
+        }
+
+        private void PlayBossDeathSfx()
+        {
+            string soundKey = biome != null
+                ? biome.BiomeType switch
+                {
+                    BiomeType.Intestine => "IntestineBossDeath",
+                    BiomeType.Liver => "LiverBossDeath",
+                    BiomeType.Stomach => "StomachBossDeath",
+                    BiomeType.Lung => "LungBossDeath",
+                    _ => "BossDeath"
+                }
+                : "BossDeath";
+
+            AudioManager.Instance?.PlaySFX(soundKey);
+        }
+
+        private void PlayBossEncounterImpactSfx()
+        {
+            if (biome == null)
+            {
+                return;
+            }
+
+            switch (biome.BiomeType)
+            {
+                case BiomeType.Intestine:
+                    AudioManager.Instance?.PlaySFX("IntestineBossImpact");
+                    break;
+                case BiomeType.Liver:
+                    AudioManager.Instance?.PlayTimedSFX("LiverBossImpact", 0.8f);
+                    break;
+                case BiomeType.Stomach:
+                    AudioManager.Instance?.PlaySFX("StomachBossImpact");
+                    break;
+            }
         }
 
         private Vector3 ResolveReturnPortalPosition()
@@ -564,12 +604,12 @@ namespace Necrocis
             if (returnPortalConfig == null || returnPortalConfig.useBillboard)
             {
                 Billboard billboard = portalObj.AddComponent<Billboard>();
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
 
             SpriteYSort ySort = portalObj.AddComponent<SpriteYSort>();
             ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
-            ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
+            ySort.SetUpdateMode(SpriteYSort.UpdateMode.Once);
 
             if (returnPortalConfig == null || returnPortalConfig.addCollider)
             {
@@ -1112,7 +1152,11 @@ namespace Necrocis
                 colliderSize = source.colliderSize,
                 colliderCenter = source.colliderCenter,
                 idleSprites = source.idleSprites,
+                idleSpritesUp = source.idleSpritesUp,
+                idleSpritesDown = source.idleSpritesDown,
                 moveSprites = source.moveSprites,
+                moveSpritesUp = source.moveSpritesUp,
+                moveSpritesDown = source.moveSpritesDown,
                 attackSprites = source.attackSprites,
                 attackSpritesUp = source.attackSpritesUp,
                 attackSpritesDown = source.attackSpritesDown,
@@ -1205,7 +1249,11 @@ namespace Necrocis
         {
             return rule != null
                 && ((rule.idleSprites != null && rule.idleSprites.Length > 0)
+                    || (rule.idleSpritesUp != null && rule.idleSpritesUp.Length > 0)
+                    || (rule.idleSpritesDown != null && rule.idleSpritesDown.Length > 0)
                     || (rule.moveSprites != null && rule.moveSprites.Length > 0)
+                    || (rule.moveSpritesUp != null && rule.moveSpritesUp.Length > 0)
+                    || (rule.moveSpritesDown != null && rule.moveSpritesDown.Length > 0)
                     || (rule.attackSprites != null && rule.attackSprites.Length > 0)
                     || (rule.deathSprites != null && rule.deathSprites.Length > 0));
         }

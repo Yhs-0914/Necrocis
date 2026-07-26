@@ -78,32 +78,25 @@ MonoBehaviour:
         colliderSize: {x: 0.95, y: 1.65, z: 0.95}
         colliderCenter: {x: 0, y: 0.82, z: 0}
         idleSprites:
-        - {fileID: 355525813, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -777785260, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 349434348, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 806756571, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -274461405, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 1126141625, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -1527034294, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -1740408080, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
+        - {fileID: 110100001, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100002, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100003, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100004, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
         moveSprites:
-        - {fileID: 355525813, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -777785260, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 349434348, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 806756571, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -274461405, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: 1126141625, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -1527034294, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
-        - {fileID: -1740408080, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
+        - {fileID: 110200001, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
+        - {fileID: 110200002, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
+        - {fileID: 110200003, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
+        - {fileID: 110200004, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
         attackSprites:
-        - {fileID: -993250770, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: -972252379, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: 564778616, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: -41725028, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: 195609161, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: -1827731989, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: -307867673, guid: 2318814a73e859b48afb23381a76291a, type: 3}
-        - {fileID: 578063590, guid: 2318814a73e859b48afb23381a76291a, type: 3}
+        - {fileID: 110300001, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300002, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300003, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300004, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300005, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300006, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300007, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300008, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
+        - {fileID: 110300009, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
         attackSpritesUp: []
         attackSpritesDown: []
         attackAnimationSpeed: 0.12
@@ -117,14 +110,10 @@ MonoBehaviour:
         attackColliderSize: {x: 2, y: 2, z: 2}
         attackColliderCenter: {x: 0, y: 0.48, z: 0}
         deathSprites:
-        - {fileID: -1796989649, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: -605929553, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: -1643347948, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: 739811864, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: 1582215997, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: -1411479431, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: -2116991119, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
-        - {fileID: -1125953015, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
+        - {fileID: 110100001, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100002, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100003, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        - {fileID: 110100004, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
         deathAnimationSpeed: 0.15
         isElite: 0
         tintColor: {r: 1, g: 1, b: 1, a: 1}
@@ -187,8 +176,6 @@ MonoBehaviour:
         stompDamage: 2
         stompSlowRatio: 0.3
         stompSlowDuration: 3
-        phase1Color: {r: 0.72, g: 0.45, b: 0.24, a: 1}
-        phase2Color: {r: 0.95, g: 0.32, b: 0.18, a: 1}
         dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
         parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
         shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
@@ -223,6 +210,7 @@ MonoBehaviour:
         gasProjectileRadius: 0.7
         gasProjectileScale: 1
         gasWindup: 0.25
+        gasProjectileHeightOffset: 2
         phase1ContactDamage: 1
         phase2ContactDamage: 2
         contactRadius: 1.05
@@ -230,9 +218,6 @@ MonoBehaviour:
         phase1PreferredDistance: 5.2
         phase2PreferredDistance: 4.2
         roamRadius: 10
-        brotherAColor: {r: 0.68, g: 0.86, b: 1, a: 1}
-        brotherBColor: {r: 0.78, g: 0.72, b: 1, a: 1}
-        enragedColor: {r: 0.45, g: 0.95, b: 1, a: 1}
         gasColor: {r: 0.72, g: 0.95, b: 0.9, a: 0.72}
         windColor: {r: 0.78, g: 0.9, b: 1, a: 0.34}
         diveColor: {r: 0.5, g: 0.85, b: 1, a: 0.42}

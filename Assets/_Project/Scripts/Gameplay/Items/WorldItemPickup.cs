@@ -45,6 +45,11 @@ namespace Necrocis
 
             if (itemManager.TryAcquireItem(itemId, out PlayerItemAcquireFailureReason failure))
             {
+                AudioManager.Instance?.PlaySFX("ItemPickup");
+                if (itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry))
+                {
+                    AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
+                }
                 Destroy(gameObject);
                 return;
             }

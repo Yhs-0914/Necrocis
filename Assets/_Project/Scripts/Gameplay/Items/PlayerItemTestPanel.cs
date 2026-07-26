@@ -141,10 +141,11 @@ namespace Necrocis
             catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -30f), new Vector2(840f, 660f));
             acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -30f), new Vector2(840f, 660f));
 
-            CreateActionButton("AddButton", panelObject.transform, new Vector2(-310f, -425f), new Vector2(300f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
-            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(10f, -425f), new Vector2(300f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
-            CreateActionButton("ClearButton", panelObject.transform, new Vector2(300f, -425f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
-            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-600f, -425f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
+            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-690f, -425f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
+            CreateActionButton("AddButton", panelObject.transform, new Vector2(-430f, -425f), new Vector2(260f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
+            CreateActionButton("SpawnButton", panelObject.transform, new Vector2(-120f, -425f), new Vector2(300f, 68f), "플레이어 위치 생성", SpawnSelectedCatalogItemAtPlayer, new Color(0.44f, 0.32f, 0.12f, 1f));
+            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(210f, -425f), new Vector2(260f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
+            CreateActionButton("ClearButton", panelObject.transform, new Vector2(500f, -425f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
 
             statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -500f), new Vector2(1740f, 46f), 24, TextAnchor.MiddleCenter);
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
@@ -330,6 +331,67 @@ namespace Necrocis
             }
 
             UpdateStatus($"추가 실패: {selectedCatalogItemId} ({failure})");
+        }
+
+        private void SpawnSelectedCatalogItemAtPlayer()
+        {
+            if (itemManager == null || string.IsNullOrWhiteSpace(selectedCatalogItemId))
+            {
+                UpdateStatus("생성할 아이템을 먼저 선택하세요.");
+                return;
+            }
+
+            PlayerController player = PlayerController.Instance != null
+                ? PlayerController.Instance
+                : GetComponent<PlayerController>();
+            if (player == null)
+            {
+                UpdateStatus("플레이어를 찾을 수 없어 아이템을 생성하지 못했습니다.");
+                return;
+            }
+
+            WorldItemSpawner spawner = ResolveWorldItemSpawner();
+            if (spawner == null)
+            {
+                UpdateStatus("아이템 스포너를 만들 수 없어 생성하지 못했습니다.");
+                return;
+            }
+
+            if (spawner.TrySpawnItemAt(selectedCatalogItemId, player.transform.position, true, true))
+            {
+                UpdateStatus($"플레이어 위치에 생성: {selectedCatalogItemId}");
+                return;
+            }
+
+            UpdateStatus($"생성 실패: {selectedCatalogItemId}");
+        }
+
+        private WorldItemSpawner ResolveWorldItemSpawner()
+        {
+            BiomeManager activeBiome = BiomeManager.Active;
+            WorldItemSpawner spawner = activeBiome != null
+                ? activeBiome.GetComponent<WorldItemSpawner>()
+                : null;
+
+            if (spawner == null)
+            {
+                spawner = FindFirstObjectByType<WorldItemSpawner>();
+            }
+
+            if (spawner != null)
+            {
+                return spawner;
+            }
+
+            GameObject spawnerObject = new GameObject("ItemTestWorldItemSpawner");
+            if (activeBiome != null)
+            {
+                spawnerObject.transform.SetParent(activeBiome.transform, true);
+            }
+
+            spawner = spawnerObject.AddComponent<WorldItemSpawner>();
+            spawner.SetAutoSpawnOnStart(false);
+            return spawner;
         }
 
         private void RemoveSelectedAcquiredItem()

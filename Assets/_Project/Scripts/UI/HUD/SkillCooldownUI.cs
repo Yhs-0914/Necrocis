@@ -7,6 +7,8 @@ using TMPro;
 [DisallowMultipleComponent]
 public class SkillCooldownUI : MonoBehaviour
 {
+    private static readonly string[] RemainingTimeFormats = { "F0", "F1", "F2", "F3" };
+
     [Header("UI References")]
     [SerializeField] private Image iconImage;
     [SerializeField] private Image cooldownFillImage;
@@ -38,6 +40,9 @@ public class SkillCooldownUI : MonoBehaviour
     private bool hasCachedButtonInteractable;
     private bool cachedCanvasGroupBlocksRaycasts = true;
     private bool hasCachedCanvasGroupBlocksRaycasts;
+    private int lastDisplayedTimeBucket = int.MinValue;
+    private int lastDisplayedDecimalPlaces = -1;
+    private string lastCooldownText;
 
     public bool IsCoolingDown { get; private set; }
     public bool IsUnlocked { get; private set; } = true;
@@ -128,6 +133,8 @@ public class SkillCooldownUI : MonoBehaviour
         cooldownDuration = 0f;
         remainingCooldown = 0f;
         normalizedProgress = 0f;
+        lastDisplayedTimeBucket = int.MinValue;
+        lastDisplayedDecimalPlaces = -1;
         SetFillAmount(0f);
         SetCooldownText(string.Empty);
         SetButtonInteractableDuringCooldown(isCoolingDown: !IsUnlocked);
@@ -257,17 +264,33 @@ public class SkillCooldownUI : MonoBehaviour
     {
         if (!showRemainingSeconds)
         {
+            lastDisplayedTimeBucket = int.MinValue;
+            lastDisplayedDecimalPlaces = -1;
             SetCooldownText(string.Empty);
             return;
         }
 
         int decimals = Mathf.Clamp(remainingTimeDecimalPlaces, 0, 3);
-        string format = $"F{decimals}";
-        SetCooldownText(seconds.ToString(format));
+        double scale = decimals == 0 ? 1d : decimals == 1 ? 10d : decimals == 2 ? 100d : 1000d;
+        int displayBucket = (int)Math.Round(seconds * scale, MidpointRounding.ToEven);
+        if (displayBucket == lastDisplayedTimeBucket && decimals == lastDisplayedDecimalPlaces)
+        {
+            return;
+        }
+
+        lastDisplayedTimeBucket = displayBucket;
+        lastDisplayedDecimalPlaces = decimals;
+        SetCooldownText(seconds.ToString(RemainingTimeFormats[decimals]));
     }
 
     private void SetCooldownText(string value)
     {
+        if (string.Equals(lastCooldownText, value, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastCooldownText = value;
         if (cooldownText != null)
         {
             cooldownText.text = value;

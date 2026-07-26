@@ -116,6 +116,9 @@ namespace Necrocis
         [SerializeField] private float footstepInterval = 0.35f;
         private float nextFootstepTime;
 
+        [Header("Debug")]
+        [SerializeField] private bool enableDebugLogs;
+
         // 공격 애니메이션 상태
         private bool isPlayingAttackAnim = false;
         private float attackAnimEndTime = 0f;                       // ?대룞 以??щ?
@@ -216,7 +219,7 @@ namespace Necrocis
             {
                 billboard = spriteRenderer.gameObject.AddComponent<Billboard>();
             }
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+            billboard.SetUpdateMode(Billboard.UpdateMode.Once);
 
             SpriteYSort ySort = spriteRenderer.GetComponent<SpriteYSort>();
             if (ySort == null)
@@ -262,7 +265,10 @@ namespace Necrocis
             SetAnimation(idleSprites, idleFrameRate);
             ApplyLockedRotation();
 
-            Debug.Log($"[Player] 시작 위치: {transform.position}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[Player] 시작 위치: {transform.position}");
+            }
         }
         // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -847,7 +853,10 @@ namespace Necrocis
             Sprite[] sprites = isMelee ? GetMeleeSprites() : GetRangedSprites();
             if (sprites == null || sprites.Length == 0)
             {
-                Debug.LogWarning($"[PlayerController] 공격 스프라이트 미할당 - isMelee:{isMelee} dir:{lastMoveDirection}");
+                if (enableDebugLogs)
+                {
+                    Debug.LogWarning($"[PlayerController] 공격 스프라이트 미할당 - isMelee:{isMelee} dir:{lastMoveDirection}");
+                }
                 return;
             }
 
@@ -855,7 +864,10 @@ namespace Necrocis
             SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + duration;
-            Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
+            }
         }
 
         private Sprite[] GetMeleeSprites()
@@ -911,6 +923,7 @@ namespace Necrocis
                 : DirectionToVector(currentDirection);
             dir.y = 0f;
             dashVelocity = dir * dashSpeed;
+            CombatVfx.PlayDash(transform, spriteRenderer, dir, dashDuration);
 
             yield return new WaitForSeconds(dashDuration);
 
@@ -1061,12 +1074,12 @@ namespace Necrocis
                 }
             }
 
-            if (args.CurrentValue < args.PreviousValue)
+            if (enableDebugLogs && args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
                 Debug.Log($"[Player] 피해 {damageTaken} 받음 | HP {args.CurrentValue}/{args.MaxValue}");
             }
-            else if (args.CurrentValue > args.PreviousValue)
+            else if (enableDebugLogs && args.CurrentValue > args.PreviousValue)
             {
                 float healed = args.CurrentValue - args.PreviousValue;
                 Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
@@ -1099,7 +1112,10 @@ namespace Necrocis
             playerStats.RuntimeStats.RestoreHealth(reviveHealth);
             Health health = GetComponent<Health>();
             health?.GrantTemporaryInvincibility(0.5f);
-            Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
+            }
             return true;
         }
         // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
@@ -1136,7 +1152,10 @@ namespace Necrocis
                 StopCoroutine(deathRoutine);
             deathRoutine = StartCoroutine(PlayDeathThenShowGameOver());
 
-            Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+            if (enableDebugLogs)
+            {
+                Debug.Log("[Player] HP媛 0???섏뼱 ?щ쭩?덉뒿?덈떎.");
+            }
         }
 
         private IEnumerator PlayDeathThenShowGameOver()

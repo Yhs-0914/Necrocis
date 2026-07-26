@@ -11,6 +11,8 @@ namespace Necrocis
     /// </summary>
     public class AggroDebris : MonoBehaviour
     {
+        private const float AggroScanInterval = 0.2f;
+
         private float duration;
         private float aggroRadius;
         private float elapsed;
@@ -29,6 +31,7 @@ namespace Necrocis
         // 영향받는 적 추적
         private readonly HashSet<EnemyController> boostedEnemies = new HashSet<EnemyController>();
         private float aggroRadiusSqr;
+        private float nextAggroScanTime;
 
         public void Configure(float duration, float aggroRadius, Sprite debrisSprite, int sortingOrder,
                               Sprite[] vfxSprites, float vfxTargetScale, float vfxSpeed)
@@ -67,6 +70,7 @@ namespace Necrocis
 
             // 즉시 어그로 적용
             ForceAggroNearbyEnemies();
+            nextAggroScanTime = Time.time + AggroScanInterval;
         }
 
         private void SpawnShockwaveVFX(Sprite[] frames, float speed, int sortingOrder)
@@ -145,8 +149,12 @@ namespace Necrocis
                 return;
             }
 
-            // 지속적으로 새 적 탐색 및 어그로 적용
-            ForceAggroNearbyEnemies();
+            // 새로 범위에 들어온 적만 주기적으로 확인한다.
+            if (Time.time >= nextAggroScanTime)
+            {
+                nextAggroScanTime = Time.time + AggroScanInterval;
+                ForceAggroNearbyEnemies();
+            }
         }
 
         /// <summary>

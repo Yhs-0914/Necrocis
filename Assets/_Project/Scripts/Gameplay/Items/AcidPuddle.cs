@@ -1,9 +1,13 @@
+using System;
 using UnityEngine;
 
 namespace Necrocis
 {
     public class AcidPuddle : MonoBehaviour
     {
+        private const string PoolName = "PlayerItem.AcidPuddle";
+        private static readonly Func<GameObject> CreateFunc = CreatePuddleObject;
+
         private float tickDamage;
         private float radius;
         private float tickInterval;
@@ -15,10 +19,15 @@ namespace Necrocis
 
         public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
         {
-            GameObject puddleObject = new GameObject("AcidPuddle");
-            puddleObject.transform.position = new Vector3(position.x, position.y + 0.05f, position.z);
+            GameObject puddleObject = RuntimePool.Acquire(PoolName, CreateFunc);
+            if (puddleObject == null || !puddleObject.TryGetComponent(out AcidPuddle puddle))
+            {
+                RuntimePool.Release(puddleObject);
+                return null;
+            }
 
-            AcidPuddle puddle = puddleObject.AddComponent<AcidPuddle>();
+            puddleObject.name = "AcidPuddle";
+            puddleObject.transform.position = new Vector3(position.x, position.y + 0.05f, position.z);
             puddle.Initialize(tickDamage, duration, radius, tickInterval);
             return puddle;
         }
@@ -33,14 +42,17 @@ namespace Necrocis
             endTime = startTime + lifeDuration;
             nextTickTime = Time.time;
             EnsureVisual();
-            transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
+            visualRenderer.enabled = true;
+            transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
+                visualRenderer != null ? visualRenderer.sprite : null,
+                Mathf.Max(0.2f, radius * 2f * 0.85f));
         }
 
         private void Update()
         {
             if (Time.time >= endTime)
             {
-                Destroy(gameObject);
+                RuntimePool.Release(gameObject);
                 return;
             }
 
@@ -98,8 +110,11 @@ namespace Necrocis
                 visualRenderer = gameObject.AddComponent<SpriteRenderer>();
             }
 
-            visualRenderer.sprite = TextureSpriteCache.GetCircleSprite();
-            visualRenderer.color = new Color(0.32f, 0.95f, 0.28f, 0.42f);
+            Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/acidic_rupture_effect");
+            visualRenderer.sprite = effectSprite != null ? effectSprite : TextureSpriteCache.GetCircleSprite();
+            visualRenderer.color = effectSprite != null
+                ? new Color(1f, 1f, 1f, 0.72f)
+                : new Color(0.32f, 0.95f, 0.28f, 0.42f);
             visualRenderer.sortingOrder = 1200;
         }
 
@@ -112,10 +127,21 @@ namespace Necrocis
 
             float elapsed = Mathf.Clamp01((Time.time - startTime) / Mathf.Max(0.01f, lifeDuration));
             float pulse = 1f + Mathf.Sin(Time.time * 8f) * 0.05f;
-            transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f) * pulse;
+            float effectScale = TextureSpriteCache.GetUniformScaleForWorldSize(
+                visualRenderer.sprite,
+                Mathf.Max(0.2f, radius * 2f * 0.85f));
+            transform.localScale = Vector3.one * effectScale * pulse;
             Color color = visualRenderer.color;
-            color.a = Mathf.Lerp(0.42f, 0.08f, elapsed);
+            color.a = Mathf.Lerp(0.72f, 0.08f, elapsed);
             visualRenderer.color = color;
+        }
+
+        private static GameObject CreatePuddleObject()
+        {
+            GameObject obj = new GameObject("AcidPuddle");
+            obj.AddComponent<SpriteRenderer>();
+            obj.AddComponent<AcidPuddle>();
+            return obj;
         }
     }
 }

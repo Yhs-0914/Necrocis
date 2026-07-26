@@ -43,6 +43,7 @@ namespace Necrocis
         public float gasProjectileRadius = 0.7f;
         public float gasProjectileScale = 1f;
         public float gasWindup = 0.25f;
+        public float gasProjectileHeightOffset = 2f;
 
         [Header("Contact")]
         public float phase1ContactDamage = 1f;
@@ -56,9 +57,6 @@ namespace Necrocis
         public float roamRadius = 10f;
 
         [Header("Temporary Visuals")]
-        public Color brotherAColor = new Color(0.68f, 0.86f, 1f, 1f);
-        public Color brotherBColor = new Color(0.78f, 0.72f, 1f, 1f);
-        public Color enragedColor = new Color(0.45f, 0.95f, 1f, 1f);
         public Color gasColor = new Color(0.72f, 0.95f, 0.9f, 0.72f);
         public Color windColor = new Color(0.78f, 0.9f, 1f, 0.34f);
         public Color diveColor = new Color(0.5f, 0.85f, 1f, 0.42f);
@@ -70,7 +68,7 @@ namespace Necrocis
     }
 
     [DisallowMultipleComponent]
-    public class LungBossPattern : MonoBehaviour
+    public class LungBossPattern : MonoBehaviour, IBossPatternTempSpriteOwner
     {
         private enum BossPhase
         {
@@ -116,6 +114,7 @@ namespace Necrocis
         [SerializeField] private float gasProjectileRadius = 0.7f;
         [SerializeField] private float gasProjectileScale = 1f;
         [SerializeField] private float gasWindup = 0.25f;
+        [SerializeField] private float gasProjectileHeightOffset = 2f;
 
         [Header("Contact")]
         [SerializeField] private float phase1ContactDamage = 1f;
@@ -129,9 +128,6 @@ namespace Necrocis
         [SerializeField] private float roamRadius = 10f;
 
         [Header("Temporary Visuals")]
-        [SerializeField] private Color brotherAColor = new Color(0.68f, 0.86f, 1f, 1f);
-        [SerializeField] private Color brotherBColor = new Color(0.78f, 0.72f, 1f, 1f);
-        [SerializeField] private Color enragedColor = new Color(0.45f, 0.95f, 1f, 1f);
         [SerializeField] private Color gasColor = new Color(0.72f, 0.95f, 0.9f, 0.72f);
         [SerializeField] private Color windColor = new Color(0.78f, 0.9f, 1f, 0.34f);
         [SerializeField] private Color diveColor = new Color(0.5f, 0.85f, 1f, 0.42f);
@@ -195,8 +191,8 @@ namespace Necrocis
             SpawnSibling();
 
             PositionBrothers();
-            ConfigureBrother(0, brotherAColor);
-            ConfigureBrother(1, brotherBColor);
+            ConfigureBrother(0);
+            ConfigureBrother(1);
 
             if (phase == BossPhase.Phase2)
             {
@@ -241,6 +237,7 @@ namespace Necrocis
             gasProjectileRadius = settings.gasProjectileRadius;
             gasProjectileScale = settings.gasProjectileScale;
             gasWindup = settings.gasWindup;
+            gasProjectileHeightOffset = settings.gasProjectileHeightOffset;
             phase1ContactDamage = settings.phase1ContactDamage;
             phase2ContactDamage = settings.phase2ContactDamage;
             contactRadius = settings.contactRadius;
@@ -248,9 +245,6 @@ namespace Necrocis
             phase1PreferredDistance = settings.phase1PreferredDistance;
             phase2PreferredDistance = settings.phase2PreferredDistance;
             roamRadius = settings.roamRadius;
-            brotherAColor = settings.brotherAColor;
-            brotherBColor = settings.brotherBColor;
-            enragedColor = settings.enragedColor;
             gasColor = settings.gasColor;
             windColor = settings.windColor;
             diveColor = settings.diveColor;
@@ -288,7 +282,7 @@ namespace Necrocis
             }
         }
 
-        private void ConfigureBrother(int index, Color color)
+        private void ConfigureBrother(int index)
         {
             EnemyController brother = GetBrother(index);
             if (brother == null)
@@ -312,7 +306,7 @@ namespace Necrocis
             brotherRenderers[index] = brother.GetComponentInChildren<SpriteRenderer>();
             if (brotherRenderers[index] != null)
             {
-                brotherRenderers[index].color = color;
+                brotherRenderers[index].color = Color.white;
             }
         }
 
@@ -353,6 +347,7 @@ namespace Necrocis
 
             if (active)
             {
+                AudioManager.Instance?.PlaySFX("BossRoar");
                 nextWindGustTime = Time.time + 1.2f;
                 windGustEndTime = float.NegativeInfinity;
                 nextGasTime[0] = Time.time + 0.8f;
@@ -513,6 +508,7 @@ namespace Necrocis
 
             survivor = newSurvivor;
             phase = BossPhase.Phase2;
+            AudioManager.Instance?.PlaySFX("LungPhase2");
             phase2ActionRunning = false;
             nextPhase2GasTime = Time.time + 1f;
             nextDiveTime = Time.time + 2.5f;
@@ -528,7 +524,7 @@ namespace Necrocis
             SpriteRenderer renderer = survivor != null ? survivor.GetComponentInChildren<SpriteRenderer>() : null;
             if (renderer != null)
             {
-                renderer.color = enragedColor;
+                renderer.color = Color.white;
             }
 
             if (survivor != null)
@@ -570,6 +566,7 @@ namespace Necrocis
 
             windGustEndTime = Time.time + Mathf.Max(0.1f, windGustDuration);
             nextWindGustTime = Time.time + Mathf.Max(0.2f, windGustInterval);
+            AudioManager.Instance?.PlaySFX("LungHighSpeed");
             Vector3 center = anchorPosition;
             center.y = GetGroundHeight(center) + 0.08f;
             GameObject wind = CreateTempSpriteObject("LungBoss_WindGust", GetRingSprite(), windColor, center, 2.4f, 2400);
@@ -598,6 +595,7 @@ namespace Necrocis
         {
             phase2ActionRunning = true;
             nextDiveTime = Time.time + GetDiveCooldown();
+            AudioManager.Instance?.PlaySFX("LungAccelerate");
 
             float windup = Mathf.Max(0f, diveWindup);
             float elapsed = 0f;
@@ -651,6 +649,7 @@ namespace Necrocis
             Vector3 forward = GetDirectionToPlayer(shooter.transform.position);
             yield return GasWindup(shooter);
 
+            AudioManager.Instance?.PlaySFX("LungPhase2Skill");
             GameObject first = CreateGasProjectile(shooter.transform.position, forward);
             GameObject second = CreateGasProjectile(shooter.transform.position, -forward);
             yield return MoveGasProjectiles(
@@ -687,6 +686,7 @@ namespace Necrocis
             }
 
             Vector3 startScale = shooter.transform.localScale;
+            shooter.PlayAttackAnimationOnly();
             float elapsed = 0f;
             float duration = Mathf.Max(0f, gasWindup);
             while (elapsed < duration)
@@ -738,12 +738,12 @@ namespace Necrocis
 
             if (first != null)
             {
-                Destroy(first);
+                ReleaseTempSprite(first);
             }
 
             if (second != null)
             {
-                Destroy(second);
+                ReleaseTempSprite(second);
             }
         }
 
@@ -860,7 +860,7 @@ namespace Necrocis
             direction.y = 0f;
             direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             Vector3 position = shooterPosition + direction * 0.65f;
-            position.y = GetGroundHeight(position) + 1f;
+            position.y = GetGroundHeight(position) + Mathf.Max(0f, gasProjectileHeightOffset);
             return CreateTempSpriteObject("LungBoss_GasShot", GetGasSprite(), gasColor, position, gasProjectileScale, 5000);
         }
 
@@ -1024,24 +1024,23 @@ namespace Necrocis
                 yield return null;
             }
 
-            Destroy(obj);
+            ReleaseTempSprite(obj);
         }
 
         private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
-            GameObject obj = new GameObject(name);
-            obj.transform.position = position;
-            obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
-            activeTempObjects.Add(obj);
+            return BossPatternVisualPool.Acquire(name, sprite, color, position, scale, sortingOrder, this, activeTempObjects);
+        }
 
-            SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            renderer.sortingOrder = sortingOrder;
+        public void ReleaseTempSprite(GameObject obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
 
-            Billboard billboard = obj.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
-            return obj;
+            activeTempObjects.Remove(obj);
+            BossPatternVisualPool.Release(obj);
         }
 
         private void CleanupPatternObjects()
@@ -1050,8 +1049,7 @@ namespace Necrocis
             {
                 if (activeTempObjects[i] != null)
                 {
-                    activeTempObjects[i].SetActive(false);
-                    Destroy(activeTempObjects[i]);
+                    BossPatternVisualPool.Release(activeTempObjects[i]);
                 }
             }
 

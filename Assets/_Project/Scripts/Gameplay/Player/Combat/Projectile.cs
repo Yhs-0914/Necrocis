@@ -14,6 +14,7 @@ namespace Necrocis
         private const int HitBufferSize = 8;
         private const int ExplosionBufferSize = 24;
         private const int ObstacleHitBufferSize = 12;
+        private const string ExplosionVisualPoolName = "Projectile.ExplosiveBloodCellVisual";
 
         [SerializeField] private float speed = 15f;
         [SerializeField] private float lifeTime = 3f;
@@ -154,11 +155,12 @@ namespace Necrocis
 
         private void Update()
         {
+            float deltaTime = Time.deltaTime;
             if (spawnKind == SpawnKind.Normal && itemEffects != null)
             {
                 if (itemEffects.HasHomingCell)
                 {
-                    ApplyHoming(Time.deltaTime);
+                    ApplyHoming(deltaTime);
                 }
 
                 if (itemEffects.HasRefluxOrgan)
@@ -167,16 +169,18 @@ namespace Necrocis
                 }
             }
 
-            Vector3 step = moveDirection * currentSpeed * Time.deltaTime;
-            if (!TryReflectFromObstacleCollider(ref step))
+            float stepDistance = currentSpeed * deltaTime;
+            Vector3 step = moveDirection * stepDistance;
+            bool reflected = TryReflectFromObstacleCollider(ref step);
+            if (!reflected)
             {
-                TryReflectFromBiome(ref step);
+                reflected = TryReflectFromBiome(ref step);
             }
 
             Vector3 nextPosition = transform.position + step;
             nextPosition.y = flightHeight;
             transform.position = nextPosition;
-            traveledDistance += step.magnitude;
+            traveledDistance += reflected ? step.magnitude : stepDistance;
 
             if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
             {
@@ -257,6 +261,7 @@ namespace Necrocis
 
             currentHitCount++;
             enemy.TakeDamage(appliedDamage);
+            CombatVfx.PlayProjectileImpact(transform.position, moveDirection);
 
             if (itemEffects != null)
             {
@@ -630,16 +635,16 @@ namespace Necrocis
 
         private static void SpawnExplosionVisual(Vector3 center, float radius)
         {
-            GameObject fx = new GameObject("ExplosiveBloodCellFx");
-            fx.transform.position = new Vector3(center.x, center.y + 0.08f, center.z);
-
-            SpriteRenderer renderer = fx.AddComponent<SpriteRenderer>();
-            renderer.sprite = TextureSpriteCache.GetCircleSprite();
-            renderer.color = new Color(1f, 0.26f, 0.12f, 0.55f);
-            renderer.sortingOrder = 5100;
-
-            fx.transform.localScale = Vector3.one * Mathf.Max(0.2f, radius * 2f);
-            Object.Destroy(fx, 0.2f);
+            Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/explosive_blood_cell_effect");
+            PlayerItemCombatEffects.SpawnPooledCircleVisual(
+                ExplosionVisualPoolName,
+                "ExplosiveBloodCellFx",
+                new Vector3(center.x, center.y + 0.08f, center.z),
+                Mathf.Max(0.2f, radius * 2f * 0.85f),
+                effectSprite != null ? Color.white : new Color(1f, 0.26f, 0.12f, 0.55f),
+                5100,
+                0.2f,
+                effectSprite);
         }
 
         private float GetRemainingRange()
@@ -686,6 +691,75 @@ namespace Necrocis
     {
         private static Sprite circleSprite;
         private static Material spriteMaterial;
+        private static readonly Dictionary<string, Sprite> ResourceSprites = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<string, Material> ResourceSpriteMaterials = new Dictionary<string, Material>();
+
+        public static Sprite LoadResourceSprite(string resourcePath, float pixelsPerUnit = 100f)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return null;
+            }
+
+            if (ResourceSprites.TryGetValue(resourcePath, out Sprite cachedSprite))
+            {
+                return cachedSprite;
+            }
+
+            Sprite sprite = Resources.Load<Sprite>(resourcePath);
+            if (sprite == null)
+            {
+                Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+                if (texture != null)
+                {
+                    sprite = Sprite.Create(
+                        texture,
+                        new Rect(0f, 0f, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f),
+                        Mathf.Max(1f, pixelsPerUnit));
+                    sprite.name = texture.name;
+                }
+            }
+
+            ResourceSprites[resourcePath] = sprite;
+            return sprite;
+        }
+
+        public static float GetUniformScaleForWorldSize(Sprite sprite, float targetWorldSize)
+        {
+            float spriteSize = sprite != null
+                ? Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y)
+                : 1f;
+            return Mathf.Max(0.01f, targetWorldSize) / Mathf.Max(0.0001f, spriteSize);
+        }
+
+        public static Material GetResourceSpriteMaterial(string resourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(resourcePath))
+            {
+                return GetSpriteMaterial();
+            }
+
+            if (ResourceSpriteMaterials.TryGetValue(resourcePath, out Material cachedMaterial))
+            {
+                return cachedMaterial;
+            }
+
+            Sprite sprite = LoadResourceSprite(resourcePath);
+            Material baseMaterial = GetSpriteMaterial();
+            if (sprite == null || baseMaterial == null)
+            {
+                return baseMaterial;
+            }
+
+            Material material = new Material(baseMaterial)
+            {
+                name = $"Runtime_{sprite.name}_Material",
+                mainTexture = sprite.texture
+            };
+            ResourceSpriteMaterials[resourcePath] = material;
+            return material;
+        }
 
         public static Sprite GetCircleSprite()
         {

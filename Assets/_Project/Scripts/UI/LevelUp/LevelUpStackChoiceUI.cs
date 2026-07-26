@@ -189,15 +189,18 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         if (selectionInProgress)
         {
             Debug.Log("[LevelUpStackChoiceUI] SelectChoice ignored: selectionInProgress=true");
+            AudioManager.Instance?.PlaySFX("UIInvalid");
             return;
         }
 
         if (index < 0 || index >= currentChoices.Count)
         {
             Debug.LogWarning($"[LevelUpStackChoiceUI] SelectChoice ignored: invalid index {index}");
+            AudioManager.Instance?.PlaySFX("UIInvalid");
             return;
         }
 
+        PlayStatSelectionSfx(currentChoices[index]);
         selectionInProgress = true;
         SetButtonsInteractable(false);
 
@@ -264,6 +267,22 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         {
             playerStats.Heal(valueConfig.value);
         }
+    }
+
+    private static void PlayStatSelectionSfx(StackStatType statType)
+    {
+        string soundKey = statType switch
+        {
+            StackStatType.AttackPower => "StatAttackPowerSelect",
+            StackStatType.AttackRange => "StatAttackRangeSelect",
+            StackStatType.AttackSpeed => "StatAttackRangeSelect",
+            StackStatType.Magic => "StatMagicSelect",
+            StackStatType.MoveSpeed => "StatMoveSpeedSelect",
+            StackStatType.MaxHealth => "StatHealthSelect",
+            _ => "UISelect"
+        };
+
+        AudioManager.Instance?.PlaySFX(soundKey);
     }
 
     private static void ApplyBioGambleStat(PlayerStats playerStats, StackStatType statType, int randomDelta, string source)

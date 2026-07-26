@@ -84,6 +84,7 @@ namespace Necrocis
 
         private void Restart()
         {
+            AudioManager.Instance?.PlaySFX("ButtonClick");
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
 

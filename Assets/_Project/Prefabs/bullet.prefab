@@ -174,4 +174,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb3c76257e37a7845bbd998ebc5be594, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ProjectileDirectionalSprite
-  spriteScale: 0.5
+  useIncomingSprite: 0
+  spriteScale: 0.2
+  incomingSpriteScale: 0.5
+  sortingOrder: 2700

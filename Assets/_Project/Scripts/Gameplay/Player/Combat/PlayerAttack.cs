@@ -10,6 +10,9 @@ namespace Necrocis
     /// </summary>
     public class PlayerAttack : MonoBehaviour
     {
+        private const string BeamVisualPoolName = "PlayerAttack.BeamVisual";
+        private static readonly System.Func<GameObject> CreateBeamVisualFunc = CreateBeamVisualObject;
+
         [Header("Melee Attack (Q)")]
         [SerializeField] private float meleeAttackDamage = 20f;
         [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3f, 3f, 3f);
@@ -30,14 +33,22 @@ namespace Necrocis
         [Header("Beam")]
         [SerializeField, Min(1)] private int beamOverlapBufferSize = 48;
         [SerializeField] private float beamVerticalHalfHeight = 2.5f;
-        [SerializeField] private float beamHeightOffset = 0.8f;
+        [SerializeField] private float beamHeightOffset = -0.3f;
         [SerializeField] private float beamVisualDuration = 0.1f;
+        [SerializeField] private string beamTextureResourcePath = "ItemEffects/beam_organ_beam";
 
         [Header("Shared")]
         [SerializeField] private float meleeCooldown  = 0.2f;
         [SerializeField] private float attackCooldown = 0.3f;
         [SerializeField, Min(0f)] private float cellProliferationDelay = 0.5f;
         [SerializeField] private bool enableDebugLogs;
+
+        [Header("Attack Visuals")]
+        [SerializeField] private string meleeSlashSpriteResourcePath = "AttackVisuals/basic_melee_slash";
+        [SerializeField] private float meleeSlashLifetime = 0.18f;
+        [SerializeField] private float meleeSlashScale = 0.95f;
+        [SerializeField] private float meleeSlashHeightOffset = 2f;
+        [SerializeField] private int meleeSlashSortingOrder = 5050;
 
         private PlayerController playerController;
         private PlayerItemCombatEffects itemEffects;
@@ -47,6 +58,11 @@ namespace Necrocis
         private readonly HashSet<EnemyController> beamHitEnemies = new HashSet<EnemyController>();
         private Collider[] meleeOverlapResults;
         private Collider[] beamOverlapResults;
+        private Sprite meleeSlashSprite;
+        private bool meleeSlashSpriteLoadAttempted;
+        private Texture2D beamTexture;
+        private Material beamMaterial;
+        private bool beamTextureLoadAttempted;
 
         private void Awake()
         {
@@ -173,6 +189,10 @@ namespace Necrocis
             float effectiveWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
             float effectiveDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z * rangeMultiplier, stats);
             Vector3 tallBoxSize = new Vector3(effectiveWidth, 20f, effectiveDepth);
+            CombatVfx.PlayMeleeSwing(
+                transform.position,
+                direction,
+                Mathf.Max(1.1f, effectiveAttackOffset + effectiveDepth * 0.5f));
             Quaternion rotation = Quaternion.LookRotation(direction);
             float damageMultiplier = itemEffects != null ? itemEffects.GetOutgoingBasicDamageMultiplier() : 1f;
             float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
@@ -180,6 +200,7 @@ namespace Necrocis
             float baseDamage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage) + flatDamageBonus;
             float finalDamage = baseDamage * damageMultiplier * unstableMultiplier;
             itemEffects?.NotifyBasicAttackPerformed(finalDamage, meleeTargetMask, effectiveAttackOffset + effectiveDepth, direction);
+            SpawnMeleeSlashVisual(boxCenter, direction, effectiveWidth, effectiveDepth);
 
             EnsureMeleeOverlapBuffer();
             meleeHitEnemies.Clear();
@@ -211,6 +232,120 @@ namespace Necrocis
                 enemy.TakeDamage(appliedDamage);
                 itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+            }
+        }
+
+        private void SpawnMeleeSlashVisual(Vector3 center, Vector3 direction, float effectiveWidth, float effectiveDepth)
+        {
+            Sprite sprite = GetMeleeSlashSprite();
+            if (sprite == null)
+            {
+                return;
+            }
+
+            GameObject visualObject = new GameObject("BasicMeleeSlashVisual");
+            visualObject.transform.position = new Vector3(center.x, transform.position.y + meleeSlashHeightOffset, center.z);
+            visualObject.transform.localScale = Vector3.one * GetMeleeSlashWorldScale(sprite, effectiveWidth, effectiveDepth);
+            visualObject.transform.rotation = GetScreenAlignedRotation(direction);
+
+            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = meleeSlashSortingOrder;
+            StartCoroutine(FadeAndDestroyMeleeSlash(renderer, Mathf.Max(0.02f, meleeSlashLifetime)));
+        }
+
+        private Sprite GetMeleeSlashSprite()
+        {
+            if (meleeSlashSpriteLoadAttempted)
+            {
+                return meleeSlashSprite;
+            }
+
+            meleeSlashSpriteLoadAttempted = true;
+            if (string.IsNullOrWhiteSpace(meleeSlashSpriteResourcePath))
+            {
+                return null;
+            }
+
+            meleeSlashSprite = TextureSpriteCache.LoadResourceSprite(meleeSlashSpriteResourcePath);
+            if (meleeSlashSprite == null)
+            {
+                Debug.LogWarning($"[PlayerAttack] Resources/{meleeSlashSpriteResourcePath} sprite not found.");
+            }
+
+            return meleeSlashSprite;
+        }
+
+        private float GetMeleeSlashWorldScale(Sprite sprite, float effectiveWidth, float effectiveDepth)
+        {
+            if (sprite == null)
+            {
+                return Mathf.Max(0.05f, meleeSlashScale);
+            }
+
+            float spriteWorldSize = Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y);
+            if (spriteWorldSize <= 0.0001f)
+            {
+                return Mathf.Max(0.05f, meleeSlashScale);
+            }
+
+            float targetWorldSize = Mathf.Max(0.1f, Mathf.Max(effectiveWidth, effectiveDepth) * meleeSlashScale);
+            return Mathf.Max(0.05f, targetWorldSize / spriteWorldSize);
+        }
+
+        private static Quaternion GetScreenAlignedRotation(Vector3 worldDirection)
+        {
+            worldDirection.y = 0f;
+            if (worldDirection.sqrMagnitude <= 0.0001f)
+            {
+                worldDirection = Vector3.forward;
+            }
+
+            Camera activeCamera = DontStarveCamera.GetActiveCamera();
+            if (activeCamera == null)
+            {
+                float fallbackAngle = Mathf.Atan2(worldDirection.z, worldDirection.x) * Mathf.Rad2Deg;
+                return Quaternion.Euler(90f, 0f, fallbackAngle);
+            }
+
+            Vector3 projectedDirection = Vector3.ProjectOnPlane(worldDirection.normalized, activeCamera.transform.forward);
+            if (projectedDirection.sqrMagnitude <= 0.0001f)
+            {
+                return activeCamera.transform.rotation;
+            }
+
+            projectedDirection.Normalize();
+            float x = Vector3.Dot(projectedDirection, activeCamera.transform.right);
+            float y = Vector3.Dot(projectedDirection, activeCamera.transform.up);
+            float rollAngle = Mathf.Atan2(y, x) * Mathf.Rad2Deg;
+            return activeCamera.transform.rotation * Quaternion.AngleAxis(rollAngle, Vector3.forward);
+        }
+
+        private static IEnumerator FadeAndDestroyMeleeSlash(SpriteRenderer renderer, float lifetime)
+        {
+            if (renderer == null)
+            {
+                yield break;
+            }
+
+            Color baseColor = renderer.color;
+            float startTime = Time.time;
+            while (renderer != null)
+            {
+                float elapsed = Time.time - startTime;
+                if (elapsed >= lifetime)
+                {
+                    break;
+                }
+
+                float alpha = Mathf.Lerp(baseColor.a, 0f, elapsed / lifetime);
+                renderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+                yield return null;
+            }
+
+            if (renderer != null)
+            {
+                Destroy(renderer.gameObject);
             }
         }
 
@@ -255,6 +390,11 @@ namespace Necrocis
             }
             float effectiveProjectileRange = PlayerCombatCalculator.GetBasicAttackRange(projectileRange, stats);
             itemEffects?.NotifyBasicAttackPerformed(damage, rangedTargetMask, effectiveProjectileRange, direction);
+
+            Vector3 muzzleOrigin = firePoint != null ? firePoint.position : transform.position;
+            muzzleOrigin += direction * projectileSpawnOffset;
+            muzzleOrigin.y += projectileSpawnHeight + projectileSpawnExtraHeight;
+            CombatVfx.PlayRangedMuzzle(muzzleOrigin, direction);
 
             if (itemEffects != null && itemEffects.HasBeamOrgan)
             {
@@ -369,7 +509,13 @@ namespace Necrocis
             }
 
             proj.Launch(forward, damage, rangedTargetMask, range, itemEffects, spawnKind);
-            projectile.GetComponent<ProjectileDirectionalSprite>()?.SetDirection(forward);
+            ProjectileDirectionalSprite directionalSprite = projectile.GetComponent<ProjectileDirectionalSprite>();
+            if (directionalSprite == null)
+            {
+                directionalSprite = projectile.AddComponent<ProjectileDirectionalSprite>();
+            }
+
+            directionalSprite.SetDirection(forward);
         }
 
         private void FireBeam(Vector3 direction, float damage, float range)
@@ -422,37 +568,74 @@ namespace Necrocis
 
         private void SpawnBeamVisual(Vector3 start, Vector3 end, float radius)
         {
+            GameObject fx = RuntimePool.Acquire(BeamVisualPoolName, CreateBeamVisualFunc);
+            if (fx == null || !fx.TryGetComponent(out PlayerBeamVisual visual))
+            {
+                RuntimePool.Release(fx);
+                return;
+            }
+
+            visual.Show(
+                start,
+                end,
+                radius,
+                Mathf.Max(0.05f, beamVisualDuration),
+                GetBeamMaterial());
+        }
+
+        private static GameObject CreateBeamVisualObject()
+        {
             GameObject fx = new GameObject("BeamOrganFx");
             LineRenderer line = fx.AddComponent<LineRenderer>();
+            PlayerBeamVisual visual = fx.AddComponent<PlayerBeamVisual>();
+            visual.Initialize(line);
+            RuntimePool.EnsureAutoReturn(fx);
+            return fx;
+        }
 
-            line.positionCount = 2;
-            line.SetPosition(0, start);
-            line.SetPosition(1, end);
-            line.useWorldSpace = true;
-            line.numCapVertices = 6;
-            line.startWidth = Mathf.Max(0.05f, radius * 1.45f);
-            line.endWidth = Mathf.Max(0.03f, radius * 1.1f);
-            line.material = TextureSpriteCache.GetSpriteMaterial();
+        private Material GetBeamMaterial()
+        {
+            if (beamMaterial != null)
+            {
+                return beamMaterial;
+            }
 
-            Color baseColor = new Color(1f, 0.24f, 0.15f, 0.85f);
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
+            Material baseMaterial = TextureSpriteCache.GetSpriteMaterial();
+            if (baseMaterial == null)
+            {
+                return null;
+            }
+
+            if (!beamTextureLoadAttempted)
+            {
+                beamTextureLoadAttempted = true;
+                if (!string.IsNullOrWhiteSpace(beamTextureResourcePath))
                 {
-                    new GradientColorKey(baseColor, 0f),
-                    new GradientColorKey(new Color(1f, 0.7f, 0.2f, 1f), 0.55f),
-                    new GradientColorKey(baseColor, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0.95f, 0f),
-                    new GradientAlphaKey(0.65f, 0.8f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            line.colorGradient = gradient;
-            line.sortingOrder = 5005;
+                    Sprite beamSprite = TextureSpriteCache.LoadResourceSprite(beamTextureResourcePath);
+                    beamTexture = beamSprite != null
+                        ? beamSprite.texture
+                        : Resources.Load<Texture2D>(beamTextureResourcePath);
+                }
 
-            Destroy(fx, Mathf.Max(0.05f, beamVisualDuration));
+                if (beamTexture == null)
+                {
+                    Debug.LogWarning($"[PlayerAttack] Resources/{beamTextureResourcePath} beam texture not found. Using the fallback line material.");
+                }
+            }
+
+            if (beamTexture == null)
+            {
+                return baseMaterial;
+            }
+
+            beamTexture.wrapMode = TextureWrapMode.Clamp;
+            beamTexture.filterMode = FilterMode.Point;
+            beamMaterial = new Material(baseMaterial)
+            {
+                name = "BeamOrganMaterial",
+                mainTexture = beamTexture
+            };
+            return beamMaterial;
         }
 
         private static PlayerProjectilePool ResolveObjectPooler()
@@ -532,6 +715,15 @@ namespace Necrocis
             return true;
         }
 
+        private void OnDestroy()
+        {
+            if (beamMaterial != null)
+            {
+                Destroy(beamMaterial);
+                beamMaterial = null;
+            }
+        }
+
         private void OnDrawGizmosSelected()
         {
             Vector3 direction = GetAttackDirection();
@@ -547,6 +739,81 @@ namespace Necrocis
                 Quaternion.LookRotation(direction),
                 Vector3.one);
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(gizmoWidth, 20f, gizmoDepth));
+        }
+    }
+
+    [DisallowMultipleComponent]
+    internal sealed class PlayerBeamVisual : MonoBehaviour
+    {
+        private LineRenderer line;
+        private RuntimePoolAutoReturn autoReturn;
+
+        public void Initialize(LineRenderer targetLine)
+        {
+            line = targetLine;
+            if (line == null)
+            {
+                line = GetComponent<LineRenderer>();
+            }
+
+            if (line == null)
+            {
+                return;
+            }
+
+            line.positionCount = 2;
+            line.useWorldSpace = true;
+            line.numCapVertices = 6;
+            line.sharedMaterial = TextureSpriteCache.GetSpriteMaterial();
+            line.sortingOrder = 5005;
+
+            Color baseColor = new Color(1f, 0.24f, 0.15f, 0.85f);
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(baseColor, 0f),
+                    new GradientColorKey(new Color(1f, 0.7f, 0.2f, 1f), 0.55f),
+                    new GradientColorKey(baseColor, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(0.95f, 0f),
+                    new GradientAlphaKey(0.65f, 0.8f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            line.colorGradient = gradient;
+        }
+
+        public void Show(Vector3 start, Vector3 end, float radius, float duration, Material material)
+        {
+            if (line == null)
+            {
+                Initialize(GetComponent<LineRenderer>());
+            }
+
+            if (line == null)
+            {
+                RuntimePool.Release(gameObject);
+                return;
+            }
+
+            if (material != null)
+            {
+                line.sharedMaterial = material;
+            }
+
+            line.SetPosition(0, start);
+            line.SetPosition(1, end);
+            line.startWidth = Mathf.Max(0.05f, radius * 1.45f);
+            line.endWidth = Mathf.Max(0.03f, radius * 1.1f);
+            line.enabled = true;
+
+            if (autoReturn == null)
+            {
+                autoReturn = RuntimePool.EnsureAutoReturn(gameObject);
+            }
+            autoReturn.Schedule(duration);
         }
     }
 }

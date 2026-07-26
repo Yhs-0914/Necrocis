@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Necrocis
@@ -52,6 +53,35 @@ namespace Necrocis
         {
             base.Start();
             TryCreateMidBossArena();
+            PlayBiomeBgm();
+
+            if (biomeType == BiomeType.Lung)
+            {
+                StartCoroutine(PlayLungAmbientImpacts());
+            }
+        }
+
+        private void PlayBiomeBgm()
+        {
+            string bgmKey = biomeType switch
+            {
+                BiomeType.Intestine => "IntestineMap",
+                BiomeType.Liver => "LiverMap",
+                BiomeType.Stomach => "StomachMap",
+                BiomeType.Lung => "LungMap",
+                _ => "InGame",
+            };
+
+            AudioManager.Instance?.PlayBGM(bgmKey);
+        }
+
+        private IEnumerator PlayLungAmbientImpacts()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(Random.Range(25f, 50f));
+                AudioManager.Instance?.PlaySFX("LungAmbientImpact");
+            }
         }
 
         protected override void InitializeNoise()
@@ -454,7 +484,7 @@ namespace Necrocis
                 }
                 billboard.enabled = true;
                 billboard.ResetBaseLocalPosition(obj.transform.localPosition);
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
             else if (billboard != null)
             {
