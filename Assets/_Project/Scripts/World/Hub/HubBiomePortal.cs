@@ -163,6 +163,7 @@ namespace Necrocis
         {
             BiomeData data = BiomeData.GetBiomeData(targetBiome);
             Debug.Log($"[HubBiomePortal] {data.displayName} 바이옴으로 이동! (크기: {data.mapSize.x}x{data.mapSize.y})");
+            AudioManager.Instance?.PlaySFX("PortalEnter");
 
             // 포털 진입 시 비활성화
             SetActive(false);

@@ -21,7 +21,7 @@ namespace Necrocis
                 return null;
             }
 
-            return AcquireInternal(prefab.GetInstanceID(), () => UnityEngine.Object.Instantiate(prefab), parent);
+            return AcquireInternal(prefab.GetInstanceID(), prefab, null, parent);
         }
 
         public static GameObject Acquire(string poolName, Func<GameObject> createFunc, Transform parent = null)
@@ -31,7 +31,7 @@ namespace Necrocis
                 return null;
             }
 
-            return AcquireInternal(Animator.StringToHash(poolName), createFunc, parent);
+            return AcquireInternal(Animator.StringToHash(poolName), null, createFunc, parent);
         }
 
         public static void Release(GameObject obj)
@@ -76,7 +76,11 @@ namespace Necrocis
             return autoReturn;
         }
 
-        private static GameObject AcquireInternal(int poolKey, Func<GameObject> createFunc, Transform parent)
+        private static GameObject AcquireInternal(
+            int poolKey,
+            GameObject prefab,
+            Func<GameObject> createFunc,
+            Transform parent)
         {
             EnsurePoolRoot();
 
@@ -94,7 +98,9 @@ namespace Necrocis
 
             if (obj == null)
             {
-                obj = createFunc.Invoke();
+                obj = prefab != null
+                    ? UnityEngine.Object.Instantiate(prefab)
+                    : createFunc?.Invoke();
                 if (obj == null)
                 {
                     return null;

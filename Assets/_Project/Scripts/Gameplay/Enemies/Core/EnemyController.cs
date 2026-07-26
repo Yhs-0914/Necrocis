@@ -35,6 +35,7 @@ namespace Necrocis
         private CharacterStats stats;             // 체력/공격력 등 스탯 컨테이너
         private EnemyStatusEffectController statusEffectController;
         private EnemySkillBridge enemySkillBridge;
+        private readonly List<CharacterStatValue> statConfigurationBuffer = new List<CharacterStatValue>();
 
         // 이동
         private Vector3 anchorPosition;  // 스폰 기준점 (leash/wander 중심)
@@ -54,6 +55,8 @@ namespace Necrocis
         private bool attackAnimPlaying;  // 공격 애니메이션 재생 중
         private bool deathAnimPlaying;   // 사망 애니메이션 재생 중
         private bool colliderExpanded;   // 공격 콜라이더 확장 상태
+        private int facingDirection = 3;  // 0=상, 1=우, 2=좌, 3=하
+        private Sprite[] currentLoopFrames;
 
         // 돌진 (항체 엘리트)
         private Vector3 chargeDirection;  // 돌진 방향 (고정)

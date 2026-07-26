@@ -1,4 +1,4 @@
-using System.Linq;
+using System;
 using UnityEngine;
 
 namespace Necrocis
@@ -13,6 +13,8 @@ namespace Necrocis
         // Dir8 인덱스 → 스프라이트 시트 인덱스
         // N→0(상), NE→1(우상), E→2(우), SE→5(우하), S→7(하), SW→8(좌하), W→6(좌), NW→3(좌상)
         private static readonly int[] DirToSpriteIndex = { 0, 1, 2, 5, 7, 8, 6, 3 };
+        private static Sprite[] cachedSprites;
+        private static bool spriteLoadAttempted;
 
         [SerializeField] private float spriteScale = 0.2f;
 
@@ -31,7 +33,7 @@ namespace Necrocis
             sr.sortingOrder = 2700;
 
             Billboard bb = spriteObj.AddComponent<Billboard>();
-            bb.SetUpdateMode(Billboard.UpdateMode.Continuous);
+            bb.SetUpdateMode(Billboard.UpdateMode.Once);
 
             // 기존 MeshRenderer 숨기기
             Renderer meshRenderer = GetComponent<Renderer>();
@@ -42,6 +44,18 @@ namespace Necrocis
 
         private void LoadSprites()
         {
+            if (cachedSprites != null)
+            {
+                sprites = cachedSprites;
+                return;
+            }
+
+            if (spriteLoadAttempted)
+            {
+                return;
+            }
+            spriteLoadAttempted = true;
+
             Sprite[] loaded = Resources.LoadAll<Sprite>(SpritesheetName);
             if (loaded == null || loaded.Length == 0)
             {
@@ -49,13 +63,33 @@ namespace Necrocis
                 return;
             }
 
-            // 이름 끝 숫자 기준 정렬 (_0, _1 ... _8)
-            sprites = loaded.OrderBy(s =>
+            Array.Sort(loaded, (left, right) => GetSpriteIndex(left).CompareTo(GetSpriteIndex(right)));
+            cachedSprites = loaded;
+            sprites = cachedSprites;
+        }
+
+        private static int GetSpriteIndex(Sprite sprite)
+        {
+            string spriteName = sprite != null ? sprite.name : string.Empty;
+            int separator = spriteName.LastIndexOf('_');
+            if (separator < 0 || separator >= spriteName.Length - 1)
             {
-                string n = s.name;
-                int u = n.LastIndexOf('_');
-                return u >= 0 && int.TryParse(n.Substring(u + 1), out int idx) ? idx : 999;
-            }).ToArray();
+                return int.MaxValue;
+            }
+
+            int value = 0;
+            for (int i = separator + 1; i < spriteName.Length; i++)
+            {
+                char digit = spriteName[i];
+                if (digit < '0' || digit > '9')
+                {
+                    return int.MaxValue;
+                }
+
+                value = value * 10 + (digit - '0');
+            }
+
+            return value;
         }
 
         private void OnEnable() => HideSprite();

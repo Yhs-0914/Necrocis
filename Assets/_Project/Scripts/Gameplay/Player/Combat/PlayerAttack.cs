@@ -10,6 +10,9 @@ namespace Necrocis
     /// </summary>
     public class PlayerAttack : MonoBehaviour
     {
+        private const string BeamVisualPoolName = "PlayerAttack.BeamVisual";
+        private static readonly System.Func<GameObject> CreateBeamVisualFunc = CreateBeamVisualObject;
+
         [Header("Melee Attack (Q)")]
         [SerializeField] private float meleeAttackDamage = 20f;
         [SerializeField] private Vector3 meleeAttackBoxSize = new Vector3(3f, 3f, 3f);
@@ -173,6 +176,10 @@ namespace Necrocis
             float effectiveWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
             float effectiveDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z * rangeMultiplier, stats);
             Vector3 tallBoxSize = new Vector3(effectiveWidth, 20f, effectiveDepth);
+            CombatVfx.PlayMeleeSwing(
+                transform.position,
+                direction,
+                Mathf.Max(1.1f, effectiveAttackOffset + effectiveDepth * 0.5f));
             Quaternion rotation = Quaternion.LookRotation(direction);
             float damageMultiplier = itemEffects != null ? itemEffects.GetOutgoingBasicDamageMultiplier() : 1f;
             float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
@@ -255,6 +262,11 @@ namespace Necrocis
             }
             float effectiveProjectileRange = PlayerCombatCalculator.GetBasicAttackRange(projectileRange, stats);
             itemEffects?.NotifyBasicAttackPerformed(damage, rangedTargetMask, effectiveProjectileRange, direction);
+
+            Vector3 muzzleOrigin = firePoint != null ? firePoint.position : transform.position;
+            muzzleOrigin += direction * projectileSpawnOffset;
+            muzzleOrigin.y += projectileSpawnHeight + projectileSpawnExtraHeight;
+            CombatVfx.PlayRangedMuzzle(muzzleOrigin, direction);
 
             if (itemEffects != null && itemEffects.HasBeamOrgan)
             {
@@ -422,37 +434,24 @@ namespace Necrocis
 
         private void SpawnBeamVisual(Vector3 start, Vector3 end, float radius)
         {
+            GameObject fx = RuntimePool.Acquire(BeamVisualPoolName, CreateBeamVisualFunc);
+            if (fx == null || !fx.TryGetComponent(out PlayerBeamVisual visual))
+            {
+                RuntimePool.Release(fx);
+                return;
+            }
+
+            visual.Show(start, end, radius, Mathf.Max(0.05f, beamVisualDuration));
+        }
+
+        private static GameObject CreateBeamVisualObject()
+        {
             GameObject fx = new GameObject("BeamOrganFx");
             LineRenderer line = fx.AddComponent<LineRenderer>();
-
-            line.positionCount = 2;
-            line.SetPosition(0, start);
-            line.SetPosition(1, end);
-            line.useWorldSpace = true;
-            line.numCapVertices = 6;
-            line.startWidth = Mathf.Max(0.05f, radius * 1.45f);
-            line.endWidth = Mathf.Max(0.03f, radius * 1.1f);
-            line.material = TextureSpriteCache.GetSpriteMaterial();
-
-            Color baseColor = new Color(1f, 0.24f, 0.15f, 0.85f);
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(baseColor, 0f),
-                    new GradientColorKey(new Color(1f, 0.7f, 0.2f, 1f), 0.55f),
-                    new GradientColorKey(baseColor, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0.95f, 0f),
-                    new GradientAlphaKey(0.65f, 0.8f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            line.colorGradient = gradient;
-            line.sortingOrder = 5005;
-
-            Destroy(fx, Mathf.Max(0.05f, beamVisualDuration));
+            PlayerBeamVisual visual = fx.AddComponent<PlayerBeamVisual>();
+            visual.Initialize(line);
+            RuntimePool.EnsureAutoReturn(fx);
+            return fx;
         }
 
         private static PlayerProjectilePool ResolveObjectPooler()
@@ -547,6 +546,76 @@ namespace Necrocis
                 Quaternion.LookRotation(direction),
                 Vector3.one);
             Gizmos.DrawWireCube(Vector3.zero, new Vector3(gizmoWidth, 20f, gizmoDepth));
+        }
+    }
+
+    [DisallowMultipleComponent]
+    internal sealed class PlayerBeamVisual : MonoBehaviour
+    {
+        private LineRenderer line;
+        private RuntimePoolAutoReturn autoReturn;
+
+        public void Initialize(LineRenderer targetLine)
+        {
+            line = targetLine;
+            if (line == null)
+            {
+                line = GetComponent<LineRenderer>();
+            }
+
+            if (line == null)
+            {
+                return;
+            }
+
+            line.positionCount = 2;
+            line.useWorldSpace = true;
+            line.numCapVertices = 6;
+            line.sharedMaterial = TextureSpriteCache.GetSpriteMaterial();
+            line.sortingOrder = 5005;
+
+            Color baseColor = new Color(1f, 0.24f, 0.15f, 0.85f);
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(baseColor, 0f),
+                    new GradientColorKey(new Color(1f, 0.7f, 0.2f, 1f), 0.55f),
+                    new GradientColorKey(baseColor, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(0.95f, 0f),
+                    new GradientAlphaKey(0.65f, 0.8f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            line.colorGradient = gradient;
+        }
+
+        public void Show(Vector3 start, Vector3 end, float radius, float duration)
+        {
+            if (line == null)
+            {
+                Initialize(GetComponent<LineRenderer>());
+            }
+
+            if (line == null)
+            {
+                RuntimePool.Release(gameObject);
+                return;
+            }
+
+            line.SetPosition(0, start);
+            line.SetPosition(1, end);
+            line.startWidth = Mathf.Max(0.05f, radius * 1.45f);
+            line.endWidth = Mathf.Max(0.03f, radius * 1.1f);
+            line.enabled = true;
+
+            if (autoReturn == null)
+            {
+                autoReturn = RuntimePool.EnsureAutoReturn(gameObject);
+            }
+            autoReturn.Schedule(duration);
         }
     }
 }

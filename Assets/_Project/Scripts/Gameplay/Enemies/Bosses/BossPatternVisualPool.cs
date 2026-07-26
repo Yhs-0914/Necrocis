@@ -24,8 +24,7 @@ namespace Necrocis
             IBossPatternTempSpriteOwner owner,
             List<GameObject> activeObjects)
         {
-            string poolName = string.Concat(PoolName, ".", objectName);
-            GameObject obj = RuntimePool.Acquire(poolName, CreateFunc);
+            GameObject obj = RuntimePool.Acquire(PoolName, CreateFunc);
             if (obj == null)
             {
                 return null;

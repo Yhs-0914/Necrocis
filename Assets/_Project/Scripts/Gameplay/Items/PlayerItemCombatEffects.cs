@@ -78,6 +78,7 @@ namespace Necrocis
         private const string BloodDronePoolName = "PlayerItem.BloodDrone";
         private const string GuardianOrganPoolName = "PlayerItem.GuardianOrgan";
         private const string BloodDroneProjectilePoolName = "PlayerItem.BloodDroneProjectile";
+        private const string BioSummonPoolName = "PlayerItem.BioSummon";
 
         [Header("Multi Shot")]
         [SerializeField] private float doubleShotSpreadAngle = 7f;
@@ -300,6 +301,7 @@ namespace Necrocis
         private SpriteRenderer plateletMembraneOutlineRenderer;
         private bool plateletMembraneShaderWarningLogged;
         private SpriteRenderer playerVisualSpriteRenderer;
+        private readonly List<SpriteRenderer> playerSpriteRendererBuffer = new List<SpriteRenderer>();
         private float rampageMoveAccumulatedTime;
         private float rampageIdleAccumulatedTime;
         private int rampageAttackBonus;
@@ -379,6 +381,7 @@ namespace Necrocis
         private static readonly Func<GameObject> CreateBloodDroneFunc = CreateBloodDroneObject;
         private static readonly Func<GameObject> CreateGuardianOrganFunc = CreateGuardianOrganObject;
         private static readonly Func<GameObject> CreateBloodDroneProjectileFunc = CreateBloodDroneProjectileObject;
+        private static readonly Func<GameObject> CreateBioSummonFunc = CreateBioSummonObject;
         private int macrophageStacks;
         private float macrophageExpireTime = float.NegativeInfinity;
         private float macrophageAppliedAttackBonus;
@@ -2389,9 +2392,15 @@ namespace Necrocis
             float attackInterval,
             bool destroyOnAttack)
         {
-            GameObject summonObject = new GameObject(kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly");
+            GameObject summonObject = RuntimePool.Acquire(BioSummonPoolName, CreateBioSummonFunc);
+            if (summonObject == null || !summonObject.TryGetComponent(out PlayerBioSummon summon))
+            {
+                RuntimePool.Release(summonObject);
+                return;
+            }
+
+            summonObject.name = kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly";
             summonObject.transform.position = position;
-            PlayerBioSummon summon = summonObject.AddComponent<PlayerBioSummon>();
             summon.Initialize(this, kind, sprite, attackSprites, visualScale, color, damage, lifetime, searchRadius, attackRadius, attackInterval, destroyOnAttack);
             activeBioSummons.Add(summon);
         }
@@ -2462,7 +2471,7 @@ namespace Necrocis
         {
             for (int i = activeBioSummons.Count - 1; i >= 0; i--)
             {
-                if (activeBioSummons[i] == null)
+                if (activeBioSummons[i] == null || !activeBioSummons[i].gameObject.activeInHierarchy)
                 {
                     activeBioSummons.RemoveAt(i);
                 }
@@ -2490,7 +2499,7 @@ namespace Necrocis
             {
                 if (activeBioSummons[i] != null)
                 {
-                    Destroy(activeBioSummons[i].gameObject);
+                    activeBioSummons[i].ReleaseToPool();
                 }
             }
 
@@ -2764,7 +2773,7 @@ namespace Necrocis
             return runtimeLineMaterial;
         }
 
-        private static void SpawnPooledCircleVisual(
+        internal static void SpawnPooledCircleVisual(
             string poolName,
             string objectName,
             Vector3 position,
@@ -2835,6 +2844,25 @@ namespace Necrocis
             GameObject obj = new GameObject("BloodDroneProjectile");
             obj.AddComponent<PlayerBioProjectile>();
             return obj;
+        }
+
+        private static GameObject CreateBioSummonObject()
+        {
+            GameObject obj = new GameObject("PlayerBioSummon");
+            obj.AddComponent<SpriteRenderer>();
+            obj.AddComponent<PlayerBioSummon>();
+            return obj;
+        }
+
+        private void ReleaseBioSummon(PlayerBioSummon summon)
+        {
+            if (summon == null)
+            {
+                return;
+            }
+
+            activeBioSummons.Remove(summon);
+            RuntimePool.Release(summon.gameObject);
         }
 
         private static SpriteRenderer GetOrAddSpriteRenderer(GameObject obj)
@@ -3706,10 +3734,16 @@ namespace Necrocis
 
         private SpriteRenderer FindPlayerSpriteRenderer()
         {
-            SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
+            if (playerVisualSpriteRenderer != null)
             {
-                SpriteRenderer renderer = renderers[i];
+                return playerVisualSpriteRenderer;
+            }
+
+            playerSpriteRendererBuffer.Clear();
+            GetComponentsInChildren(true, playerSpriteRendererBuffer);
+            for (int i = 0; i < playerSpriteRendererBuffer.Count; i++)
+            {
+                SpriteRenderer renderer = playerSpriteRendererBuffer[i];
                 if (renderer == null)
                 {
                     continue;
@@ -3721,7 +3755,8 @@ namespace Necrocis
                     continue;
                 }
 
-                return renderer;
+                playerVisualSpriteRenderer = renderer;
+                return playerVisualSpriteRenderer;
             }
 
             return null;
@@ -3810,26 +3845,34 @@ namespace Necrocis
                 this.attackInterval = Mathf.Max(0.05f, attackInterval);
                 this.destroyOnAttack = destroyOnAttack;
                 this.attackSprites = attackSprites;
+                target = null;
+                nextAttackTime = 0f;
+                attackVisualEndTime = 0f;
+                attackVisualFrameTime = 0f;
                 moveSpeed = kind == SummonKind.Spore ? 5.2f : 3.2f;
                 expireTime = Time.time + Mathf.Max(0.1f, lifetime);
 
-                spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+                if (spriteRenderer == null)
+                {
+                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
+                }
                 idleSprite = sprite != null ? sprite : TextureSpriteCache.GetCircleSprite();
                 spriteRenderer.sprite = idleSprite;
                 spriteRenderer.color = color;
                 spriteRenderer.sortingOrder = kind == SummonKind.Spore ? 5100 : 5050;
+                spriteRenderer.enabled = true;
                 transform.localScale = visualScale;
+                SyncBillboard();
             }
 
             private void Update()
             {
                 if (owner == null || Time.time >= expireTime)
                 {
-                    Destroy(gameObject);
+                    ReleaseToPool();
                     return;
                 }
 
-                SyncBillboard();
                 UpdateAttackVisual();
                 if (!IsEnemyTargetable(target))
                 {
@@ -3863,8 +3906,22 @@ namespace Necrocis
                 if (destroyOnAttack)
                 {
                     SpawnBurstVisual();
-                    Destroy(gameObject);
+                    ReleaseToPool();
                 }
+            }
+
+            public void ReleaseToPool()
+            {
+                PlayerItemCombatEffects currentOwner = owner;
+                owner = null;
+                target = null;
+                if (currentOwner != null)
+                {
+                    currentOwner.ReleaseBioSummon(this);
+                    return;
+                }
+
+                RuntimePool.Release(gameObject);
             }
 
             private void StartAttackVisual()
@@ -3946,6 +4003,13 @@ namespace Necrocis
                     transform.rotation = activeCamera.transform.rotation;
                 }
             }
+
+            private void OnDisable()
+            {
+                owner = null;
+                target = null;
+                attackSprites = null;
+            }
         }
 
         private class PlayerBloodDrone : MonoBehaviour
@@ -3971,6 +4035,7 @@ namespace Necrocis
                 spriteRenderer.sortingOrder = 5300;
                 spriteRenderer.enabled = true;
                 transform.localScale = Vector3.one * 0.68f;
+                SyncBillboard();
             }
 
             public void ClearOwner()
@@ -3990,7 +4055,6 @@ namespace Necrocis
                 float radians = angle * Mathf.Deg2Rad;
                 Vector3 offset = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.bloodDroneOrbitRadius);
                 transform.position = owner.transform.position + offset + Vector3.up * 0.45f;
-                SyncBillboard();
 
                 if (Time.time < nextFireTime)
                 {
@@ -4029,6 +4093,8 @@ namespace Necrocis
             private SpriteRenderer spriteRenderer;
             private float angle;
             private float nextBlockTime;
+            private Vector3 cameraRight = Vector3.right;
+            private Vector3 cameraUp = Vector3.up;
 
             public void Initialize(PlayerItemCombatEffects owner)
             {
@@ -4046,6 +4112,7 @@ namespace Necrocis
                 spriteRenderer.sortingOrder = 5350;
                 spriteRenderer.enabled = true;
                 transform.localScale = Vector3.one * 0.82f;
+                CacheCameraBasis();
             }
 
             public void ClearOwner()
@@ -4063,17 +4130,12 @@ namespace Necrocis
 
                 angle += Time.deltaTime * 260f;
                 float radians = angle * Mathf.Deg2Rad;
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                Vector3 right = activeCamera != null ? activeCamera.transform.right : Vector3.right;
-                Vector3 up = activeCamera != null ? activeCamera.transform.up : Vector3.up;
                 Vector3 center = owner.GetPlayerVisualCenter();
-                Vector3 offset = (right * Mathf.Cos(radians) + up * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
+                Vector3 offset = (cameraRight * Mathf.Cos(radians) + cameraUp * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
                 transform.position = center + offset;
                 spriteRenderer.color = Time.time >= nextBlockTime
                     ? new Color(0.68f, 0.82f, 1f, 0.95f)
                     : new Color(0.35f, 0.48f, 0.7f, 0.45f);
-                SyncBillboard();
-
                 if (Time.time < nextBlockTime)
                 {
                     return;
@@ -4122,12 +4184,20 @@ namespace Necrocis
                     0.16f);
             }
 
-            private void SyncBillboard()
+            private void CacheCameraBasis()
             {
                 Camera activeCamera = DontStarveCamera.GetActiveCamera();
                 if (activeCamera != null)
                 {
+                    cameraRight = activeCamera.transform.right;
+                    cameraUp = activeCamera.transform.up;
                     transform.rotation = activeCamera.transform.rotation;
+                }
+                else
+                {
+                    cameraRight = Vector3.right;
+                    cameraUp = Vector3.up;
+                    transform.rotation = Quaternion.identity;
                 }
             }
 
@@ -4180,6 +4250,11 @@ namespace Necrocis
                 spriteRenderer.sortingOrder = 5320;
                 spriteRenderer.enabled = true;
                 transform.localScale = Vector3.one * 0.22f;
+                Camera activeCamera = DontStarveCamera.GetActiveCamera();
+                if (activeCamera != null)
+                {
+                    transform.rotation = activeCamera.transform.rotation;
+                }
             }
 
             private void Update()
@@ -4200,11 +4275,6 @@ namespace Necrocis
                 }
 
                 transform.position += toTarget.normalized * speed * Time.deltaTime;
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    transform.rotation = activeCamera.transform.rotation;
-                }
             }
 
             private void ReleaseSelf()

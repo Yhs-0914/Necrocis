@@ -110,9 +110,11 @@ public class ClassChoiceUI : MonoBehaviour
     {
         if (job == JobType.None || LevelUpManager.GetCurrentJob() != JobType.None)
         {
+            AudioManager.Instance?.PlaySFX("UIInvalid");
             return;
         }
 
+        AudioManager.Instance?.PlaySFX("UISelect");
         LevelUpManager.SetJob(job);
         SyncLegacyPlayerClass(job);
         HideUI();

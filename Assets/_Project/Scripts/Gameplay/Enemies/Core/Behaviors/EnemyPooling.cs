@@ -48,6 +48,8 @@ namespace Necrocis
             attackAnimPlaying = false;
             deathAnimPlaying = false;
             colliderExpanded = false;
+            facingDirection = 3;
+            currentLoopFrames = null;
             isCharging = false;
             chargeElapsed = 0f;
             chargeCurrentSpeed = 0f;
@@ -85,6 +87,8 @@ namespace Necrocis
                 gameObject.SetActive(true);
             }
 
+            CombatVfx.PlayEnemySpawn(this);
+
             // FSM 시작 → Idle
             currentState = null;
             ChangeState(EnemyIdleState.Instance);
@@ -115,6 +119,8 @@ namespace Necrocis
             attackAnimPlaying = false;
             deathAnimPlaying = false;
             colliderExpanded = false;
+            facingDirection = 3;
+            currentLoopFrames = null;
             isCharging = false;
             hasAggroBoost = false;
             ignoreMidBossArenaRestriction = false;
@@ -176,6 +182,7 @@ namespace Necrocis
                 animatedSprite.Stop();
                 animatedSprite.enabled = false;
             }
+            currentLoopFrames = null;
 
             if (spriteRenderer != null)
                 spriteRenderer.flipX = false;

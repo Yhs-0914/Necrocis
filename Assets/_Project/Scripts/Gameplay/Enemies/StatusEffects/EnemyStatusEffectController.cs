@@ -13,7 +13,7 @@ namespace Necrocis
             public float endTime;
         }
 
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool enableDebugLogs;
 
         private EnemyController enemy;
 
@@ -25,11 +25,15 @@ namespace Necrocis
         private float poisonEndTime;
         private float poisonTickInterval;
         private float poisonTickDamage;
+        private WaitForSeconds poisonWaitInstruction;
+        private float poisonWaitDuration = -1f;
 
         private Coroutine bleedCoroutine;
         private float bleedEndTime;
         private float bleedTickInterval;
         private float bleedTickDamage;
+        private WaitForSeconds bleedWaitInstruction;
+        private float bleedWaitDuration = -1f;
 
         private float freezeVisualEndTime;
         private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
@@ -44,7 +48,6 @@ namespace Necrocis
         public void Initialize(EnemyController owner)
         {
             enemy = owner;
-            ResolveStatusOverlay();
         }
 
         public void ResetEffects()
@@ -157,6 +160,8 @@ namespace Necrocis
                 bleedCoroutine = StartCoroutine(BleedRoutine());
             }
 
+            RefreshStatusVisuals();
+
             if (enableDebugLogs)
             {
                 Debug.Log($"[EnemyStatus] Bleed applied to {EnemyName} | {duration:0.#}s / {tickDamage:0.#}dmg per {tickInterval:0.#}s");
@@ -178,6 +183,8 @@ namespace Necrocis
             {
                 poisonCoroutine = StartCoroutine(PoisonRoutine());
             }
+
+            RefreshStatusVisuals();
 
             if (enableDebugLogs)
             {
@@ -206,6 +213,8 @@ namespace Necrocis
                 slowRoutine = StartCoroutine(SlowRoutine());
             }
 
+            RefreshStatusVisuals();
+
             if (enableDebugLogs)
             {
                 Debug.Log($"[EnemyStatus] Slow applied to {EnemyName} for {duration:0.##}s ({slowRatio * 100f:0.#}%)");
@@ -217,7 +226,12 @@ namespace Necrocis
             while (Time.time < poisonEndTime)
             {
                 float interval = Mathf.Max(0.05f, poisonTickInterval);
-                yield return new WaitForSeconds(interval);
+                if (poisonWaitInstruction == null || !Mathf.Approximately(poisonWaitDuration, interval))
+                {
+                    poisonWaitDuration = interval;
+                    poisonWaitInstruction = new WaitForSeconds(interval);
+                }
+                yield return poisonWaitInstruction;
 
                 if (enemy == null || enemy.IsDead)
                 {
@@ -229,6 +243,7 @@ namespace Necrocis
 
             poisonCoroutine = null;
             poisonEndTime = 0f;
+            RefreshStatusVisuals();
         }
 
         private IEnumerator BleedRoutine()
@@ -236,7 +251,12 @@ namespace Necrocis
             while (Time.time < bleedEndTime)
             {
                 float interval = Mathf.Max(0.05f, bleedTickInterval);
-                yield return new WaitForSeconds(interval);
+                if (bleedWaitInstruction == null || !Mathf.Approximately(bleedWaitDuration, interval))
+                {
+                    bleedWaitDuration = interval;
+                    bleedWaitInstruction = new WaitForSeconds(interval);
+                }
+                yield return bleedWaitInstruction;
 
                 if (enemy == null || enemy.IsDead)
                 {
@@ -248,6 +268,7 @@ namespace Necrocis
 
             bleedCoroutine = null;
             bleedEndTime = 0f;
+            RefreshStatusVisuals();
         }
 
         private IEnumerator SlowRoutine()
@@ -263,9 +284,12 @@ namespace Necrocis
                 float waitTime = Mathf.Max(0.02f, nextEndTime - Time.time);
                 yield return new WaitForSeconds(waitTime);
                 RefreshMoveSpeedSlow();
+                RefreshStatusVisuals();
             }
 
             slowRoutine = null;
+            freezeVisualEndTime = 0f;
+            RefreshStatusVisuals();
         }
 
         private void RefreshMoveSpeedSlow()
@@ -302,10 +326,18 @@ namespace Necrocis
             }
         }
 
-        private void Update()
+        private void RefreshStatusVisuals()
         {
+            bool poisoned = IsPoisoned;
+            bool frozen = IsFrozenVisualActive;
+            bool bleeding = IsBleeding;
+            if (!poisoned && !frozen && !bleeding && statusVisualOverlay == null)
+            {
+                return;
+            }
+
             ResolveStatusOverlay();
-            statusVisualOverlay?.Refresh(IsPoisoned, IsFrozenVisualActive, IsBleeding);
+            statusVisualOverlay?.Refresh(poisoned, frozen, bleeding);
         }
 
         private void OnDisable()
@@ -335,6 +367,10 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class EnemyStatusVisualOverlay : MonoBehaviour
     {
+        private static readonly Color PoisonColor = new Color(0.22f, 0.95f, 0.3f, 0.56f);
+        private static readonly Color FreezeColor = new Color(0.62f, 0.86f, 1f, 1f);
+        private static readonly Color BleedColor = new Color(1f, 0.12f, 0.16f, 0.56f);
+
         private EnemyController owner;
         private SpriteRenderer sourceRenderer;
         private SpriteRenderer poisonOverlay;
@@ -345,22 +381,37 @@ namespace Necrocis
         {
             owner = enemy;
             ResolveSourceRenderer();
-            EnsureOverlayRenderers();
         }
 
         public void Refresh(bool poisoned, bool frozen, bool bleeding)
         {
             ResolveSourceRenderer();
-            EnsureOverlayRenderers();
 
             if (sourceRenderer == null)
             {
+                enabled = false;
                 return;
             }
 
-            poisonOverlay.enabled = poisoned;
-            freezeOverlay.enabled = frozen;
-            bleedOverlay.enabled = bleeding;
+            if (poisoned && poisonOverlay == null)
+            {
+                poisonOverlay = CreateOverlayRenderer("PoisonOverlay", PoisonColor, 0.01f);
+            }
+
+            if (frozen && freezeOverlay == null)
+            {
+                freezeOverlay = CreateOverlayRenderer("FreezeOverlay", FreezeColor, 0.1f);
+            }
+
+            if (bleeding && bleedOverlay == null)
+            {
+                bleedOverlay = CreateOverlayRenderer("BleedOverlay", BleedColor, 0.03f);
+            }
+
+            if (poisonOverlay != null) poisonOverlay.enabled = poisoned;
+            if (freezeOverlay != null) freezeOverlay.enabled = frozen;
+            if (bleedOverlay != null) bleedOverlay.enabled = bleeding;
+            enabled = poisoned || frozen || bleeding;
         }
 
         private void LateUpdate()
@@ -368,13 +419,12 @@ namespace Necrocis
             if (sourceRenderer == null)
             {
                 ResolveSourceRenderer();
-                EnsureOverlayRenderers();
                 return;
             }
 
-            SyncOverlay(poisonOverlay, new Color(0.22f, 0.95f, 0.3f, 0.56f), 0.01f);
-            SyncOverlay(freezeOverlay, new Color(0.62f, 0.86f, 1f, 1f), 0.1f);
-            SyncOverlay(bleedOverlay, new Color(1f, 0.12f, 0.16f, 0.56f), 0.03f);
+            if (poisonOverlay != null && poisonOverlay.enabled) SyncOverlay(poisonOverlay);
+            if (freezeOverlay != null && freezeOverlay.enabled) SyncOverlay(freezeOverlay);
+            if (bleedOverlay != null && bleedOverlay.enabled) SyncOverlay(bleedOverlay);
         }
 
         private void OnDisable()
@@ -415,30 +465,7 @@ namespace Necrocis
             }
         }
 
-        private void EnsureOverlayRenderers()
-        {
-            if (sourceRenderer == null)
-            {
-                return;
-            }
-
-            if (poisonOverlay == null)
-            {
-                poisonOverlay = CreateOverlayRenderer("PoisonOverlay");
-            }
-
-            if (freezeOverlay == null)
-            {
-                freezeOverlay = CreateOverlayRenderer("FreezeOverlay");
-            }
-
-            if (bleedOverlay == null)
-            {
-                bleedOverlay = CreateOverlayRenderer("BleedOverlay");
-            }
-        }
-
-        private SpriteRenderer CreateOverlayRenderer(string name)
+        private SpriteRenderer CreateOverlayRenderer(string name, Color color, float scaleOffset)
         {
             GameObject overlayObject = new GameObject(name);
             overlayObject.transform.SetParent(sourceRenderer.transform, false);
@@ -448,12 +475,14 @@ namespace Necrocis
 
             SpriteRenderer renderer = overlayObject.AddComponent<SpriteRenderer>();
             renderer.enabled = false;
+            renderer.color = color;
             renderer.sortingLayerID = sourceRenderer.sortingLayerID;
             renderer.sortingOrder = sourceRenderer.sortingOrder + 1;
+            overlayObject.transform.localScale = Vector3.one * (1f + scaleOffset);
             return renderer;
         }
 
-        private void SyncOverlay(SpriteRenderer overlay, Color color, float scaleOffset)
+        private void SyncOverlay(SpriteRenderer overlay)
         {
             if (overlay == null || sourceRenderer == null)
             {
@@ -462,10 +491,8 @@ namespace Necrocis
 
             overlay.sprite = sourceRenderer.sprite;
             overlay.flipX = sourceRenderer.flipX;
-            overlay.color = color;
             overlay.sortingLayerID = sourceRenderer.sortingLayerID;
             overlay.sortingOrder = sourceRenderer.sortingOrder + 1;
-            overlay.transform.localScale = Vector3.one * (1f + scaleOffset);
         }
     }
 }

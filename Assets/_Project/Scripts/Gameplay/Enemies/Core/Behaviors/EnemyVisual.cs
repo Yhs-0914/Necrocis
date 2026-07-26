@@ -9,11 +9,7 @@ namespace Necrocis
         public void UpdateFacingDirection()
         {
             if (spriteRenderer == null || playerTransform == null) return;
-            float dx = playerTransform.position.x - GetCurrentPosition().x;
-            if (Mathf.Abs(dx) > 0.01f)
-            {
-                spriteRenderer.flipX = dx < 0f;
-            }
+            UpdateFacingFromVector(playerTransform.position - GetCurrentPosition());
         }
 
 
@@ -33,6 +29,7 @@ namespace Necrocis
 
             deathAnimPlaying = true;
             usingMoveAnimation = false;
+            currentLoopFrames = null;
             animatedSprite.enabled = true;
             animatedSprite.PlayOneShot(deathFrames, config.deathAnimationSpeed, () =>
             {
@@ -52,7 +49,7 @@ namespace Necrocis
         public void SetMoveAnimation()
         {
             usingMoveAnimation = true;
-            ApplyAnimation(config.moveSprites);
+            ApplyAnimation(GetMoveFrames());
         }
 
 
@@ -64,8 +61,16 @@ namespace Necrocis
             {
                 animatedSprite.Stop();
                 animatedSprite.enabled = false;
+                currentLoopFrames = null;
                 return;
             }
+
+            if (currentLoopFrames == frames && animatedSprite.enabled && animatedSprite.IsPlaying)
+            {
+                return;
+            }
+
+            currentLoopFrames = frames;
 
             if (frames.Length == 1)
             {
@@ -83,9 +88,130 @@ namespace Necrocis
 
         private Sprite[] GetIdleFrames()
         {
-            if (config.idleSprites != null && config.idleSprites.Length > 0)
-                return config.idleSprites;
-            return config.moveSprites;
+            Sprite[] frames = GetDirectionalFrames(config.idleSprites, config.idleSpritesUp, config.idleSpritesDown);
+            if (HasFrames(frames))
+            {
+                return frames;
+            }
+
+            return GetDirectionalFrames(config.moveSprites, config.moveSpritesUp, config.moveSpritesDown);
+        }
+
+
+        private Sprite[] GetMoveFrames()
+        {
+            Sprite[] frames = GetDirectionalFrames(config.moveSprites, config.moveSpritesUp, config.moveSpritesDown);
+            if (HasFrames(frames))
+            {
+                return frames;
+            }
+
+            return GetDirectionalFrames(config.idleSprites, config.idleSpritesUp, config.idleSpritesDown);
+        }
+
+
+        private Sprite[] GetDirectionalFrames(Sprite[] sideFrames, Sprite[] upFrames, Sprite[] downFrames)
+        {
+            switch (facingDirection)
+            {
+                case 0:
+                    return HasFrames(upFrames) ? upFrames : sideFrames;
+                case 3:
+                    return HasFrames(downFrames) ? downFrames : sideFrames;
+                default:
+                    return sideFrames;
+            }
+        }
+
+
+        private static bool HasFrames(Sprite[] frames)
+        {
+            return frames != null && frames.Length > 0;
+        }
+
+
+        private void UpdateFacingFromVector(Vector3 direction)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= 0.000001f)
+            {
+                return;
+            }
+
+            int nextDirection = GetPlanarDirection(direction);
+            bool changed = nextDirection != facingDirection;
+            facingDirection = nextDirection;
+            ApplyFacingFlip();
+
+            if (changed && !attackAnimPlaying && !deathAnimPlaying)
+            {
+                if (usingMoveAnimation)
+                {
+                    ApplyAnimation(GetMoveFrames());
+                }
+                else
+                {
+                    ApplyAnimation(GetIdleFrames());
+                }
+            }
+        }
+
+
+        private int GetPlanarDirection(Vector3 direction)
+        {
+            if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.z))
+            {
+                return direction.x >= 0f ? 1 : 2;
+            }
+
+            return direction.z >= 0f ? 0 : 3;
+        }
+
+
+        private void ApplyFacingFlip()
+        {
+            if (spriteRenderer == null)
+            {
+                return;
+            }
+
+            if (facingDirection == 1)
+            {
+                spriteRenderer.flipX = false;
+                return;
+            }
+
+            if (facingDirection == 2)
+            {
+                spriteRenderer.flipX = true;
+                return;
+            }
+
+            if (HasDirectionalFramesForFacing())
+            {
+                spriteRenderer.flipX = false;
+            }
+        }
+
+
+        private bool HasDirectionalFramesForFacing()
+        {
+            if (config == null)
+            {
+                return false;
+            }
+
+            if (facingDirection == 0)
+            {
+                return HasFrames(config.idleSpritesUp) || HasFrames(config.moveSpritesUp);
+            }
+
+            if (facingDirection == 3)
+            {
+                return HasFrames(config.idleSpritesDown) || HasFrames(config.moveSpritesDown);
+            }
+
+            return false;
         }
 
 
@@ -144,21 +270,22 @@ namespace Necrocis
                 return;
             }
 
-            List<CharacterStatValue> additionalStats = config.additionalBaseStats ?? new List<CharacterStatValue>();
-            List<CharacterStatValue> baseStats = new List<CharacterStatValue>(3 + additionalStats.Count)
-            {
-                new CharacterStatValue(CharacterStatType.MoveSpeed, config.moveSpeed),
-                new CharacterStatValue(CharacterStatType.MaxHealth, config.maxHealth),
-                new CharacterStatValue(CharacterStatType.AttackPower, config.attackDamage)
-            };
+            statConfigurationBuffer.Clear();
+            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.MoveSpeed, config.moveSpeed));
+            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.MaxHealth, config.maxHealth));
+            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, config.attackDamage));
 
-            for (int i = 0; i < additionalStats.Count; i++)
+            List<CharacterStatValue> additionalStats = config.additionalBaseStats;
+            if (additionalStats != null)
             {
-                baseStats.Add(additionalStats[i]);
+                for (int i = 0; i < additionalStats.Count; i++)
+                {
+                    statConfigurationBuffer.Add(additionalStats[i]);
+                }
             }
 
             stats.ClearModifiers();
-            stats.ConfigureBaseStats(baseStats, true);
+            stats.ConfigureBaseStats(statConfigurationBuffer, true);
         }
 
 
@@ -179,7 +306,7 @@ namespace Necrocis
             if (config.useBillboard)
             {
                 billboard.ResetBaseLocalPosition(Vector3.zero);
-                billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
 
             ySort.enabled = config.useYSort;

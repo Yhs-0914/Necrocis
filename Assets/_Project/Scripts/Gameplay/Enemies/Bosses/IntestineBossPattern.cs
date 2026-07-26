@@ -50,8 +50,6 @@ namespace Necrocis
         public float stompSlowDuration = 3f;
 
         [Header("Temporary Visuals")]
-        public Color phase1Color = new Color(0.72f, 0.45f, 0.24f, 1f);
-        public Color phase2Color = new Color(0.95f, 0.32f, 0.18f, 1f);
         public Color dungColor = new Color(0.34f, 0.18f, 0.08f, 0.95f);
         public Color parasiteColor = new Color(0.62f, 0.88f, 0.36f, 1f);
         public Color shockwaveColor = new Color(0.65f, 0.38f, 0.18f, 0.45f);
@@ -110,8 +108,6 @@ namespace Necrocis
         [SerializeField] private float stompSlowDuration = 3f;
 
         [Header("Temporary Visuals")]
-        [SerializeField] private Color phase1Color = new Color(0.72f, 0.45f, 0.24f, 1f);
-        [SerializeField] private Color phase2Color = new Color(0.95f, 0.32f, 0.18f, 1f);
         [SerializeField] private Color dungColor = new Color(0.34f, 0.18f, 0.08f, 0.95f);
         [SerializeField] private Color parasiteColor = new Color(0.62f, 0.88f, 0.36f, 1f);
         [SerializeField] private Color shockwaveColor = new Color(0.65f, 0.38f, 0.18f, 0.45f);
@@ -217,8 +213,6 @@ namespace Necrocis
             stompDamage = settings.stompDamage;
             stompSlowRatio = settings.stompSlowRatio;
             stompSlowDuration = settings.stompSlowDuration;
-            phase1Color = settings.phase1Color;
-            phase2Color = settings.phase2Color;
             dungColor = settings.dungColor;
             parasiteColor = settings.parasiteColor;
             shockwaveColor = settings.shockwaveColor;
@@ -268,6 +262,7 @@ namespace Necrocis
 
             if (active)
             {
+                AudioManager.Instance?.PlaySFX("BossRoar");
                 nextDungTime = Time.time + 1f;
                 nextStompTime = phase == BossPhase.Phase2
                     ? Time.time + GetStompCooldown()
@@ -445,6 +440,7 @@ namespace Necrocis
         {
             phase = BossPhase.Transition;
             actionRunning = true;
+            AudioManager.Instance?.PlaySFX("BossPhaseChange");
 
             float elapsed = 0f;
             float duration = 1.1f;
@@ -453,11 +449,6 @@ namespace Necrocis
                 elapsed += Time.deltaTime;
                 float pulse = 1f + Mathf.Sin(elapsed * 22f) * 0.12f;
                 transform.localScale = baseScale * pulse;
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase1Color, phase2Color, Mathf.PingPong(elapsed * 6f, 1f));
-                }
-
                 yield return null;
             }
 
@@ -475,6 +466,7 @@ namespace Necrocis
             nextDungTime = Time.time + GetPhase1DungCooldown();
             yield return new WaitForSeconds(Mathf.Max(0f, dungPreDelay));
 
+            AudioManager.Instance?.PlaySFX("IntestineSkill1");
             Vector3 dropPosition = transform.position - GetDirectionToPlayer() * 0.7f;
             SpawnDungHazard(dropPosition, true);
 
@@ -493,6 +485,7 @@ namespace Necrocis
                 : transform.position + GetDirectionToPlayer() * 4f;
             target.y = GetGroundHeight(target) + 0.05f;
 
+            AudioManager.Instance?.PlaySFX("IntestineSkill2");
             GameObject projectile = CreateTempSpriteObject("IntestineBoss_DungProjectile", GetDungSprite(), dungColor, start, 0.7f, 5000);
             float elapsed = 0f;
             float duration = Mathf.Max(0.1f, throwTravelTime);
@@ -523,6 +516,7 @@ namespace Necrocis
         {
             actionRunning = true;
             nextStompTime = Time.time + GetStompCooldown();
+            boss?.PlayAttackAnimationOnly();
 
             Vector3 originalScale = baseScale;
             float elapsed = 0f;
@@ -536,6 +530,7 @@ namespace Necrocis
             }
 
             transform.localScale = originalScale;
+            AudioManager.Instance?.PlaySFX("IntestineLand");
             SpawnShockwave(transform.position, stompRadius);
 
             PlayerController player = PlayerController.Instance;
@@ -629,7 +624,7 @@ namespace Necrocis
 
             if (visualRenderer != null)
             {
-                visualRenderer.color = phase == BossPhase.Phase2 ? phase2Color : phase1Color;
+                visualRenderer.color = Color.white;
             }
         }
 

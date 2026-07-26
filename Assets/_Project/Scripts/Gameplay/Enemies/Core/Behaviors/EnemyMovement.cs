@@ -14,12 +14,17 @@ namespace Necrocis
                 return false;
             }
 
-            float distToPlayer = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
-            if (distToPlayer > config.chaseRadius) return false;
+            float chaseRadius = config.chaseRadius;
+            if (chaseRadius < 0f
+                || GetPlanarDistanceSqr(GetCurrentPosition(), playerTransform.position) > chaseRadius * chaseRadius)
+            {
+                return false;
+            }
 
             // leash 안에 있는 플레이어만 추격
-            float playerToAnchor = GetPlanarDistance(playerTransform.position, anchorPosition);
-            return playerToAnchor <= config.leashRadius;
+            float leashRadius = config.leashRadius;
+            return leashRadius >= 0f
+                && GetPlanarDistanceSqr(playerTransform.position, anchorPosition) <= leashRadius * leashRadius;
         }
 
 
@@ -30,17 +35,20 @@ namespace Necrocis
             {
                 return false;
             }
-            float dist = GetPlanarDistance(GetCurrentPosition(), playerTransform.position);
             float effectiveAttackRange = config.isRanged
                 ? config.attackRange
                 : GetEffectiveMeleeAttackRange(PlayerController.Instance);
-            return dist <= effectiveAttackRange;
+            return effectiveAttackRange >= 0f
+                && GetPlanarDistanceSqr(GetCurrentPosition(), playerTransform.position)
+                    <= effectiveAttackRange * effectiveAttackRange;
         }
 
 
         public bool IsOutOfLeash()
         {
-            return GetPlanarDistance(GetCurrentPosition(), anchorPosition) > config.leashRadius;
+            float leashRadius = config.leashRadius;
+            return leashRadius < 0f
+                || GetPlanarDistanceSqr(GetCurrentPosition(), anchorPosition) > leashRadius * leashRadius;
         }
 
 
@@ -132,10 +140,7 @@ namespace Necrocis
                 return false;
             }
 
-            if (spriteRenderer != null && Mathf.Abs(step.x) > 0.001f)
-            {
-                spriteRenderer.flipX = step.x < 0f;
-            }
+            UpdateFacingFromVector(step);
 
             // 이동 애니메이션 전환
             if (!usingMoveAnimation)
@@ -195,7 +200,23 @@ namespace Necrocis
                 return false;
             }
 
-            return TryMove(GetCurrentPosition(), step);
+            bool moved = TryMove(GetCurrentPosition(), step);
+            if (!moved)
+            {
+                return false;
+            }
+
+            if (!attackAnimPlaying)
+            {
+                UpdateFacingFromVector(step);
+            }
+
+            if (!attackAnimPlaying && !usingMoveAnimation)
+            {
+                SetMoveAnimation();
+            }
+
+            return true;
         }
 
         public void StartCharge()
@@ -211,9 +232,7 @@ namespace Necrocis
             chargeCurrentSpeed = 0f;
             isCharging = true;
 
-            // 방향에 따라 스프라이트 반전
-            if (spriteRenderer != null)
-                spriteRenderer.flipX = chargeDirection.x < 0f;
+            UpdateFacingFromVector(chargeDirection);
         }
 
         public bool UpdateCharge(float deltaTime)
@@ -534,11 +553,11 @@ namespace Necrocis
         }
 
 
-        private static float GetPlanarDistance(Vector3 a, Vector3 b)
+        private static float GetPlanarDistanceSqr(Vector3 a, Vector3 b)
         {
-            a.y = 0f;
-            b.y = 0f;
-            return Vector3.Distance(a, b);
+            float deltaX = a.x - b.x;
+            float deltaZ = a.z - b.z;
+            return deltaX * deltaX + deltaZ * deltaZ;
         }
 
 
@@ -582,11 +601,7 @@ namespace Necrocis
                 return 0.45f;
             }
 
-            Collider playerCollider = player.GetComponent<Collider>();
-            if (playerCollider == null)
-            {
-                playerCollider = player.GetComponentInChildren<Collider>();
-            }
+            Collider playerCollider = player.HitCollider;
 
             if (playerCollider == null || !playerCollider.enabled)
             {

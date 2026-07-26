@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Necrocis
 {
@@ -17,8 +18,10 @@ namespace Necrocis
 
         private bool isInvincible; // 현재 무적 상태인지
         private Coroutine invincibilityRoutine;
-        private SpriteRenderer[] cachedSpriteRenderers;
-        private Color[] cachedSpriteColors;
+        private readonly List<SpriteRenderer> cachedSpriteRenderers = new List<SpriteRenderer>();
+        private readonly List<Color> cachedSpriteColors = new List<Color>();
+        private PlayerController playerController;
+        private PlayerItemCombatEffects itemEffects;
 
         // PlayerStats의 CharacterStats를 참조 (PlayerStats가 아직 없으면 null 반환)
         private CharacterStats Stats => PlayerStats.Instance?.RuntimeStats;
@@ -32,6 +35,17 @@ namespace Necrocis
         public event Action OnDeath;                         // 사망 시
 
         private bool subscribed; // CharacterStats 이벤트 구독 완료 여부
+
+        private void Awake()
+        {
+            playerController = GetComponent<PlayerController>();
+            if (playerController == null)
+            {
+                playerController = GetComponentInParent<PlayerController>();
+            }
+
+            itemEffects = GetComponent<PlayerItemCombatEffects>();
+        }
 
         private void OnEnable()
         {
@@ -75,11 +89,7 @@ namespace Necrocis
 
                 OnDeath?.Invoke();
 
-                PlayerController player = GetComponent<PlayerController>();
-                if (player == null)
-                    player = GetComponentInParent<PlayerController>();
-
-                player?.HandleDeath();
+                playerController?.HandleDeath();
             }
         }
 
@@ -90,13 +100,13 @@ namespace Necrocis
                 return true;
             }
 
-            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
-            if (itemEffects == null || Stats == null)
+            PlayerItemCombatEffects effects = ResolveItemEffects();
+            if (effects == null || Stats == null)
             {
                 return false;
             }
 
-            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
+            if (!effects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
             {
                 return false;
             }
@@ -113,10 +123,10 @@ namespace Necrocis
             if (Stats == null) return;
 
             float actualDamage = Mathf.Max(0f, damageAmount);
-            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
-            if (itemEffects != null)
+            PlayerItemCombatEffects effects = ResolveItemEffects();
+            if (effects != null)
             {
-                actualDamage = itemEffects.ProcessIncomingDamage(actualDamage, sourceEnemy);
+                actualDamage = effects.ProcessIncomingDamage(actualDamage, sourceEnemy);
             }
 
             if (actualDamage <= 0f)
@@ -124,12 +134,12 @@ namespace Necrocis
                 return;
             }
 
-            if (itemEffects != null)
+            if (effects != null)
             {
                 float currentHealth = Stats.CurrentHealth;
                 float maxHealth = Stats.MaxHealth;
                 if (actualDamage >= currentHealth
-                    && itemEffects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
+                    && effects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
                 {
                     float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
                     if (currentHealth > targetHealth)
@@ -147,7 +157,14 @@ namespace Necrocis
             }
 
             AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
-            Stats.ApplyDamage(actualDamage);
+            float appliedDamage = Stats.ApplyDamage(actualDamage);
+            if (appliedDamage > 0f)
+            {
+                Vector3 sourcePosition = sourceEnemy != null
+                    ? sourceEnemy.transform.position
+                    : transform.position - Vector3.forward;
+                CombatVfx.PlayPlayerHit(transform, sourcePosition, appliedDamage, IsDead);
+            }
 
             if (!IsDead)
             {
@@ -202,20 +219,25 @@ namespace Necrocis
 
             CacheSpriteRenderers();
             float elapsed = 0f;
+            float nextFlashTime = 0f;
             bool flashOn = true;
             float interval = Mathf.Max(0.03f, hitFlashInterval);
 
             while (elapsed < duration && !IsDead)
             {
-                if (flashOn)
-                    ApplySpriteColor(hitFlashColor);
-                else
-                    ApplyOriginalSpriteColors();
+                if (elapsed >= nextFlashTime)
+                {
+                    if (flashOn)
+                        ApplySpriteColor(hitFlashColor);
+                    else
+                        ApplyOriginalSpriteColors();
 
-                flashOn = !flashOn;
-                float wait = Mathf.Min(interval, duration - elapsed);
-                yield return new WaitForSeconds(wait);
-                elapsed += wait;
+                    flashOn = !flashOn;
+                    nextFlashTime += interval;
+                }
+
+                yield return null;
+                elapsed += Time.deltaTime;
             }
 
             RestoreSpriteColors();
@@ -236,30 +258,25 @@ namespace Necrocis
 
         private void CacheSpriteRenderers()
         {
-            cachedSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
-            if (cachedSpriteRenderers == null || cachedSpriteRenderers.Length == 0)
+            cachedSpriteRenderers.Clear();
+            GetComponentsInChildren(true, cachedSpriteRenderers);
+            cachedSpriteColors.Clear();
+            if (cachedSpriteRenderers.Count == 0)
             {
-                cachedSpriteColors = Array.Empty<Color>();
                 return;
             }
 
-            cachedSpriteColors = new Color[cachedSpriteRenderers.Length];
-            for (int i = 0; i < cachedSpriteRenderers.Length; i++)
+            for (int i = 0; i < cachedSpriteRenderers.Count; i++)
             {
-                cachedSpriteColors[i] = cachedSpriteRenderers[i] != null
+                cachedSpriteColors.Add(cachedSpriteRenderers[i] != null
                     ? cachedSpriteRenderers[i].color
-                    : Color.white;
+                    : Color.white);
             }
         }
 
         private void ApplySpriteColor(Color color)
         {
-            if (cachedSpriteRenderers == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < cachedSpriteRenderers.Length; i++)
+            for (int i = 0; i < cachedSpriteRenderers.Count; i++)
             {
                 if (cachedSpriteRenderers[i] != null)
                 {
@@ -270,24 +287,22 @@ namespace Necrocis
 
         private void RestoreSpriteColors()
         {
-            if (cachedSpriteRenderers == null || cachedSpriteColors == null)
+            if (cachedSpriteRenderers.Count == 0 || cachedSpriteColors.Count == 0)
             {
                 return;
             }
 
             ApplyOriginalSpriteColors();
-            cachedSpriteRenderers = null;
-            cachedSpriteColors = null;
         }
 
         private void ApplyOriginalSpriteColors()
         {
-            if (cachedSpriteRenderers == null || cachedSpriteColors == null)
+            if (cachedSpriteRenderers.Count == 0 || cachedSpriteColors.Count == 0)
             {
                 return;
             }
 
-            int count = Mathf.Min(cachedSpriteRenderers.Length, cachedSpriteColors.Length);
+            int count = Mathf.Min(cachedSpriteRenderers.Count, cachedSpriteColors.Count);
             for (int i = 0; i < count; i++)
             {
                 if (cachedSpriteRenderers[i] != null)
@@ -295,6 +310,16 @@ namespace Necrocis
                     cachedSpriteRenderers[i].color = cachedSpriteColors[i];
                 }
             }
+        }
+
+        private PlayerItemCombatEffects ResolveItemEffects()
+        {
+            if (itemEffects == null)
+            {
+                itemEffects = GetComponent<PlayerItemCombatEffects>();
+            }
+
+            return itemEffects;
         }
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Necrocis
 {
@@ -234,7 +235,16 @@ namespace Necrocis
         /// </summary>
         private void Start()
         {
-            AudioManager.Instance?.PlayBGM("InGame");
+            if (SceneManager.GetActiveScene().name == SceneLoader.SCENE_HUB)
+            {
+                AudioManager.Instance?.PlayBGM("Hub");
+                return;
+            }
+
+            if (BiomeManager.Active == null || BiomeManager.Active.BiomeType == BiomeType.None)
+            {
+                AudioManager.Instance?.PlayBGM("InGame");
+            }
         }
 
         public PlayerController GetPlayer()

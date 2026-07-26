@@ -184,7 +184,7 @@ namespace Necrocis
         [SerializeField] private float skillHitHeightOffset = 0.75f;
         [SerializeField] private float skillHitVerticalHalfHeight = 4f;
         [SerializeField, Min(1)] private int maxAreaSkillHitTargets = 32;
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool enableDebugLogs;
 
         [Header("Mage")]
         [SerializeField] private MageSkill1Config mageSkill1 = new MageSkill1Config();
@@ -368,8 +368,6 @@ namespace Necrocis
                 return;
             }
 
-            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬1 사용
-
             switch (currentClass)
             {
                 case PlayerClassType.Mage:
@@ -388,6 +386,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("ArcherSkill1");
                     ExecuteArcherSkill1FanShot();
                     break;
 
@@ -409,8 +408,6 @@ namespace Necrocis
             {
                 return;
             }
-
-            AudioManager.Instance?.PlaySFX("SkillUse"); // [Sound] 스킬2 사용
 
             switch (currentClass)
             {
@@ -446,6 +443,7 @@ namespace Necrocis
                         return;
                     }
 
+                    AudioManager.Instance?.PlaySFX("ArcherSkill2");
                     StartCoroutine(ExecuteArcherSkill2());
                     break;
 
@@ -465,6 +463,7 @@ namespace Necrocis
             float now = Time.time;
             if (now < nextReadyTime)
             {
+                AudioManager.Instance?.PlaySFX("SkillCooldown");
                 if (enableDebugLogs)
                 {
                     float remain = Mathf.Max(0f, nextReadyTime - now);
@@ -476,6 +475,7 @@ namespace Necrocis
 
             float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
             nextReadyTime = now + effectiveCooldown;
+            AudioManager.Instance?.PlaySFX("SkillUse");
             CooldownStarted?.Invoke(slot, effectiveCooldown);
             return true;
         }

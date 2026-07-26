@@ -53,11 +53,10 @@ namespace Necrocis
         public float spitReturnDuration = 0.18f;
         public float shortRangeDamage = 5f;
         public float shortRangeRadius = 2.2f;
+        public Sprite[] suctionAttackSprites;
+        public float suctionAttackAnimationSpeed = 0.08f;
 
         [Header("Temporary Visuals")]
-        public Color phase1Color = new Color(0.62f, 0.55f, 0.34f, 1f);
-        public Color phase2Color = new Color(0.42f, 0.78f, 0.2f, 1f);
-        public Color chargeColor = new Color(0.95f, 0.78f, 0.22f, 1f);
         public Color acidColor = new Color(0.55f, 0.95f, 0.15f, 0.95f);
         public Color acidSplashColor = new Color(0.5f, 0.9f, 0.12f, 0.42f);
         public Color suctionColor = new Color(0.75f, 0.95f, 0.45f, 0.42f);
@@ -71,7 +70,7 @@ namespace Necrocis
 
     [DisallowMultipleComponent]
     [RequireComponent(typeof(EnemyController))]
-    public class StomachBossPattern : MonoBehaviour
+    public class StomachBossPattern : MonoBehaviour, IBossPatternTempSpriteOwner
     {
         private enum BossPhase
         {
@@ -135,11 +134,10 @@ namespace Necrocis
         [SerializeField] private float spitReturnDuration = 0.18f;
         [SerializeField] private float shortRangeDamage = 5f;
         [SerializeField] private float shortRangeRadius = 2.2f;
+        [SerializeField] private Sprite[] suctionAttackSprites;
+        [SerializeField] private float suctionAttackAnimationSpeed = 0.08f;
 
         [Header("Temporary Visuals")]
-        [SerializeField] private Color phase1Color = new Color(0.62f, 0.55f, 0.34f, 1f);
-        [SerializeField] private Color phase2Color = new Color(0.42f, 0.78f, 0.2f, 1f);
-        [SerializeField] private Color chargeColor = new Color(0.95f, 0.78f, 0.22f, 1f);
         [SerializeField] private Color acidColor = new Color(0.55f, 0.95f, 0.15f, 0.95f);
         [SerializeField] private Color acidSplashColor = new Color(0.5f, 0.9f, 0.12f, 0.42f);
         [SerializeField] private Color suctionColor = new Color(0.75f, 0.95f, 0.45f, 0.42f);
@@ -236,9 +234,8 @@ namespace Necrocis
             spitReturnDuration = settings.spitReturnDuration;
             shortRangeDamage = settings.shortRangeDamage;
             shortRangeRadius = settings.shortRangeRadius;
-            phase1Color = settings.phase1Color;
-            phase2Color = settings.phase2Color;
-            chargeColor = settings.chargeColor;
+            suctionAttackSprites = settings.suctionAttackSprites;
+            suctionAttackAnimationSpeed = settings.suctionAttackAnimationSpeed;
             acidColor = settings.acidColor;
             acidSplashColor = settings.acidSplashColor;
             suctionColor = settings.suctionColor;
@@ -289,6 +286,7 @@ namespace Necrocis
 
             if (active)
             {
+                AudioManager.Instance?.PlaySFX("BossRoar");
                 nextChargeTime = Time.time + 1.2f;
                 nextMeleeTime = Time.time + 1f;
                 nextPhase2AttackTime = phase == BossPhase.Phase2
@@ -414,6 +412,7 @@ namespace Necrocis
         {
             phase = BossPhase.Transition;
             actionRunning = true;
+            AudioManager.Instance?.PlaySFX("BossPhaseChange");
 
             Vector3 leakPosition = transform.position;
             leakPosition.y = GetGroundHeight(leakPosition) + 0.08f;
@@ -427,11 +426,6 @@ namespace Necrocis
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 transform.localScale = baseScale * (1f + Mathf.Sin(t * Mathf.PI * 6f) * 0.08f);
-
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase1Color, phase2Color, t);
-                }
 
                 yield return null;
             }
@@ -464,6 +458,7 @@ namespace Necrocis
             PlayerController player = PlayerController.Instance;
             if (IsPlayerWithinRange(player, phase1MeleeRange))
             {
+                AudioManager.Instance?.PlaySFX("StomachImpact");
                 player.TakeDamage(phase1AttackDamage);
             }
 
@@ -479,16 +474,12 @@ namespace Necrocis
             Vector3 direction = GetDirectionToPlayer();
             float windup = Mathf.Max(0f, chargeWindup);
             float elapsed = 0f;
+            AudioManager.Instance?.PlaySFX("StomachCharge");
             while (elapsed < windup)
             {
                 elapsed += Time.deltaTime;
                 float pulse = 1f + Mathf.Sin(elapsed * 22f) * 0.08f;
                 transform.localScale = new Vector3(baseScale.x * 1.12f, baseScale.y * 0.88f, baseScale.z) * pulse;
-
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase1Color, chargeColor, 0.7f);
-                }
 
                 yield return null;
             }
@@ -506,6 +497,7 @@ namespace Necrocis
                 if (!hitPlayer && IsPlayerWithinRange(player, chargeHitRadius))
                 {
                     hitPlayer = true;
+                    AudioManager.Instance?.PlaySFX("StomachHeadbutt");
                     player.TakeDamage(chargeDamage);
                     ApplyPlayerKnockback(player, transform.position, chargeKnockbackDistance);
                 }
@@ -551,6 +543,9 @@ namespace Necrocis
 
         private IEnumerator AcidSprayRoutine()
         {
+            boss?.PlayAttackAnimationOnly();
+            AudioManager.Instance?.PlaySFX("StomachAcidReady");
+
             float windup = 0.25f;
             float elapsed = 0f;
             while (elapsed < windup)
@@ -575,6 +570,7 @@ namespace Necrocis
 
             target.y = GetGroundHeight(target) + 0.05f;
 
+            AudioManager.Instance?.PlaySFX("StomachAcidFire");
             GameObject projectile = CreateTempSpriteObject(
                 "StomachBoss_AcidProjectile",
                 GetCircleSprite(),
@@ -601,7 +597,7 @@ namespace Necrocis
 
             if (projectile != null)
             {
-                Destroy(projectile);
+                ReleaseTempSprite(projectile);
             }
 
             SplashAcid(target);
@@ -614,6 +610,8 @@ namespace Necrocis
             {
                 yield break;
             }
+
+            PlaySuctionAttackAnimation();
 
             Vector3 startPosition = player.transform.position;
             Vector3 directionToPlayer = startPosition - transform.position;
@@ -661,6 +659,16 @@ namespace Necrocis
             }
 
             yield return SpitPlayerBackToStart(player, startPosition);
+        }
+
+        private void PlaySuctionAttackAnimation()
+        {
+            if (boss == null || suctionAttackSprites == null || suctionAttackSprites.Length == 0)
+            {
+                return;
+            }
+
+            boss.PlayPatternAnimation(suctionAttackSprites, suctionAttackAnimationSpeed);
         }
 
         private IEnumerator SpitPlayerBackToStart(PlayerController player, Vector3 targetPosition)
@@ -736,7 +744,7 @@ namespace Necrocis
 
             if (visualRenderer != null)
             {
-                visualRenderer.color = phase == BossPhase.Phase2 ? phase2Color : phase1Color;
+                visualRenderer.color = Color.white;
             }
         }
 
@@ -1023,24 +1031,23 @@ namespace Necrocis
                 yield return null;
             }
 
-            Destroy(obj);
+            ReleaseTempSprite(obj);
         }
 
         private GameObject CreateTempSpriteObject(string name, Sprite sprite, Color color, Vector3 position, float scale, int sortingOrder)
         {
-            GameObject obj = new GameObject(name);
-            obj.transform.position = position;
-            obj.transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
-            activeTempObjects.Add(obj);
+            return BossPatternVisualPool.Acquire(name, sprite, color, position, scale, sortingOrder, this, activeTempObjects);
+        }
 
-            SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            renderer.sortingOrder = sortingOrder;
+        public void ReleaseTempSprite(GameObject obj)
+        {
+            if (obj == null)
+            {
+                return;
+            }
 
-            Billboard billboard = obj.AddComponent<Billboard>();
-            billboard.SetUpdateMode(Billboard.UpdateMode.Continuous);
-            return obj;
+            activeTempObjects.Remove(obj);
+            BossPatternVisualPool.Release(obj);
         }
 
         private void CleanupPatternObjects()
@@ -1049,8 +1056,7 @@ namespace Necrocis
             {
                 if (activeTempObjects[i] != null)
                 {
-                    activeTempObjects[i].SetActive(false);
-                    Destroy(activeTempObjects[i]);
+                    BossPatternVisualPool.Release(activeTempObjects[i]);
                 }
             }
 

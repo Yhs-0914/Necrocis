@@ -54,9 +54,11 @@ namespace Necrocis
         {
             if (isLoading)
             {
+                AudioManager.Instance?.PlaySFX("UIInvalid");
                 return;
             }
 
+            AudioManager.Instance?.PlaySFX("ButtonClick");
             StartCoroutine(ReturnToHubRoutine());
         }
 

@@ -48,33 +48,38 @@ namespace Necrocis
 
         protected virtual void DestroyChunkObjects(Chunk chunk)
         {
-            HashSet<GameObject> releasedObjects = new HashSet<GameObject>();
+            chunkObjectReleaseSet.Clear();
+            chunkObjectReleaseBuffer.Clear();
 
             if (chunk.liveObjects.Count > 0)
             {
-                GameObject[] liveSnapshot = chunk.liveObjects.ToArray();
-                for (int i = 0; i < liveSnapshot.Length; i++)
+                for (int i = 0; i < chunk.liveObjects.Count; i++)
                 {
-                    ReleaseChunkObject(liveSnapshot[i], releasedObjects);
+                    GameObject obj = chunk.liveObjects[i];
+                    if (obj != null)
+                    {
+                        chunkObjectReleaseBuffer.Add(obj);
+                    }
                 }
             }
 
             if (chunk.objectsRoot != null)
             {
                 int childCount = chunk.objectsRoot.childCount;
-                GameObject[] rootChildren = new GameObject[childCount];
                 for (int i = 0; i < childCount; i++)
                 {
-                    rootChildren[i] = chunk.objectsRoot.GetChild(i).gameObject;
-                }
-
-                for (int i = 0; i < rootChildren.Length; i++)
-                {
-                    ReleaseChunkObject(rootChildren[i], releasedObjects);
+                    chunkObjectReleaseBuffer.Add(chunk.objectsRoot.GetChild(i).gameObject);
                 }
             }
 
+            for (int i = 0; i < chunkObjectReleaseBuffer.Count; i++)
+            {
+                ReleaseChunkObject(chunkObjectReleaseBuffer[i], chunkObjectReleaseSet);
+            }
+
             chunk.liveObjects.Clear();
+            chunkObjectReleaseBuffer.Clear();
+            chunkObjectReleaseSet.Clear();
         }
 
 
@@ -149,9 +154,10 @@ namespace Necrocis
 
             if (blocksMovement)
             {
-                List<Vector2Int> occupiedCells = GetOccupiedCellsForObject(obj, id);
-                state.SetOccupiedCells(occupiedCells);
-                AddBlockedCells(occupiedCells);
+                PopulateOccupiedCellsForObject(obj, id, occupiedCellBuffer);
+                state.SetOccupiedCells(occupiedCellBuffer);
+                AddBlockedCells(state.OccupiedCells);
+                occupiedCellBuffer.Clear();
             }
             else
             {
@@ -193,20 +199,20 @@ namespace Necrocis
         }
 
 
-        private List<Vector2Int> GetOccupiedCellsForObject(GameObject obj, ObjectId id)
+        private void PopulateOccupiedCellsForObject(GameObject obj, ObjectId id, List<Vector2Int> results)
         {
-            List<Vector2Int> occupiedCells = new List<Vector2Int>();
+            results.Clear();
             if (obj == null)
             {
-                occupiedCells.Add(new Vector2Int(id.x, id.y));
-                return occupiedCells;
+                results.Add(new Vector2Int(id.x, id.y));
+                return;
             }
 
             BoxCollider collider = obj.GetComponent<BoxCollider>();
             if (collider == null || !collider.enabled || collider.isTrigger)
             {
-                occupiedCells.Add(new Vector2Int(id.x, id.y));
-                return occupiedCells;
+                results.Add(new Vector2Int(id.x, id.y));
+                return;
             }
 
             Vector3 lossyScale = obj.transform.lossyScale;
@@ -220,25 +226,21 @@ namespace Necrocis
             int minY = Mathf.FloorToInt((center.z - halfSize.z + epsilon) / tileSize);
             int maxY = Mathf.FloorToInt((center.z + halfSize.z - epsilon) / tileSize);
 
-            HashSet<Vector2Int> uniqueCells = new HashSet<Vector2Int>();
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
                     if (IsValidPosition(x, y))
                     {
-                        uniqueCells.Add(new Vector2Int(x, y));
+                        results.Add(new Vector2Int(x, y));
                     }
                 }
             }
 
-            if (uniqueCells.Count == 0)
+            if (results.Count == 0)
             {
-                uniqueCells.Add(new Vector2Int(id.x, id.y));
+                results.Add(new Vector2Int(id.x, id.y));
             }
-
-            occupiedCells.AddRange(uniqueCells);
-            return occupiedCells;
         }
 
 

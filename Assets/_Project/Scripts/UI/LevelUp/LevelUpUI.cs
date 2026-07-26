@@ -153,6 +153,7 @@ namespace Necrocis
         // 직업 선택 처리: LevelUpManager에 직업 설정 → 대기 레벨업 있으면 계속 진행
         private void SelectJob(JobType job)
         {
+            AudioManager.Instance?.PlaySFX("UISelect");
             LevelUpManager.SetJob(job);
             isJobSelection = false;
             titleText.color = new Color(1f, 0.85f, 0.2f); // 이후 레벨업은 금색 타이틀
@@ -228,6 +229,16 @@ namespace Necrocis
         // 스탯 선택 처리: 실제 스탯 적용 → 선택 기록 → 대기 레벨업 확인
         private void SelectChoice(LevelUpStatChoice choice)
         {
+            string soundKey = choice switch
+            {
+                LevelUpStatChoice.HealthUp => "StatHealthSelect",
+                LevelUpStatChoice.SpeedUp => "StatMoveSpeedSelect",
+                LevelUpStatChoice.AttackPowerUp => "StatAttackPowerSelect",
+                LevelUpStatChoice.AttackSpeedRangeUp => "StatAttackRangeSelect",
+                LevelUpStatChoice.MagicUp => "StatMagicSelect",
+                _ => "UISelect"
+            };
+            AudioManager.Instance?.PlaySFX(soundKey);
             if (PlayerStats.Instance != null)
                 PlayerStats.Instance.ApplyLevelUpStatChoice(choice); // 실제 스탯 모디파이어 적용
 

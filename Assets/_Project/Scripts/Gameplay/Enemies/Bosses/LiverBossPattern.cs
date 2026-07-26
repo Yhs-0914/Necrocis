@@ -32,6 +32,11 @@ namespace Necrocis
         public float healingPoseCooldown = 15f;
         public float healingPoseDuration = 5f;
         [Range(0f, 1f)] public float damageHealRatio = 0.7f;
+        public Sprite[] healingPoseLowerSprites;
+        public Sprite[] healingPoseLowerSpritesDown;
+        public Sprite[] healingPoseRaiseSprites;
+        public Sprite[] healingPoseRaiseSpritesDown;
+        public float healingPoseAnimationSpeed = 0.12f;
 
         [Header("Movement")]
         public float phase1PreferredDistanceRatio = 0.72f;
@@ -39,9 +44,6 @@ namespace Necrocis
         public float roamRadius = 9f;
 
         [Header("Temporary Visuals")]
-        public Color phase1Color = new Color(0.78f, 0.08f, 0.12f, 1f);
-        public Color phase2Color = new Color(0.52f, 0.05f, 0.1f, 1f);
-        public Color healingPoseColor = new Color(1f, 0.38f, 0.52f, 1f);
         public Color bloodBombColor = new Color(0.7f, 0f, 0.04f, 0.96f);
         public Color explosionColor = new Color(0.9f, 0.05f, 0.08f, 0.45f);
 
@@ -87,6 +89,11 @@ namespace Necrocis
         [SerializeField] private float healingPoseCooldown = 15f;
         [SerializeField] private float healingPoseDuration = 5f;
         [SerializeField, Range(0f, 1f)] private float damageHealRatio = 0.7f;
+        [SerializeField] private Sprite[] healingPoseLowerSprites;
+        [SerializeField] private Sprite[] healingPoseLowerSpritesDown;
+        [SerializeField] private Sprite[] healingPoseRaiseSprites;
+        [SerializeField] private Sprite[] healingPoseRaiseSpritesDown;
+        [SerializeField] private float healingPoseAnimationSpeed = 0.12f;
 
         [Header("Movement")]
         [SerializeField] private float phase1PreferredDistanceRatio = 0.72f;
@@ -94,9 +101,6 @@ namespace Necrocis
         [SerializeField] private float roamRadius = 9f;
 
         [Header("Temporary Visuals")]
-        [SerializeField] private Color phase1Color = new Color(0.78f, 0.08f, 0.12f, 1f);
-        [SerializeField] private Color phase2Color = new Color(0.52f, 0.05f, 0.1f, 1f);
-        [SerializeField] private Color healingPoseColor = new Color(1f, 0.38f, 0.52f, 1f);
         [SerializeField] private Color bloodBombColor = new Color(0.7f, 0f, 0.04f, 0.96f);
         [SerializeField] private Color explosionColor = new Color(0.9f, 0.05f, 0.08f, 0.45f);
 
@@ -176,12 +180,14 @@ namespace Necrocis
             healingPoseCooldown = settings.healingPoseCooldown;
             healingPoseDuration = settings.healingPoseDuration;
             damageHealRatio = settings.damageHealRatio;
+            healingPoseLowerSprites = settings.healingPoseLowerSprites;
+            healingPoseLowerSpritesDown = settings.healingPoseLowerSpritesDown;
+            healingPoseRaiseSprites = settings.healingPoseRaiseSprites;
+            healingPoseRaiseSpritesDown = settings.healingPoseRaiseSpritesDown;
+            healingPoseAnimationSpeed = settings.healingPoseAnimationSpeed;
             phase1PreferredDistanceRatio = settings.phase1PreferredDistanceRatio;
             phase2PreferredDistance = settings.phase2PreferredDistance;
             roamRadius = settings.roamRadius;
-            phase1Color = settings.phase1Color;
-            phase2Color = settings.phase2Color;
-            healingPoseColor = settings.healingPoseColor;
             bloodBombColor = settings.bloodBombColor;
             explosionColor = settings.explosionColor;
             startInPhase2ForDebug = settings.startInPhase2ForDebug;
@@ -234,6 +240,7 @@ namespace Necrocis
 
             if (active)
             {
+                AudioManager.Instance?.PlaySFX("BossRoar");
                 nextBloodBombTime = Time.time + 1f;
                 nextHealingPoseTime = phase == BossPhase.Phase2
                     ? Time.time + GetHealingPoseCooldown()
@@ -346,6 +353,7 @@ namespace Necrocis
             phase = BossPhase.Transition;
             actionRunning = true;
             healingPoseActive = false;
+            AudioManager.Instance?.PlaySFX("BossPhaseChange");
 
             float elapsed = 0f;
             const float duration = 1f;
@@ -355,11 +363,6 @@ namespace Necrocis
                 float t = Mathf.Clamp01(elapsed / duration);
                 float pulse = 1f + Mathf.Sin(t * Mathf.PI * 6f) * 0.1f;
                 transform.localScale = baseScale * pulse;
-
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase1Color, phase2Color, t);
-                }
 
                 yield return null;
             }
@@ -377,6 +380,7 @@ namespace Necrocis
         {
             actionRunning = true;
             nextBloodBombTime = Time.time + GetBloodBombCooldown();
+            boss?.PlayAttackAnimationOnly();
 
             Vector3 start = transform.position + Vector3.up * 1.2f;
             Vector3 target = PlayerController.Instance != null
@@ -384,6 +388,7 @@ namespace Necrocis
                 : transform.position + GetDirectionToPlayer() * bloodBombRange;
             target.y = GetGroundHeight(target) + 0.05f;
 
+            AudioManager.Instance?.PlaySFX("LiverBloodThrow");
             GameObject projectile = CreateTempSpriteObject(
                 "LiverBoss_BloodBomb",
                 GetBloodBombSprite(),
@@ -422,8 +427,12 @@ namespace Necrocis
             nextHealingPoseTime = Time.time + GetHealingPoseCooldown();
 
             float preDelay = Mathf.Max(0f, healingPosePreDelay);
+            bool lowerAnimationStarted = PlayHealingPoseTransition(
+                healingPoseLowerSprites,
+                healingPoseLowerSpritesDown,
+                returnToIdleOnComplete: false);
             float elapsed = 0f;
-            while (elapsed < preDelay)
+            while (elapsed < preDelay || (lowerAnimationStarted && IsPatternAnimationPlaying()))
             {
                 elapsed += Time.deltaTime;
                 float pulse = 1f + Mathf.Sin(elapsed * 18f) * 0.06f;
@@ -440,22 +449,81 @@ namespace Necrocis
                 float pulse = 1f + Mathf.Sin(elapsed * 9f) * 0.05f;
                 transform.localScale = new Vector3(baseScale.x * (1.12f + pulse * 0.02f), baseScale.y * 0.86f, baseScale.z * (1.12f + pulse * 0.02f));
 
-                if (visualRenderer != null)
-                {
-                    visualRenderer.color = Color.Lerp(phase2Color, healingPoseColor, 0.82f + Mathf.Sin(elapsed * 8f) * 0.12f);
-                }
-
                 yield return null;
             }
 
             healingPoseActive = false;
             transform.localScale = baseScale;
             ApplyPhaseVisual();
+            yield return WaitForHealingPoseTransition(healingPoseRaiseSprites, healingPoseRaiseSpritesDown, true);
             actionRunning = false;
+        }
+
+        private IEnumerator WaitForHealingPoseTransition(Sprite[] sideFrames, Sprite[] downFrames, bool returnToIdleOnComplete)
+        {
+            if (!PlayHealingPoseTransition(sideFrames, downFrames, returnToIdleOnComplete))
+            {
+                yield break;
+            }
+
+            while (IsPatternAnimationPlaying())
+            {
+                yield return null;
+            }
+        }
+
+        private bool PlayHealingPoseTransition(Sprite[] sideFrames, Sprite[] downFrames, bool returnToIdleOnComplete)
+        {
+            Sprite[] frames = SelectPoseFrames(sideFrames, downFrames);
+            if (!HasFrames(frames) || boss == null)
+            {
+                return false;
+            }
+
+            return boss.PlayPatternAnimation(frames, healingPoseAnimationSpeed, null, returnToIdleOnComplete);
+        }
+
+        private bool IsPatternAnimationPlaying()
+        {
+            return boss != null && boss.IsPatternAnimationPlaying;
+        }
+
+        private Sprite[] SelectPoseFrames(Sprite[] sideFrames, Sprite[] downFrames)
+        {
+            bool hasDown = HasFrames(downFrames);
+            bool hasSide = HasFrames(sideFrames);
+            if (!hasDown && !hasSide)
+            {
+                return null;
+            }
+
+            Vector3 toPlayer = GetDirectionToPlayer();
+            if (hasDown && toPlayer.z < -Mathf.Abs(toPlayer.x))
+            {
+                if (visualRenderer != null)
+                {
+                    visualRenderer.flipX = false;
+                }
+
+                return downFrames;
+            }
+
+            if (visualRenderer != null && Mathf.Abs(toPlayer.x) > 0.01f)
+            {
+                visualRenderer.flipX = toPlayer.x < 0f;
+            }
+
+            return hasSide ? sideFrames : downFrames;
+        }
+
+        private static bool HasFrames(Sprite[] frames)
+        {
+            return frames != null && frames.Length > 0;
         }
 
         private void ExplodeBloodBomb(Vector3 center)
         {
+            AudioManager.Instance?.PlaySFX("LiverBloodBurst");
             center.y = GetGroundHeight(center) + 0.08f;
             GameObject explosion = CreateTempSpriteObject(
                 "LiverBoss_BloodBombExplosion",
@@ -550,7 +618,7 @@ namespace Necrocis
 
             if (visualRenderer != null)
             {
-                visualRenderer.color = phase == BossPhase.Phase2 ? phase2Color : phase1Color;
+                visualRenderer.color = Color.white;
             }
         }
 
