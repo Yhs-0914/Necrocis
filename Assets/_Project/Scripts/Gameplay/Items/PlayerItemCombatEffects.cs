@@ -324,6 +324,7 @@ namespace Necrocis
         private bool overclockNerveModifierApplied;
         private bool imperfectRegenModifierApplied;
         private int bloodContractKillProgress;
+        private int bloodContractHealthGainCount;
         private float decayOrganStartTime = float.NegativeInfinity;
         private int decayOrganAttackBonus;
         private float ruptureMuscleStacks;
@@ -1096,6 +1097,7 @@ namespace Necrocis
                 gain,
                 CharacterStatModifierMode.Flat,
                 this);
+            bloodContractHealthGainCount++;
             playerStats.Heal(gain);
         }
 
@@ -1357,6 +1359,113 @@ namespace Necrocis
             RebuildItemCache();
         }
 
+        public void CapturePersistentItemState(SavedItemStateData target)
+        {
+            if (target == null || string.IsNullOrWhiteSpace(target.itemId))
+            {
+                return;
+            }
+
+            if (string.Equals(target.itemId, BloodContractId, StringComparison.OrdinalIgnoreCase))
+            {
+                target.bloodContractKillProgress = Mathf.Max(0, bloodContractKillProgress);
+                target.bloodContractHealthGainCount = Mathf.Max(0, bloodContractHealthGainCount);
+            }
+            else if (string.Equals(target.itemId, SplitRegenerationId, StringComparison.OrdinalIgnoreCase))
+            {
+                target.splitRegenerationUsed = splitRegenerationUsed;
+            }
+            else if (string.Equals(target.itemId, DecayOrganId, StringComparison.OrdinalIgnoreCase))
+            {
+                target.decayOrganElapsedSeconds = decayOrganStartTime <= float.NegativeInfinity * 0.5f
+                    ? 0f
+                    : Mathf.Max(0f, Time.time - decayOrganStartTime);
+            }
+            else if (string.Equals(target.itemId, PlateletMembraneId, StringComparison.OrdinalIgnoreCase))
+            {
+                target.plateletMembraneShield = Mathf.Max(0f, plateletMembraneCurrentShield);
+                target.plateletMembraneCooldownRemaining = Mathf.Max(0f, plateletMembraneNextReadyTime - Time.time);
+            }
+            else if (string.Equals(target.itemId, RecoveryFactorId, StringComparison.OrdinalIgnoreCase))
+            {
+                target.recoveryFactorCooldownRemaining = Mathf.Max(0f, recoveryFactorNextHealTime - Time.time);
+            }
+        }
+
+        public void RestorePersistentItemStates(IReadOnlyList<SavedItemStateData> savedItems)
+        {
+            bloodContractKillProgress = 0;
+            bloodContractHealthGainCount = 0;
+            splitRegenerationUsed = false;
+            decayOrganStartTime = hasDecayOrganItem ? Time.time : float.NegativeInfinity;
+            plateletMembraneCurrentShield = 0f;
+            plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
+            recoveryFactorNextHealTime = Time.time + Mathf.Max(0.1f, recoveryFactorInterval);
+            playerStats?.RuntimeStats.RemoveModifiersFromSource(this);
+
+            if (savedItems != null)
+            {
+                for (int i = 0; i < savedItems.Count; i++)
+                {
+                    SavedItemStateData state = savedItems[i];
+                    if (state == null || string.IsNullOrWhiteSpace(state.itemId))
+                    {
+                        continue;
+                    }
+
+                    if (hasBloodContractItem
+                        && string.Equals(state.itemId, BloodContractId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        bloodContractKillProgress = Mathf.Clamp(
+                            state.bloodContractKillProgress,
+                            0,
+                            Mathf.Max(1, bloodContractKillsPerHeal) - 1);
+                        bloodContractHealthGainCount = Mathf.Max(0, state.bloodContractHealthGainCount);
+                    }
+                    else if (hasSplitRegenerationItem
+                             && string.Equals(state.itemId, SplitRegenerationId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        splitRegenerationUsed = state.splitRegenerationUsed;
+                    }
+                    else if (hasDecayOrganItem
+                             && string.Equals(state.itemId, DecayOrganId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        decayOrganStartTime = Time.time - Mathf.Max(0f, state.decayOrganElapsedSeconds);
+                    }
+                    else if (hasPlateletMembraneItem
+                             && string.Equals(state.itemId, PlateletMembraneId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        plateletMembraneCurrentShield = Mathf.Clamp(
+                            state.plateletMembraneShield,
+                            0f,
+                            Mathf.Max(0f, plateletMembraneShieldAmount));
+                        plateletMembraneNextReadyTime =
+                            Time.time + Mathf.Max(0f, state.plateletMembraneCooldownRemaining);
+                    }
+                    else if (hasRecoveryFactorItem
+                             && string.Equals(state.itemId, RecoveryFactorId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        recoveryFactorNextHealTime =
+                            Time.time + Mathf.Max(0f, state.recoveryFactorCooldownRemaining);
+                    }
+                }
+            }
+
+            float restoredBloodContractHealth = bloodContractHealthGainCount
+                                                * Mathf.Max(0f, bloodContractHealthGainAmount);
+            if (hasBloodContractItem && restoredBloodContractHealth > 0f && playerStats != null)
+            {
+                playerStats.RuntimeStats.AddModifier(
+                    CharacterStatType.MaxHealth,
+                    restoredBloodContractHealth,
+                    CharacterStatModifierMode.Flat,
+                    this);
+            }
+
+            UpdateDecayOrganState();
+            UpdatePlateletMembraneOutline();
+        }
+
         private bool HasCachedItem(string itemId)
         {
             return acquiredItemIds.Contains(itemId);
@@ -1469,6 +1578,8 @@ namespace Necrocis
             if (!hasBloodContractItem)
             {
                 bloodContractKillProgress = 0;
+                bloodContractHealthGainCount = 0;
+                playerStats?.RuntimeStats.RemoveModifiersFromSource(this);
             }
 
             if (!hasSeveranceReflexItem)

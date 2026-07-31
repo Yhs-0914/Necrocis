@@ -25,6 +25,21 @@ namespace Necrocis
         private int enemyPoolArchetypeId;        // 풀 분류 ID
         private float nextEvaluationTime;
 
+        private int DifficultyMaxAlive
+        {
+            get
+            {
+                float multiplier = DifficultyBalanceService.ActiveProfile?.world?.enemyMaxAlive ?? 1f;
+                return Mathf.Max(0, Mathf.RoundToInt(config.maxAlive * Mathf.Max(0f, multiplier)));
+            }
+        }
+
+        private float DifficultyRespawnCooldown =>
+            config.respawnCooldown
+            * Mathf.Max(
+                0.01f,
+                DifficultyBalanceService.ActiveProfile?.world?.enemyRespawnCooldown ?? 1f);
+
         // 스포너 초기 설정: 이전 적 정리 → 새 설정 적용
         public void Configure(EnemySpawnRuleConfig config, Vector3 anchorPosition)
         {
@@ -84,12 +99,12 @@ namespace Necrocis
                 if (TrySpawnWave())
                 {
                     initializedWave = true;
-                    nextSpawnTime = Time.time + config.respawnCooldown;
+                    nextSpawnTime = Time.time + DifficultyRespawnCooldown;
                 }
                 return;
             }
 
-            if (activeEnemies.Count >= config.maxAlive || Time.time < nextSpawnTime)
+            if (activeEnemies.Count >= DifficultyMaxAlive || Time.time < nextSpawnTime)
             {
                 return;
             }
@@ -101,7 +116,7 @@ namespace Necrocis
 
             if (TrySpawnWave())
             {
-                nextSpawnTime = Time.time + config.respawnCooldown;
+                nextSpawnTime = Time.time + DifficultyRespawnCooldown;
             }
         }
 
@@ -150,15 +165,15 @@ namespace Necrocis
         public void NotifyEnemyReleased(EnemyController enemy)
         {
             activeEnemies.Remove(enemy);
-            if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < config.maxAlive)
+            if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < DifficultyMaxAlive)
             {
-                nextSpawnTime = Time.time + config.respawnCooldown;
+                nextSpawnTime = Time.time + DifficultyRespawnCooldown;
             }
         }
 
         private bool TrySpawnWave()
         {
-            while (activeEnemies.Count < config.maxAlive)
+            while (activeEnemies.Count < DifficultyMaxAlive)
             {
                 if (!SpawnEnemy())
                 {

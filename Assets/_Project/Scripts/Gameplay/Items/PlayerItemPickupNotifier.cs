@@ -40,7 +40,7 @@ namespace Necrocis
 
         private void HandleItemAcquired(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem item)
         {
-            if (item == null)
+            if (item == null || (itemManager != null && itemManager.IsRestoringSavedItems))
             {
                 return;
             }

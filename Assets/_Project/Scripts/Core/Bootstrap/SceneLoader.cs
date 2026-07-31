@@ -26,6 +26,7 @@ namespace Necrocis
         }
 
         [Header("씬 이름")]
+        public const string SCENE_MAIN_MENU = "MainMenu";
         public const string SCENE_HUB = "Hub";
         public const string SCENE_INTESTINE = "Intestine";
         public const string SCENE_LIVER = "Liver";

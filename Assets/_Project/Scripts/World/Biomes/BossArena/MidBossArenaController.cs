@@ -28,7 +28,7 @@ namespace Necrocis
         private LiverBossPattern activeLiverPattern;
         private StomachBossPattern activeStomachPattern;
         private LungBossPattern activeLungPattern;
-        private readonly List<MidBossContactDamage> activeContactDamage = new List<MidBossContactDamage>();
+        private readonly List<EnemyContactDamage> activeContactDamage = new List<EnemyContactDamage>();
         private Vector2Int centerGrid;
         private Vector2Int arenaSize;
         private bool arenaLocked;
@@ -408,22 +408,12 @@ namespace Necrocis
                 return;
             }
 
-            MidBossContactDamage contactDamage = boss.GetComponent<MidBossContactDamage>();
+            EnemyContactDamage contactDamage = boss.GetComponent<EnemyContactDamage>();
             if (contactDamage == null)
             {
-                contactDamage = boss.gameObject.AddComponent<MidBossContactDamage>();
+                contactDamage = boss.gameObject.AddComponent<EnemyContactDamage>();
             }
 
-            if (arenaConfig == null)
-            {
-                return;
-            }
-
-            contactDamage.Initialize(
-                boss,
-                arenaConfig.bossContactDamage,
-                arenaConfig.bossContactDamageCooldown,
-                arenaConfig.bossContactPushSpeed);
             contactDamage.SetDamageActive(arenaLocked && !bossDefeated);
 
             if (!activeContactDamage.Contains(contactDamage))

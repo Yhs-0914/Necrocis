@@ -151,6 +151,7 @@ namespace Necrocis
         private readonly List<AcquiredPlayerItem> acquiredItems = new List<AcquiredPlayerItem>();
         private readonly Dictionary<string, PlayerItemEntry> entryMap = new Dictionary<string, PlayerItemEntry>(StringComparer.OrdinalIgnoreCase);
         private PlayerStats playerStats;
+        private bool isRestoringSavedItems;
 
         public event Action<PlayerItemManager, AcquiredPlayerItem> ItemAcquired;
         public event Action<PlayerItemManager, AcquiredPlayerItem> ItemRemoved;
@@ -160,6 +161,7 @@ namespace Necrocis
         public bool IsFull => acquiredItems.Count >= maxItemSlots;
         public IReadOnlyList<PlayerItemEntry> ItemEntries => itemEntries;
         public IReadOnlyList<AcquiredPlayerItem> AcquiredItems => acquiredItems;
+        public bool IsRestoringSavedItems => isRestoringSavedItems;
 
         private void Awake()
         {
@@ -171,6 +173,12 @@ namespace Necrocis
             {
                 Destroy(this);
                 return;
+            }
+
+            int slotOverride = DifficultyBalanceService.ActiveProfile?.items?.maxSlotsOverride ?? 0;
+            if (slotOverride > 0)
+            {
+                maxItemSlots = slotOverride;
             }
 
             playerStats = GetComponent<PlayerStats>();
@@ -817,6 +825,58 @@ namespace Necrocis
             for (int i = 0; i < removedItems.Count; i++)
             {
                 ItemRemoved?.Invoke(this, removedItems[i]);
+            }
+        }
+
+        public List<SavedItemStateData> CaptureSavedItems()
+        {
+            List<SavedItemStateData> result = new List<SavedItemStateData>(acquiredItems.Count);
+            PlayerItemCombatEffects combatEffects = GetComponent<PlayerItemCombatEffects>();
+            for (int i = 0; i < acquiredItems.Count; i++)
+            {
+                AcquiredPlayerItem item = acquiredItems[i];
+                if (item == null || string.IsNullOrWhiteSpace(item.ItemId))
+                {
+                    continue;
+                }
+
+                SavedItemStateData state = new SavedItemStateData { itemId = item.ItemId };
+                combatEffects?.CapturePersistentItemState(state);
+                result.Add(state);
+            }
+
+            return result;
+        }
+
+        public void RestoreSavedItems(IReadOnlyList<SavedItemStateData> savedItems)
+        {
+            isRestoringSavedItems = true;
+            try
+            {
+                ClearAllItems();
+                if (savedItems != null)
+                {
+                    for (int i = 0; i < savedItems.Count; i++)
+                    {
+                        SavedItemStateData state = savedItems[i];
+                        if (state == null || string.IsNullOrWhiteSpace(state.itemId))
+                        {
+                            continue;
+                        }
+
+                        if (!TryAcquireItem(state.itemId, out PlayerItemAcquireFailureReason failureReason))
+                        {
+                            Debug.LogWarning(
+                                $"[PlayerItemManager] 저장 아이템 복원 실패: {state.itemId} ({failureReason})");
+                        }
+                    }
+                }
+
+                GetComponent<PlayerItemCombatEffects>()?.RestorePersistentItemStates(savedItems);
+            }
+            finally
+            {
+                isRestoringSavedItems = false;
             }
         }
 

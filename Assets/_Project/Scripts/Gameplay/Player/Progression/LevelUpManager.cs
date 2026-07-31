@@ -25,6 +25,7 @@ namespace Necrocis
         private static int expRequired = 100;  // 다음 레벨까지 필요 경험치
 
         private static LevelProgressionConfig progressionConfig;
+        private static LevelProgressionConfig expRequirementConfig;
         private static bool expRequirementInitialized;
 
         public static Action OnLevelUp;       // 레벨업 이벤트 (LevelUpUI가 구독)
@@ -48,13 +49,15 @@ namespace Necrocis
         }
 
         // 적 처치 시 고정 경험치 지급 (배율/개별 보상값 미적용)
-        public static void AddEnemyKillExp()
+        public static void AddEnemyKillExp(float rewardMultiplier = 1f)
         {
             EnsureExpRequirementInitialized();
             if (currentLevel >= Config.MaxLevel) return;
             if (IsWaitingForJobSelection()) return;
 
-            int enemyKillExp = Config.EnemyKillExp;
+            int enemyKillExp = Mathf.Max(
+                0,
+                Mathf.RoundToInt(Config.EnemyKillExp * Mathf.Max(0f, rewardMultiplier)));
             currentExp += enemyKillExp;
             OnExpGained?.Invoke(enemyKillExp);
 
@@ -116,6 +119,7 @@ namespace Necrocis
         private static void CalculateExpRequired()
         {
             expRequired = Config.GetRequiredExpForCurrentLevel(currentLevel);
+            expRequirementConfig = Config;
             expRequirementInitialized = true;
         }
 
@@ -160,6 +164,9 @@ namespace Necrocis
 
         private static JobType currentJob = JobType.None;                        // 현재 선택한 직업
         private static List<LevelUpStatChoice> selectionHistory = new List<LevelUpStatChoice>(); // 지금까지 선택한 스탯 기록
+        private static readonly List<SavedStatModifierData> resolvedModifiers = new List<SavedStatModifierData>();
+
+        public static readonly object RestoredModifierSource = new object();
 
         // 직업별 고유 스탯 매핑 (레벨 11+ 선택지에서 1번째로 고정 등장)
         private static Dictionary<JobType, LevelUpStatChoice> jobStatMap = new Dictionary<JobType, LevelUpStatChoice>
@@ -266,6 +273,100 @@ namespace Necrocis
         }
 
         public static void RecordSelection(LevelUpStatChoice choice) => selectionHistory.Add(choice);
+        public static void RecordResolvedModifier(
+            CharacterStatType statType,
+            float value,
+            CharacterStatModifierMode mode)
+        {
+            resolvedModifiers.Add(new SavedStatModifierData
+            {
+                statType = statType,
+                value = value,
+                mode = mode
+            });
+        }
+
+        public static void CaptureProgress(PlayerProgressSaveData target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            target.level = Mathf.Clamp(currentLevel, 1, Config.MaxLevel);
+            target.experience = Mathf.Max(0, currentExp);
+            target.job = currentJob;
+            target.selectionHistory = new List<LevelUpStatChoice>(selectionHistory);
+            target.levelUpModifiers = new List<SavedStatModifierData>(resolvedModifiers.Count);
+            for (int i = 0; i < resolvedModifiers.Count; i++)
+            {
+                SavedStatModifierData source = resolvedModifiers[i];
+                target.levelUpModifiers.Add(new SavedStatModifierData
+                {
+                    statType = source.statType,
+                    value = source.value,
+                    mode = source.mode
+                });
+            }
+        }
+
+        public static void RestoreProgress(PlayerProgressSaveData source)
+        {
+            source ??= new PlayerProgressSaveData();
+            currentLevel = Mathf.Clamp(source.level, 1, Config.MaxLevel);
+            currentExp = Mathf.Max(0, source.experience);
+            pendingLevelUps = 0;
+            CalculateExpRequired();
+            if (currentLevel < Config.MaxLevel)
+            {
+                currentExp = Mathf.Min(currentExp, Mathf.Max(0, expRequired - 1));
+            }
+            else
+            {
+                currentExp = 0;
+            }
+
+            selectionHistory.Clear();
+            if (source.selectionHistory != null)
+            {
+                selectionHistory.AddRange(source.selectionHistory);
+            }
+
+            resolvedModifiers.Clear();
+            if (source.levelUpModifiers != null)
+            {
+                for (int i = 0; i < source.levelUpModifiers.Count; i++)
+                {
+                    SavedStatModifierData modifier = source.levelUpModifiers[i];
+                    if (modifier == null)
+                    {
+                        continue;
+                    }
+
+                    resolvedModifiers.Add(new SavedStatModifierData
+                    {
+                        statType = modifier.statType,
+                        value = modifier.value,
+                        mode = modifier.mode
+                    });
+                }
+            }
+
+            bool jobChanged = currentJob != source.job;
+            currentJob = source.job;
+            if (jobChanged)
+            {
+                OnJobChanged?.Invoke(currentJob);
+            }
+
+            OnExpGained?.Invoke(0);
+        }
+
+        public static void ResetProgress()
+        {
+            RestoreProgress(new PlayerProgressSaveData());
+        }
+
         public static void SetJob(JobType job)
         {
             if (job == JobType.None || currentJob == job)
@@ -284,6 +385,12 @@ namespace Necrocis
         {
             get
             {
+                LevelProgressionConfig difficultyConfig = DifficultyBalanceService.GetProgressionConfig();
+                if (difficultyConfig != null)
+                {
+                    return difficultyConfig;
+                }
+
                 if (progressionConfig == null)
                 {
                     progressionConfig = Resources.Load<LevelProgressionConfig>(LevelProgressionConfig.DefaultResourcePath);
@@ -300,7 +407,8 @@ namespace Necrocis
 
         private static void EnsureExpRequirementInitialized()
         {
-            if (expRequirementInitialized)
+            LevelProgressionConfig activeConfig = Config;
+            if (expRequirementInitialized && expRequirementConfig == activeConfig)
             {
                 return;
             }

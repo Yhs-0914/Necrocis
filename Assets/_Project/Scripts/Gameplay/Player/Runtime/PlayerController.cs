@@ -155,6 +155,7 @@ namespace Necrocis
         public float SkillCooldownReduction => playerStats != null ? playerStats.SkillCooldownReduction : 0f;
         public bool IsDead => playerStats != null && playerStats.IsDead;
         public bool IsMoving => isMoving;
+        public bool IsDashInvincible => isDashing && invincibleDuringDash;
         public Collider HitCollider
         {
             get
@@ -648,6 +649,25 @@ namespace Necrocis
 
         public void ReviveForRespawn()
         {
+            ResetRuntimeAfterDeath();
+
+            Health health = GetComponent<Health>();
+            if (health != null)
+                health.ResetHealth();
+            else
+                playerStats.RuntimeStats.ResetHealthToMax();
+
+            RestoreRuntimeControls();
+        }
+
+        public void ReviveRuntimeStateAfterLoad()
+        {
+            ResetRuntimeAfterDeath();
+            RestoreRuntimeControls();
+        }
+
+        private void ResetRuntimeAfterDeath()
+        {
             deathHandled = false;
             movement = Vector3.zero;
             isMoving = false;
@@ -660,13 +680,10 @@ namespace Necrocis
             }
 
             EnsurePlayerStats();
+        }
 
-            Health health = GetComponent<Health>();
-            if (health != null)
-                health.ResetHealth();
-            else
-                playerStats.RuntimeStats.ResetHealthToMax();
-
+        private void RestoreRuntimeControls()
+        {
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
                 attack.enabled = true;

@@ -109,7 +109,7 @@ namespace Necrocis
             // 시드 설정
             if (useRandomSeed)
             {
-                seed = GetOrCreateBiomeSeed(biomeType);
+                seed = SaveService.GetOrCreateBiomeSeed(biomeType);
             }
 
             if (chunkSize <= 0)

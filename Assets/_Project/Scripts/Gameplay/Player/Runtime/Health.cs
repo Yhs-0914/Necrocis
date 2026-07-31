@@ -122,7 +122,9 @@ namespace Necrocis
             if (isInvincible || IsDead || damageAmount <= 0f) return;
             if (Stats == null) return;
 
-            float actualDamage = Mathf.Max(0f, damageAmount);
+            float actualDamage = Mathf.Max(
+                0f,
+                damageAmount * DifficultyBalanceService.GetIncomingDamageMultiplier(sourceEnemy));
             PlayerItemCombatEffects effects = ResolveItemEffects();
             if (effects != null)
             {

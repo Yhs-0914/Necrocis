@@ -261,6 +261,7 @@ namespace Necrocis
             stats = GetOrAddComponent<CharacterStats>(gameObject);
             statusEffectController = GetOrAddComponent<EnemyStatusEffectController>(gameObject);
             enemySkillBridge = GetOrAddComponent<EnemySkillBridge>(gameObject);
+            contactDamage = GetOrAddComponent<EnemyContactDamage>(gameObject);
         }
 
         private void ConfigureStats()
@@ -270,9 +271,14 @@ namespace Necrocis
                 return;
             }
 
+            EnemyDifficultyBalance balance = DifficultyBalanceService.GetEnemyBalance(IsBossEncounter);
             statConfigurationBuffer.Clear();
-            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.MoveSpeed, config.moveSpeed));
-            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.MaxHealth, config.maxHealth));
+            statConfigurationBuffer.Add(new CharacterStatValue(
+                CharacterStatType.MoveSpeed,
+                config.moveSpeed * Mathf.Max(0.01f, balance.moveSpeed)));
+            statConfigurationBuffer.Add(new CharacterStatValue(
+                CharacterStatType.MaxHealth,
+                config.maxHealth * Mathf.Max(0.01f, balance.maxHealth)));
             statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, config.attackDamage));
 
             List<CharacterStatValue> additionalStats = config.additionalBaseStats;

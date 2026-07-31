@@ -7,6 +7,14 @@ namespace Necrocis
     {
         [SerializeField] private bool logDamageToConsole;
 
+        private float DifficultyAttackCooldown =>
+            config != null
+                ? config.attackCooldown
+                  * Mathf.Max(
+                      0.01f,
+                      DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown)
+                : 0f;
+
         public bool TryPerformAttack(float deltaTime)
         {
             if (statusEffectController != null && statusEffectController.IsStunned)
@@ -43,7 +51,7 @@ namespace Necrocis
 
             // 공격 애니메이션이 없으면 즉시 데미지 (기존 동작)
             ApplyDamageToPlayer();
-            attackTimer = config.attackCooldown;
+            attackTimer = DifficultyAttackCooldown;
             return false;
         }
 
@@ -104,7 +112,7 @@ namespace Necrocis
         private void OnAttackAnimationComplete()
         {
             attackAnimPlaying = false;
-            attackTimer = config.attackCooldown;
+            attackTimer = DifficultyAttackCooldown;
 
             // 공격 범위 내 플레이어에게 데미지
             ApplyDamageToPlayer();
@@ -324,7 +332,10 @@ namespace Necrocis
         public void GrantExp()
         {
             if (config == null) return;
-            LevelUpManager.AddEnemyKillExp();
+            float multiplier = DifficultyBalanceService
+                .GetEnemyBalance(IsBossEncounter)
+                .experienceReward;
+            LevelUpManager.AddEnemyKillExp(multiplier);
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !config.isElite)

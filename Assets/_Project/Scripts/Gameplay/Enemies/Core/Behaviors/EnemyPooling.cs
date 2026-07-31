@@ -71,6 +71,11 @@ namespace Necrocis
             gameObject.tag = "Enemy";
             ConfigureStats();
             ApplyPhysicsSetup();
+            contactDamage.Configure(
+                this,
+                config.enableContactDamage,
+                config.contactDamage,
+                config.contactKnockbackDistance);
             ApplyVisualSetup();
             SetIdleAnimation();
             SyncHeight();

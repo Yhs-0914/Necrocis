@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22ed4564501043c995d93dc4d0e81404, type: 3}
+  m_Name: HardDifficultyBalance
+  m_EditorClassIdentifier:
+  difficulty: 1
+  displayName: Hard
+  description: "\uC0AC\uB9DD \uC2DC \uC804\uBD80 \uCD08\uAE30\uD654\uB418\uB294 \uB3C5\uB9BD Run \uB09C\uC774\uB3C4."
+  progression: {fileID: 11400000, guid: 95e5feaa12c54801b912479277307f41, type: 2}
+  player:
+    maxHealth: 1
+    moveSpeed: 1
+    attackPower: 1
+    attackSpeed: 1
+    attackRange: 1
+    magic: 1
+    skillCooldownReduction: 1
+    basicAttackDamage: 1
+    basicAttackCooldown: 1
+    basicAttackRange: 1
+    skillDamage: 1
+    skillCooldown: 1
+  enemies:
+    maxHealth: 1
+    moveSpeed: 1
+    outgoingDamage: 1
+    attackCooldown: 1
+    experienceReward: 1
+  bosses:
+    maxHealth: 1
+    moveSpeed: 1
+    outgoingDamage: 1
+    attackCooldown: 1
+    experienceReward: 1
+  items:
+    maxSlotsOverride: 0
+    worldSpawnCount: 1
+  world:
+    enemySpawnerDensity: 1
+    sceneObjectDensity: 1
+    enemyMaxAlive: 1
+    enemyRespawnCooldown: 1
+  biomeOverrides: []

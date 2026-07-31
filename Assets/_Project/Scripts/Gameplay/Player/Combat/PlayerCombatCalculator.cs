@@ -9,32 +9,37 @@ namespace Necrocis
         public static float GetBasicAttackDamage(PlayerStats stats, float fallbackDamage = 0f)
         {
             float damage = stats != null ? stats.AttackPower : fallbackDamage;
-            return Mathf.Max(0f, damage);
+            float multiplier = DifficultyBalanceService.ActiveProfile?.player?.basicAttackDamage ?? 1f;
+            return Mathf.Max(0f, damage * Mathf.Max(0f, multiplier));
         }
 
         public static float GetBasicAttackCooldown(float baseCooldown, PlayerStats stats)
         {
             float attackSpeed = stats != null ? stats.AttackSpeed : 1f;
             attackSpeed = Mathf.Max(0.01f, attackSpeed);
-            return Mathf.Max(0f, baseCooldown / attackSpeed);
+            float multiplier = DifficultyBalanceService.ActiveProfile?.player?.basicAttackCooldown ?? 1f;
+            return Mathf.Max(0f, baseCooldown / attackSpeed * Mathf.Max(0.01f, multiplier));
         }
 
         public static float GetBasicAttackRange(float baseRange, PlayerStats stats)
         {
             float attackRange = stats != null ? stats.AttackRange : 1f;
-            return Mathf.Max(0f, baseRange * Mathf.Max(0f, attackRange));
+            float multiplier = DifficultyBalanceService.ActiveProfile?.player?.basicAttackRange ?? 1f;
+            return Mathf.Max(0f, baseRange * Mathf.Max(0f, attackRange) * Mathf.Max(0f, multiplier));
         }
 
         public static float GetSkillCooldown(float baseCooldown, PlayerStats stats)
         {
             float reductionPercent = stats != null ? stats.SkillCooldownReduction : 0f;
             float multiplier = 1f - reductionPercent * PercentToRatio;
-            return Mathf.Max(0f, baseCooldown * multiplier);
+            float difficultyMultiplier = DifficultyBalanceService.ActiveProfile?.player?.skillCooldown ?? 1f;
+            return Mathf.Max(0f, baseCooldown * multiplier * Mathf.Max(0.01f, difficultyMultiplier));
         }
 
         public static float GetSkillDamage(float baseDamage, PlayerStats stats)
         {
-            return Mathf.Max(0f, baseDamage * GetSkillDamageMultiplier(stats));
+            float multiplier = DifficultyBalanceService.ActiveProfile?.player?.skillDamage ?? 1f;
+            return Mathf.Max(0f, baseDamage * GetSkillDamageMultiplier(stats) * Mathf.Max(0f, multiplier));
         }
 
         public static float GetSkillDamageMultiplier(PlayerStats stats)

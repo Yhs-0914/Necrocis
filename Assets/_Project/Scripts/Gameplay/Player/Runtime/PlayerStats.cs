@@ -64,8 +64,6 @@ namespace Necrocis
                 return runtimeStats;
             }
         }
-        // 유니티 생명주기: 참조를 캐시하고 기본 상태를 초기화합니다.
-
         private void Awake()
         {
             if (instance == null)
@@ -89,7 +87,6 @@ namespace Necrocis
                 instance = null;
             }
         }
-        // EnsureInitialized: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         public void EnsureInitialized()
         {
@@ -107,9 +104,16 @@ namespace Necrocis
 
         private void ApplyDefaultBaseStats(bool resetCurrentHealth)
         {
-            RuntimeStats.ConfigureBaseStats(LevelUpManager.Config.BuildPlayerBaseStats(), resetCurrentHealth);
+            CharacterStatValue[] baseStats = LevelUpManager.Config.BuildPlayerBaseStats();
+            for (int index = 0; index < baseStats.Length; index++)
+            {
+                CharacterStatValue value = baseStats[index];
+                value.value *= DifficultyBalanceService.GetPlayerBaseStatMultiplier(value.statType);
+                baseStats[index] = value;
+            }
+
+            RuntimeStats.ConfigureBaseStats(baseStats, resetCurrentHealth);
         }
-        // ConfigureBaseStats: 관련 설정과 상태를 구성합니다.
 
         public void ConfigureBaseStats(float moveSpeed, float maxHealth, float attackPower, bool resetCurrentHealth = false)
         {
@@ -167,6 +171,10 @@ namespace Necrocis
                     stat.Value,
                     CharacterStatModifierMode.Flat,
                     choice); // source를 choice로 설정하여 추적 가능
+                LevelUpManager.RecordResolvedModifier(
+                    stat.Key,
+                    stat.Value,
+                    CharacterStatModifierMode.Flat);
             }
 
             // 퍼센트 모디파이어 적용 (예: 이동속도 +3% → 0.03으로 변환)
@@ -177,6 +185,10 @@ namespace Necrocis
                     stat.Value / 100f, // UI에선 3%로 표시, 내부적으론 0.03
                     CharacterStatModifierMode.PercentAdd,
                     choice);
+                LevelUpManager.RecordResolvedModifier(
+                    stat.Key,
+                    stat.Value / 100f,
+                    CharacterStatModifierMode.PercentAdd);
             }
 
             float maxHealthIncrease = RuntimeStats.MaxHealth - previousMaxHealth;
@@ -185,7 +197,6 @@ namespace Necrocis
                 RuntimeStats.RestoreHealth(maxHealthIncrease);
             }
         }
-        // ResetStats: 상태 또는 컬렉션을 갱신합니다.
 
         public void ResetStats()
         {
@@ -236,7 +247,6 @@ namespace Necrocis
             EnsureInitialized();
             RuntimeStats.AddModifier(modifier);
         }
-        // ApplyModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         public void ApplyModifiers(IEnumerable<CharacterStatModifierData> modifiers, object source)
         {
@@ -253,7 +263,6 @@ namespace Necrocis
             foreach (PlayerItemStatModifierData modifier in modifiers)
                 RuntimeStats.AddModifier(modifier.ToModifier(source));
         }
-        // ApplyOrReplaceSourceModifiers: 변경 사항을 런타임 객체에 반영합니다.
 
         // 특정 출처의 모디파이어를 새 것으로 교체 (기존 제거 → 새로 적용)
         // 장비 교체 시 유용: 이전 장비 효과 제거 후 새 장비 효과 적용
@@ -263,7 +272,6 @@ namespace Necrocis
             RuntimeStats.RemoveModifiersFromSource(source);
             ApplyModifiers(modifiers, source);
         }
-        // RemoveModifiersFromSource: 상태 또는 컬렉션을 갱신합니다.
 
         public int RemoveModifiersFromSource(object source)
         {

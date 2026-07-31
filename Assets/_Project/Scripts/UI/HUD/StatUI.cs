@@ -33,7 +33,6 @@ namespace Necrocis
             CharacterStatType.Magic,
             CharacterStatType.SkillCooldownReduction
         };
-        // 유니티 생명주기: Awake 이후 초기 런타임 설정을 수행합니다.
 
         private void Start()
         {
@@ -57,9 +56,8 @@ namespace Necrocis
             LevelUpManager.OnJobChanged -= HandleJobChanged;
             UnbindStats();
         }
-        // 유니티 생명주기: 매 프레임 게임플레이 로직을 실행합니다.
 
-        // O키로 토글, 열려 있으면 매 프레임 스탯 갱신
+        // O키로 창을 토글한다. 수치는 구독한 스탯/진행 이벤트에서 갱신한다.
         private void Update()
         {
             if (subscribedStats == null)
@@ -79,7 +77,6 @@ namespace Necrocis
                     Show();
             }
         }
-        // Show: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Show()
         {
@@ -88,14 +85,12 @@ namespace Necrocis
             uiRoot.SetActive(true);
             isShowing = true;
         }
-        // Hide: 이 컴포넌트의 핵심 로직을 실행합니다.
 
         private void Hide()
         {
             uiRoot.SetActive(false);
             isShowing = false;
         }
-        // RefreshStats: 변경 사항을 런타임 객체에 반영합니다.
 
         // 모든 스탯 정보를 StringBuilder로 조합하여 Text에 표시
         // 기본값 대비 증감분을 색상으로 표시 (초록: 증가, 빨강: 감소)
@@ -211,35 +206,33 @@ namespace Necrocis
                 RefreshStats();
             }
         }
-        // GetStatName: 필요한 값을 반환합니다.
 
         // 스탯 타입 → 한글 이름 변환
-        private string GetStatName(CharacterStatType type)
+        private static string GetStatName(CharacterStatType type)
         {
-            switch (type)
+            return type switch
             {
-                case CharacterStatType.MaxHealth:   return "체력";
-                case CharacterStatType.AttackPower:  return "공격력";
-                case CharacterStatType.MoveSpeed:    return "이동속도";
-                case CharacterStatType.AttackSpeed:  return "공격속도";
-                case CharacterStatType.AttackRange:  return "공격 사거리";
-                case CharacterStatType.Magic:        return "마력";
-                case CharacterStatType.SkillCooldownReduction: return "스킬 쿨타임 감소";
-                default:                             return type.ToString();
-            }
+                CharacterStatType.MaxHealth => "체력",
+                CharacterStatType.AttackPower => "공격력",
+                CharacterStatType.MoveSpeed => "이동속도",
+                CharacterStatType.AttackSpeed => "공격속도",
+                CharacterStatType.AttackRange => "공격 사거리",
+                CharacterStatType.Magic => "마력",
+                CharacterStatType.SkillCooldownReduction => "스킬 쿨타임 감소",
+                _ => type.ToString()
+            };
         }
-        // GetJobName: 필요한 값을 반환합니다.
 
         // 직업 타입 → 한글 이름 변환
-        private string GetJobName(JobType job)
+        private static string GetJobName(JobType job)
         {
-            switch (job)
+            return job switch
             {
-                case JobType.Warrior: return "전사";
-                case JobType.Mage:    return "마법사";
-                case JobType.Archer:  return "궁수";
-                default:              return job.ToString();
-            }
+                JobType.Warrior => "전사",
+                JobType.Mage => "마법사",
+                JobType.Archer => "궁수",
+                _ => job.ToString()
+            };
         }
 
         // ─────────────────────────────────

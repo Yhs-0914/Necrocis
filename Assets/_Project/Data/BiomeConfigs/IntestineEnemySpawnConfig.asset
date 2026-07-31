@@ -33,6 +33,9 @@ MonoBehaviour:
     attackRange: 4
     attackCooldown: 1
     expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
     additionalBaseStats: []
     separationDistance: 1.2
     separationStrength: 1.1
@@ -129,6 +132,9 @@ MonoBehaviour:
     attackRange: 1.5
     attackCooldown: 1
     expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
     additionalBaseStats: []
     separationDistance: 1.05
     separationStrength: 1.2
@@ -232,6 +238,9 @@ MonoBehaviour:
     attackRange: 7
     attackCooldown: 1.5
     expReward: 15
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
     additionalBaseStats: []
     separationDistance: 1.3
     separationStrength: 1
@@ -330,6 +339,9 @@ MonoBehaviour:
     attackRange: 4
     attackCooldown: 1
     expReward: 50
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
     additionalBaseStats:
     - statType: 3
       value: 0.15
@@ -428,6 +440,9 @@ MonoBehaviour:
     attackRange: 1.5
     attackCooldown: 0.8
     expReward: 60
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
     additionalBaseStats:
     - statType: 3
       value: 0.15

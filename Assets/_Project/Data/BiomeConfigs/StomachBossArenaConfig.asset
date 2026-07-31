@@ -39,9 +39,6 @@ MonoBehaviour:
     interiorFogSortingOrderOffset: 3000
     returnPortalSprite: {fileID: 0}
     returnPortalScale: {x: 1, y: 1, z: 1}
-    bossContactDamage: 1
-    bossContactDamageCooldown: 1
-    bossContactPushSpeed: 5
     boss:
       displayName: StomachBoss
       useCustomBossRule: 1
@@ -66,6 +63,9 @@ MonoBehaviour:
         attackRange: 1.6
         attackCooldown: 1
         expReward: 0
+        enableContactDamage: 1
+        contactDamage: 1
+        contactKnockbackDistance: 0.45
         additionalBaseStats: []
         separationDistance: 0
         separationStrength: 0

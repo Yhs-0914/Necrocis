@@ -171,7 +171,12 @@ namespace Necrocis
 
         public void SetIgnoreMidBossArenaRestriction(bool ignore)
         {
+            bool changed = ignoreMidBossArenaRestriction != ignore;
             ignoreMidBossArenaRestriction = ignore;
+            if (changed && config != null && stats != null)
+            {
+                ConfigureStats();
+            }
         }
 
 

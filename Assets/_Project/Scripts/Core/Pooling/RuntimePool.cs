@@ -154,6 +154,16 @@ namespace Necrocis
             poolRoot = root.transform;
         }
 
+        public static void ClearAll()
+        {
+            Pools.Clear();
+            if (poolRoot != null)
+            {
+                DestroyObject(poolRoot.gameObject);
+                poolRoot = null;
+            }
+        }
+
         private static void DestroyObject(GameObject obj)
         {
             if (obj == null)

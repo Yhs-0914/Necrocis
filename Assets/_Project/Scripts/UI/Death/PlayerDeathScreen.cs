@@ -65,11 +65,40 @@ namespace Necrocis
         private IEnumerator ReturnToHubRoutine()
         {
             isLoading = true;
+
+            if (SaveService.HasActiveSession && SaveService.ActiveDifficulty == GameDifficulty.Hard)
+            {
+                if (!SaveService.TryHandleHardDeath(out string hardDeathError))
+                {
+                    Debug.LogError($"[PlayerDeathScreen] Hard run 초기화 실패: {hardDeathError}");
+                    isLoading = false;
+                    AudioManager.Instance?.PlaySFX("UIInvalid");
+                    yield break;
+                }
+
+                Time.timeScale = 1f;
+                HideImmediate();
+                AsyncOperation mainMenuLoad = GameplaySessionLifecycle.LoadMainMenu();
+                while (mainMenuLoad != null && !mainMenuLoad.isDone)
+                {
+                    yield return null;
+                }
+
+                isLoading = false;
+                yield break;
+            }
+
             Time.timeScale = 1f;
             HideImmediate();
             PreparePlayerForRespawn();
 
             GameManager.Instance?.ReturnToHub();
+            if (SaveService.HasActiveSession
+                && !SaveService.TrySaveActiveRun(out string normalDeathSaveError))
+            {
+                Debug.LogError($"[PlayerDeathScreen] Normal 사망 저장 실패: {normalDeathSaveError}");
+            }
+
             if (SceneLoader.Instance != null)
             {
                 SceneLoader.Instance.ReturnToHub();

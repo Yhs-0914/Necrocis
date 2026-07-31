@@ -21,6 +21,7 @@ namespace NecrocisEditor
         private const string SettingsScreenshotPath = "/tmp/necrocis-main-menu-settings.png";
         private const string RevealedScreenshotPath = "/tmp/necrocis-main-menu-revealed.png";
         private const string PartialScreenshotPath = "/tmp/necrocis-main-menu-partial.png";
+        private const string ContinueLayoutScreenshotPath = "/tmp/necrocis-main-menu-with-save.png";
         private static readonly string[] BossKeys =
         {
             "necrocis.boss-defeated.intestine",
@@ -34,11 +35,14 @@ namespace NecrocisEditor
         private static int enteredPlayFrame;
         private static bool settingsOpened;
         private static bool settingsClosed;
+        private static bool difficultyOpened;
         private static bool startClicked;
+        private static bool layoutVerified;
         private static bool initialCaptureComplete;
         private static bool settingsCaptureComplete;
         private static bool previousEnterPlayModeOptionsEnabled;
         private static EnterPlayModeOptions previousEnterPlayModeOptions;
+        private static string testStorageRoot;
 
         public static void Run()
         {
@@ -60,6 +64,11 @@ namespace NecrocisEditor
             Begin(SmokePhase.PartialFlow, false);
         }
 
+        public static void RunContinueLayout()
+        {
+            Begin(SmokePhase.ContinueLayout, false);
+        }
+
         private static void Begin(SmokePhase requestedPhase, bool revealBosses)
         {
             MainMenuSceneBuilder.ValidateOrThrow();
@@ -68,6 +77,13 @@ namespace NecrocisEditor
             {
                 PlayerPrefs.SetInt("necrocis.boss-defeated.lung", 1);
                 PlayerPrefs.Save();
+            }
+            testStorageRoot = Path.Combine(Path.GetTempPath(), $"necrocis-main-menu-smoke-{Guid.NewGuid():N}");
+            SaveService.UseStorageRootForTests(testStorageRoot);
+            if (requestedPhase == SmokePhase.ContinueLayout
+                && !SaveService.TryBeginNewGame(GameDifficulty.Normal, out string error))
+            {
+                throw new InvalidOperationException($"Continue layout test save 생성 실패: {error}");
             }
             previousEnterPlayModeOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
             previousEnterPlayModeOptions = EditorSettings.enterPlayModeOptions;
@@ -87,7 +103,9 @@ namespace NecrocisEditor
                 enteredPlayFrame = Time.frameCount;
                 settingsOpened = false;
                 settingsClosed = false;
+                difficultyOpened = false;
                 startClicked = false;
+                layoutVerified = false;
                 initialCaptureComplete = false;
                 settingsCaptureComplete = false;
                 EditorApplication.update += Tick;
@@ -103,13 +121,16 @@ namespace NecrocisEditor
             RestoreBossProgress();
             RestoreEditorPlayModeSettings();
             EditorApplication.playModeStateChanged -= HandlePlayModeChanged;
-            Debug.Log(phase == SmokePhase.StartFlow
-                ? "[MainMenuSmoke] PASS - settings and Hub start flow verified"
-                : phase == SmokePhase.QuitFlow
-                    ? "[MainMenuSmoke] PASS - quit flow verified"
-                    : phase == SmokePhase.RevealFlow
-                        ? "[MainMenuSmoke] PASS - revealed boss collection state verified"
-                        : "[MainMenuSmoke] PASS - partial boss collection state verified");
+            string result = phase switch
+            {
+                SmokePhase.StartFlow => "settings, no-save layout and Hub start flow verified",
+                SmokePhase.QuitFlow => "quit flow verified",
+                SmokePhase.RevealFlow => "revealed boss collection state verified",
+                SmokePhase.PartialFlow => "partial boss collection state verified",
+                SmokePhase.ContinueLayout => "continue-save four-button layout verified",
+                _ => "main-menu flow verified"
+            };
+            Debug.Log($"[MainMenuSmoke] PASS - {result}");
             EditorApplication.Exit(0);
         }
 
@@ -139,7 +160,10 @@ namespace NecrocisEditor
                 return;
             }
 
-            if (controller.StartButton == null || controller.SettingsButton == null || controller.QuitButton == null)
+            if (controller.StartButton == null
+                || controller.ContinueButton == null
+                || controller.SettingsButton == null
+                || controller.QuitButton == null)
             {
                 Fail("One or more main-menu buttons are missing.");
                 return;
@@ -149,6 +173,33 @@ namespace NecrocisEditor
             {
                 Fail("EventSystem is missing from the title screen.");
                 return;
+            }
+
+            if (phase == SmokePhase.ContinueLayout)
+            {
+                if (!ValidateMenuLayout(controller, true))
+                {
+                    return;
+                }
+
+                if (!CaptureCanvasScreenshot(controller, ContinueLayoutScreenshotPath))
+                {
+                    Fail($"Could not capture screenshot at {ContinueLayoutScreenshotPath}.");
+                    return;
+                }
+
+                EditorApplication.isPlaying = false;
+                return;
+            }
+
+            if (phase == SmokePhase.StartFlow && !layoutVerified)
+            {
+                if (!ValidateMenuLayout(controller, false))
+                {
+                    return;
+                }
+
+                layoutVerified = true;
             }
 
             if (phase == SmokePhase.QuitFlow)
@@ -229,13 +280,104 @@ namespace NecrocisEditor
                 return;
             }
 
-            if (!startClicked && settingsClosed && Time.frameCount - enteredPlayFrame >= 16)
+            if (!difficultyOpened && settingsClosed && Time.frameCount - enteredPlayFrame >= 16)
             {
                 controller.StartButton.onClick.Invoke();
+                if (controller.DifficultyOverlay == null || !controller.DifficultyOverlay.activeSelf)
+                {
+                    Fail("New Game button did not open the difficulty overlay.");
+                    return;
+                }
+
+                difficultyOpened = true;
+                return;
+            }
+
+            if (!startClicked && difficultyOpened && Time.frameCount - enteredPlayFrame >= 18)
+            {
+                if (controller.NormalDifficultyButton == null
+                    || !controller.NormalDifficultyButton.interactable)
+                {
+                    Fail("Normal difficulty button is unavailable.");
+                    return;
+                }
+
+                controller.NormalDifficultyButton.onClick.Invoke();
                 startClicked = true;
                 return;
             }
 
+        }
+
+        private static bool ValidateMenuLayout(MainMenuController controller, bool expectContinue)
+        {
+            Button continueButton = controller.ContinueButton;
+            Button newGameButton = controller.NewGameButton;
+            Button settingsButton = controller.SettingsButton;
+            Button quitButton = controller.QuitButton;
+            if (continueButton.gameObject.activeSelf != expectContinue)
+            {
+                Fail(expectContinue
+                    ? "Continue save exists but Continue button is hidden."
+                    : "No continue save exists but Continue button is visible.");
+                return false;
+            }
+
+            Text status = controller
+                .GetComponentsInChildren<Text>(true)
+                .FirstOrDefault(text => text.name == "MenuStatus");
+            if (status == null || status.gameObject.activeSelf != expectContinue)
+            {
+                Fail("Menu status visibility does not match Continue button visibility.");
+                return false;
+            }
+
+            if (expectContinue)
+            {
+                if (!ApproximatelyY(continueButton, 117f)
+                    || !ApproximatelyY(newGameButton, 39f)
+                    || !ApproximatelyY(settingsButton, -39f)
+                    || !ApproximatelyY(quitButton, -117f)
+                    || string.IsNullOrWhiteSpace(status.text))
+                {
+                    Fail("Continue-save four-button layout is incorrect.");
+                    return false;
+                }
+
+                if (continueButton.navigation.selectOnDown != newGameButton
+                    || newGameButton.navigation.selectOnUp != continueButton
+                    || quitButton.navigation.selectOnDown != continueButton)
+                {
+                    Fail("Continue-save four-button navigation is incorrect.");
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (!ApproximatelyY(newGameButton, 78f)
+                || !ApproximatelyY(settingsButton, 0f)
+                || !ApproximatelyY(quitButton, -78f))
+            {
+                Fail("No-save three-button layout is incorrect.");
+                return false;
+            }
+
+            if (newGameButton.navigation.selectOnUp != quitButton
+                || newGameButton.navigation.selectOnDown != settingsButton
+                || quitButton.navigation.selectOnDown != newGameButton)
+            {
+                Fail("No-save three-button navigation is incorrect.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool ApproximatelyY(Button button, float expected)
+        {
+            RectTransform rect = button.GetComponent<RectTransform>();
+            return Mathf.Abs(rect.anchoredPosition.y - expected) < 0.01f;
         }
 
         private static void BackupAndSetBossProgress(int value)
@@ -247,6 +389,12 @@ namespace NecrocisEditor
                 PlayerPrefs.SetInt(key, value);
             }
             PlayerPrefs.Save();
+            SaveService.ResetStaticStateForTests();
+            if (!string.IsNullOrEmpty(testStorageRoot) && Directory.Exists(testStorageRoot))
+            {
+                Directory.Delete(testStorageRoot, true);
+            }
+            testStorageRoot = null;
         }
 
         private static bool CaptureCanvasScreenshot(MainMenuController controller, string path)
@@ -337,7 +485,8 @@ namespace NecrocisEditor
             StartFlow,
             QuitFlow,
             RevealFlow,
-            PartialFlow
+            PartialFlow,
+            ContinueLayout
         }
     }
 

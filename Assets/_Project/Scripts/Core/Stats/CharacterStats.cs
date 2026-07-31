@@ -342,6 +342,14 @@ namespace Necrocis
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, true);
         }
 
+        public void SetCurrentHealth(float value)
+        {
+            float previousCurrentHealth = currentHealth;
+            float minimumAliveHealth = MaxHealth > 0f ? Mathf.Min(1f, MaxHealth) : 0f;
+            currentHealth = Mathf.Clamp(ToHealthUnits(value), minimumAliveHealth, MaxHealth);
+            NotifyHealthChanged(previousCurrentHealth, MaxHealth, true);
+        }
+
         // 스탯 재계산 후 HP가 최대HP를 초과하지 않도록 클램핑
         private void ClampHealthAfterStatRefresh(float previousCurrentHealth, float previousMaxHealth)
         {

@@ -25,6 +25,11 @@ namespace Necrocis
 
         protected override void Awake()
         {
+            if (config != null)
+            {
+                config = DifficultyBalanceService.ResolveBiomeConfig(config.biomeType, config);
+            }
+
             if (config == null)
             {
                 Debug.LogError("[ConfigurableBiomeManager] BiomeConfig가 없습니다.");
@@ -165,7 +170,11 @@ namespace Necrocis
                 return 0f;
             }
 
-            return density;
+            WorldDifficultyBalance world = DifficultyBalanceService.ActiveProfile?.world;
+            float multiplier = rule.category == SpawnCategory.EnemySpawner
+                ? world?.enemySpawnerDensity ?? 1f
+                : world?.sceneObjectDensity ?? 1f;
+            return density * Mathf.Max(0f, multiplier);
         }
 
         protected override void BuildObjectRules()

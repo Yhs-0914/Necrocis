@@ -116,7 +116,11 @@ namespace Necrocis
             }
 
             Shuffle(candidates);
-            int targetCount = Mathf.Min(spawnCount, candidates.Count);
+            float spawnMultiplier = DifficultyBalanceService.ActiveProfile?.items?.worldSpawnCount ?? 1f;
+            int configuredSpawnCount = Mathf.Max(
+                0,
+                Mathf.RoundToInt(spawnCount * Mathf.Max(0f, spawnMultiplier)));
+            int targetCount = Mathf.Min(configuredSpawnCount, candidates.Count);
             Transform playerTransform = PlayerController.Instance != null ? PlayerController.Instance.transform : null;
 
             List<Vector3> positions = null;

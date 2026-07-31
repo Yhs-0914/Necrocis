@@ -211,6 +211,11 @@ namespace Necrocis
         public float attackCooldown = 1f;
         public int expReward = 10;
 
+        [Header("Contact Damage")]
+        public bool enableContactDamage = true;
+        [Min(0f)] public float contactDamage = 1f;
+        [Min(0f)] public float contactKnockbackDistance = 0.45f;
+
         [Header("Additional Stats")]
         public List<CharacterStatValue> additionalBaseStats = new List<CharacterStatValue>();
 
@@ -338,11 +343,6 @@ namespace Necrocis
         [Header("Return Portal")]
         public Sprite returnPortalSprite;
         public Vector3 returnPortalScale = Vector3.one;
-
-        [Header("Boss Contact")]
-        public float bossContactDamage = 1f;
-        public float bossContactDamageCooldown = 1f;
-        public float bossContactPushSpeed = 5f;
 
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();

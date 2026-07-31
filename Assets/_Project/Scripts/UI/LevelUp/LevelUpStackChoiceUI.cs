@@ -260,6 +260,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
         float modifierValue = config.GetRuntimeModifierValue(valueConfig);
         playerStats.ApplyModifier(new CharacterStatModifier(characterStatType, modifierValue, valueConfig.mode, source));
+        LevelUpManager.RecordResolvedModifier(characterStatType, modifierValue, valueConfig.mode);
         if (valueConfig.healWhenPositive
             && characterStatType == CharacterStatType.MaxHealth
             && valueConfig.mode == CharacterStatModifierMode.Flat
@@ -291,21 +292,27 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         {
             case StackStatType.AttackPower:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackPower, randomDelta, CharacterStatModifierMode.Flat, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackPower, randomDelta, CharacterStatModifierMode.Flat);
                 break;
             case StackStatType.AttackRange:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackRange, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackRange, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
                 break;
             case StackStatType.AttackSpeed:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
                 break;
             case StackStatType.Magic:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.Magic, randomDelta, CharacterStatModifierMode.Flat, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.Magic, randomDelta, CharacterStatModifierMode.Flat);
                 break;
             case StackStatType.MoveSpeed:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MoveSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.MoveSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
                 break;
             case StackStatType.MaxHealth:
                 playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MaxHealth, randomDelta, CharacterStatModifierMode.Flat, source));
+                LevelUpManager.RecordResolvedModifier(CharacterStatType.MaxHealth, randomDelta, CharacterStatModifierMode.Flat);
                 if (randomDelta > 0)
                 {
                     playerStats.Heal(randomDelta);

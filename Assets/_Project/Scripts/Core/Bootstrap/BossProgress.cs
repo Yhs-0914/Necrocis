@@ -11,32 +11,38 @@ namespace Necrocis
 
         public static bool IsDefeated(BiomeType biome)
         {
-            string key = GetKey(biome);
-            return !string.IsNullOrEmpty(key) && PlayerPrefs.GetInt(key, 0) == 1;
+            string key = GetLegacyKey(biome);
+            if (SaveService.HasActiveSession)
+            {
+                return SaveService.IsBossDefeated(biome);
+            }
+
+            return SaveService.IsBossDiscovered(biome)
+                   || (!string.IsNullOrEmpty(key) && PlayerPrefs.GetInt(key, 0) == 1);
         }
 
         public static void MarkDefeated(BiomeType biome)
         {
-            string key = GetKey(biome);
-            if (string.IsNullOrEmpty(key) || PlayerPrefs.GetInt(key, 0) == 1)
+            string key = GetLegacyKey(biome);
+            if (string.IsNullOrEmpty(key))
             {
                 return;
             }
 
-            PlayerPrefs.SetInt(key, 1);
-            PlayerPrefs.Save();
+            SaveService.MarkBossDefeated(biome);
         }
 
         public static void ResetAll()
         {
-            PlayerPrefs.DeleteKey(GetKey(BiomeType.Intestine));
-            PlayerPrefs.DeleteKey(GetKey(BiomeType.Liver));
-            PlayerPrefs.DeleteKey(GetKey(BiomeType.Stomach));
-            PlayerPrefs.DeleteKey(GetKey(BiomeType.Lung));
+            PlayerPrefs.DeleteKey(GetLegacyKey(BiomeType.Intestine));
+            PlayerPrefs.DeleteKey(GetLegacyKey(BiomeType.Liver));
+            PlayerPrefs.DeleteKey(GetLegacyKey(BiomeType.Stomach));
+            PlayerPrefs.DeleteKey(GetLegacyKey(BiomeType.Lung));
             PlayerPrefs.Save();
+            SaveService.ResetBossDiscoveriesForDevelopment();
         }
 
-        private static string GetKey(BiomeType biome)
+        internal static string GetLegacyKey(BiomeType biome)
         {
             return biome switch
             {

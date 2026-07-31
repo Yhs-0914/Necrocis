@@ -69,7 +69,13 @@ namespace Necrocis
 
             Instance = this;
             EnsureEventsInitialized();
+            SaveService.EnsureInitialized();
+            if (SaveService.HasActiveSession)
+            {
+                currentDifficulty = SaveService.ActiveDifficulty;
+            }
             LoadPersistentBossProgress();
+            GameplaySaveCoordinator.EnsureOn(gameObject);
             Application.targetFrameRate = targetFrameRate > 0 ? targetFrameRate : -1;
             DontDestroyOnLoad(gameObject);
         }
@@ -174,6 +180,52 @@ namespace Necrocis
             stomachEntryCount = 0;
             lungEntryCount = 0;
             Debug.Log("[GameManager] 보스 클리어 기록을 초기화했습니다.");
+        }
+
+        public void CaptureToSave(RunSaveData run)
+        {
+            if (run == null)
+            {
+                return;
+            }
+
+            run.difficulty = currentDifficulty;
+            run.bosses ??= new BossProgressSaveData();
+            run.bosses.SetDefeated(BiomeType.Intestine, hasIntestineRelic);
+            run.bosses.SetDefeated(BiomeType.Liver, hasLiverRelic);
+            run.bosses.SetDefeated(BiomeType.Stomach, hasStomachRelic);
+            run.bosses.SetDefeated(BiomeType.Lung, hasLungRelic);
+
+            run.world ??= new WorldRunSaveData();
+            run.world.SetEntryCount(BiomeType.Intestine, intestineEntryCount);
+            run.world.SetEntryCount(BiomeType.Liver, liverEntryCount);
+            run.world.SetEntryCount(BiomeType.Stomach, stomachEntryCount);
+            run.world.SetEntryCount(BiomeType.Lung, lungEntryCount);
+        }
+
+        public void RestoreFromSave(RunSaveData run)
+        {
+            if (run == null)
+            {
+                return;
+            }
+
+            currentDifficulty = run.difficulty;
+            currentBiome = run.checkpoint?.biome ?? BiomeType.None;
+            currentState = currentBiome == BiomeType.None ? GameState.InHub : GameState.InBiome;
+
+            BossProgressSaveData bosses = run.bosses ?? new BossProgressSaveData();
+            hasIntestineRelic = bosses.intestineDefeated;
+            hasLiverRelic = bosses.liverDefeated;
+            hasStomachRelic = bosses.stomachDefeated;
+            hasLungRelic = bosses.lungDefeated;
+
+            WorldRunSaveData world = run.world ?? new WorldRunSaveData();
+            intestineEntryCount = world.GetEntryCount(BiomeType.Intestine);
+            liverEntryCount = world.GetEntryCount(BiomeType.Liver);
+            stomachEntryCount = world.GetEntryCount(BiomeType.Stomach);
+            lungEntryCount = world.GetEntryCount(BiomeType.Lung);
+            OnGameStateChanged?.Invoke(currentState);
         }
 
         private void LoadPersistentBossProgress()
