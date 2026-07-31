@@ -165,11 +165,20 @@ namespace Necrocis
 
             if (itemManager.TryAcquireItem(itemId, out PlayerItemAcquireFailureReason failure))
             {
+                PlayerItemCategory category = PlayerItemCategory.BasicProjectile;
                 AudioManager.Instance?.PlaySFX("ItemPickup");
                 if (itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry))
                 {
+                    category = entry.Category;
                     AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
                 }
+                Vector3 effectPosition = itemVisual != null
+                    ? itemVisual.position
+                    : transform.position + Vector3.up * itemRestHeight;
+                CombatVfx.PlayItemPickup(
+                    transform.position + Vector3.up * 0.025f,
+                    effectPosition,
+                    category);
                 collected = true;
                 Destroy(gameObject);
                 return;

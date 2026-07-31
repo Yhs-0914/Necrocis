@@ -11,9 +11,17 @@ namespace Necrocis
     {
         private const string ImpactPoolName = "CombatVfx.Impact";
         private const string MeleeArcPoolName = "CombatVfx.MeleeArc";
+        private const string ItemPickupPoolName = "CombatVfx.ItemPickup";
+        private const string LevelUpPoolName = "CombatVfx.LevelUp";
+        private const string JobChangePoolName = "CombatVfx.JobChange";
+        private const string BossEncounterPoolName = "CombatVfx.BossEncounter";
 
         private static readonly Func<GameObject> CreateImpactFunc = CombatImpactVfx.CreateObject;
         private static readonly Func<GameObject> CreateMeleeArcFunc = MeleeArcVfx.CreateObject;
+        private static readonly Func<GameObject> CreateItemPickupFunc = ItemPickupVfx.CreateObject;
+        private static readonly Func<GameObject> CreateLevelUpFunc = LevelUpVfx.CreateObject;
+        private static readonly Func<GameObject> CreateJobChangeFunc = JobChangeVfx.CreateObject;
+        private static readonly Func<GameObject> CreateBossEncounterFunc = BossEncounterVfx.CreateObject;
 
         private static readonly Color BloodRed = new Color(0.96f, 0.035f, 0.11f, 0.92f);
         private static readonly Color WarmCell = new Color(1f, 0.5f, 0.18f, 0.85f);
@@ -219,6 +227,212 @@ namespace Necrocis
                 0.88f);
         }
 
+        public static void PlayItemPickup(
+            Vector3 groundPosition,
+            Vector3 visualPosition,
+            PlayerItemCategory category)
+        {
+            if (!IsNearView(visualPosition))
+            {
+                return;
+            }
+
+            Color primary = GetItemCategoryColor(category);
+            Color accent = Color.Lerp(primary, BoneWhite, 0.72f);
+
+            GameObject pickupObject = RuntimePool.Acquire(ItemPickupPoolName, CreateItemPickupFunc);
+            if (pickupObject != null && pickupObject.TryGetComponent(out ItemPickupVfx pickupVfx))
+            {
+                pickupVfx.Show(groundPosition, visualPosition, primary, accent, 1f);
+            }
+            else
+            {
+                RuntimePool.Release(pickupObject);
+            }
+
+            SpawnImpact(
+                visualPosition,
+                Vector3.up,
+                0.72f,
+                accent,
+                primary,
+                9,
+                2,
+                0.34f,
+                false,
+                0.15f);
+        }
+
+        public static void PlayLevelUp(Transform player)
+        {
+            if (player == null
+                || !TryGetPlayerPresentationContext(
+                    player,
+                    out Vector3 groundPosition,
+                    out Vector3 center,
+                    out float scale)
+                || !IsNearView(center))
+            {
+                return;
+            }
+
+            GameObject levelUpObject = RuntimePool.Acquire(LevelUpPoolName, CreateLevelUpFunc);
+            if (levelUpObject != null && levelUpObject.TryGetComponent(out LevelUpVfx levelUpVfx))
+            {
+                levelUpVfx.Show(player, groundPosition, center, scale);
+            }
+            else
+            {
+                RuntimePool.Release(levelUpObject);
+            }
+
+            SpawnImpact(
+                center,
+                Vector3.up,
+                scale * 0.92f,
+                new Color(1f, 0.94f, 0.7f, 1f),
+                new Color(0.95f, 0.08f, 0.32f, 0.95f),
+                14,
+                4,
+                0.52f,
+                false,
+                0.08f);
+        }
+
+        public static void PlayJobChange(Transform player, JobType job)
+        {
+            if (player == null
+                || job == JobType.None
+                || !TryGetPlayerPresentationContext(
+                    player,
+                    out Vector3 groundPosition,
+                    out Vector3 center,
+                    out float scale)
+                || !IsNearView(center))
+            {
+                return;
+            }
+
+            GetJobColors(job, out Color primary, out Color accent);
+            GameObject jobChangeObject = RuntimePool.Acquire(
+                JobChangePoolName,
+                CreateJobChangeFunc);
+            if (jobChangeObject != null
+                && jobChangeObject.TryGetComponent(out JobChangeVfx jobChangeVfx))
+            {
+                jobChangeVfx.Show(
+                    player,
+                    groundPosition,
+                    center,
+                    scale,
+                    job,
+                    primary,
+                    accent);
+            }
+            else
+            {
+                RuntimePool.Release(jobChangeObject);
+            }
+
+            SpawnImpact(
+                center,
+                Vector3.up,
+                scale * 0.82f,
+                accent,
+                primary,
+                16,
+                4,
+                0.58f,
+                false,
+                0.06f);
+        }
+
+        public static void PlayBossEncounter(
+            EnemyController boss,
+            BiomeType biome,
+            bool addCameraShake = true)
+        {
+            if (boss == null || boss.IsDead)
+            {
+                return;
+            }
+
+            if (TryPlayBossEncounterNow(boss, biome, addCameraShake))
+            {
+                return;
+            }
+
+            BossEncounterVfxPending pending = boss.GetComponent<BossEncounterVfxPending>();
+            if (pending == null)
+            {
+                pending = boss.gameObject.AddComponent<BossEncounterVfxPending>();
+            }
+            pending.Arm(boss, biome, addCameraShake);
+        }
+
+        internal static bool TryPlayBossEncounterNow(
+            EnemyController boss,
+            BiomeType biome,
+            bool addCameraShake)
+        {
+            if (boss == null || boss.IsDead)
+            {
+                return true;
+            }
+
+            if (!TryGetBossPresentationContext(
+                    boss.transform,
+                    out Vector3 groundPosition,
+                    out Vector3 center,
+                    out float scale))
+            {
+                return true;
+            }
+
+            if (!IsNearView(center))
+            {
+                return false;
+            }
+
+            GetBossEncounterColors(biome, out Color primary, out Color accent);
+            GameObject encounterObject = RuntimePool.Acquire(
+                BossEncounterPoolName,
+                CreateBossEncounterFunc);
+            if (encounterObject != null
+                && encounterObject.TryGetComponent(out BossEncounterVfx encounterVfx))
+            {
+                encounterVfx.Show(
+                    boss.transform,
+                    groundPosition,
+                    center,
+                    scale,
+                    primary,
+                    accent);
+            }
+            else
+            {
+                RuntimePool.Release(encounterObject);
+            }
+
+            SpawnImpact(
+                center,
+                Vector3.up,
+                scale * 0.9f,
+                accent,
+                primary,
+                18,
+                6,
+                0.62f,
+                false,
+                0.04f);
+
+            if (addCameraShake)
+            {
+                AddCameraShake(0.2f, 0.3f);
+            }
+            return true;
+        }
+
         private static void SpawnImpact(
             Vector3 position,
             Vector3 direction,
@@ -275,6 +489,245 @@ namespace Necrocis
             return true;
         }
 
+        private static bool TryGetPlayerPresentationContext(
+            Transform player,
+            out Vector3 groundPosition,
+            out Vector3 center,
+            out float scale)
+        {
+            groundPosition = player != null
+                ? player.position + Vector3.up * 0.035f
+                : Vector3.zero;
+            center = groundPosition + Vector3.up * 0.7f;
+            scale = 1f;
+
+            if (player == null)
+            {
+                return false;
+            }
+
+            SpriteRenderer spriteRenderer = player.GetComponentInChildren<SpriteRenderer>(false);
+            if (spriteRenderer == null
+                || !spriteRenderer.enabled
+                || spriteRenderer.sprite == null)
+            {
+                if (!TryGetVisualContext(player, out center, out scale))
+                {
+                    return false;
+                }
+
+                scale = Mathf.Clamp(scale * 0.82f, 0.65f, 1.55f);
+                return true;
+            }
+
+            Bounds spriteBounds = spriteRenderer.sprite.bounds;
+            Transform spriteTransform = spriteRenderer.transform;
+            Vector3 localBottomLeft = new Vector3(
+                spriteBounds.min.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+            Vector3 localBottomRight = new Vector3(
+                spriteBounds.max.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+            Vector3 localTopCenter = new Vector3(
+                spriteBounds.center.x,
+                spriteBounds.max.y,
+                spriteBounds.center.z);
+            Vector3 localBottomCenter = new Vector3(
+                spriteBounds.center.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+
+            Vector3 worldBottomLeft = spriteTransform.TransformPoint(localBottomLeft);
+            Vector3 worldBottomRight = spriteTransform.TransformPoint(localBottomRight);
+            Vector3 worldBottomCenter = spriteTransform.TransformPoint(localBottomCenter);
+            Vector3 worldTopCenter = spriteTransform.TransformPoint(localTopCenter);
+            center = spriteTransform.TransformPoint(spriteBounds.center);
+
+            float visualWidth = Vector3.Distance(worldBottomLeft, worldBottomRight);
+            float visualHeight = Vector3.Distance(worldBottomCenter, worldTopCenter);
+            scale = Mathf.Clamp(Mathf.Max(visualWidth, visualHeight * 0.55f), 0.65f, 1.55f);
+
+            Camera camera = DontStarveCamera.GetActiveCamera();
+            if (camera == null)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            Vector3 leftScreen = camera.WorldToScreenPoint(worldBottomLeft);
+            Vector3 rightScreen = camera.WorldToScreenPoint(worldBottomRight);
+            Vector3 footScreen = (leftScreen + rightScreen) * 0.5f;
+            Ray footRay = camera.ScreenPointToRay(footScreen);
+
+            if (Mathf.Abs(footRay.direction.y) <= 0.0001f)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            float distance = (groundPosition.y - footRay.origin.y) / footRay.direction.y;
+            if (distance < 0f)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            groundPosition = footRay.GetPoint(distance);
+            groundPosition.y = player.position.y + 0.035f;
+            return true;
+        }
+
+        private static bool TryGetBossPresentationContext(
+            Transform boss,
+            out Vector3 groundPosition,
+            out Vector3 center,
+            out float scale)
+        {
+            groundPosition = boss != null
+                ? boss.position + Vector3.up * 0.04f
+                : Vector3.zero;
+            center = groundPosition + Vector3.up;
+            scale = 1.35f;
+
+            if (boss == null)
+            {
+                return false;
+            }
+
+            SpriteRenderer spriteRenderer = boss.GetComponentInChildren<SpriteRenderer>(false);
+            if (spriteRenderer == null
+                || !spriteRenderer.enabled
+                || spriteRenderer.sprite == null)
+            {
+                if (!TryGetVisualContext(boss, out center, out scale))
+                {
+                    return false;
+                }
+
+                scale = Mathf.Clamp(scale, 0.9f, 3.4f);
+                return true;
+            }
+
+            Bounds spriteBounds = spriteRenderer.sprite.bounds;
+            Transform spriteTransform = spriteRenderer.transform;
+            Vector3 localBottomLeft = new Vector3(
+                spriteBounds.min.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+            Vector3 localBottomRight = new Vector3(
+                spriteBounds.max.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+            Vector3 localTopCenter = new Vector3(
+                spriteBounds.center.x,
+                spriteBounds.max.y,
+                spriteBounds.center.z);
+            Vector3 localBottomCenter = new Vector3(
+                spriteBounds.center.x,
+                spriteBounds.min.y,
+                spriteBounds.center.z);
+
+            Vector3 worldBottomLeft = spriteTransform.TransformPoint(localBottomLeft);
+            Vector3 worldBottomRight = spriteTransform.TransformPoint(localBottomRight);
+            Vector3 worldBottomCenter = spriteTransform.TransformPoint(localBottomCenter);
+            Vector3 worldTopCenter = spriteTransform.TransformPoint(localTopCenter);
+            center = spriteTransform.TransformPoint(spriteBounds.center);
+
+            float visualWidth = Vector3.Distance(worldBottomLeft, worldBottomRight);
+            float visualHeight = Vector3.Distance(worldBottomCenter, worldTopCenter);
+            scale = Mathf.Clamp(Mathf.Max(visualWidth, visualHeight * 0.58f), 0.9f, 3.4f);
+
+            Camera camera = DontStarveCamera.GetActiveCamera();
+            if (camera == null)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            Vector3 leftScreen = camera.WorldToScreenPoint(worldBottomLeft);
+            Vector3 rightScreen = camera.WorldToScreenPoint(worldBottomRight);
+            Vector3 footScreen = (leftScreen + rightScreen) * 0.5f;
+            Ray footRay = camera.ScreenPointToRay(footScreen);
+
+            if (Mathf.Abs(footRay.direction.y) <= 0.0001f)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            float distance = (groundPosition.y - footRay.origin.y) / footRay.direction.y;
+            if (distance < 0f)
+            {
+                groundPosition.x = worldBottomCenter.x;
+                groundPosition.z = worldBottomCenter.z;
+                return true;
+            }
+
+            groundPosition = footRay.GetPoint(distance);
+            groundPosition.y = boss.position.y + 0.04f;
+            return true;
+        }
+
+        private static void GetJobColors(JobType job, out Color primary, out Color accent)
+        {
+            switch (job)
+            {
+                case JobType.Warrior:
+                    primary = new Color(0.92f, 0.055f, 0.12f, 0.96f);
+                    accent = new Color(1f, 0.58f, 0.12f, 1f);
+                    break;
+                case JobType.Mage:
+                    primary = new Color(0.58f, 0.1f, 0.95f, 0.96f);
+                    accent = new Color(0.22f, 0.92f, 1f, 1f);
+                    break;
+                case JobType.Archer:
+                    primary = new Color(0.18f, 0.86f, 0.32f, 0.96f);
+                    accent = new Color(1f, 0.84f, 0.2f, 1f);
+                    break;
+                default:
+                    primary = new Color(0.95f, 0.16f, 0.32f, 0.96f);
+                    accent = new Color(1f, 0.94f, 0.7f, 1f);
+                    break;
+            }
+        }
+
+        private static void GetBossEncounterColors(
+            BiomeType biome,
+            out Color primary,
+            out Color accent)
+        {
+            switch (biome)
+            {
+                case BiomeType.Intestine:
+                    primary = new Color(0.78f, 0.035f, 0.16f, 0.96f);
+                    accent = new Color(1f, 0.38f, 0.54f, 1f);
+                    break;
+                case BiomeType.Liver:
+                    primary = new Color(0.42f, 0.025f, 0.24f, 0.96f);
+                    accent = new Color(1f, 0.4f, 0.12f, 1f);
+                    break;
+                case BiomeType.Stomach:
+                    primary = new Color(0.32f, 0.72f, 0.06f, 0.96f);
+                    accent = new Color(1f, 0.76f, 0.12f, 1f);
+                    break;
+                case BiomeType.Lung:
+                    primary = new Color(0.15f, 0.72f, 0.88f, 0.94f);
+                    accent = new Color(0.88f, 1f, 0.94f, 1f);
+                    break;
+                default:
+                    primary = new Color(0.66f, 0.04f, 0.26f, 0.96f);
+                    accent = BoneWhite;
+                    break;
+            }
+        }
+
         private static bool IsNearView(Vector3 worldPosition)
         {
             Camera camera = DontStarveCamera.GetActiveCamera();
@@ -289,6 +742,21 @@ namespace Necrocis
                 && viewport.x <= 1.3f
                 && viewport.y >= -0.3f
                 && viewport.y <= 1.3f;
+        }
+
+        private static Color GetItemCategoryColor(PlayerItemCategory category)
+        {
+            return category switch
+            {
+                PlayerItemCategory.AttackStyle => new Color(1f, 0.28f, 0.08f, 0.95f),
+                PlayerItemCategory.HighRiskHighReturn => new Color(0.76f, 0.08f, 0.62f, 0.95f),
+                PlayerItemCategory.SurvivalDefense => new Color(0.18f, 0.88f, 0.92f, 0.95f),
+                PlayerItemCategory.SummonPet => new Color(0.28f, 0.92f, 0.42f, 0.95f),
+                PlayerItemCategory.ChainClear => new Color(0.32f, 0.56f, 1f, 0.95f),
+                PlayerItemCategory.BossSpecialized => new Color(1f, 0.72f, 0.12f, 0.98f),
+                PlayerItemCategory.FunRandom => new Color(1f, 0.24f, 0.78f, 0.95f),
+                _ => new Color(0.96f, 0.08f, 0.2f, 0.95f)
+            };
         }
 
         private static void AddCameraShake(float strength, float duration)

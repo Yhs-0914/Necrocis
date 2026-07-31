@@ -166,6 +166,7 @@ namespace Necrocis
             ApplyFogVisualState();
             RecenterBossEncounter();
             SetBossEncounterActive(true);
+            PlayBossEncounterVfx();
             AudioManager.Instance?.PlayTimedSFX("BossSpawn", 5f);
             PlayBossEncounterImpactSfx();
 
@@ -553,6 +554,23 @@ namespace Necrocis
                     AudioManager.Instance?.PlaySFX("StomachBossImpact");
                     break;
             }
+        }
+
+        private void PlayBossEncounterVfx()
+        {
+            BiomeType encounterBiome = biome != null ? biome.BiomeType : BiomeType.None;
+            if (activeLungPattern != null)
+            {
+                bool addCameraShake = true;
+                activeLungPattern.ForEachEncounterBoss(boss =>
+                {
+                    CombatVfx.PlayBossEncounter(boss, encounterBiome, addCameraShake);
+                    addCameraShake = false;
+                });
+                return;
+            }
+
+            CombatVfx.PlayBossEncounter(activeBoss, encounterBiome);
         }
 
         private Vector3 ResolveReturnPortalPosition()
