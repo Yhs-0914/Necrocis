@@ -599,7 +599,7 @@ namespace Necrocis
 
         private bool IsControlBlocked()
         {
-            return deathHandled || IsDead;
+            return deathHandled || IsDead || Time.timeScale <= Mathf.Epsilon;
         }
 
         private void SyncDeathState()

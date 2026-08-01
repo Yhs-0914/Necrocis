@@ -176,8 +176,8 @@ namespace Necrocis
                     ? itemVisual.position
                     : transform.position + Vector3.up * itemRestHeight;
                 CombatVfx.PlayItemPickup(
-                    transform.position + Vector3.up * 0.025f,
                     effectPosition,
+                    player.transform,
                     category);
                 collected = true;
                 Destroy(gameObject);

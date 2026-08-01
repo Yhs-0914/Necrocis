@@ -33,6 +33,7 @@ namespace Necrocis
         private Vector2Int arenaSize;
         private bool arenaLocked;
         private bool bossDefeated;
+        private bool bossIntroPlaying;
         private float fogRevealAmount;
 
         public bool IsLocked => arenaLocked;
@@ -76,6 +77,8 @@ namespace Necrocis
         private void OnDisable()
         {
             ActiveArenas.Remove(this);
+            BossIntroPresentation.Cancel(this);
+            bossIntroPlaying = false;
         }
 
         private void Update()
@@ -137,6 +140,7 @@ namespace Necrocis
         private void OnDestroy()
         {
             ActiveArenas.Remove(this);
+            BossIntroPresentation.Cancel(this);
 
             if (activeBoss != null)
                 activeBoss.Defeated -= HandleBossDefeated;
@@ -165,17 +169,103 @@ namespace Necrocis
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
             ApplyFogVisualState();
             RecenterBossEncounter();
-            SetBossEncounterActive(true);
-            PlayBossEncounterVfx();
-            AudioManager.Instance?.PlayTimedSFX("BossSpawn", 5f);
-            PlayBossEncounterImpactSfx();
+            SetBossEncounterActive(false);
 
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.SetGameState(GameState.InBossRoom);
             }
 
+            bossIntroPlaying = TryPlayBossIntro();
+            if (!bossIntroPlaying)
+            {
+                BeginBossEncounter();
+            }
+
             Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
+        }
+
+        private bool TryPlayBossIntro()
+        {
+            List<SpriteRenderer> renderers = new List<SpriteRenderer>(2);
+            if (activeLungPattern != null)
+            {
+                activeLungPattern.ForEachEncounterBoss(boss =>
+                {
+                    SpriteRenderer renderer = FindBossPortraitRenderer(boss);
+                    if (renderer != null && !renderers.Contains(renderer))
+                    {
+                        renderers.Add(renderer);
+                    }
+                });
+            }
+            else
+            {
+                SpriteRenderer renderer = FindBossPortraitRenderer(activeBoss);
+                if (renderer != null)
+                {
+                    renderers.Add(renderer);
+                }
+            }
+
+            BiomeType encounterBiome = biome != null ? biome.BiomeType : BiomeType.None;
+            return BossIntroPresentation.Show(this, encounterBiome, renderers, HandleBossIntroCompleted);
+        }
+
+        private void HandleBossIntroCompleted()
+        {
+            bossIntroPlaying = false;
+            if (!arenaLocked || bossDefeated || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            BeginBossEncounter();
+        }
+
+        private void BeginBossEncounter()
+        {
+            if (!arenaLocked || bossDefeated)
+            {
+                return;
+            }
+
+            SetBossEncounterActive(true);
+            PlayBossEncounterVfx();
+            AudioManager.Instance?.PlayTimedSFX("BossSpawn", 5f);
+            PlayBossEncounterImpactSfx();
+        }
+
+        private static SpriteRenderer FindBossPortraitRenderer(EnemyController boss)
+        {
+            if (boss == null)
+            {
+                return null;
+            }
+
+            SpriteRenderer[] renderers = boss.GetComponentsInChildren<SpriteRenderer>(true);
+            SpriteRenderer best = null;
+            float bestArea = -1f;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SpriteRenderer candidate = renderers[i];
+                if (candidate == null || candidate.sprite == null)
+                {
+                    continue;
+                }
+
+                Rect rect = candidate.sprite.rect;
+                float area = rect.width * rect.height;
+                if (area <= bestArea)
+                {
+                    continue;
+                }
+
+                best = candidate;
+                bestArea = area;
+            }
+
+            return best;
         }
 
         private void SpawnBoss()

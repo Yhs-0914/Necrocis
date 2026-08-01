@@ -53,8 +53,8 @@ namespace Necrocis
                     AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
                 }
                 CombatVfx.PlayItemPickup(
-                    transform.position + Vector3.up * 0.025f,
                     transform.position + Vector3.up * 0.45f,
+                    player.transform,
                     category);
                 Destroy(gameObject);
                 return;

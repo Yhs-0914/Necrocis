@@ -5,22 +5,22 @@ namespace Necrocis
     [DisallowMultipleComponent]
     internal sealed class ItemPickupVfx : MonoBehaviour
     {
-        private const int BackRingSortingOrder = 5230;
-        private const int BeamSortingOrder = 5240;
-        private const int FrontRingSortingOrder = 5250;
-        private const int GlintSortingOrder = 5260;
-        private const int ParticleSortingOrder = 5270;
+        private const int TrailSortingOrder = 5240;
+        private const int SparkSortingOrder = 5250;
+        private const int FlashSortingOrder = 5260;
+        private const int SparkCount = 5;
 
-        private SpriteRenderer backRing;
-        private SpriteRenderer frontRing;
-        private SpriteRenderer beam;
-        private SpriteRenderer glint;
-        private ParticleSystem motes;
+        private readonly SpriteRenderer[] sparks = new SpriteRenderer[SparkCount];
+
+        private LineRenderer trail;
+        private SpriteRenderer sourceFlash;
+        private SpriteRenderer targetFlash;
         private RuntimePoolAutoReturn autoReturn;
-
+        private Transform collector;
+        private Vector3 collectorOffset;
+        private Vector3 startPosition;
         private Color primaryColor;
         private Color accentColor;
-        private Vector3 visualOffset;
         private float duration;
         private float elapsed;
         private float effectScale;
@@ -31,34 +31,35 @@ namespace Necrocis
             root.SetActive(false);
 
             ItemPickupVfx effect = root.AddComponent<ItemPickupVfx>();
-            effect.backRing = CreateSpriteRenderer(
+            effect.trail = CreateTrail(root.transform);
+            effect.sourceFlash = CreateSpriteRenderer(
                 root.transform,
-                "BackRing",
-                CombatVfxResources.GetRingSprite(),
-                BackRingSortingOrder);
-            effect.beam = CreateSpriteRenderer(
+                "PickupSpark",
+                CombatVfxResources.GetStarSprite(),
+                FlashSortingOrder);
+            effect.targetFlash = CreateSpriteRenderer(
                 root.transform,
-                "Beam",
-                CombatVfxResources.GetSoftCircleSprite(),
-                BeamSortingOrder);
-            effect.frontRing = CreateSpriteRenderer(
-                root.transform,
-                "FrontRing",
-                CombatVfxResources.GetRingSprite(),
-                FrontRingSortingOrder);
-            effect.glint = CreateSpriteRenderer(
-                root.transform,
-                "Glint",
-                CombatVfxResources.GetSoftCircleSprite(),
-                GlintSortingOrder);
-            effect.motes = CreateMoteSystem(root.transform);
+                "CollectorSpark",
+                CombatVfxResources.GetStarSprite(),
+                FlashSortingOrder + 1);
+
+            for (int i = 0; i < SparkCount; i++)
+            {
+                effect.sparks[i] = CreateSpriteRenderer(
+                    root.transform,
+                    $"AbsorbSpark{i + 1}",
+                    CombatVfxResources.GetStarSprite(),
+                    SparkSortingOrder + i);
+            }
+
             effect.autoReturn = RuntimePool.EnsureAutoReturn(root);
             return root;
         }
 
         public void Show(
-            Vector3 groundPosition,
             Vector3 visualPosition,
+            Transform collectorTarget,
+            Vector3 collectorCenter,
             Color primary,
             Color accent,
             float scale)
@@ -66,40 +67,47 @@ namespace Necrocis
             EnsureComponents();
 
             transform.SetParent(null, false);
-            transform.position = groundPosition;
+            transform.position = Vector3.zero;
             transform.rotation = Quaternion.identity;
 
+            collector = collectorTarget;
+            collectorOffset = collectorTarget != null
+                ? collectorCenter - collectorTarget.position
+                : Vector3.zero;
+            startPosition = visualPosition;
             primaryColor = primary;
             accentColor = accent;
-            visualOffset = visualPosition - groundPosition;
-            duration = 0.68f;
+            duration = 0.56f;
             elapsed = 0f;
-            effectScale = Mathf.Clamp(scale, 0.65f, 1.8f);
+            effectScale = Mathf.Clamp(scale * 2f, 1.3f, 3f);
 
-            backRing.enabled = true;
-            frontRing.enabled = true;
-            beam.enabled = true;
-            glint.enabled = true;
+            trail.enabled = true;
+            trail.positionCount = 7;
+            sourceFlash.enabled = true;
+            sourceFlash.transform.position = startPosition;
+            sourceFlash.transform.localScale = Vector3.one * effectScale * 0.32f;
+            sourceFlash.color = WithAlpha(accentColor, 1f);
 
-            backRing.transform.localScale = Vector3.one * effectScale * 0.28f;
-            backRing.transform.localPosition = Vector3.up * 0.025f;
-            frontRing.transform.localScale = Vector3.one * effectScale * 0.16f;
-            frontRing.transform.localPosition = Vector3.up * 0.045f;
-            beam.transform.localPosition = visualOffset + Vector3.up * effectScale * 0.18f;
-            beam.transform.localScale = new Vector3(
-                effectScale * 0.3f,
-                effectScale * 2.25f,
-                1f);
-            glint.transform.localPosition = visualOffset;
-            glint.transform.localScale = Vector3.one * effectScale * 0.16f;
+            targetFlash.enabled = true;
+            targetFlash.transform.position = GetCollectorPosition();
+            targetFlash.transform.localScale = Vector3.one * 0.02f;
+            targetFlash.color = WithAlpha(accentColor, 0f);
 
-            backRing.color = WithAlpha(primaryColor, 0.72f);
-            frontRing.color = WithAlpha(accentColor, 0.95f);
-            beam.color = WithAlpha(primaryColor, 0.38f);
-            glint.color = WithAlpha(accentColor, 1f);
+            for (int i = 0; i < sparks.Length; i++)
+            {
+                if (sparks[i] == null)
+                {
+                    continue;
+                }
 
-            ApplyElementOrientations();
-            EmitMotes(visualPosition);
+                sparks[i].enabled = true;
+                sparks[i].transform.position = startPosition;
+                sparks[i].transform.localScale = Vector3.one * effectScale * (0.15f - i * 0.01f);
+                sparks[i].color = WithAlpha(Color.Lerp(primaryColor, accentColor, i * 0.18f), 0f);
+            }
+
+            ApplyBillboardOrientation();
+            UpdateTrail(startPosition, 0f, 1f);
             autoReturn.Schedule(duration);
             enabled = true;
         }
@@ -108,50 +116,15 @@ namespace Necrocis
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            float expand = 1f - Mathf.Pow(1f - t, 3f);
-            float fade = 1f - t;
-            float glintPulse = Mathf.Sin(Mathf.Clamp01(t * 1.45f) * Mathf.PI);
+            Vector3 targetPosition = GetCollectorPosition();
+            float headT = Smooth01(Mathf.Clamp01(t / 0.76f));
+            float trailFade = Mathf.Clamp01((0.88f - t) / 0.2f);
 
-            transform.rotation = Quaternion.identity;
-            ApplyElementOrientations();
-
-            if (backRing != null)
-            {
-                backRing.transform.localScale = Vector3.one
-                    * effectScale
-                    * Mathf.Lerp(0.28f, 1.55f, expand);
-                backRing.color = WithAlpha(primaryColor, fade * fade * 0.72f);
-            }
-
-            if (frontRing != null)
-            {
-                frontRing.transform.localScale = Vector3.one
-                    * effectScale
-                    * Mathf.Lerp(0.16f, 1.05f, expand);
-                frontRing.color = WithAlpha(accentColor, fade * 0.95f);
-            }
-
-            if (beam != null)
-            {
-                float beamWidth = Mathf.Lerp(0.3f, 0.08f, expand);
-                float beamHeight = Mathf.Lerp(2.25f, 2.75f, expand);
-                beam.transform.localScale = new Vector3(
-                    effectScale * beamWidth,
-                    effectScale * beamHeight,
-                    1f);
-                beam.transform.localPosition = visualOffset
-                    + Vector3.up * effectScale * Mathf.Lerp(0.1f, 0.38f, expand);
-                beam.color = WithAlpha(primaryColor, fade * fade * 0.38f);
-            }
-
-            if (glint != null)
-            {
-                glint.transform.localScale = Vector3.one
-                    * effectScale
-                    * Mathf.Lerp(0.16f, 0.72f, glintPulse);
-                glint.transform.localPosition = visualOffset;
-                glint.color = WithAlpha(accentColor, glintPulse);
-            }
+            ApplyBillboardOrientation();
+            UpdateTrail(targetPosition, headT, trailFade);
+            UpdateSourceFlash(t);
+            UpdateTravelSparks(t, targetPosition);
+            UpdateTargetFlash(t, targetPosition);
 
             if (t >= 1f)
             {
@@ -159,86 +132,161 @@ namespace Necrocis
             }
         }
 
-        private void ApplyElementOrientations()
+        private void UpdateSourceFlash(float t)
         {
-            Quaternion billboardRotation = GetCameraRotation();
-
-            if (backRing != null)
-            {
-                backRing.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            }
-            if (frontRing != null)
-            {
-                frontRing.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            }
-            if (beam != null)
-            {
-                beam.transform.rotation = billboardRotation;
-            }
-            if (glint != null)
-            {
-                glint.transform.rotation = billboardRotation;
-            }
-        }
-
-        private void EmitMotes(Vector3 worldPosition)
-        {
-            if (motes == null)
+            if (sourceFlash == null)
             {
                 return;
             }
 
-            motes.Clear(true);
-            motes.Play(true);
+            float localT = Mathf.Clamp01(t / 0.32f);
+            sourceFlash.transform.position = startPosition;
+            sourceFlash.transform.localScale = Vector3.one
+                * effectScale
+                * Mathf.Lerp(0.32f, 0.9f, Mathf.Sin(localT * Mathf.PI));
+            sourceFlash.transform.Rotate(0f, 0f, 280f * Time.unscaledDeltaTime, Space.Self);
+            sourceFlash.color = WithAlpha(accentColor, 1f - localT);
+        }
 
-            for (int i = 0; i < 16; i++)
+        private void UpdateTravelSparks(float t, Vector3 targetPosition)
+        {
+            for (int i = 0; i < sparks.Length; i++)
             {
-                Vector3 radial = Quaternion.AngleAxis(Random.Range(0f, 360f), Vector3.up)
-                    * Vector3.forward;
-                Vector3 velocity = radial * Random.Range(0.45f, 1.55f) * effectScale;
-                velocity.y = Random.Range(1.2f, 2.8f) * effectScale;
-
-                Color moteColor = Color.Lerp(primaryColor, accentColor, Random.Range(0.25f, 0.85f));
-                ParticleSystem.EmitParams parameters = new ParticleSystem.EmitParams
+                SpriteRenderer spark = sparks[i];
+                if (spark == null)
                 {
-                    position = worldPosition
-                        + radial * Random.Range(0.04f, 0.22f) * effectScale,
-                    velocity = velocity,
-                    startColor = moteColor,
-                    startLifetime = Random.Range(0.38f, 0.72f),
-                    startSize = Random.Range(0.055f, 0.15f) * effectScale,
-                    rotation = Random.Range(0f, 360f)
-                };
-                motes.Emit(parameters, 1);
+                    continue;
+                }
+
+                float delayedT = Mathf.Clamp01((t - i * 0.045f) / 0.76f);
+                float travelT = Smooth01(delayedT);
+                spark.transform.position = EvaluatePath(travelT, targetPosition);
+                float pulse = Mathf.Sin(delayedT * Mathf.PI);
+                spark.transform.localScale = Vector3.one
+                    * effectScale
+                    * Mathf.Lerp(0.065f, 0.23f - i * 0.014f, pulse);
+                spark.transform.Rotate(0f, 0f, (180f + i * 35f) * Time.unscaledDeltaTime, Space.Self);
+                spark.color = WithAlpha(
+                    Color.Lerp(primaryColor, accentColor, i * 0.18f),
+                    pulse * (0.92f - i * 0.08f));
+            }
+        }
+
+        private void UpdateTargetFlash(float t, Vector3 targetPosition)
+        {
+            if (targetFlash == null)
+            {
+                return;
+            }
+
+            float flashT = Mathf.Clamp01((t - 0.63f) / 0.37f);
+            float pulse = Mathf.Sin(flashT * Mathf.PI);
+            targetFlash.transform.position = targetPosition;
+            targetFlash.transform.localScale = Vector3.one
+                * effectScale
+                * Mathf.Lerp(0.03f, 0.74f, pulse);
+            targetFlash.transform.Rotate(0f, 0f, -360f * Time.unscaledDeltaTime, Space.Self);
+            targetFlash.color = WithAlpha(accentColor, pulse);
+        }
+
+        private void UpdateTrail(Vector3 targetPosition, float headT, float alpha)
+        {
+            if (trail == null)
+            {
+                return;
+            }
+
+            float tailT = Mathf.Max(0f, headT - 0.34f);
+            int count = Mathf.Max(2, trail.positionCount);
+            for (int i = 0; i < count; i++)
+            {
+                float segmentT = Mathf.Lerp(tailT, headT, i / (count - 1f));
+                trail.SetPosition(i, EvaluatePath(segmentT, targetPosition));
+            }
+
+            Color transparentPrimary = WithAlpha(primaryColor, 0f);
+            trail.startColor = transparentPrimary;
+            trail.endColor = WithAlpha(accentColor, alpha * 0.9f);
+            trail.startWidth = effectScale * 0.05f;
+            trail.endWidth = effectScale * 0.15f;
+        }
+
+        private Vector3 EvaluatePath(float t, Vector3 targetPosition)
+        {
+            Vector3 straight = Vector3.Lerp(startPosition, targetPosition, t);
+            float arcHeight = Mathf.Max(0.42f, Vector3.Distance(startPosition, targetPosition) * 0.18f);
+            return straight + Vector3.up * Mathf.Sin(t * Mathf.PI) * arcHeight;
+        }
+
+        private Vector3 GetCollectorPosition()
+        {
+            return collector != null
+                ? collector.position + collectorOffset
+                : startPosition + Vector3.up * 0.65f;
+        }
+
+        private void ApplyBillboardOrientation()
+        {
+            Quaternion rotation = GetCameraRotation();
+            if (sourceFlash != null)
+            {
+                sourceFlash.transform.rotation = rotation;
+            }
+            if (targetFlash != null)
+            {
+                targetFlash.transform.rotation = rotation;
+            }
+            for (int i = 0; i < sparks.Length; i++)
+            {
+                if (sparks[i] != null)
+                {
+                    sparks[i].transform.rotation = rotation;
+                }
             }
         }
 
         private void EnsureComponents()
         {
-            if (backRing == null)
+            if (trail == null)
             {
-                backRing = transform.Find("BackRing")?.GetComponent<SpriteRenderer>();
+                trail = transform.Find("AbsorbTrail")?.GetComponent<LineRenderer>();
             }
-            if (frontRing == null)
+            if (sourceFlash == null)
             {
-                frontRing = transform.Find("FrontRing")?.GetComponent<SpriteRenderer>();
+                sourceFlash = transform.Find("PickupSpark")?.GetComponent<SpriteRenderer>();
             }
-            if (beam == null)
+            if (targetFlash == null)
             {
-                beam = transform.Find("Beam")?.GetComponent<SpriteRenderer>();
-            }
-            if (glint == null)
-            {
-                glint = transform.Find("Glint")?.GetComponent<SpriteRenderer>();
-            }
-            if (motes == null)
-            {
-                motes = transform.Find("Motes")?.GetComponent<ParticleSystem>();
+                targetFlash = transform.Find("CollectorSpark")?.GetComponent<SpriteRenderer>();
             }
             if (autoReturn == null)
             {
                 autoReturn = RuntimePool.EnsureAutoReturn(gameObject);
             }
+            for (int i = 0; i < SparkCount; i++)
+            {
+                if (sparks[i] == null)
+                {
+                    sparks[i] = transform.Find($"AbsorbSpark{i + 1}")?.GetComponent<SpriteRenderer>();
+                }
+            }
+        }
+
+        private static LineRenderer CreateTrail(Transform parent)
+        {
+            GameObject trailObject = new GameObject("AbsorbTrail");
+            trailObject.transform.SetParent(parent, false);
+            LineRenderer renderer = trailObject.AddComponent<LineRenderer>();
+            renderer.useWorldSpace = true;
+            renderer.loop = false;
+            renderer.positionCount = 7;
+            renderer.numCornerVertices = 2;
+            renderer.numCapVertices = 2;
+            renderer.textureMode = LineTextureMode.Stretch;
+            renderer.sortingOrder = TrailSortingOrder;
+            renderer.sharedMaterial = CombatVfxResources.GetLineMaterial();
+            renderer.enabled = false;
+            return renderer;
         }
 
         private static SpriteRenderer CreateSpriteRenderer(
@@ -249,7 +297,6 @@ namespace Necrocis
         {
             GameObject spriteObject = new GameObject(objectName);
             spriteObject.transform.SetParent(parent, false);
-
             SpriteRenderer renderer = spriteObject.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = sortingOrder;
@@ -257,66 +304,15 @@ namespace Necrocis
             return renderer;
         }
 
-        private static ParticleSystem CreateMoteSystem(Transform parent)
-        {
-            GameObject particleObject = new GameObject("Motes");
-            particleObject.transform.SetParent(parent, false);
-
-            ParticleSystem particleSystem = particleObject.AddComponent<ParticleSystem>();
-            ParticleSystem.MainModule main = particleSystem.main;
-            main.playOnAwake = false;
-            main.loop = false;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 32;
-            main.startSpeed = 0f;
-            main.startLifetime = 0.6f;
-            main.startSize = 0.1f;
-            main.gravityModifier = -0.08f;
-
-            ParticleSystem.EmissionModule emission = particleSystem.emission;
-            emission.enabled = false;
-
-            ParticleSystem.SizeOverLifetimeModule sizeOverLifetime = particleSystem.sizeOverLifetime;
-            sizeOverLifetime.enabled = true;
-            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(
-                1f,
-                new AnimationCurve(
-                    new Keyframe(0f, 0.25f),
-                    new Keyframe(0.18f, 1f),
-                    new Keyframe(0.78f, 0.7f),
-                    new Keyframe(1f, 0f)));
-
-            ParticleSystem.ColorOverLifetimeModule colorOverLifetime = particleSystem.colorOverLifetime;
-            colorOverLifetime.enabled = true;
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(Color.white, 0f),
-                    new GradientColorKey(Color.white, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0f, 0f),
-                    new GradientAlphaKey(1f, 0.12f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            colorOverLifetime.color = gradient;
-
-            ParticleSystemRenderer renderer = particleObject.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
-            renderer.alignment = ParticleSystemRenderSpace.View;
-            renderer.sortingOrder = ParticleSortingOrder;
-            renderer.sharedMaterial = CombatVfxResources.GetParticleMaterial();
-
-            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            return particleSystem;
-        }
-
         private static Quaternion GetCameraRotation()
         {
             Camera camera = DontStarveCamera.GetActiveCamera();
             return camera != null ? camera.transform.rotation : Quaternion.Euler(45f, 0f, 0f);
+        }
+
+        private static float Smooth01(float t)
+        {
+            return t * t * (3f - 2f * t);
         }
 
         private static Color WithAlpha(Color color, float alpha)

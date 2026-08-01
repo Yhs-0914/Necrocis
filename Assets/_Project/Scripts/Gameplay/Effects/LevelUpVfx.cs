@@ -5,22 +5,19 @@ namespace Necrocis
     [DisallowMultipleComponent]
     internal sealed class LevelUpVfx : MonoBehaviour
     {
-        private const int BeamSortingOrder = 5280;
-        private const int RingSortingOrder = 5290;
-        private const int OrbiterSortingOrder = 5300;
-        private const int CoreSortingOrder = 5310;
+        private const int ShaftSortingOrder = 5280;
+        private const int ChevronSortingOrder = 5290;
+        private const int CrownSortingOrder = 5310;
         private const int ParticleSortingOrder = 5320;
-        private const int RingCount = 3;
-        private const int OrbiterCount = 6;
+        private const int ShaftCount = 2;
+        private const int ChevronCount = 4;
 
-        private readonly SpriteRenderer[] rings = new SpriteRenderer[RingCount];
-        private readonly SpriteRenderer[] orbiters = new SpriteRenderer[OrbiterCount];
+        private readonly SpriteRenderer[] shafts = new SpriteRenderer[ShaftCount];
+        private readonly SpriteRenderer[] chevrons = new SpriteRenderer[ChevronCount];
 
-        private SpriteRenderer beam;
-        private SpriteRenderer core;
+        private SpriteRenderer crown;
         private ParticleSystem motes;
         private RuntimePoolAutoReturn autoReturn;
-
         private Transform followTarget;
         private Vector3 followOffset;
         private Vector3 centerOffset;
@@ -28,9 +25,9 @@ namespace Necrocis
         private float elapsed;
         private float effectScale;
 
-        private readonly Color energyColor = new Color(0.95f, 0.08f, 0.32f, 0.95f);
-        private readonly Color lifeColor = new Color(1f, 0.48f, 0.12f, 0.95f);
-        private readonly Color highlightColor = new Color(1f, 0.94f, 0.7f, 1f);
+        private readonly Color energyColor = new Color(0.96f, 0.08f, 0.3f, 0.95f);
+        private readonly Color ascentColor = new Color(1f, 0.48f, 0.1f, 0.98f);
+        private readonly Color highlightColor = new Color(1f, 0.96f, 0.68f, 1f);
 
         public static GameObject CreateObject()
         {
@@ -38,35 +35,29 @@ namespace Necrocis
             root.SetActive(false);
 
             LevelUpVfx effect = root.AddComponent<LevelUpVfx>();
-            effect.beam = CreateSpriteRenderer(
-                root.transform,
-                "AscensionBeam",
-                CombatVfxResources.GetSoftCircleSprite(),
-                BeamSortingOrder);
-
-            for (int i = 0; i < RingCount; i++)
+            for (int i = 0; i < ShaftCount; i++)
             {
-                effect.rings[i] = CreateSpriteRenderer(
+                effect.shafts[i] = CreateSpriteRenderer(
                     root.transform,
-                    $"PulseRing{i + 1}",
-                    CombatVfxResources.GetRingSprite(),
-                    RingSortingOrder + i);
-            }
-
-            for (int i = 0; i < OrbiterCount; i++)
-            {
-                effect.orbiters[i] = CreateSpriteRenderer(
-                    root.transform,
-                    $"LifeMote{i + 1}",
+                    $"LightShaft{i + 1}",
                     CombatVfxResources.GetSoftCircleSprite(),
-                    OrbiterSortingOrder + i);
+                    ShaftSortingOrder + i);
             }
 
-            effect.core = CreateSpriteRenderer(
+            for (int i = 0; i < ChevronCount; i++)
+            {
+                effect.chevrons[i] = CreateSpriteRenderer(
+                    root.transform,
+                    $"AscendMark{i + 1}",
+                    CombatVfxResources.GetChevronSprite(),
+                    ChevronSortingOrder + i);
+            }
+
+            effect.crown = CreateSpriteRenderer(
                 root.transform,
-                "CoreFlash",
-                CombatVfxResources.GetSoftCircleSprite(),
-                CoreSortingOrder);
+                "LevelCrown",
+                CombatVfxResources.GetStarSprite(),
+                CrownSortingOrder);
             effect.motes = CreateMoteSystem(root.transform);
             effect.autoReturn = RuntimePool.EnsureAutoReturn(root);
             return root;
@@ -83,59 +74,52 @@ namespace Necrocis
             followTarget = target;
             followOffset = target != null ? groundPosition - target.position : Vector3.zero;
             centerOffset = center - groundPosition;
+            duration = 1.28f;
+            elapsed = 0f;
+            effectScale = Mathf.Clamp(scale, 0.65f, 1.55f);
+
             transform.SetParent(null, false);
             transform.position = groundPosition;
             transform.rotation = Quaternion.identity;
 
-            duration = 1.15f;
-            elapsed = 0f;
-            effectScale = Mathf.Clamp(scale, 0.65f, 1.55f);
-
-            beam.enabled = true;
-            beam.transform.localPosition = centerOffset + Vector3.up * effectScale * 0.16f;
-            beam.transform.localScale = new Vector3(
-                effectScale * 0.26f,
-                effectScale * 1.9f,
-                1f);
-            beam.color = WithAlpha(energyColor, 0f);
-
-            core.enabled = true;
-            core.transform.localPosition = centerOffset;
-            core.transform.localScale = Vector3.one * effectScale * 0.2f;
-            core.color = WithAlpha(highlightColor, 0f);
-
-            for (int i = 0; i < RingCount; i++)
+            for (int i = 0; i < shafts.Length; i++)
             {
-                if (rings[i] == null)
+                SpriteRenderer shaft = shafts[i];
+                if (shaft == null)
                 {
                     continue;
                 }
 
-                rings[i].enabled = true;
-                rings[i].transform.localPosition = Vector3.up * (0.025f + i * 0.012f);
-                rings[i].transform.localScale = Vector3.one * effectScale * 0.12f;
-                rings[i].color = WithAlpha(
-                    Color.Lerp(energyColor, highlightColor, i * 0.34f),
-                    0f);
+                shaft.enabled = true;
+                shaft.transform.localPosition = centerOffset;
+                shaft.transform.localScale = new Vector3(
+                    effectScale * (i == 0 ? 0.34f : 0.18f),
+                    effectScale * (i == 0 ? 2.2f : 2.8f),
+                    1f);
+                shaft.color = WithAlpha(i == 0 ? energyColor : highlightColor, 0f);
             }
 
-            for (int i = 0; i < OrbiterCount; i++)
+            for (int i = 0; i < chevrons.Length; i++)
             {
-                if (orbiters[i] == null)
+                SpriteRenderer chevron = chevrons[i];
+                if (chevron == null)
                 {
                     continue;
                 }
 
-                orbiters[i].enabled = true;
-                orbiters[i].transform.localPosition = centerOffset;
-                orbiters[i].transform.localScale = Vector3.one * effectScale * 0.13f;
-                orbiters[i].color = WithAlpha(
-                    Color.Lerp(lifeColor, highlightColor, i / (OrbiterCount - 1f)),
-                    0f);
+                chevron.enabled = true;
+                chevron.transform.localPosition = centerOffset - Vector3.up * effectScale * 0.65f;
+                chevron.transform.localScale = Vector3.one * effectScale * 0.34f;
+                chevron.color = WithAlpha(Color.Lerp(ascentColor, highlightColor, i * 0.22f), 0f);
             }
+
+            crown.enabled = true;
+            crown.transform.localPosition = centerOffset + Vector3.up * effectScale * 0.82f;
+            crown.transform.localScale = Vector3.one * 0.02f;
+            crown.color = WithAlpha(highlightColor, 0f);
 
             ApplyElementOrientations();
-            EmitMotes(center);
+            EmitMotes(groundPosition);
             autoReturn.Schedule(duration);
             enabled = true;
         }
@@ -144,10 +128,9 @@ namespace Necrocis
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            float appear = Mathf.Clamp01(t / 0.16f);
-            float fade = Mathf.Clamp01((1f - t) / 0.32f);
+            float appear = Mathf.Clamp01(t / 0.12f);
+            float fade = Mathf.Clamp01((1f - t) / 0.25f);
             float envelope = appear * fade;
-            float expand = 1f - Mathf.Pow(1f - t, 3f);
 
             if (followTarget != null)
             {
@@ -156,10 +139,9 @@ namespace Necrocis
             transform.rotation = Quaternion.identity;
             ApplyElementOrientations();
 
-            UpdateBeam(t, envelope, expand);
-            UpdateCore(t, envelope);
-            UpdateRings(t);
-            UpdateOrbiters(t, envelope, expand);
+            UpdateShafts(t, envelope);
+            UpdateChevrons(t);
+            UpdateCrown(t);
 
             if (t >= 1f)
             {
@@ -167,126 +149,98 @@ namespace Necrocis
             }
         }
 
-        private void UpdateBeam(float t, float envelope, float expand)
+        private void UpdateShafts(float t, float envelope)
         {
-            if (beam == null)
+            Vector3 cameraRight = GetCameraRight();
+            for (int i = 0; i < shafts.Length; i++)
             {
-                return;
-            }
+                SpriteRenderer shaft = shafts[i];
+                if (shaft == null)
+                {
+                    continue;
+                }
 
-            float width = Mathf.Lerp(0.3f, 0.1f, expand);
-            float height = Mathf.Lerp(1.9f, 2.8f, expand);
-            beam.transform.localScale = new Vector3(
-                effectScale * width,
-                effectScale * height,
-                1f);
-            beam.transform.localPosition = centerOffset
-                + Vector3.up * effectScale * Mathf.Lerp(0.1f, 0.5f, expand);
-            beam.color = WithAlpha(energyColor, envelope * (1f - t) * 0.42f);
+                float side = i == 0 ? -1f : 1f;
+                float rise = Mathf.SmoothStep(0f, 1f, t);
+                shaft.transform.position = transform.position
+                    + centerOffset
+                    + cameraRight * side * effectScale * 0.22f
+                    + Vector3.up * effectScale * Mathf.Lerp(0.1f, 0.62f, rise);
+                shaft.transform.localScale = new Vector3(
+                    effectScale * Mathf.Lerp(i == 0 ? 0.34f : 0.19f, 0.075f, rise),
+                    effectScale * Mathf.Lerp(i == 0 ? 2.15f : 2.65f, 3.2f, rise),
+                    1f);
+                Color color = i == 0 ? energyColor : highlightColor;
+                shaft.color = WithAlpha(color, envelope * (1f - t) * (i == 0 ? 0.38f : 0.24f));
+            }
         }
 
-        private void UpdateCore(float t, float envelope)
+        private void UpdateChevrons(float t)
         {
-            if (core == null)
+            for (int i = 0; i < chevrons.Length; i++)
+            {
+                SpriteRenderer chevron = chevrons[i];
+                if (chevron == null)
+                {
+                    continue;
+                }
+
+                float delay = i * 0.09f;
+                float markT = Mathf.Clamp01((t - delay) / Mathf.Max(0.01f, 0.7f - delay));
+                float rise = 1f - Mathf.Pow(1f - markT, 2f);
+                float alpha = Mathf.Sin(markT * Mathf.PI);
+                chevron.transform.localPosition = centerOffset
+                    + Vector3.up * effectScale * Mathf.Lerp(-0.68f, 1.72f, rise);
+                chevron.transform.localScale = new Vector3(
+                    effectScale * Mathf.Lerp(0.36f, 0.58f, alpha),
+                    effectScale * Mathf.Lerp(0.2f, 0.34f, alpha),
+                    1f);
+                chevron.color = WithAlpha(
+                    Color.Lerp(ascentColor, highlightColor, i * 0.22f),
+                    alpha * (0.9f - i * 0.1f));
+            }
+        }
+
+        private void UpdateCrown(float t)
+        {
+            if (crown == null)
             {
                 return;
             }
 
-            float pulse = Mathf.Sin(Mathf.Clamp01(t * 1.65f) * Mathf.PI);
-            core.transform.localScale = Vector3.one
+            float crownT = Mathf.Clamp01((t - 0.28f) / 0.55f);
+            float pop = Mathf.Sin(crownT * Mathf.PI);
+            float settle = 1f - Mathf.Pow(1f - crownT, 3f);
+            crown.transform.localPosition = centerOffset
+                + Vector3.up * effectScale * Mathf.Lerp(0.62f, 1.05f, settle);
+            crown.transform.localScale = Vector3.one
                 * effectScale
-                * Mathf.Lerp(0.2f, 1.05f, pulse);
-            core.color = WithAlpha(highlightColor, pulse * envelope);
-        }
-
-        private void UpdateRings(float t)
-        {
-            for (int i = 0; i < rings.Length; i++)
-            {
-                SpriteRenderer ring = rings[i];
-                if (ring == null)
-                {
-                    continue;
-                }
-
-                float delay = i * 0.14f;
-                float ringT = Mathf.Clamp01((t - delay) / Mathf.Max(0.01f, 1f - delay));
-                float ringExpand = 1f - Mathf.Pow(1f - ringT, 3f);
-                float ringFade = Mathf.Sin(ringT * Mathf.PI);
-                float size = Mathf.Lerp(0.12f, 0.76f - i * 0.055f, ringExpand);
-
-                ring.transform.localPosition = Vector3.up * (0.025f + i * 0.012f);
-                ring.transform.localScale = Vector3.one * effectScale * size;
-
-                Color ringColor = Color.Lerp(
-                    energyColor,
-                    highlightColor,
-                    i / (RingCount - 1f));
-                ring.color = WithAlpha(ringColor, ringFade * (0.82f - i * 0.1f));
-            }
-        }
-
-        private void UpdateOrbiters(float t, float envelope, float expand)
-        {
-            float radius = effectScale * Mathf.Lerp(0.12f, 0.52f, expand);
-            float orbitAngle = Time.unscaledTime * 150f;
-
-            for (int i = 0; i < orbiters.Length; i++)
-            {
-                SpriteRenderer orbiter = orbiters[i];
-                if (orbiter == null)
-                {
-                    continue;
-                }
-
-                float angle = orbitAngle + i * (360f / OrbiterCount);
-                float radians = angle * Mathf.Deg2Rad;
-                float verticalOffset = centerOffset.y + Mathf.Lerp(-0.35f, 1.05f, t) * effectScale;
-                orbiter.transform.localPosition = new Vector3(
-                    Mathf.Cos(radians) * radius,
-                    verticalOffset + Mathf.Sin(radians * 2f) * effectScale * 0.12f,
-                    Mathf.Sin(radians) * radius);
-
-                float pulse = 0.72f + Mathf.Sin(radians * 2f + t * Mathf.PI) * 0.28f;
-                orbiter.transform.localScale = Vector3.one
-                    * effectScale
-                    * Mathf.Lerp(0.08f, 0.18f, pulse);
-                Color orbiterColor = Color.Lerp(lifeColor, highlightColor, pulse * 0.65f);
-                orbiter.color = WithAlpha(orbiterColor, envelope * pulse);
-            }
+                * Mathf.Lerp(0.04f, 0.56f, pop);
+            crown.transform.rotation = GetCameraRotation()
+                * Quaternion.Euler(0f, 0f, t * 160f);
+            crown.color = WithAlpha(highlightColor, pop);
         }
 
         private void ApplyElementOrientations()
         {
-            Quaternion billboardRotation = GetCameraRotation();
-
-            if (beam != null)
+            Quaternion rotation = GetCameraRotation();
+            for (int i = 0; i < shafts.Length; i++)
             {
-                beam.transform.rotation = billboardRotation;
-            }
-            if (core != null)
-            {
-                core.transform.rotation = billboardRotation;
-            }
-
-            for (int i = 0; i < rings.Length; i++)
-            {
-                if (rings[i] != null)
+                if (shafts[i] != null)
                 {
-                    rings[i].transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                    shafts[i].transform.rotation = rotation;
                 }
             }
-
-            for (int i = 0; i < orbiters.Length; i++)
+            for (int i = 0; i < chevrons.Length; i++)
             {
-                if (orbiters[i] != null)
+                if (chevrons[i] != null)
                 {
-                    orbiters[i].transform.rotation = billboardRotation;
+                    chevrons[i].transform.rotation = rotation;
                 }
             }
         }
 
-        private void EmitMotes(Vector3 center)
+        private void EmitMotes(Vector3 groundPosition)
         {
             if (motes == null)
             {
@@ -295,25 +249,16 @@ namespace Necrocis
 
             motes.Clear(true);
             motes.Play(true);
-
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 24; i++)
             {
-                Vector3 radial = Quaternion.AngleAxis(Random.Range(0f, 360f), Vector3.up)
-                    * Vector3.forward;
-                Vector3 velocity = radial * Random.Range(0.18f, 0.9f) * effectScale;
-                velocity.y = Random.Range(1.4f, 3.6f) * effectScale;
-
-                Color moteColor = Color.Lerp(
-                    energyColor,
-                    highlightColor,
-                    Random.Range(0.15f, 0.9f));
+                Vector3 offset = GetCameraRight() * Random.Range(-0.36f, 0.36f) * effectScale;
                 ParticleSystem.EmitParams parameters = new ParticleSystem.EmitParams
                 {
-                    position = center + radial * Random.Range(0.04f, 0.42f) * effectScale,
-                    velocity = velocity,
-                    startColor = moteColor,
+                    position = groundPosition + offset + Vector3.up * Random.Range(0.05f, 0.55f) * effectScale,
+                    velocity = Vector3.up * Random.Range(1.7f, 3.9f) * effectScale,
+                    startColor = Color.Lerp(energyColor, highlightColor, Random.Range(0.2f, 0.9f)),
                     startLifetime = Random.Range(0.55f, 1.05f),
-                    startSize = Random.Range(0.06f, 0.17f) * effectScale,
+                    startSize = Random.Range(0.05f, 0.13f) * effectScale,
                     rotation = Random.Range(0f, 360f)
                 };
                 motes.Emit(parameters, 1);
@@ -322,13 +267,9 @@ namespace Necrocis
 
         private void EnsureComponents()
         {
-            if (beam == null)
+            if (crown == null)
             {
-                beam = transform.Find("AscensionBeam")?.GetComponent<SpriteRenderer>();
-            }
-            if (core == null)
-            {
-                core = transform.Find("CoreFlash")?.GetComponent<SpriteRenderer>();
+                crown = transform.Find("LevelCrown")?.GetComponent<SpriteRenderer>();
             }
             if (motes == null)
             {
@@ -338,20 +279,18 @@ namespace Necrocis
             {
                 autoReturn = RuntimePool.EnsureAutoReturn(gameObject);
             }
-
-            for (int i = 0; i < RingCount; i++)
+            for (int i = 0; i < ShaftCount; i++)
             {
-                if (rings[i] == null)
+                if (shafts[i] == null)
                 {
-                    rings[i] = transform.Find($"PulseRing{i + 1}")?.GetComponent<SpriteRenderer>();
+                    shafts[i] = transform.Find($"LightShaft{i + 1}")?.GetComponent<SpriteRenderer>();
                 }
             }
-
-            for (int i = 0; i < OrbiterCount; i++)
+            for (int i = 0; i < ChevronCount; i++)
             {
-                if (orbiters[i] == null)
+                if (chevrons[i] == null)
                 {
-                    orbiters[i] = transform.Find($"LifeMote{i + 1}")?.GetComponent<SpriteRenderer>();
+                    chevrons[i] = transform.Find($"AscendMark{i + 1}")?.GetComponent<SpriteRenderer>();
                 }
             }
         }
@@ -364,7 +303,6 @@ namespace Necrocis
         {
             GameObject spriteObject = new GameObject(objectName);
             spriteObject.transform.SetParent(parent, false);
-
             SpriteRenderer renderer = spriteObject.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = sortingOrder;
@@ -376,54 +314,34 @@ namespace Necrocis
         {
             GameObject particleObject = new GameObject("Motes");
             particleObject.transform.SetParent(parent, false);
-
             ParticleSystem particleSystem = particleObject.AddComponent<ParticleSystem>();
             ParticleSystem.MainModule main = particleSystem.main;
             main.playOnAwake = false;
             main.loop = false;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 48;
+            main.maxParticles = 40;
             main.startSpeed = 0f;
-            main.startLifetime = 0.85f;
-            main.startSize = 0.12f;
-            main.gravityModifier = -0.12f;
+            main.startLifetime = 0.8f;
+            main.startSize = 0.1f;
+            main.gravityModifier = -0.06f;
 
             ParticleSystem.EmissionModule emission = particleSystem.emission;
             emission.enabled = false;
-
-            ParticleSystem.SizeOverLifetimeModule sizeOverLifetime = particleSystem.sizeOverLifetime;
-            sizeOverLifetime.enabled = true;
-            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(
+            ParticleSystem.SizeOverLifetimeModule size = particleSystem.sizeOverLifetime;
+            size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(
                 1f,
                 new AnimationCurve(
                     new Keyframe(0f, 0f),
-                    new Keyframe(0.15f, 1f),
-                    new Keyframe(0.72f, 0.78f),
+                    new Keyframe(0.16f, 1f),
+                    new Keyframe(0.78f, 0.62f),
                     new Keyframe(1f, 0f)));
-
-            ParticleSystem.ColorOverLifetimeModule colorOverLifetime = particleSystem.colorOverLifetime;
-            colorOverLifetime.enabled = true;
-            Gradient gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(Color.white, 0f),
-                    new GradientColorKey(Color.white, 1f)
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0f, 0f),
-                    new GradientAlphaKey(1f, 0.12f),
-                    new GradientAlphaKey(0f, 1f)
-                });
-            colorOverLifetime.color = gradient;
 
             ParticleSystemRenderer renderer = particleObject.GetComponent<ParticleSystemRenderer>();
             renderer.renderMode = ParticleSystemRenderMode.Billboard;
             renderer.alignment = ParticleSystemRenderSpace.View;
             renderer.sortingOrder = ParticleSortingOrder;
             renderer.sharedMaterial = CombatVfxResources.GetParticleMaterial();
-
             particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             return particleSystem;
         }
@@ -432,6 +350,12 @@ namespace Necrocis
         {
             Camera camera = DontStarveCamera.GetActiveCamera();
             return camera != null ? camera.transform.rotation : Quaternion.Euler(45f, 0f, 0f);
+        }
+
+        private static Vector3 GetCameraRight()
+        {
+            Camera camera = DontStarveCamera.GetActiveCamera();
+            return camera != null ? camera.transform.right : Vector3.right;
         }
 
         private static Color WithAlpha(Color color, float alpha)

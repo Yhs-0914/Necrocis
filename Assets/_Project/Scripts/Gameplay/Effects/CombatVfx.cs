@@ -14,7 +14,7 @@ namespace Necrocis
         private const string ItemPickupPoolName = "CombatVfx.ItemPickup";
         private const string LevelUpPoolName = "CombatVfx.LevelUp";
         private const string JobChangePoolName = "CombatVfx.JobChange";
-        private const string BossEncounterPoolName = "CombatVfx.BossEncounter";
+        private const string BossEncounterPoolName = "CombatVfx.BossEncounter.V3";
 
         private static readonly Func<GameObject> CreateImpactFunc = CombatImpactVfx.CreateObject;
         private static readonly Func<GameObject> CreateMeleeArcFunc = MeleeArcVfx.CreateObject;
@@ -228,39 +228,44 @@ namespace Necrocis
         }
 
         public static void PlayItemPickup(
-            Vector3 groundPosition,
             Vector3 visualPosition,
+            Transform collector,
             PlayerItemCategory category)
         {
-            if (!IsNearView(visualPosition))
+            if (collector == null || !IsNearView(visualPosition))
             {
                 return;
             }
 
             Color primary = GetItemCategoryColor(category);
             Color accent = Color.Lerp(primary, BoneWhite, 0.72f);
+            Vector3 collectorCenter = collector.position + Vector3.up * 0.7f;
+            float collectorScale = 1f;
+            if (TryGetPlayerPresentationContext(
+                    collector,
+                    out _,
+                    out Vector3 presentationCenter,
+                    out float presentationScale))
+            {
+                collectorCenter = presentationCenter;
+                collectorScale = presentationScale;
+            }
 
             GameObject pickupObject = RuntimePool.Acquire(ItemPickupPoolName, CreateItemPickupFunc);
             if (pickupObject != null && pickupObject.TryGetComponent(out ItemPickupVfx pickupVfx))
             {
-                pickupVfx.Show(groundPosition, visualPosition, primary, accent, 1f);
+                pickupVfx.Show(
+                    visualPosition,
+                    collector,
+                    collectorCenter,
+                    primary,
+                    accent,
+                    collectorScale);
             }
             else
             {
                 RuntimePool.Release(pickupObject);
             }
-
-            SpawnImpact(
-                visualPosition,
-                Vector3.up,
-                0.72f,
-                accent,
-                primary,
-                9,
-                2,
-                0.34f,
-                false,
-                0.15f);
         }
 
         public static void PlayLevelUp(Transform player)
@@ -286,17 +291,6 @@ namespace Necrocis
                 RuntimePool.Release(levelUpObject);
             }
 
-            SpawnImpact(
-                center,
-                Vector3.up,
-                scale * 0.92f,
-                new Color(1f, 0.94f, 0.7f, 1f),
-                new Color(0.95f, 0.08f, 0.32f, 0.95f),
-                14,
-                4,
-                0.52f,
-                false,
-                0.08f);
         }
 
         public static void PlayJobChange(Transform player, JobType job)
@@ -334,17 +328,6 @@ namespace Necrocis
                 RuntimePool.Release(jobChangeObject);
             }
 
-            SpawnImpact(
-                center,
-                Vector3.up,
-                scale * 0.82f,
-                accent,
-                primary,
-                16,
-                4,
-                0.58f,
-                false,
-                0.06f);
         }
 
         public static void PlayBossEncounter(
@@ -389,7 +372,7 @@ namespace Necrocis
                 return true;
             }
 
-            if (!IsNearView(center))
+            if (!IsBossEntranceVisible(center))
             {
                 return false;
             }
@@ -406,30 +389,16 @@ namespace Necrocis
                     groundPosition,
                     center,
                     scale,
+                    biome,
                     primary,
-                    accent);
+                    accent,
+                    addCameraShake);
             }
             else
             {
                 RuntimePool.Release(encounterObject);
             }
 
-            SpawnImpact(
-                center,
-                Vector3.up,
-                scale * 0.9f,
-                accent,
-                primary,
-                18,
-                6,
-                0.62f,
-                false,
-                0.04f);
-
-            if (addCameraShake)
-            {
-                AddCameraShake(0.2f, 0.3f);
-            }
             return true;
         }
 
@@ -706,20 +675,20 @@ namespace Necrocis
             switch (biome)
             {
                 case BiomeType.Intestine:
-                    primary = new Color(0.78f, 0.035f, 0.16f, 0.96f);
-                    accent = new Color(1f, 0.38f, 0.54f, 1f);
+                    primary = new Color(0.34f, 0.18f, 0.07f, 0.96f);
+                    accent = new Color(0.68f, 0.9f, 0.3f, 1f);
                     break;
                 case BiomeType.Liver:
-                    primary = new Color(0.42f, 0.025f, 0.24f, 0.96f);
-                    accent = new Color(1f, 0.4f, 0.12f, 1f);
+                    primary = new Color(0.62f, 0.015f, 0.09f, 0.98f);
+                    accent = new Color(0.65f, 0.22f, 0.9f, 1f);
                     break;
                 case BiomeType.Stomach:
-                    primary = new Color(0.32f, 0.72f, 0.06f, 0.96f);
-                    accent = new Color(1f, 0.76f, 0.12f, 1f);
+                    primary = new Color(0.46f, 0.9f, 0.08f, 0.96f);
+                    accent = new Color(1f, 0.38f, 0.43f, 1f);
                     break;
                 case BiomeType.Lung:
-                    primary = new Color(0.15f, 0.72f, 0.88f, 0.94f);
-                    accent = new Color(0.88f, 1f, 0.94f, 1f);
+                    primary = new Color(0.65f, 0.9f, 1f, 0.94f);
+                    accent = new Color(1f, 0.78f, 0.24f, 1f);
                     break;
                 default:
                     primary = new Color(0.66f, 0.04f, 0.26f, 0.96f);
@@ -742,6 +711,22 @@ namespace Necrocis
                 && viewport.x <= 1.3f
                 && viewport.y >= -0.3f
                 && viewport.y <= 1.3f;
+        }
+
+        private static bool IsBossEntranceVisible(Vector3 worldPosition)
+        {
+            Camera camera = DontStarveCamera.GetActiveCamera();
+            if (camera == null)
+            {
+                return true;
+            }
+
+            Vector3 viewport = camera.WorldToViewportPoint(worldPosition);
+            return viewport.z > 0f
+                && viewport.x >= 0.08f
+                && viewport.x <= 0.92f
+                && viewport.y >= 0.1f
+                && viewport.y <= 0.9f;
         }
 
         private static Color GetItemCategoryColor(PlayerItemCategory category)
