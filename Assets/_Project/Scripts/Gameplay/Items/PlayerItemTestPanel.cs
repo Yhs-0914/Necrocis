@@ -34,7 +34,6 @@ namespace Necrocis
         private void Awake()
         {
             itemManager = GetComponent<PlayerItemManager>();
-            EnsureUi();
         }
 
         private void OnEnable()
@@ -59,39 +58,36 @@ namespace Necrocis
             itemManager.ItemRemoved -= HandleItemChanged;
         }
 
-        private void Start()
-        {
-            if (panelObject == null)
-            {
-                return;
-            }
-
-            panelObject.SetActive(false);
-            RefreshLists();
-            UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
-        }
-
         private void Update()
         {
-            if (!enablePanel || panelObject == null)
+            if (!enablePanel || !IsTogglePressedThisFrame())
             {
                 return;
             }
 
-            if (IsTogglePressedThisFrame())
+            if (canvasObject == null)
             {
-                bool visible = !panelObject.activeSelf;
-                panelObject.SetActive(visible);
-                if (visible)
-                {
-                    RefreshLists();
-                }
+                EnsureUi();
+                canvasObject.SetActive(true);
+                RefreshLists();
+                UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
+                return;
+            }
+
+            bool visible = !canvasObject.activeSelf;
+            canvasObject.SetActive(visible);
+            if (visible)
+            {
+                RefreshLists();
             }
         }
 
         private void HandleItemChanged(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem __)
         {
-            RefreshLists();
+            if (canvasObject != null && canvasObject.activeSelf)
+            {
+                RefreshLists();
+            }
         }
 
         private void EnsureUi()
@@ -149,7 +145,7 @@ namespace Necrocis
 
             statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -500f), new Vector2(1740f, 46f), 24, TextAnchor.MiddleCenter);
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
-            panelObject.SetActive(false);
+            canvasObject.SetActive(false);
         }
 
         private static void EnsureEventSystem()
