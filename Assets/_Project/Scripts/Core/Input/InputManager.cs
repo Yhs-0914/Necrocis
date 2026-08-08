@@ -46,6 +46,7 @@ namespace Necrocis
 
         public InputAction DashAction { get; private set; }          // 대시 (Shift)
         public InputAction StatWindowAction { get; private set; }   // 스탯창 토글 (O)
+        public InputAction InventoryAction { get; private set; }    // 인벤토리 토글 (I)
         public InputAction DebugLevelUpAction { get; private set; } // 디버그 레벨업 (P)
 
         private const string RebindKey = "InputRebinds"; // PlayerPrefs 키(리바인딩 저장용)
@@ -110,6 +111,7 @@ namespace Necrocis
             DashAction = new InputAction("Dash", InputActionType.Button, "<Keyboard>/space");
 
             StatWindowAction = new InputAction("StatWindow", InputActionType.Button, "<Keyboard>/o");
+            InventoryAction = new InputAction("Inventory", InputActionType.Button, "<Keyboard>/i");
             DebugLevelUpAction = new InputAction("DebugLevelUp", InputActionType.Button, "<Keyboard>/p");
         }
 
@@ -274,6 +276,7 @@ namespace Necrocis
                 Digit4Action,
                 Digit5Action,
                 StatWindowAction,
+                InventoryAction,
                 DebugLevelUpAction
             };
         }

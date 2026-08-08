@@ -184,6 +184,7 @@ namespace Necrocis
             }
 
             EnsureComponent<PlayerItemCombatEffects>();
+            EnsureComponent<PlayerItemInventoryUI>();
             EnsureComponent<PlayerItemTestPanel>();
         }
 

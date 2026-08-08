@@ -8,6 +8,8 @@ namespace Necrocis
     {
         [SerializeField] private string itemId;
         [SerializeField] private string displayName;
+        private bool slotsFullLogged;
+        private bool collected;
 
         public void Initialize(string itemId, string displayName)
         {
@@ -26,7 +28,25 @@ namespace Necrocis
 
         private void OnTriggerEnter(Collider other)
         {
-            if (string.IsNullOrWhiteSpace(itemId))
+            HandlePlayerContact(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            HandlePlayerContact(other);
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.GetComponentInParent<PlayerController>() != null)
+            {
+                slotsFullLogged = false;
+            }
+        }
+
+        private void HandlePlayerContact(Collider other)
+        {
+            if (collected || string.IsNullOrWhiteSpace(itemId))
             {
                 return;
             }
@@ -56,13 +76,15 @@ namespace Necrocis
                     transform.position + Vector3.up * 0.45f,
                     player.transform,
                     category);
+                collected = true;
                 Destroy(gameObject);
                 return;
             }
 
-            if (failure == PlayerItemAcquireFailureReason.SlotsFull)
+            if (failure == PlayerItemAcquireFailureReason.SlotsFull && !slotsFullLogged)
             {
-                Debug.Log($"[WorldItemPickup] 슬롯이 가득 차서 획득 실패: {displayName} ({itemId})");
+                slotsFullLogged = true;
+                Debug.Log($"[WorldItemPickup] 아이템 슬롯이 가득 참: {displayName} ({itemId}). I 키로 인벤토리를 열어 아이템을 버릴 수 있습니다.");
             }
         }
     }
