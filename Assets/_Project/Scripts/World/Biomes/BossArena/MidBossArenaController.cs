@@ -10,13 +10,29 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class MidBossArenaController : MonoBehaviour
     {
+        private static readonly int FogTilingId = Shader.PropertyToID("_FogTiling");
+        private static readonly int PrimarySpeedId = Shader.PropertyToID("_PrimarySpeed");
+        private static readonly int SecondarySpeedId = Shader.PropertyToID("_SecondarySpeed");
+        private static readonly int SecondaryColorId = Shader.PropertyToID("_SecondaryColor");
+        private static readonly int DistortionStrengthId = Shader.PropertyToID("_DistortionStrength");
+        private static readonly int EdgeSoftnessId = Shader.PropertyToID("_EdgeSoftness");
+        private static readonly int DensityId = Shader.PropertyToID("_Density");
+        private static readonly int BaseOpacityId = Shader.PropertyToID("_BaseOpacity");
+        private static readonly int InteriorModeId = Shader.PropertyToID("_InteriorMode");
+        private static readonly int CoreDarknessId = Shader.PropertyToID("_CoreDarkness");
+        private static readonly int WispBrightnessId = Shader.PropertyToID("_WispBrightness");
+        private static readonly int SeedId = Shader.PropertyToID("_Seed");
+
         private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
+        private static Material runtimeFogMaterial;
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
 
         private readonly List<SpriteRenderer> fogRenderers = new List<SpriteRenderer>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
+        private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
         private SpriteRenderer interiorFogRenderer;
+        private MaterialPropertyBlock fogPropertyBlock;
 
         private BiomeManager biome;
         private MidBossArenaConfig arenaConfig;
@@ -35,6 +51,7 @@ namespace Necrocis
         private bool bossDefeated;
         private bool bossIntroPlaying;
         private float fogRevealAmount;
+        private float borderFogAmount;
 
         public bool IsLocked => arenaLocked;
 
@@ -461,6 +478,15 @@ namespace Necrocis
                 activeBoss.SetAiSuppressed(!active || hasPattern);
             }
 
+            if (active)
+            {
+                RevealBossVisuals();
+            }
+            else if (!bossDefeated)
+            {
+                ConcealBossVisuals();
+            }
+
             activeIntestinePattern?.SetEncounterActive(active);
             activeLiverPattern?.SetEncounterActive(active);
             activeStomachPattern?.SetEncounterActive(active);
@@ -473,6 +499,49 @@ namespace Necrocis
                     activeContactDamage[i].SetDamageActive(active && !bossDefeated);
                 }
             }
+        }
+
+        private void ConcealBossVisuals()
+        {
+            if (arenaConfig == null || !arenaConfig.hideBossUntilEncounter)
+            {
+                return;
+            }
+
+            concealedBossRenderers.RemoveWhere(renderer => renderer == null);
+            ConcealBossRenderers(activeBoss);
+            activeLungPattern?.ForEachEncounterBoss(ConcealBossRenderers);
+        }
+
+        private void ConcealBossRenderers(EnemyController boss)
+        {
+            if (boss == null)
+            {
+                return;
+            }
+
+            Renderer[] renderers = boss.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer != null && renderer.enabled && concealedBossRenderers.Add(renderer))
+                {
+                    renderer.enabled = false;
+                }
+            }
+        }
+
+        private void RevealBossVisuals()
+        {
+            foreach (Renderer renderer in concealedBossRenderers)
+            {
+                if (renderer != null)
+                {
+                    renderer.enabled = true;
+                }
+            }
+
+            concealedBossRenderers.Clear();
         }
 
         private void RecenterBossEncounter()
@@ -686,7 +755,7 @@ namespace Necrocis
             bool hasArenaSprite = !hasConfiguredSprite && arenaConfig != null && arenaConfig.returnPortalSprite != null;
             sr.sprite = hasConfiguredSprite
                 ? returnPortalConfig.sprite
-                : hasArenaSprite ? arenaConfig.returnPortalSprite : GetFogSprite();
+                : hasArenaSprite ? arenaConfig.returnPortalSprite : GetFogSprite(true);
             sr.color = hasConfiguredSprite || hasArenaSprite
                 ? Color.white
                 : new Color(0.6f, 0.2f, 1f, 0.85f);
@@ -800,18 +869,54 @@ namespace Necrocis
 
         private void CreateFogWall(string name, Vector3 position, Vector2 size)
         {
-            GameObject wall = new GameObject(name);
-            wall.transform.SetParent(transform, false);
             position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset;
-            wall.transform.position = position;
-            wall.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            bool horizontal = size.x >= size.y;
+            Vector2 visualSize = size;
+            if (horizontal)
+            {
+                visualSize.y *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
+            }
+            else
+            {
+                visualSize.x *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
+            }
 
-            SpriteRenderer renderer = wall.AddComponent<SpriteRenderer>();
-            renderer.sprite = GetFogSprite();
-            ApplyFogWorldSize(wall.transform, renderer.sprite, size);
-            renderer.sortingOrder = arenaConfig.sortingOrder;
-            renderer.color = arenaLocked ? arenaConfig.lockedFogColor : arenaConfig.unlockedFogColor;
+            int wallIndex = fogRenderers.Count;
+            SpriteRenderer renderer = CreateFogLayer(
+                name,
+                position + Vector3.up * 0.02f,
+                visualSize,
+                arenaConfig.sortingOrder);
+            ConfigureFogMaterial(
+                renderer,
+                visualSize,
+                wallIndex * 2f + 1.17f,
+                arenaConfig.fogDensity,
+                arenaConfig.fogEdgeSoftness,
+                0f,
+                1f);
             fogRenderers.Add(renderer);
+        }
+
+        private SpriteRenderer CreateFogLayer(string objectName, Vector3 position, Vector2 size, int sortingOrder)
+        {
+            GameObject layer = new GameObject(objectName);
+            layer.transform.SetParent(transform, false);
+            layer.transform.position = position;
+            layer.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+            SpriteRenderer renderer = layer.AddComponent<SpriteRenderer>();
+            renderer.sprite = GetFogSprite(false);
+            renderer.sortingOrder = sortingOrder;
+            bool verticalWall = size.y > size.x;
+            if (verticalWall)
+            {
+                layer.transform.rotation = Quaternion.Euler(90f, 0f, 90f);
+                size = new Vector2(size.y, size.x);
+            }
+
+            ApplyFogWorldSize(layer.transform, renderer.sprite, size);
+            return renderer;
         }
 
         private void CreateInteriorFogCover(Vector3 position, Vector2 size)
@@ -823,9 +928,78 @@ namespace Necrocis
             cover.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 
             interiorFogRenderer = cover.AddComponent<SpriteRenderer>();
-            interiorFogRenderer.sprite = GetFogSprite();
+            interiorFogRenderer.sprite = GetFogSprite(true);
             ApplyFogWorldSize(cover.transform, interiorFogRenderer.sprite, size);
             interiorFogRenderer.sortingOrder = arenaConfig.sortingOrder + arenaConfig.interiorFogSortingOrderOffset;
+            ConfigureFogMaterial(
+                interiorFogRenderer,
+                size,
+                19.73f,
+                arenaConfig.interiorFogDensity,
+                Mathf.Max(0.025f, arenaConfig.fogEdgeSoftness * 0.35f),
+                arenaConfig.interiorFogBaseOpacity,
+                0.58f,
+                true);
+        }
+
+        private void ConfigureFogMaterial(
+            SpriteRenderer renderer,
+            Vector2 worldSize,
+            float seed,
+            float density,
+            float edgeSoftness,
+            float baseOpacity,
+            float speedMultiplier,
+            bool interiorMode = false)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            Material material = GetFogMaterial();
+            if (material == null)
+            {
+                return;
+            }
+
+            renderer.sharedMaterial = material;
+            fogPropertyBlock ??= new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(fogPropertyBlock);
+
+            float worldTileSize = Mathf.Max(0.5f, arenaConfig.fogWorldTileSize);
+            Vector2 tiling = interiorMode
+                ? new Vector2(
+                    Mathf.Max(0.5f, worldSize.x / worldTileSize),
+                    Mathf.Max(0.5f, worldSize.y / worldTileSize))
+                : new Vector2(Mathf.Max(1f, Mathf.Max(worldSize.x, worldSize.y) / worldTileSize), 1f);
+            fogPropertyBlock.SetVector(
+                FogTilingId,
+                new Vector4(tiling.x, tiling.y, 0f, 0f));
+            fogPropertyBlock.SetVector(
+                PrimarySpeedId,
+                new Vector4(
+                    arenaConfig.fogPrimaryScrollSpeed.x * speedMultiplier,
+                    arenaConfig.fogPrimaryScrollSpeed.y * speedMultiplier,
+                    0f,
+                    0f));
+            fogPropertyBlock.SetVector(
+                SecondarySpeedId,
+                new Vector4(
+                    arenaConfig.fogSecondaryScrollSpeed.x * speedMultiplier,
+                    arenaConfig.fogSecondaryScrollSpeed.y * speedMultiplier,
+                    0f,
+                    0f));
+            fogPropertyBlock.SetColor(SecondaryColorId, arenaConfig.fogSecondaryColor);
+            fogPropertyBlock.SetFloat(DistortionStrengthId, arenaConfig.fogDistortionStrength);
+            fogPropertyBlock.SetFloat(EdgeSoftnessId, Mathf.Clamp(edgeSoftness, 0.001f, 0.45f));
+            fogPropertyBlock.SetFloat(DensityId, Mathf.Clamp(density, 0f, 2f));
+            fogPropertyBlock.SetFloat(BaseOpacityId, Mathf.Clamp01(baseOpacity));
+            fogPropertyBlock.SetFloat(InteriorModeId, interiorMode ? 1f : 0f);
+            fogPropertyBlock.SetFloat(CoreDarknessId, Mathf.Clamp01(arenaConfig.fogCoreDarkness));
+            fogPropertyBlock.SetFloat(WispBrightnessId, Mathf.Max(0f, arenaConfig.fogWispBrightness));
+            fogPropertyBlock.SetFloat(SeedId, seed);
+            renderer.SetPropertyBlock(fogPropertyBlock);
         }
 
         private static void ApplyFogWorldSize(Transform target, Sprite sprite, Vector2 worldSize)
@@ -1373,9 +1547,15 @@ namespace Necrocis
 
         private void UpdateFogReveal(float deltaTime)
         {
-            float target = ShouldRevealInteriorFog() ? 1f : 0f;
-            float duration = Mathf.Max(0.01f, arenaConfig.fogRevealDuration);
-            fogRevealAmount = Mathf.MoveTowards(fogRevealAmount, target, deltaTime / duration);
+            float revealTarget = ShouldRevealInteriorFog() ? 1f : 0f;
+            float revealDuration = Mathf.Max(0.01f, arenaConfig.fogRevealDuration);
+            fogRevealAmount = Mathf.MoveTowards(fogRevealAmount, revealTarget, deltaTime / revealDuration);
+
+            float borderTarget = arenaLocked && !bossDefeated ? 1f : 0f;
+            float borderDuration = borderTarget > borderFogAmount
+                ? revealDuration
+                : Mathf.Max(0.01f, arenaConfig.fogDissolveDuration);
+            borderFogAmount = Mathf.MoveTowards(borderFogAmount, borderTarget, deltaTime / borderDuration);
             UpdateFogVisuals();
         }
 
@@ -1386,14 +1566,19 @@ namespace Necrocis
 
         private void UpdateFogVisuals()
         {
-            Color borderColor = arenaConfig.lockedFogColor;
+            Color borderColor = Color.Lerp(
+                arenaConfig.unlockedFogColor,
+                arenaConfig.lockedFogColor,
+                borderFogAmount);
             for (int i = 0; i < fogRenderers.Count; i++)
             {
                 if (fogRenderers[i] != null)
                 {
-                    float pulse = 0.9f + Mathf.Sin(Time.time * 1.8f + i * 0.65f) * 0.08f;
+                    float pulse = 1f + Mathf.Sin(
+                        Time.time * Mathf.Max(0f, arenaConfig.fogPulseSpeed) + i * 0.65f)
+                        * arenaConfig.fogPulseAmount;
                     Color animatedColor = borderColor;
-                    animatedColor.a = Mathf.Clamp01(borderColor.a * fogRevealAmount * pulse);
+                    animatedColor.a = Mathf.Clamp01(borderColor.a * borderFogAmount * pulse);
                     fogRenderers[i].color = animatedColor;
                 }
             }
@@ -1409,8 +1594,39 @@ namespace Necrocis
             }
         }
 
-        private Sprite GetFogSprite()
+        private Material GetFogMaterial()
         {
+            if (arenaConfig != null && arenaConfig.fogMaterial != null)
+            {
+                return arenaConfig.fogMaterial;
+            }
+
+            if (runtimeFogMaterial != null)
+            {
+                return runtimeFogMaterial;
+            }
+
+            Shader shader = Shader.Find("Necrocis/BossArenaFog");
+            if (shader == null)
+            {
+                return null;
+            }
+
+            runtimeFogMaterial = new Material(shader)
+            {
+                name = "RuntimeBossArenaFog",
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            return runtimeFogMaterial;
+        }
+
+        private Sprite GetFogSprite(bool interior)
+        {
+            if (interior && arenaConfig != null && arenaConfig.interiorFogSprite != null)
+            {
+                return arenaConfig.interiorFogSprite;
+            }
+
             if (arenaConfig != null && arenaConfig.fogSprite != null)
             {
                 return arenaConfig.fogSprite;

@@ -28,15 +28,33 @@ MonoBehaviour:
     groundFogOffset: 0.15
     triggerHeight: 4
     sortingOrder: 3500
-    fogSprite: {fileID: 21300000, guid: c10f2071bfff404491e4b780e2c614dd, type: 3}
-    unlockedFogColor: {r: 1, g: 1, b: 1, a: 0.85}
-    lockedFogColor: {r: 1, g: 1, b: 1, a: 0.35}
+    fogSprite: {fileID: 21300000, guid: 98c6e2a274b14b16929a92b0dddaef11, type: 3}
+    interiorFogSprite: {fileID: 21300000, guid: c10f2071bfff404491e4b780e2c614dd, type: 3}
+    unlockedFogColor: {r: 0.14, g: 0.08, b: 0.015, a: 0.12}
+    lockedFogColor: {r: 0.28, g: 0.16, b: 0.02, a: 0.9}
+    fogMaterial: {fileID: 2100000, guid: 4d3a4c7333804448899e263a19fe19ce, type: 2}
+    fogSecondaryColor: {r: 0.95, g: 0.58, b: 0.12, a: 1}
+    fogWorldTileSize: 8
+    fogPrimaryScrollSpeed: {x: 0.018, y: 0.009}
+    fogSecondaryScrollSpeed: {x: -0.012, y: 0.016}
+    fogDistortionStrength: 0.035
+    fogEdgeSoftness: 0.16
+    fogDensity: 1.15
+    fogCoreDarkness: 0.8
+    fogWispBrightness: 0.78
+    interiorFogDensity: 1.05
+    interiorFogBaseOpacity: 0.42
+    fogSoftLayerWidth: 1.75
+    fogPulseSpeed: 1.25
+    fogPulseAmount: 0.025
     useInteriorFogCover: 1
-    interiorFogColor: {r: 1, g: 1, b: 1, a: 1}
-    interiorFogHiddenAlpha: 1
+    interiorFogColor: {r: 0.61, g: 0.57, b: 0.47, a: 1}
+    interiorFogHiddenAlpha: 0.62
     interiorFogRevealedAlpha: 0
     fogRevealDuration: 1.4
+    fogDissolveDuration: 1.1
     interiorFogSortingOrderOffset: 3000
+    hideBossUntilEncounter: 1
     returnPortalSprite: {fileID: 0}
     returnPortalScale: {x: 1, y: 1, z: 1}
     boss:
