@@ -107,6 +107,11 @@ namespace Necrocis
 
         private void HandleAttackInput()
         {
+            if (Time.timeScale <= Mathf.Epsilon)
+            {
+                return;
+            }
+
             InputManager input = InputManager.Instance;
             if (input == null)
             {

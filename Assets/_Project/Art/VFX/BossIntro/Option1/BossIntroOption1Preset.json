@@ -1,0 +1,54 @@
+{
+  "presetName": "Boss Intro Option 1 - Sprite Speedlines",
+  "snapshotDate": "2026-08-01",
+  "activeEnumValue": "Option1SpriteSpeedlines",
+  "appliedPreviewPath": "Assets/_Project/Art/VFX/BossIntro/Option1/BossIntroOption1AppliedPreview.png",
+  "background": {
+    "mode": "FullScreenSolid",
+    "colorRgba": [0.43, 0.44, 0.45, 0.96]
+  },
+  "portrait": {
+    "useLiveBossSprite": true,
+    "preserveOriginalColor": true,
+    "preserveAspect": true,
+    "singleBossSize": [1040.0, 575.0],
+    "dualBossSize": [620.0, 535.0],
+    "dualBossXPositions": [-255.0, 255.0],
+    "anchoredY": 8.0,
+    "pulseAmount": 0.012,
+    "pulseSpeed": 5.2
+  },
+  "speedlineSprites": [
+    {
+      "name": "UpperLeft",
+      "resourcesPath": "VFX/BossIntro/Option1/BossIntroSpeedlinesUpperLeft",
+      "sourceArtPath": "Assets/_Project/Art/VFX/BossIntro/BossIntroSpeedlinesUpperLeft.png",
+      "baseAlpha": 0.88,
+      "enterOffset": [-135.0, 72.0],
+      "delay": 0.025
+    },
+    {
+      "name": "Lower",
+      "resourcesPath": "VFX/BossIntro/Option1/BossIntroSpeedlinesLower",
+      "sourceArtPath": "Assets/_Project/Art/VFX/BossIntro/BossIntroSpeedlinesLower.png",
+      "baseAlpha": 0.82,
+      "enterOffset": [-105.0, -48.0],
+      "delay": 0.07
+    }
+  ],
+  "animation": {
+    "totalDuration": 2.75,
+    "enterDuration": 0.48,
+    "exitStartTime": 2.18,
+    "speedlineRevealDuration": 0.34,
+    "speedlineStartScale": 1.035,
+    "speedlineEndScale": 1.0
+  },
+  "presentation": {
+    "pauseGameplay": true,
+    "useUnscaledTime": true,
+    "bossTitle": "BOSS",
+    "bossTitleColorRgba": [0.58, 0.005, 0.055, 1.0],
+    "displayBiomeBossName": true
+  }
+}

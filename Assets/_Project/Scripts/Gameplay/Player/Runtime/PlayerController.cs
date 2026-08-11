@@ -600,7 +600,7 @@ namespace Necrocis
 
         private bool IsControlBlocked()
         {
-            return deathHandled || IsDead;
+            return deathHandled || IsDead || Time.timeScale <= Mathf.Epsilon;
         }
 
         private void SyncDeathState()
@@ -1003,11 +1003,13 @@ namespace Necrocis
         private void OnEnable()
         {
             LevelUpManager.OnJobChanged += HandleJobChanged;
+            LevelUpManager.OnLevelUp += HandleLevelUpVfx;
         }
 
         private void OnDisable()
         {
             LevelUpManager.OnJobChanged -= HandleJobChanged;
+            LevelUpManager.OnLevelUp -= HandleLevelUpVfx;
         }
 
         private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -1046,6 +1048,12 @@ namespace Necrocis
         private void HandleJobChanged(JobType job)
         {
             ApplyJobVisual(job);
+            CombatVfx.PlayJobChange(transform, job);
+        }
+
+        private void HandleLevelUpVfx()
+        {
+            CombatVfx.PlayLevelUp(transform);
         }
 
         private void ApplyJobVisual(JobType job)

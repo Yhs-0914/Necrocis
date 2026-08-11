@@ -48,8 +48,20 @@ namespace Necrocis
             CheckLevelUp();
         }
 
-        // 적 처치 시 고정 경험치 지급 (배율/개별 보상값 미적용)
-        public static void AddEnemyKillExp(float rewardMultiplier = 1f)
+        // 이전 호출부 호환용: 전역 기본 처치 경험치를 지급합니다.
+        public static void AddEnemyKillExp()
+        {
+            AddEnemyKillExp(Config.EnemyKillExp);
+        }
+
+        // 적 설정에 지정된 개별 경험치를 지급합니다.
+        public static void AddEnemyKillExp(int amount)
+        {
+            AddEnemyKillExp(amount, 1f);
+        }
+
+        // 적별 보상값과 난이도별 경험치 배율을 함께 적용합니다.
+        public static void AddEnemyKillExp(int amount, float rewardMultiplier)
         {
             EnsureExpRequirementInitialized();
             if (currentLevel >= Config.MaxLevel) return;
@@ -57,7 +69,9 @@ namespace Necrocis
 
             int enemyKillExp = Mathf.Max(
                 0,
-                Mathf.RoundToInt(Config.EnemyKillExp * Mathf.Max(0f, rewardMultiplier)));
+                Mathf.RoundToInt(Mathf.Max(0, amount) * Mathf.Max(0f, rewardMultiplier)));
+            if (enemyKillExp == 0) return;
+
             currentExp += enemyKillExp;
             OnExpGained?.Invoke(enemyKillExp);
 

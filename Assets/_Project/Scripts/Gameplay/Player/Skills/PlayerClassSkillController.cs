@@ -330,6 +330,11 @@ namespace Necrocis
 
         private bool ShouldAcceptInput()
         {
+            if (Time.timeScale <= Mathf.Epsilon)
+            {
+                return false;
+            }
+
             if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
             {
                 return false;

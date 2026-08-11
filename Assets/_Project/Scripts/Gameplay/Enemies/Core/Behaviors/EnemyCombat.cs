@@ -335,7 +335,7 @@ namespace Necrocis
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
-            LevelUpManager.AddEnemyKillExp(multiplier);
+            LevelUpManager.AddEnemyKillExp(config.expReward, multiplier);
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !config.isElite)
