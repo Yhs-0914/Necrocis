@@ -49,4 +49,5 @@ MonoBehaviour:
     sceneObjectDensity: 1
     enemyMaxAlive: 1
     enemyRespawnCooldown: 1
+  biomeWorldOverrides: []
   biomeOverrides: []

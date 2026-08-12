@@ -9,15 +9,24 @@ namespace Necrocis
 
         [SerializeField] private Font menuFont;
 
+        private static Font cachedFont;
+
         public static Font LoadFont()
         {
+            if (cachedFont != null)
+            {
+                return cachedFont;
+            }
+
             GameUiTheme theme = Resources.Load<GameUiTheme>(ResourcePath);
             if (theme != null && theme.menuFont != null)
             {
-                return theme.menuFont;
+                cachedFont = theme.menuFont;
+                return cachedFont;
             }
 
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            return cachedFont;
         }
     }
 }

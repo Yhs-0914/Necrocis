@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: HardLevelProgressionConfig
   m_EditorClassIdentifier:
   maxLevel: 30
-  baseExp: 100
-  expMultiplier: 1.25
+  baseExp: 30
+  expIncreasePerLevel: 20
   enemyKillExp: 10
   earlyLevelUpperBound: 9
   earlyExpGainMultiplier: 2

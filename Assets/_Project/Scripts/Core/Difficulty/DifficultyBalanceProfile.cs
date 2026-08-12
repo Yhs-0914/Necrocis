@@ -31,6 +31,9 @@ namespace Necrocis
         [Header("World")]
         public WorldDifficultyBalance world = new WorldDifficultyBalance();
 
+        [Header("Optional Biome World Overrides")]
+        public List<DifficultyBiomeWorldOverride> biomeWorldOverrides = new List<DifficultyBiomeWorldOverride>();
+
         [Header("Optional Full Biome Overrides")]
         [Tooltip("지정하면 해당 난이도는 씬에 연결된 BiomeConfig 대신 이 에셋을 사용합니다.")]
         public List<DifficultyBiomeOverride> biomeOverrides = new List<DifficultyBiomeOverride>();
@@ -50,6 +53,23 @@ namespace Necrocis
             }
 
             return fallback;
+        }
+
+        public WorldDifficultyBalance ResolveWorldBalance(BiomeType biome)
+        {
+            if (biomeWorldOverrides != null)
+            {
+                for (int index = 0; index < biomeWorldOverrides.Count; index++)
+                {
+                    DifficultyBiomeWorldOverride entry = biomeWorldOverrides[index];
+                    if (entry != null && entry.biome == biome && entry.world != null)
+                    {
+                        return entry.world;
+                    }
+                }
+            }
+
+            return world ?? new WorldDifficultyBalance();
         }
     }
 
@@ -120,5 +140,12 @@ namespace Necrocis
     {
         public BiomeType biome = BiomeType.None;
         public BiomeConfig config;
+    }
+
+    [Serializable]
+    public sealed class DifficultyBiomeWorldOverride
+    {
+        public BiomeType biome = BiomeType.None;
+        public WorldDifficultyBalance world = new WorldDifficultyBalance();
     }
 }
