@@ -253,22 +253,27 @@ namespace ProceduralMap
         public Vector3 GetPlayerSpawnWorldPosition()
         {
             if (gridData == null)
-                return GetCellCenterWorld(new Vector2Int(mapWidth / 2, mapHeight / 2));
+                return GetCellCenterWorld(new Vector2Int(mapWidth / 2, Mathf.Min(8, mapHeight - 1)));
 
-            Vector2Int center = new Vector2Int(mapWidth / 2, mapHeight / 2);
+            // 보스 아레나는 맵 중앙에 생성되므로 입장 지점은 아래쪽에 둡니다.
+            // 장애물, 용암, 절벽 및 다른 층을 피하면서 가장 가까운 안전 셀을 찾습니다.
+            Vector2Int entrance = new Vector2Int(
+                mapWidth / 2,
+                Mathf.Clamp(edgeMargin + 6, 0, mapHeight - 1));
             int maxRadius = Mathf.Max(mapWidth, mapHeight);
             for (int radius = 0; radius < maxRadius; radius++)
             {
-                for (int y = center.y - radius; y <= center.y + radius; y++)
-                for (int x = center.x - radius; x <= center.x + radius; x++)
+                for (int y = entrance.y - radius; y <= entrance.y + radius; y++)
+                for (int x = entrance.x - radius; x <= entrance.x + radius; x++)
                 {
                     if (!gridData.IsInside(x, y)) continue;
                     MapCell cell = gridData.GetCell(x, y);
-                    if (!cell.IsVoid && !cell.HasCliff && !cell.HasLava && cell.HeightLevel == 0)
+                    if (!cell.IsVoid && !cell.HasCliff && !cell.HasLava &&
+                        !cell.Occupied && cell.HeightLevel == 0)
                         return GetCellCenterWorld(new Vector2Int(x, y));
                 }
             }
-            return GetCellCenterWorld(center);
+            return GetCellCenterWorld(entrance);
         }
 
         private int CountInvalidPlayerSamples(Vector2 center, Vector2 halfExtents, int requiredHeight)
