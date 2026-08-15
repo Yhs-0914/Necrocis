@@ -133,6 +133,7 @@ namespace Necrocis
         private Vector3 movement;                  // ?대룞 踰≫꽣
         private Rigidbody rb;                      // 臾쇰━ 而댄룷?뚰듃 (?덉쑝硫??ъ슜)
         private CharacterController characterController; // CharacterController (?덉쑝硫??곗꽑 ?ъ슜)
+        private ProceduralTerrainMotor proceduralTerrainMotor;
         private Collider cachedHitCollider;
         private Health cachedHealth;
         private PlayerStats playerStats;           // ?ㅽ꺈 而댄룷?뚰듃 李몄“
@@ -233,6 +234,11 @@ namespace Necrocis
             // 臾쇰━ 而댄룷?뚰듃 ?뺤씤
             rb = GetComponent<Rigidbody>();
             characterController = GetComponent<CharacterController>();
+            proceduralTerrainMotor = GetComponent<ProceduralTerrainMotor>();
+            if (proceduralTerrainMotor == null)
+            {
+                proceduralTerrainMotor = gameObject.AddComponent<ProceduralTerrainMotor>();
+            }
             EnsurePlayerStats();
             EnsureClassSkillController();
             EnsureDeathScreen();
@@ -499,6 +505,50 @@ namespace Necrocis
         // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
+            if (proceduralTerrainMotor != null && proceduralTerrainMotor.HasActiveMap)
+            {
+                Vector3 proceduralCurrentPos = transform.position;
+                Vector3 proceduralTargetPos = proceduralCurrentPos + moveVector;
+                if (proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralTargetPos))
+                {
+                    ApplyMove(moveVector);
+                    return true;
+                }
+
+                Vector3 proceduralMoveX = new Vector3(moveVector.x, 0f, 0f);
+                Vector3 proceduralMoveZ = new Vector3(0f, 0f, moveVector.z);
+                if (Mathf.Abs(moveVector.x) >= Mathf.Abs(moveVector.z))
+                {
+                    if (proceduralMoveX.sqrMagnitude > 0f && proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralCurrentPos + proceduralMoveX))
+                    {
+                        ApplyMove(proceduralMoveX);
+                        return true;
+                    }
+
+                    if (proceduralMoveZ.sqrMagnitude > 0f && proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralCurrentPos + proceduralMoveZ))
+                    {
+                        ApplyMove(proceduralMoveZ);
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (proceduralMoveZ.sqrMagnitude > 0f && proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralCurrentPos + proceduralMoveZ))
+                    {
+                        ApplyMove(proceduralMoveZ);
+                        return true;
+                    }
+
+                    if (proceduralMoveX.sqrMagnitude > 0f && proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralCurrentPos + proceduralMoveX))
+                    {
+                        ApplyMove(proceduralMoveX);
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             BiomeManager biome = BiomeManager.Active;
             if (biome == null)
             {
@@ -600,7 +650,10 @@ namespace Necrocis
 
         private bool IsControlBlocked()
         {
-            return deathHandled || IsDead || Time.timeScale <= Mathf.Epsilon;
+            return deathHandled
+                || IsDead
+                || Time.timeScale <= Mathf.Epsilon
+                || (proceduralTerrainMotor != null && proceduralTerrainMotor.IsTraversing);
         }
 
         private void SyncDeathState()
