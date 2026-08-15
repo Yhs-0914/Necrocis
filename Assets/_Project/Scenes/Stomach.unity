@@ -510,6 +510,7 @@ GameObject:
   m_Component:
   - component: {fileID: 497294028}
   - component: {fileID: 497294027}
+  - component: {fileID: 497294029}
   m_Layer: 0
   m_Name: Map Generator
   m_TagString: Untagged
@@ -517,6 +518,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &497294029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497294026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c7a9b2d5e64f71a3c8b9d0246e5f10, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ProceduralBiomeBridge
+  config: {fileID: 11400000, guid: ec818977ff60b4efc8b65e18c1044c1a, type: 2}
+  proceduralChunkSize: 32
+  proceduralLoadDistance: 2
+  proceduralUnloadDistance: 3
 --- !u!114 &497294027
 MonoBehaviour:
   m_ObjectHideFlags: 0

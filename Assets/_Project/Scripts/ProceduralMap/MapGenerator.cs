@@ -139,6 +139,28 @@ namespace ProceduralMap
 
         public GridData Data => gridData;
         public bool IsReady => gridData != null;
+        public int MapWidth => mapWidth;
+        public int MapHeight => mapHeight;
+        public int RandomSeed => randomSeed;
+
+        public bool IsCellWalkable(int x, int y)
+        {
+            if (gridData == null || !gridData.IsInside(x, y)) return false;
+            MapCell cell = gridData.GetCell(x, y);
+            return !cell.IsVoid && !cell.HasCliff && (!cell.HasLava || cell.HasStomachRock);
+        }
+
+        public int GetCellHeightLevel(int x, int y)
+        {
+            return gridData != null && gridData.IsInside(x, y)
+                ? gridData.GetCell(x, y).HeightLevel
+                : 0;
+        }
+
+        public Vector3 GetCellCenterWorld(int x, int y)
+        {
+            return GetCellCenterWorld(new Vector2Int(x, y));
+        }
 
         public bool CanPlayerMove(Vector2 currentWorldPosition, Vector2 targetWorldPosition)
         {
