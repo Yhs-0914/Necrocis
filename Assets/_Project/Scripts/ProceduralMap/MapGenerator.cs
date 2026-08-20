@@ -136,12 +136,38 @@ namespace ProceduralMap
         private readonly Dictionary<Vector2Int, List<GameObject>> chunkObstacleInstances =
             new Dictionary<Vector2Int, List<GameObject>>();
         private Vector2Int currentPlayerChunk = new Vector2Int(int.MinValue, int.MinValue);
+        private bool hasBossArenaReservation;
+        private Vector2Int bossArenaCenter;
+        private Vector2Int bossArenaSize;
+        private int bossArenaPadding;
 
         public GridData Data => gridData;
         public bool IsReady => gridData != null;
         public int MapWidth => mapWidth;
         public int MapHeight => mapHeight;
         public int RandomSeed => randomSeed;
+
+        public void ConfigureBossArenaReservation(
+            Vector2Int center, Vector2Int size, int padding)
+        {
+            hasBossArenaReservation = true;
+            bossArenaCenter = new Vector2Int(
+                Mathf.Clamp(center.x, 0, Mathf.Max(0, mapWidth - 1)),
+                Mathf.Clamp(center.y, 0, Mathf.Max(0, mapHeight - 1)));
+            bossArenaSize = new Vector2Int(Mathf.Max(8, size.x), Mathf.Max(8, size.y));
+            bossArenaPadding = Mathf.Max(0, padding);
+        }
+
+        public bool IsCellReservedForBossArena(int x, int y)
+        {
+            if (!hasBossArenaReservation)
+            {
+                return false;
+            }
+
+            GetBossArenaReservationBounds(out int minX, out int minY, out int maxX, out int maxY);
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+        }
 
         public bool IsCellWalkable(int x, int y)
         {
@@ -500,6 +526,7 @@ namespace ProceduralMap
             occupancyGrid = new OccupancyGrid(mapWidth, mapHeight);
             thirdFloorOccupancyGrid = new OccupancyGrid(mapWidth, mapHeight);
             ReserveBottomBoundaryCliff();
+            ReserveBossArenaFootprint();
             if (generateRoads) GenerateRoads(new System.Random(unchecked(randomSeed ^ 0x2A6F91C3)));
             ConfigureTilemapOrder();
             CreateRuntimeTiles();
@@ -599,6 +626,46 @@ namespace ProceduralMap
                 cell.CliffLevel = y == cliffY ? 1 : 0;
             }
             occupancyGrid.Occupy(reservedRows);
+        }
+
+        private void ReserveBossArenaFootprint()
+        {
+            if (!hasBossArenaReservation || gridData == null || occupancyGrid == null)
+            {
+                return;
+            }
+
+            GetBossArenaReservationBounds(out int minX, out int minY, out int maxX, out int maxY);
+            var reservedCells = new List<Vector2Int>((maxX - minX + 1) * (maxY - minY + 1));
+            for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+            {
+                if (!gridData.IsInside(x, y))
+                {
+                    continue;
+                }
+
+                MapCell cell = gridData.GetCell(x, y);
+                cell.Reset();
+                cell.Occupied = true;
+                reservedCells.Add(new Vector2Int(x, y));
+            }
+
+            occupancyGrid.Occupy(reservedCells);
+            thirdFloorOccupancyGrid?.Occupy(reservedCells);
+        }
+
+        private void GetBossArenaReservationBounds(
+            out int minX, out int minY, out int maxX, out int maxY)
+        {
+            minX = Mathf.Max(0, bossArenaCenter.x - bossArenaSize.x / 2 - bossArenaPadding);
+            minY = Mathf.Max(0, bossArenaCenter.y - bossArenaSize.y / 2 - bossArenaPadding);
+            maxX = Mathf.Min(
+                mapWidth - 1,
+                bossArenaCenter.x - bossArenaSize.x / 2 + bossArenaSize.x - 1 + bossArenaPadding);
+            maxY = Mathf.Min(
+                mapHeight - 1,
+                bossArenaCenter.y - bossArenaSize.y / 2 + bossArenaSize.y - 1 + bossArenaPadding);
         }
 
         private void GenerateGrassShapes(System.Random random)
@@ -1114,6 +1181,9 @@ namespace ProceduralMap
             for (int i = 0; i < plan.Count; i++)
             {
                 ObstacleSpawnData spawn = plan[i];
+                int spawnX = Mathf.FloorToInt(spawn.Position.x);
+                int spawnY = Mathf.FloorToInt(spawn.Position.y);
+                if (IsCellReservedForBossArena(spawnX, spawnY)) continue;
                 Vector2Int coordinate = GridPositionToChunk(spawn.Position);
                 if (!obstaclePlanByChunk.TryGetValue(coordinate, out List<ObstacleSpawnData> chunkPlan))
                 {

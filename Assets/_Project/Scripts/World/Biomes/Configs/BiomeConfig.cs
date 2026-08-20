@@ -304,6 +304,14 @@ namespace Necrocis
         public float debrisVfxSpeed = 0.12f;
     }
 
+    public enum BossFogMotionProfile
+    {
+        Intestine = 0,
+        Liver = 1,
+        Stomach = 2,
+        Lung = 3
+    }
+
     [System.Serializable]
     public class MidBossArenaConfig
     {
@@ -315,7 +323,7 @@ namespace Necrocis
         [Header("Layout")]
         public bool useCustomCenter = false;
         public Vector2Int centerGrid = new Vector2Int(150, 150);
-        public Vector2Int arenaSize = new Vector2Int(26, 26);
+        public Vector2Int arenaSize = new Vector2Int(32, 32);
         public int wallThicknessInCells = 1;
         [Tooltip("안개 벽보다 안쪽으로 봉쇄 경계를 들여놓을 칸 수")]
         public int lockBoundaryInsetInCells = 1;
@@ -347,15 +355,41 @@ namespace Necrocis
         [Range(0f, 1f)] public float fogCoreDarkness = 0.82f;
         [Range(0f, 2f)] public float fogWispBrightness = 0.75f;
         [Range(0f, 2f)] public float interiorFogDensity = 1.05f;
-        [Range(0f, 1f)] public float interiorFogBaseOpacity = 0.42f;
-        [Min(1f)] public float fogSoftLayerWidth = 2.4f;
+        [Range(0f, 1f)] public float interiorFogBaseOpacity = 0.2f;
         [Min(0f)] public float fogPulseSpeed = 1.25f;
         [Range(0f, 0.5f)] public float fogPulseAmount = 0.06f;
+        [Tooltip("플레이어가 다가올 때 해당 방향의 안개 장막이 강하게 반응하기 시작하는 거리")]
+        [Min(0.5f)] public float fogApproachPreviewDistance = 5f;
+        [Tooltip("픽셀 아트 질감을 유지하기 위한 안개 텍스처 샘플 밀도")]
+        [Range(16f, 256f)] public float fogPixelDensity = 96f;
+        [Tooltip("안개 흐름을 픽셀 애니메이션처럼 끊어 보여주는 초당 프레임 수")]
+        [Range(4f, 30f)] public float fogAnimationFps = 12f;
+        [Tooltip("봉쇄/걷힘 순간에 안개 흐름이 빨라지는 정도")]
+        [Range(0f, 2f)] public float fogTransitionFlowBoost = 1.35f;
+        [Tooltip("장기별 안개 흐름 방식")]
+        public BossFogMotionProfile fogMotionProfile = BossFogMotionProfile.Intestine;
+        [Range(0f, 2f)] public float fogMotionIntensity = 1f;
+        [Tooltip("전면 안개 뒤에 겹치는 저주파 안개의 투명도")]
+        [Range(0f, 0.7f)] public float fogRearLayerOpacity = 0.28f;
+        [Tooltip("바닥에 닿아 퍼지는 안개의 투명도")]
+        [Range(0f, 0.7f)] public float fogGroundContactOpacity = 0.34f;
+        [Tooltip("바닥 접촉 안개가 장벽 폭보다 퍼지는 비율")]
+        [Range(0.8f, 2f)] public float fogGroundSpread = 1.3f;
+
+        [Header("Boss Entrance Fog Choreography")]
+        [Tooltip("보스 포스터가 뜨기 전에 안개 봉쇄와 내부 걷힘을 보여주는 시간")]
+        [Min(0f)] public float bossIntroFogPreludeDuration = 0.65f;
+        [Tooltip("외곽 안개가 전투 봉쇄 상태까지 차오르는 시간")]
+        [Min(0.05f)] public float fogSealDuration = 0.72f;
+        [Tooltip("진입한 벽에서 반대편 벽으로 봉쇄가 번지는 지연 비율")]
+        [Range(0f, 0.3f)] public float fogSealStagger = 0.11f;
+        [Tooltip("진입구가 닫힐 때의 약한 카메라 충격")]
+        [Range(0f, 0.2f)] public float fogSealCameraImpulse = 0.075f;
 
         [Header("Fog Reveal")]
         public bool useInteriorFogCover = true;
         public Color interiorFogColor = Color.white;
-        [Range(0f, 1f)] public float interiorFogHiddenAlpha = 1f;
+        [Range(0f, 1f)] public float interiorFogHiddenAlpha = 0.54f;
         [Range(0f, 1f)] public float interiorFogRevealedAlpha = 0f;
         public float fogRevealDuration = 1.4f;
         public float fogDissolveDuration = 1.1f;

@@ -22,13 +22,29 @@ namespace Necrocis
         private static readonly int CoreDarknessId = Shader.PropertyToID("_CoreDarkness");
         private static readonly int WispBrightnessId = Shader.PropertyToID("_WispBrightness");
         private static readonly int SeedId = Shader.PropertyToID("_Seed");
+        private static readonly int SealAmountId = Shader.PropertyToID("_SealAmount");
+        private static readonly int RevealAmountId = Shader.PropertyToID("_RevealAmount");
+        private static readonly int FlowBoostId = Shader.PropertyToID("_FlowBoost");
+        private static readonly int PixelDensityId = Shader.PropertyToID("_PixelDensity");
+        private static readonly int AnimationFpsId = Shader.PropertyToID("_AnimationFps");
+        private static readonly int AspectRatioId = Shader.PropertyToID("_AspectRatio");
+        private static readonly int ApproachAmountId = Shader.PropertyToID("_ApproachAmount");
+        private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
+        private static readonly int TintId = Shader.PropertyToID("_Tint");
+        private static readonly int SideSealId = Shader.PropertyToID("_SideSeal");
+        private static readonly int SideApproachId = Shader.PropertyToID("_SideApproach");
+        private static readonly int UseSideStateId = Shader.PropertyToID("_UseSideState");
+        private static readonly int OrganProfileId = Shader.PropertyToID("_OrganProfile");
+        private static readonly int MotionIntensityId = Shader.PropertyToID("_MotionIntensity");
+        private static readonly int GroundContactId = Shader.PropertyToID("_GroundContact");
 
         private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
         private static Material runtimeFogMaterial;
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
 
-        private readonly List<SpriteRenderer> fogRenderers = new List<SpriteRenderer>();
+        private readonly List<Renderer> fogRenderers = new List<Renderer>();
+        private readonly List<float> fogRendererAlphaScales = new List<float>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
         private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
         private SpriteRenderer interiorFogRenderer;
@@ -50,8 +66,11 @@ namespace Necrocis
         private bool arenaLocked;
         private bool bossDefeated;
         private bool bossIntroPlaying;
+        private bool bossIntroPending;
+        private float bossIntroPreludeElapsed;
         private float fogRevealAmount;
         private float borderFogAmount;
+        private int entryFogWallIndex = -1;
 
         public bool IsLocked => arenaLocked;
 
@@ -96,11 +115,14 @@ namespace Necrocis
             ActiveArenas.Remove(this);
             BossIntroPresentation.Cancel(this);
             bossIntroPlaying = false;
+            bossIntroPending = false;
         }
 
         private void Update()
         {
-            UpdateFogReveal(Time.deltaTime);
+            float presentationDeltaTime = Time.unscaledDeltaTime;
+            UpdateFogReveal(presentationDeltaTime);
+            UpdateBossIntroPrelude(presentationDeltaTime);
 
             if (!arenaLocked || bossDefeated)
                 return;
@@ -151,13 +173,14 @@ namespace Necrocis
                 return;
             }
 
-            TryActivateArena();
+            TryActivateArena(player);
         }
 
         private void OnDestroy()
         {
             ActiveArenas.Remove(this);
             BossIntroPresentation.Cancel(this);
+            bossIntroPending = false;
 
             if (activeBoss != null)
                 activeBoss.Defeated -= HandleBossDefeated;
@@ -166,9 +189,20 @@ namespace Necrocis
             {
                 biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
             }
+
+            for (int i = 0; i < fogRenderers.Count; i++)
+            {
+                MeshFilter meshFilter = fogRenderers[i] != null
+                    ? fogRenderers[i].GetComponent<MeshFilter>()
+                    : null;
+                if (meshFilter != null && meshFilter.sharedMesh != null)
+                {
+                    Destroy(meshFilter.sharedMesh);
+                }
+            }
         }
 
-        private void TryActivateArena()
+        private void TryActivateArena(PlayerController player)
         {
             if (biome == null)
             {
@@ -183,6 +217,8 @@ namespace Necrocis
             }
 
             arenaLocked = true;
+            entryFogWallIndex = ResolveEntryFogWallIndex(player != null ? player.transform.position : transform.position);
+            bossIntroPreludeElapsed = 0f;
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
             ApplyFogVisualState();
             RecenterBossEncounter();
@@ -193,13 +229,73 @@ namespace Necrocis
                 GameManager.Instance.SetGameState(GameState.InBossRoom);
             }
 
+            float preludeDuration = Mathf.Max(0f, arenaConfig.bossIntroFogPreludeDuration);
+            bossIntroPending = preludeDuration > 0.01f;
+            if (bossIntroPending)
+            {
+                DontStarveCamera.Instance?.AddCombatImpulse(
+                    Mathf.Max(0f, arenaConfig.fogSealCameraImpulse),
+                    Mathf.Min(0.35f, preludeDuration));
+            }
+            else
+            {
+                StartBossIntroOrEncounter();
+            }
+
+            Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
+        }
+
+        private void UpdateBossIntroPrelude(float deltaTime)
+        {
+            if (!bossIntroPending)
+            {
+                return;
+            }
+
+            if (!arenaLocked || bossDefeated || !isActiveAndEnabled)
+            {
+                bossIntroPending = false;
+                return;
+            }
+
+            bossIntroPreludeElapsed += Mathf.Max(0f, deltaTime);
+            if (bossIntroPreludeElapsed < Mathf.Max(0f, arenaConfig.bossIntroFogPreludeDuration))
+            {
+                return;
+            }
+
+            bossIntroPending = false;
+            StartBossIntroOrEncounter();
+        }
+
+        private void StartBossIntroOrEncounter()
+        {
             bossIntroPlaying = TryPlayBossIntro();
             if (!bossIntroPlaying)
             {
                 BeginBossEncounter();
             }
+        }
 
-            Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
+        private int ResolveEntryFogWallIndex(Vector3 playerPosition)
+        {
+            if (biome == null)
+            {
+                return -1;
+            }
+
+            Vector3 arenaCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
+            Vector3 offset = playerPosition - arenaCenter;
+            float halfWidth = Mathf.Max(0.01f, arenaSize.x * biome.TileSize * 0.5f);
+            float halfDepth = Mathf.Max(0.01f, arenaSize.y * biome.TileSize * 0.5f);
+            float normalizedX = Mathf.Abs(offset.x) / halfWidth;
+            float normalizedZ = Mathf.Abs(offset.z) / halfDepth;
+            if (normalizedZ >= normalizedX)
+            {
+                return offset.z >= 0f ? 0 : 1;
+            }
+
+            return offset.x >= 0f ? 2 : 3;
         }
 
         private bool TryPlayBossIntro()
@@ -623,6 +719,9 @@ namespace Necrocis
 
             arenaLocked = false;
             bossDefeated = true;
+            bossIntroPending = false;
+            BossIntroPresentation.Cancel(this);
+            bossIntroPlaying = false;
             SetBossEncounterActive(false);
             PlayBossDeathSfx();
 
@@ -830,6 +929,7 @@ namespace Necrocis
         private void BuildFogWalls()
         {
             fogRenderers.Clear();
+            fogRendererAlphaScales.Clear();
             interiorFogRenderer = null;
 
             Vector3 worldCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
@@ -846,77 +946,227 @@ namespace Necrocis
                 CreateInteriorFogCover(worldCenter, new Vector2(widthWorld, depthWorld));
             }
 
-            CreateFogWall(
-                "NorthFogWall",
-                worldCenter + new Vector3(0f, 0f, wallOffsetZ),
-                new Vector2(widthWorld, thicknessWorld));
+            float fogThickness = Mathf.Max(1.65f, arenaConfig.wallHeight * 0.46f);
+            float baseHeight = biome.GetGroundHeight(worldCenter) + arenaConfig.groundFogOffset;
+            float perimeterLength = 2f * (widthWorld + depthWorld);
 
-            CreateFogWall(
-                "SouthFogWall",
-                worldCenter + new Vector3(0f, 0f, -wallOffsetZ),
-                new Vector2(widthWorld, thicknessWorld));
-
-            CreateFogWall(
-                "EastFogWall",
-                worldCenter + new Vector3(wallOffsetX, 0f, 0f),
-                new Vector2(thicknessWorld, depthWorld));
-
-            CreateFogWall(
-                "WestFogWall",
-                worldCenter + new Vector3(-wallOffsetX, 0f, 0f),
-                new Vector2(thicknessWorld, depthWorld));
+            // Each depth band is one closed ribbon. Rounded corners are part of the
+            // same mesh and share perimeter UVs, so there are no overlap seams.
+            CreateContinuousFogRibbon(
+                "RearFogRibbon",
+                worldCenter,
+                wallOffsetX,
+                wallOffsetZ,
+                fogThickness * 1.16f,
+                baseHeight + fogThickness * 0.42f + 0.16f,
+                0.42f,
+                -0.34f,
+                arenaConfig.fogRearLayerOpacity,
+                0.54f,
+                0.58f,
+                perimeterLength,
+                false);
+            CreateContinuousFogRibbon(
+                "FrontFogRibbon",
+                worldCenter,
+                wallOffsetX,
+                wallOffsetZ,
+                fogThickness,
+                baseHeight + fogThickness * 0.38f,
+                0f,
+                0f,
+                1f,
+                0.78f,
+                1f,
+                perimeterLength,
+                false);
+            CreateContinuousFogRibbon(
+                "GroundContactFogRibbon",
+                worldCenter,
+                wallOffsetX,
+                wallOffsetZ,
+                fogThickness * Mathf.Max(0.8f, arenaConfig.fogGroundSpread),
+                baseHeight + fogThickness * 0.12f,
+                -0.56f,
+                0.24f,
+                arenaConfig.fogGroundContactOpacity,
+                0.34f,
+                0.72f,
+                perimeterLength,
+                true);
         }
 
-        private void CreateFogWall(string name, Vector3 position, Vector2 size)
+        private void CreateContinuousFogRibbon(
+            string name,
+            Vector3 worldCenter,
+            float halfWidth,
+            float halfDepth,
+            float thickness,
+            float height,
+            float radialOffset,
+            float verticalOffset,
+            float alphaScale,
+            float speedMultiplier,
+            float tilingMultiplier,
+            float perimeterLength,
+            bool groundContact)
         {
-            position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset;
-            bool horizontal = size.x >= size.y;
-            Vector2 visualSize = size;
-            if (horizontal)
-            {
-                visualSize.y *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
-            }
-            else
-            {
-                visualSize.x *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
-            }
+            GameObject ribbon = new GameObject(name);
+            ribbon.transform.SetParent(transform, false);
+            ribbon.transform.position = new Vector3(worldCenter.x, height + verticalOffset, worldCenter.z);
 
-            int wallIndex = fogRenderers.Count;
-            SpriteRenderer renderer = CreateFogLayer(
+            MeshFilter filter = ribbon.AddComponent<MeshFilter>();
+            filter.sharedMesh = BuildContinuousFogRibbonMesh(
                 name,
-                position + Vector3.up * 0.02f,
-                visualSize,
-                arenaConfig.sortingOrder);
+                halfWidth,
+                halfDepth,
+                thickness,
+                radialOffset,
+                groundContact);
+            MeshRenderer renderer = ribbon.AddComponent<MeshRenderer>();
+            renderer.sortingOrder = arenaConfig.sortingOrder + (groundContact ? 0 : radialOffset < 0f ? 1 : 2);
             ConfigureFogMaterial(
                 renderer,
-                visualSize,
-                wallIndex * 2f + 1.17f,
-                arenaConfig.fogDensity,
+                new Vector2(perimeterLength, thickness),
+                9.41f + radialOffset * 13.7f,
+                Mathf.Min(2f, arenaConfig.fogDensity * (groundContact ? 0.74f : radialOffset < 0f ? 0.88f : 1.14f)),
                 arenaConfig.fogEdgeSoftness,
                 0f,
-                1f);
+                speedMultiplier,
+                false,
+                groundContact,
+                tilingMultiplier);
             fogRenderers.Add(renderer);
+            fogRendererAlphaScales.Add(Mathf.Clamp01(alphaScale));
         }
 
-        private SpriteRenderer CreateFogLayer(string objectName, Vector3 position, Vector2 size, int sortingOrder)
+        private static Mesh BuildContinuousFogRibbonMesh(
+            string name,
+            float halfWidth,
+            float halfDepth,
+            float thickness,
+            float radialOffset,
+            bool groundContact)
         {
-            GameObject layer = new GameObject(objectName);
-            layer.transform.SetParent(transform, false);
-            layer.transform.position = position;
-            layer.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            const int cornerSegments = 10;
+            const int rowCount = 3;
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            List<int> triangles = new List<int>();
+            List<Vector2> path = new List<Vector2>();
+            List<Vector4> sideWeights = new List<Vector4>();
 
-            SpriteRenderer renderer = layer.AddComponent<SpriteRenderer>();
-            renderer.sprite = GetFogSprite(false);
-            renderer.sortingOrder = sortingOrder;
-            bool verticalWall = size.y > size.x;
-            if (verticalWall)
+            float radius = Mathf.Clamp(Mathf.Min(halfWidth, halfDepth) * 0.045f, 0.45f, 0.85f);
+            if (groundContact)
             {
-                layer.transform.rotation = Quaternion.Euler(90f, 0f, 90f);
-                size = new Vector2(size.y, size.x);
+                radius = Mathf.Max(radius, thickness * 0.55f);
+            }
+            float centerX = Mathf.Max(radius, halfWidth - radius + radialOffset);
+            float centerZ = Mathf.Max(radius, halfDepth - radius + radialOffset);
+            AddRoundedCorner(path, sideWeights, new Vector2(centerX, centerZ), radius, 0f, 90f, 2, 0, cornerSegments);
+            AddRoundedCorner(path, sideWeights, new Vector2(-centerX, centerZ), radius, 90f, 180f, 0, 3, cornerSegments);
+            AddRoundedCorner(path, sideWeights, new Vector2(-centerX, -centerZ), radius, 180f, 270f, 3, 1, cornerSegments);
+            AddRoundedCorner(path, sideWeights, new Vector2(centerX, -centerZ), radius, 270f, 360f, 1, 2, cornerSegments);
+
+            float[] distance = new float[path.Count + 1];
+            for (int i = 1; i <= path.Count; i++)
+            {
+                distance[i] = distance[i - 1] + Vector2.Distance(path[i - 1], path[i % path.Count]);
+            }
+            float totalDistance = Mathf.Max(0.01f, distance[path.Count]);
+
+            for (int i = 0; i <= path.Count; i++)
+            {
+                int pathIndex = i % path.Count;
+                Vector2 point = path[pathIndex];
+                Vector2 previous = path[(pathIndex - 1 + path.Count) % path.Count];
+                Vector2 next = path[(pathIndex + 1) % path.Count];
+                Vector2 tangent = (next - previous).normalized;
+                Vector2 outward = new Vector2(tangent.y, -tangent.x);
+                float u = distance[i] / totalDistance;
+
+                for (int row = 0; row < rowCount; row++)
+                {
+                    float across = row / (float)(rowCount - 1);
+                    float acrossOffset = (across - 0.5f) * thickness;
+                    Vector2 horizontal = groundContact
+                        ? point + outward * acrossOffset
+                        : point;
+                    float y = groundContact
+                        ? Mathf.Sin(across * Mathf.PI) * thickness * 0.08f
+                        : (across - 0.5f) * thickness;
+                    vertices.Add(new Vector3(horizontal.x, y, horizontal.y));
+                    uvs.Add(new Vector2(u, across));
+                }
             }
 
-            ApplyFogWorldSize(layer.transform, renderer.sprite, size);
-            return renderer;
+            for (int segment = 0; segment < path.Count; segment++)
+            {
+                for (int row = 0; row < rowCount - 1; row++)
+                {
+                    int current = segment * rowCount + row;
+                    int next = current + rowCount;
+                    triangles.Add(current);
+                    triangles.Add(next);
+                    triangles.Add(current + 1);
+                    triangles.Add(current + 1);
+                    triangles.Add(next);
+                    triangles.Add(next + 1);
+                }
+            }
+
+            Mesh mesh = new Mesh { name = name, hideFlags = HideFlags.HideAndDontSave };
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            List<Vector4> vertexSideWeights = new List<Vector4>(vertices.Count);
+            List<Color> colors = new List<Color>(vertices.Count);
+            for (int i = 0; i <= path.Count; i++)
+            {
+                Vector4 weights = sideWeights[i % path.Count];
+                for (int row = 0; row < rowCount; row++)
+                {
+                    vertexSideWeights.Add(weights);
+                    colors.Add(Color.white);
+                }
+            }
+            mesh.SetUVs(1, vertexSideWeights);
+            mesh.SetColors(colors);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static void AddRoundedCorner(
+            List<Vector2> path,
+            List<Vector4> sideWeights,
+            Vector2 center,
+            float radius,
+            float startAngle,
+            float endAngle,
+            int startSide,
+            int endSide,
+            int segmentCount)
+        {
+            for (int segment = 0; segment < segmentCount; segment++)
+            {
+                float t = segment / (float)segmentCount;
+                float angle = Mathf.Lerp(startAngle, endAngle, t) * Mathf.Deg2Rad;
+                path.Add(center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius);
+                float blend = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.22f, 0.78f, t));
+                sideWeights.Add(Vector4.Lerp(GetFogSideWeight(startSide), GetFogSideWeight(endSide), blend));
+            }
+        }
+
+        private static Vector4 GetFogSideWeight(int sideIndex)
+        {
+            return sideIndex switch
+            {
+                0 => new Vector4(1f, 0f, 0f, 0f),
+                1 => new Vector4(0f, 1f, 0f, 0f),
+                2 => new Vector4(0f, 0f, 1f, 0f),
+                3 => new Vector4(0f, 0f, 0f, 1f),
+                _ => Vector4.zero
+            };
         }
 
         private void CreateInteriorFogCover(Vector3 position, Vector2 size)
@@ -943,14 +1193,16 @@ namespace Necrocis
         }
 
         private void ConfigureFogMaterial(
-            SpriteRenderer renderer,
+            Renderer renderer,
             Vector2 worldSize,
             float seed,
             float density,
             float edgeSoftness,
             float baseOpacity,
             float speedMultiplier,
-            bool interiorMode = false)
+            bool interiorMode = false,
+            bool groundContact = false,
+            float tilingMultiplier = 1f)
         {
             if (renderer == null)
             {
@@ -966,13 +1218,24 @@ namespace Necrocis
             renderer.sharedMaterial = material;
             fogPropertyBlock ??= new MaterialPropertyBlock();
             renderer.GetPropertyBlock(fogPropertyBlock);
+            SpriteRenderer spriteRenderer = renderer as SpriteRenderer;
+            Texture mainTexture = spriteRenderer != null && spriteRenderer.sprite != null
+                ? spriteRenderer.sprite.texture
+                : GetFogSprite(true) != null ? GetFogSprite(true).texture : null;
+            if (mainTexture != null)
+            {
+                fogPropertyBlock.SetTexture(MainTexId, mainTexture);
+            }
+            fogPropertyBlock.SetColor(TintId, Color.white);
 
             float worldTileSize = Mathf.Max(0.5f, arenaConfig.fogWorldTileSize);
             Vector2 tiling = interiorMode
                 ? new Vector2(
                     Mathf.Max(0.5f, worldSize.x / worldTileSize),
                     Mathf.Max(0.5f, worldSize.y / worldTileSize))
-                : new Vector2(Mathf.Max(1f, Mathf.Max(worldSize.x, worldSize.y) / worldTileSize), 1f);
+                : new Vector2(
+                    Mathf.Max(1f, Mathf.Max(worldSize.x, worldSize.y) / worldTileSize) * tilingMultiplier,
+                    1f);
             fogPropertyBlock.SetVector(
                 FogTilingId,
                 new Vector4(tiling.x, tiling.y, 0f, 0f));
@@ -999,6 +1262,19 @@ namespace Necrocis
             fogPropertyBlock.SetFloat(CoreDarknessId, Mathf.Clamp01(arenaConfig.fogCoreDarkness));
             fogPropertyBlock.SetFloat(WispBrightnessId, Mathf.Max(0f, arenaConfig.fogWispBrightness));
             fogPropertyBlock.SetFloat(SeedId, seed);
+            fogPropertyBlock.SetFloat(SealAmountId, 0f);
+            fogPropertyBlock.SetFloat(RevealAmountId, 0f);
+            fogPropertyBlock.SetFloat(FlowBoostId, 0f);
+            fogPropertyBlock.SetFloat(PixelDensityId, Mathf.Clamp(arenaConfig.fogPixelDensity, 16f, 256f));
+            fogPropertyBlock.SetFloat(AnimationFpsId, Mathf.Clamp(arenaConfig.fogAnimationFps, 4f, 30f));
+            fogPropertyBlock.SetFloat(ApproachAmountId, interiorMode ? 0f : 0.18f);
+            fogPropertyBlock.SetFloat(UseSideStateId, interiorMode ? 0f : 1f);
+            fogPropertyBlock.SetFloat(OrganProfileId, (float)arenaConfig.fogMotionProfile);
+            fogPropertyBlock.SetFloat(MotionIntensityId, Mathf.Clamp(arenaConfig.fogMotionIntensity, 0f, 2f));
+            fogPropertyBlock.SetFloat(GroundContactId, groundContact ? 1f : 0f);
+            fogPropertyBlock.SetFloat(
+                AspectRatioId,
+                interiorMode ? Mathf.Max(0.25f, worldSize.x / Mathf.Max(0.01f, worldSize.y)) : 1f);
             renderer.SetPropertyBlock(fogPropertyBlock);
         }
 
@@ -1553,7 +1829,7 @@ namespace Necrocis
 
             float borderTarget = arenaLocked && !bossDefeated ? 1f : 0f;
             float borderDuration = borderTarget > borderFogAmount
-                ? revealDuration
+                ? Mathf.Max(0.05f, arenaConfig.fogSealDuration)
                 : Mathf.Max(0.01f, arenaConfig.fogDissolveDuration);
             borderFogAmount = Mathf.MoveTowards(borderFogAmount, borderTarget, deltaTime / borderDuration);
             UpdateFogVisuals();
@@ -1566,32 +1842,169 @@ namespace Necrocis
 
         private void UpdateFogVisuals()
         {
+            float easedBorderAmount = Mathf.SmoothStep(0f, 1f, borderFogAmount);
             Color borderColor = Color.Lerp(
                 arenaConfig.unlockedFogColor,
                 arenaConfig.lockedFogColor,
-                borderFogAmount);
+                easedBorderAmount);
             for (int i = 0; i < fogRenderers.Count; i++)
             {
                 if (fogRenderers[i] != null)
                 {
                     float pulse = 1f + Mathf.Sin(
-                        Time.time * Mathf.Max(0f, arenaConfig.fogPulseSpeed) + i * 0.65f)
+                        Time.unscaledTime * Mathf.Max(0f, arenaConfig.fogPulseSpeed) + i * 0.65f)
                         * arenaConfig.fogPulseAmount;
                     Color animatedColor = borderColor;
-                    animatedColor.a = Mathf.Clamp01(borderColor.a * borderFogAmount * pulse);
-                    fogRenderers[i].color = animatedColor;
+                    float alphaScale = i < fogRendererAlphaScales.Count
+                        ? fogRendererAlphaScales[i]
+                        : 1f;
+                    animatedColor.a = Mathf.Clamp01(borderColor.a * pulse * alphaScale);
+                    if (bossDefeated)
+                    {
+                        animatedColor.a *= easedBorderAmount;
+                    }
+
+                    SetRendererTint(fogRenderers[i], animatedColor);
+                    SetFogTransitionProperties(
+                        fogRenderers[i],
+                        easedBorderAmount,
+                        0f,
+                        Mathf.Sin(easedBorderAmount * Mathf.PI) * Mathf.Max(0f, arenaConfig.fogTransitionFlowBoost),
+                        0.18f);
                 }
             }
 
             if (interiorFogRenderer != null)
             {
                 Color interiorColor = arenaConfig.interiorFogColor;
+                float lateAlphaFade = Mathf.SmoothStep(0.82f, 1f, fogRevealAmount);
                 interiorColor.a = Mathf.Lerp(
                     Mathf.Clamp01(arenaConfig.interiorFogHiddenAlpha),
                     Mathf.Clamp01(arenaConfig.interiorFogRevealedAlpha),
-                    fogRevealAmount);
+                    lateAlphaFade);
                 interiorFogRenderer.color = interiorColor;
+                SetFogTransitionProperties(
+                    interiorFogRenderer,
+                    borderFogAmount,
+                    fogRevealAmount,
+                    Mathf.Sin(fogRevealAmount * Mathf.PI) * Mathf.Max(0f, arenaConfig.fogTransitionFlowBoost),
+                    0f);
             }
+        }
+
+        private float GetWallApproachAmount(int sideIndex)
+        {
+            const float idleReadability = 0.18f;
+            if (arenaLocked || bossDefeated || biome == null || sideIndex < 0 || sideIndex >= 4)
+            {
+                return idleReadability;
+            }
+
+            PlayerController player = PlayerController.Instance;
+            if (player == null || ResolveEntryFogWallIndex(player.transform.position) != sideIndex)
+            {
+                return idleReadability;
+            }
+
+            Vector3 center = biome.GridToWorld(centerGrid.x, centerGrid.y);
+            Vector3 offset = player.transform.position - center;
+            float halfWidth = arenaSize.x * biome.TileSize * 0.5f;
+            float halfDepth = arenaSize.y * biome.TileSize * 0.5f;
+            float distanceToWall = sideIndex switch
+            {
+                0 => Mathf.Abs(offset.z - halfDepth),
+                1 => Mathf.Abs(offset.z + halfDepth),
+                2 => Mathf.Abs(offset.x - halfWidth),
+                3 => Mathf.Abs(offset.x + halfWidth),
+                _ => float.MaxValue
+            };
+            float previewDistance = Mathf.Max(0.5f, arenaConfig.fogApproachPreviewDistance);
+            float proximity = 1f - Mathf.Clamp01(distanceToWall / previewDistance);
+            return Mathf.Max(idleReadability, Mathf.SmoothStep(0f, 1f, proximity));
+        }
+
+        private float GetWallSealAmount(int wallIndex)
+        {
+            float amount = Mathf.Clamp01(borderFogAmount);
+            if (!arenaLocked || entryFogWallIndex < 0 || wallIndex < 0 || wallIndex >= 4)
+            {
+                return Mathf.SmoothStep(0f, 1f, amount);
+            }
+
+            int distanceFromEntry;
+            if (wallIndex == entryFogWallIndex)
+            {
+                distanceFromEntry = 0;
+            }
+            else if (AreOppositeFogWalls(wallIndex, entryFogWallIndex))
+            {
+                distanceFromEntry = 2;
+            }
+            else
+            {
+                distanceFromEntry = 1;
+            }
+
+            float delay = Mathf.Clamp01(distanceFromEntry * Mathf.Max(0f, arenaConfig.fogSealStagger));
+            float staggeredAmount = Mathf.InverseLerp(delay, 1f, amount);
+            return Mathf.SmoothStep(0f, 1f, staggeredAmount);
+        }
+
+        private static bool AreOppositeFogWalls(int first, int second)
+        {
+            return (first == 0 && second == 1)
+                || (first == 1 && second == 0)
+                || (first == 2 && second == 3)
+                || (first == 3 && second == 2);
+        }
+
+        private void SetFogTransitionProperties(
+            Renderer renderer,
+            float sealAmount,
+            float revealAmount,
+            float flowBoost,
+            float approachAmount)
+        {
+            if (renderer == null || renderer.sharedMaterial == null)
+            {
+                return;
+            }
+
+            fogPropertyBlock ??= new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(fogPropertyBlock);
+            fogPropertyBlock.SetFloat(SealAmountId, Mathf.Clamp01(sealAmount));
+            fogPropertyBlock.SetFloat(RevealAmountId, Mathf.Clamp01(revealAmount));
+            fogPropertyBlock.SetFloat(FlowBoostId, Mathf.Max(0f, flowBoost));
+            fogPropertyBlock.SetFloat(ApproachAmountId, Mathf.Clamp01(approachAmount));
+            fogPropertyBlock.SetVector(
+                SideSealId,
+                new Vector4(
+                    GetWallSealAmount(0),
+                    GetWallSealAmount(1),
+                    GetWallSealAmount(2),
+                    GetWallSealAmount(3)));
+            fogPropertyBlock.SetVector(
+                SideApproachId,
+                new Vector4(
+                    GetWallApproachAmount(0),
+                    GetWallApproachAmount(1),
+                    GetWallApproachAmount(2),
+                    GetWallApproachAmount(3)));
+            renderer.SetPropertyBlock(fogPropertyBlock);
+        }
+
+        private void SetRendererTint(Renderer renderer, Color color)
+        {
+            if (renderer is SpriteRenderer spriteRenderer)
+            {
+                spriteRenderer.color = color;
+                return;
+            }
+
+            fogPropertyBlock ??= new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(fogPropertyBlock);
+            fogPropertyBlock.SetColor(TintId, color);
+            renderer.SetPropertyBlock(fogPropertyBlock);
         }
 
         private Material GetFogMaterial()

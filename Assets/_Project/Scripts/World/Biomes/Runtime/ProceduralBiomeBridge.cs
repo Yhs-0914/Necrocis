@@ -58,7 +58,25 @@ namespace Necrocis
             heightStep = 0.5f;
             destroyChunkRootOnUnload = true;
             useChunkRootPooling = true;
+            ConfigureBossArenaReservation();
             base.Awake();
+        }
+
+        private void ConfigureBossArenaReservation()
+        {
+            MidBossArenaConfig arenaConfig = config.GetMidBossArenaConfig();
+            if (!IsBossArenaEnabled(arenaConfig))
+            {
+                return;
+            }
+
+            Vector2Int center = arenaConfig.useCustomCenter
+                ? arenaConfig.centerGrid
+                : new Vector2Int(mapGenerator.MapWidth / 2, mapGenerator.MapHeight / 2);
+            int padding = Mathf.Max(
+                2,
+                arenaConfig.wallThicknessInCells + arenaConfig.lockBoundaryInsetInCells + 2);
+            mapGenerator.ConfigureBossArenaReservation(center, arenaConfig.arenaSize, padding);
         }
 
         protected override void Start()
@@ -115,11 +133,23 @@ namespace Necrocis
         private void CreateBossArena()
         {
             MidBossArenaConfig arenaConfig = config.GetMidBossArenaConfig();
-            if (arenaConfig == null || !arenaConfig.enabled) return;
+            if (!IsBossArenaEnabled(arenaConfig)) return;
             GameObject arenaObject = new GameObject("MidBossArena");
             arenaObject.transform.SetParent(transform, false);
             bossArena = arenaObject.AddComponent<MidBossArenaController>();
             bossArena.Configure(this, arenaConfig, normalEnemyRules, config.GetReturnPortalConfig());
+        }
+
+        private bool IsBossArenaEnabled(MidBossArenaConfig arenaConfig)
+        {
+            if (arenaConfig == null || !arenaConfig.enabled)
+            {
+                return false;
+            }
+
+            return !arenaConfig.onlyEnableOnLargeMaps
+                || (mapGenerator.MapWidth >= arenaConfig.minimumMapWidth
+                    && mapGenerator.MapHeight >= arenaConfig.minimumMapHeight);
         }
 
         private void PlayBiomeBgm()
@@ -185,7 +215,9 @@ namespace Necrocis
             {
                 int x = startX + BiomeDeterministic.HashRange(seed, chunk.chunkX, chunk.chunkY, salt + attempt * 2, chunkSize);
                 int y = startY + BiomeDeterministic.HashRange(seed, chunk.chunkX, chunk.chunkY, salt + attempt * 2 + 1, chunkSize);
-                if (IsValidPosition(x, y) && mapGenerator.IsCellWalkable(x, y))
+                if (IsValidPosition(x, y)
+                    && !mapGenerator.IsCellReservedForBossArena(x, y)
+                    && mapGenerator.IsCellWalkable(x, y))
                 {
                     resultX = x;
                     resultY = y;
