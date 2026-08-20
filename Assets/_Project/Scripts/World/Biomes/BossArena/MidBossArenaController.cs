@@ -46,7 +46,6 @@ namespace Necrocis
         private readonly List<Renderer> fogRenderers = new List<Renderer>();
         private readonly List<float> fogRendererAlphaScales = new List<float>();
         private readonly List<int> fogRendererSideIndices = new List<int>();
-        private readonly List<BossArenaEntranceMarker> entranceMarkers = new List<BossArenaEntranceMarker>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
         private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
         private SpriteRenderer interiorFogRenderer;
@@ -933,7 +932,6 @@ namespace Necrocis
             fogRenderers.Clear();
             fogRendererAlphaScales.Clear();
             fogRendererSideIndices.Clear();
-            entranceMarkers.Clear();
             interiorFogRenderer = null;
 
             Vector3 worldCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
@@ -952,42 +950,6 @@ namespace Necrocis
 
             float baseHeight = biome.GetGroundHeight(worldCenter) + arenaConfig.groundFogOffset;
             CreatePerimeterFogCards(worldCenter, wallOffsetX, wallOffsetZ, baseHeight);
-            CreateBossEntranceMarkers(worldCenter, halfWidth, halfDepth, baseHeight);
-        }
-
-        private void CreateBossEntranceMarkers(
-            Vector3 worldCenter,
-            float halfWidth,
-            float halfDepth,
-            float baseHeight)
-        {
-            Vector3[] positions =
-            {
-                worldCenter + Vector3.forward * halfDepth,
-                worldCenter + Vector3.back * halfDepth,
-                worldCenter + Vector3.right * halfWidth,
-                worldCenter + Vector3.left * halfWidth
-            };
-            Vector3[] inwardDirections =
-            {
-                Vector3.back,
-                Vector3.forward,
-                Vector3.left,
-                Vector3.right
-            };
-
-            for (int side = 0; side < positions.Length; side++)
-            {
-                GameObject markerObject = new GameObject($"BossEntranceMarker_{side}");
-                markerObject.transform.SetParent(transform, false);
-                Vector3 position = positions[side];
-                position.y = baseHeight;
-                markerObject.transform.position = position;
-
-                BossArenaEntranceMarker marker = markerObject.AddComponent<BossArenaEntranceMarker>();
-                marker.Configure(side, inwardDirections[side], arenaConfig.sortingOrder + 5000);
-                entranceMarkers.Add(marker);
-            }
         }
 
         private void CreatePerimeterFogCards(
@@ -2048,28 +2010,6 @@ namespace Necrocis
                 }
             }
 
-            PlayerController currentPlayer = PlayerController.Instance;
-            int approachSide = !arenaLocked && !bossDefeated && currentPlayer != null
-                ? ResolveEntryFogWallIndex(currentPlayer.transform.position)
-                : -1;
-            for (int i = 0; i < entranceMarkers.Count; i++)
-            {
-                BossArenaEntranceMarker marker = entranceMarkers[i];
-                if (marker != null)
-                {
-                    PositionEntranceMarker(
-                        marker,
-                        currentPlayer != null && marker.SideIndex == approachSide
-                            ? currentPlayer.transform.position
-                            : (Vector3?)null);
-                    marker.SetState(
-                        GetWallApproachAmount(marker.SideIndex),
-                        arenaLocked,
-                        bossDefeated,
-                        marker.SideIndex == approachSide);
-                }
-            }
-
             if (interiorFogRenderer != null)
             {
                 Color interiorColor = arenaConfig.interiorFogColor;
@@ -2087,34 +2027,6 @@ namespace Necrocis
                     0f,
                     false);
             }
-        }
-
-        private void PositionEntranceMarker(BossArenaEntranceMarker marker, Vector3? alignWithPlayer)
-        {
-            if (marker == null || biome == null)
-            {
-                return;
-            }
-
-            Vector3 center = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float halfWidth = arenaSize.x * biome.TileSize * 0.5f;
-            float halfDepth = arenaSize.y * biome.TileSize * 0.5f;
-            float alignedX = alignWithPlayer.HasValue
-                ? Mathf.Clamp(alignWithPlayer.Value.x, center.x - halfWidth, center.x + halfWidth)
-                : center.x;
-            float alignedZ = alignWithPlayer.HasValue
-                ? Mathf.Clamp(alignWithPlayer.Value.z, center.z - halfDepth, center.z + halfDepth)
-                : center.z;
-            Vector3 position = marker.SideIndex switch
-            {
-                0 => new Vector3(alignedX, center.y, center.z + halfDepth),
-                1 => new Vector3(alignedX, center.y, center.z - halfDepth),
-                2 => new Vector3(center.x + halfWidth, center.y, alignedZ),
-                3 => new Vector3(center.x - halfWidth, center.y, alignedZ),
-                _ => center
-            };
-            position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset;
-            marker.transform.position = position;
         }
 
         private float GetWallApproachAmount(int sideIndex)
