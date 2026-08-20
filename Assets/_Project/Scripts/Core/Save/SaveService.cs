@@ -306,6 +306,41 @@ namespace Necrocis
             return SaveProfile(out error);
         }
 
+        public static bool TryPrepareNormalDeathRespawn(out string error)
+        {
+            EnsureInitialized();
+            error = string.Empty;
+            if (!HasActiveSession || activeRun.difficulty != GameDifficulty.Normal)
+            {
+                error = "활성 Normal run이 없습니다.";
+                return false;
+            }
+
+            // Capture progression before any scene-load callbacks can replace or
+            // reinitialize the persistent player. Death only restores health and
+            // returns to the hub on Normal; level, stats and items stay intact.
+            CaptureRuntimeState(activeRun);
+            activeRun.player ??= new PlayerProgressSaveData();
+            activeRun.player.currentHealth = -1f;
+            activeRun.checkpoint ??= new ResumeCheckpointSaveData();
+            activeRun.checkpoint.sceneName = SceneLoader.SCENE_HUB;
+            activeRun.checkpoint.biome = BiomeType.None;
+            activeRun.checkpoint.wasInBossRoom = false;
+            activeRun.lastSavedUtcTicks = DateTime.UtcNow.Ticks;
+            profile.lastPlayedDifficulty = activeRun.difficulty;
+            profile.lastSavedUtcTicks = activeRun.lastSavedUtcTicks;
+
+            if (!TryWriteRun(activeRun, out error) || !SaveProfile(out error))
+            {
+                return false;
+            }
+
+            // GameplaySaveCoordinator skips its scene-load autosave while this is
+            // true, preventing an uninitialized Hub player from overwriting data.
+            restorePending = true;
+            return true;
+        }
+
         public static void ClearActiveSessionReference()
         {
             activeRun = null;
