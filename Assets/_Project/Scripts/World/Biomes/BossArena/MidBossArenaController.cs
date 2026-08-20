@@ -45,6 +45,7 @@ namespace Necrocis
 
         private readonly List<Renderer> fogRenderers = new List<Renderer>();
         private readonly List<float> fogRendererAlphaScales = new List<float>();
+        private readonly List<int> fogRendererSideIndices = new List<int>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
         private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
         private SpriteRenderer interiorFogRenderer;
@@ -930,6 +931,7 @@ namespace Necrocis
         {
             fogRenderers.Clear();
             fogRendererAlphaScales.Clear();
+            fogRendererSideIndices.Clear();
             interiorFogRenderer = null;
 
             Vector3 worldCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
@@ -946,54 +948,172 @@ namespace Necrocis
                 CreateInteriorFogCover(worldCenter, new Vector2(widthWorld, depthWorld));
             }
 
-            float fogThickness = Mathf.Max(1.65f, arenaConfig.wallHeight * 0.46f);
             float baseHeight = biome.GetGroundHeight(worldCenter) + arenaConfig.groundFogOffset;
-            float perimeterLength = 2f * (widthWorld + depthWorld);
+            CreatePerimeterFogCards(worldCenter, wallOffsetX, wallOffsetZ, baseHeight);
+        }
 
-            // Each depth band is one closed ribbon. Rounded corners are part of the
-            // same mesh and share perimeter UVs, so there are no overlap seams.
-            CreateContinuousFogRibbon(
-                "RearFogRibbon",
-                worldCenter,
-                wallOffsetX,
-                wallOffsetZ,
-                fogThickness * 1.16f,
-                baseHeight + fogThickness * 0.42f + 0.16f,
-                0.42f,
-                -0.34f,
-                arenaConfig.fogRearLayerOpacity,
-                0.54f,
-                0.58f,
-                perimeterLength,
-                false);
-            CreateContinuousFogRibbon(
-                "FrontFogRibbon",
-                worldCenter,
-                wallOffsetX,
-                wallOffsetZ,
-                fogThickness,
-                baseHeight + fogThickness * 0.38f,
+        private void CreatePerimeterFogCards(
+            Vector3 worldCenter,
+            float halfWidth,
+            float halfDepth,
+            float baseHeight)
+        {
+            Vector3[] sideStarts =
+            {
+                worldCenter + new Vector3(-halfWidth, 0f, halfDepth),
+                worldCenter + new Vector3(halfWidth, 0f, -halfDepth),
+                worldCenter + new Vector3(halfWidth, 0f, halfDepth),
+                worldCenter + new Vector3(-halfWidth, 0f, -halfDepth)
+            };
+            Vector3[] sideEnds =
+            {
+                worldCenter + new Vector3(halfWidth, 0f, halfDepth),
+                worldCenter + new Vector3(-halfWidth, 0f, -halfDepth),
+                worldCenter + new Vector3(halfWidth, 0f, -halfDepth),
+                worldCenter + new Vector3(-halfWidth, 0f, halfDepth)
+            };
+            Vector3[] outwardNormals =
+            {
+                Vector3.forward,
+                Vector3.back,
+                Vector3.right,
+                Vector3.left
+            };
+
+            for (int side = 0; side < 4; side++)
+            {
+                CreateFogCardsForSide(
+                    sideStarts[side],
+                    sideEnds[side],
+                    outwardNormals[side],
+                    side,
+                    baseHeight + 1.06f,
+                    4.8f,
+                    new Vector2(3.2f, 2.7f),
+                    0f,
+                    1f,
+                    0.82f,
+                    arenaConfig.sortingOrder + 2,
+                    10.7f + side * 17.3f);
+                CreateFogCardsForSide(
+                    sideStarts[side],
+                    sideEnds[side],
+                    outwardNormals[side],
+                    side,
+                    baseHeight + 0.82f,
+                    6.2f,
+                    new Vector2(2.35f, 1.9f),
+                    -0.48f,
+                    arenaConfig.fogRearLayerOpacity,
+                    0.52f,
+                    arenaConfig.sortingOrder + 1,
+                    31.9f + side * 13.1f);
+                CreateFogCardsForSide(
+                    sideStarts[side],
+                    sideEnds[side],
+                    outwardNormals[side],
+                    side,
+                    baseHeight + 0.34f,
+                    5.5f,
+                    new Vector2(2.85f * arenaConfig.fogGroundSpread, 1.1f),
+                    0.3f,
+                    arenaConfig.fogGroundContactOpacity,
+                    0.34f,
+                    arenaConfig.sortingOrder,
+                    53.3f + side * 11.7f);
+            }
+
+            Vector3[] corners =
+            {
+                worldCenter + new Vector3(halfWidth, baseHeight + 1.02f, halfDepth),
+                worldCenter + new Vector3(-halfWidth, baseHeight + 1.02f, halfDepth),
+                worldCenter + new Vector3(halfWidth, baseHeight + 1.02f, -halfDepth),
+                worldCenter + new Vector3(-halfWidth, baseHeight + 1.02f, -halfDepth)
+            };
+            int[] cornerSides = { 0, 0, 1, 1 };
+            for (int i = 0; i < corners.Length; i++)
+            {
+                CreateFogCard(
+                    $"CornerFogCard_{i}",
+                    corners[i],
+                    new Vector2(3.65f, 3f),
+                    cornerSides[i],
+                    1f,
+                    0.76f,
+                    arenaConfig.sortingOrder + 3,
+                    79.1f + i * 7.9f);
+            }
+        }
+
+        private void CreateFogCardsForSide(
+            Vector3 start,
+            Vector3 end,
+            Vector3 outwardNormal,
+            int sideIndex,
+            float height,
+            float spacing,
+            Vector2 baseSize,
+            float radialOffset,
+            float alphaScale,
+            float speedMultiplier,
+            int sortingOrder,
+            float seedBase)
+        {
+            float length = Vector3.Distance(start, end);
+            int count = Mathf.Max(1, Mathf.CeilToInt(length / Mathf.Max(0.5f, spacing)));
+            for (int i = 0; i < count; i++)
+            {
+                float t = (i + 0.5f) / count;
+                float wave = Mathf.Sin((i + 1f) * 2.17f + seedBase) * 0.16f;
+                Vector3 position = Vector3.Lerp(start, end, t) + outwardNormal * (radialOffset + wave);
+                position.y = height + Mathf.Sin((i + 1f) * 1.31f + seedBase) * 0.15f;
+                float scaleVariation = 0.86f + Mathf.Abs(Mathf.Sin((i + 1f) * 1.73f + seedBase)) * 0.28f;
+                CreateFogCard(
+                    $"FogCard_{sideIndex}_{sortingOrder}_{i}",
+                    position,
+                    baseSize * scaleVariation,
+                    sideIndex,
+                    alphaScale,
+                    speedMultiplier,
+                    sortingOrder,
+                    seedBase + i * 1.91f);
+            }
+        }
+
+        private void CreateFogCard(
+            string objectName,
+            Vector3 position,
+            Vector2 size,
+            int sideIndex,
+            float alphaScale,
+            float speedMultiplier,
+            int sortingOrder,
+            float seed)
+        {
+            GameObject card = new GameObject(objectName);
+            card.transform.SetParent(transform, false);
+            card.transform.position = position;
+            Billboard billboard = card.AddComponent<Billboard>();
+            billboard.Configure(Billboard.BillboardMode.FaceCamera, 0f, Billboard.UpdateMode.Once);
+
+            SpriteRenderer renderer = card.AddComponent<SpriteRenderer>();
+            renderer.sprite = GetFogSprite(false);
+            renderer.sortingOrder = sortingOrder;
+            ApplyFogWorldSize(card.transform, renderer.sprite, size);
+            ConfigureFogMaterial(
+                renderer,
+                size,
+                seed,
+                arenaConfig.fogDensity,
+                arenaConfig.fogEdgeSoftness,
                 0f,
-                0f,
-                1f,
-                0.78f,
-                1f,
-                perimeterLength,
-                false);
-            CreateContinuousFogRibbon(
-                "GroundContactFogRibbon",
-                worldCenter,
-                wallOffsetX,
-                wallOffsetZ,
-                fogThickness * Mathf.Max(0.8f, arenaConfig.fogGroundSpread),
-                baseHeight + fogThickness * 0.12f,
-                -0.56f,
-                0.24f,
-                arenaConfig.fogGroundContactOpacity,
-                0.34f,
-                0.72f,
-                perimeterLength,
-                true);
+                speedMultiplier,
+                false,
+                sortingOrder == arenaConfig.sortingOrder,
+                1f);
+            fogRenderers.Add(renderer);
+            fogRendererAlphaScales.Add(Mathf.Clamp01(alphaScale));
+            fogRendererSideIndices.Add(sideIndex);
         }
 
         private void CreateContinuousFogRibbon(
@@ -1230,12 +1350,23 @@ namespace Necrocis
             fogPropertyBlock.SetColor(TintId, Color.white);
 
             float worldTileSize = Mathf.Max(0.5f, arenaConfig.fogWorldTileSize);
+            float sourceAspect = densitySprite != null && densitySprite.texture != null
+                ? densitySprite.texture.width / (float)Mathf.Max(1, densitySprite.texture.height)
+                : 1f;
+            float shapePreservingTileWidth = Mathf.Max(
+                0.5f,
+                worldSize.y * Mathf.Max(0.25f, sourceAspect) * 2f);
+            bool useSingleSpriteShape = spriteRenderer != null && !interiorMode;
             Vector2 tiling = interiorMode
                 ? new Vector2(
                     Mathf.Max(0.5f, worldSize.x / worldTileSize),
                     Mathf.Max(0.5f, worldSize.y / worldTileSize))
+                : useSingleSpriteShape
+                    ? Vector2.one
                 : new Vector2(
-                    Mathf.Max(1f, Mathf.Max(worldSize.x, worldSize.y) / worldTileSize) * tilingMultiplier,
+                    Mathf.Max(
+                        1f,
+                        worldSize.x / Mathf.Min(worldTileSize, shapePreservingTileWidth)) * tilingMultiplier,
                     1f);
             fogPropertyBlock.SetVector(
                 FogTilingId,
@@ -1269,7 +1400,7 @@ namespace Necrocis
             fogPropertyBlock.SetFloat(PixelDensityId, Mathf.Clamp(arenaConfig.fogPixelDensity, 16f, 256f));
             fogPropertyBlock.SetFloat(AnimationFpsId, Mathf.Clamp(arenaConfig.fogAnimationFps, 4f, 30f));
             fogPropertyBlock.SetFloat(ApproachAmountId, interiorMode ? 0f : 0.18f);
-            fogPropertyBlock.SetFloat(UseSideStateId, interiorMode ? 0f : 1f);
+            fogPropertyBlock.SetFloat(UseSideStateId, interiorMode || useSingleSpriteShape ? 0f : 1f);
             fogPropertyBlock.SetFloat(OrganProfileId, (float)arenaConfig.fogMotionProfile);
             fogPropertyBlock.SetFloat(MotionIntensityId, Mathf.Clamp(arenaConfig.fogMotionIntensity, 0f, 2f));
             fogPropertyBlock.SetFloat(GroundContactId, groundContact ? 1f : 0f);
@@ -1859,6 +1990,9 @@ namespace Necrocis
                     float alphaScale = i < fogRendererAlphaScales.Count
                         ? fogRendererAlphaScales[i]
                         : 1f;
+                    int sideIndex = i < fogRendererSideIndices.Count
+                        ? fogRendererSideIndices[i]
+                        : -1;
                     animatedColor.a = Mathf.Clamp01(borderColor.a * pulse * alphaScale);
                     if (bossDefeated)
                     {
@@ -1868,10 +2002,11 @@ namespace Necrocis
                     SetRendererTint(fogRenderers[i], animatedColor);
                     SetFogTransitionProperties(
                         fogRenderers[i],
-                        easedBorderAmount,
+                        sideIndex >= 0 ? GetWallSealAmount(sideIndex) : easedBorderAmount,
                         0f,
                         Mathf.Sin(easedBorderAmount * Mathf.PI) * Mathf.Max(0f, arenaConfig.fogTransitionFlowBoost),
-                        0.18f);
+                        sideIndex >= 0 ? GetWallApproachAmount(sideIndex) : 0.18f,
+                        sideIndex < 0);
                 }
             }
 
@@ -1889,7 +2024,8 @@ namespace Necrocis
                     borderFogAmount,
                     fogRevealAmount,
                     Mathf.Sin(fogRevealAmount * Mathf.PI) * Mathf.Max(0f, arenaConfig.fogTransitionFlowBoost),
-                    0f);
+                    0f,
+                    false);
             }
         }
 
@@ -1964,7 +2100,8 @@ namespace Necrocis
             float sealAmount,
             float revealAmount,
             float flowBoost,
-            float approachAmount)
+            float approachAmount,
+            bool useSideState)
         {
             if (renderer == null || renderer.sharedMaterial == null)
             {
@@ -1977,6 +2114,7 @@ namespace Necrocis
             fogPropertyBlock.SetFloat(RevealAmountId, Mathf.Clamp01(revealAmount));
             fogPropertyBlock.SetFloat(FlowBoostId, Mathf.Max(0f, flowBoost));
             fogPropertyBlock.SetFloat(ApproachAmountId, Mathf.Clamp01(approachAmount));
+            fogPropertyBlock.SetFloat(UseSideStateId, useSideState ? 1f : 0f);
             fogPropertyBlock.SetVector(
                 SideSealId,
                 new Vector4(

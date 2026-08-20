@@ -212,6 +212,12 @@ Shader "Necrocis/BossArenaFog"
                     max(primary, counterFlow * 0.78)
                     + min(primary, counterFlow) * 0.24
                     + filamentDetail * 0.13);
+                float sparseOrganDensity = saturate(
+                    primary * 0.82
+                    + counterFlow * 0.14
+                    + filamentDetail * 0.06);
+                float preserveOpenShapes = saturate(stomach * 0.72 + lung * 0.56);
+                organicDensity = lerp(organicDensity, sparseOrganDensity, preserveOpenShapes);
                 organicDensity = saturate(organicDensity * _Density);
 
                 float seal = Smooth01(sealSource);
@@ -225,8 +231,11 @@ Shader "Necrocis/BossArenaFog"
                     coverageThreshold + 0.145,
                     organicDensity);
                 float persistentWisp = smoothstep(0.28, 0.72, organicDensity) * (0.38 + seal * 0.16);
-                float verticalEdge = smoothstep(0.0, 0.035, fogUv.y)
-                    * (1.0 - smoothstep(0.965, 1.0, fogUv.y));
+                float verticalEdge = smoothstep(0.0, 0.16, fogUv.y)
+                    * (1.0 - smoothstep(0.84, 1.0, fogUv.y));
+                float horizontalCardEdge = smoothstep(0.0, 0.18, fogUv.x)
+                    * (1.0 - smoothstep(0.82, 1.0, fogUv.x));
+                verticalEdge *= lerp(horizontalCardEdge, 1.0, saturate(_UseSideState));
                 float approachBody = smoothstep(0.18, 0.72, organicDensity)
                     * approach
                     * (0.54 + 0.08 * sin(flowTime * 2.4 + along));
