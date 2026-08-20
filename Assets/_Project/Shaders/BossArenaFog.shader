@@ -135,14 +135,18 @@ Shader "Necrocis/BossArenaFog"
             float SampleWallDensity(float2 uv)
             {
                 float2 sampleUv = PixelateUv(float2(MirrorRepeat(uv.x), saturate(uv.y)));
-                fixed3 sampleColor = tex2D(_MainTex, sampleUv).rgb;
-                return smoothstep(0.0008, 0.10, FogLuminance(sampleColor));
+                fixed4 sampleColor = tex2D(_MainTex, sampleUv);
+                float alphaWeight = sqrt(sqrt(saturate(sampleColor.a)));
+                float density = FogLuminance(sampleColor.rgb) * alphaWeight;
+                return smoothstep(0.005, 0.18, density);
             }
 
             float SampleInteriorDensity(float2 uv)
             {
-                fixed3 sampleColor = tex2D(_MainTex, MirrorRepeat(PixelateUv(uv))).rgb;
-                return smoothstep(0.001, 0.18, FogLuminance(sampleColor));
+                fixed4 sampleColor = tex2D(_MainTex, MirrorRepeat(PixelateUv(uv)));
+                float alphaWeight = sqrt(sqrt(saturate(sampleColor.a)));
+                float density = FogLuminance(sampleColor.rgb) * alphaWeight;
+                return smoothstep(0.005, 0.22, density);
             }
 
             v2f vert(appdata_t input)
@@ -214,13 +218,13 @@ Shader "Necrocis/BossArenaFog"
                 float approach = Smooth01(approachSource) * (1.0 - seal);
                 // The idle barrier must read before the player steps into it.
                 // Keep enough body coverage at seal=0, then grow into the dense lock state.
-                float idleCoverageThreshold = lerp(0.36, 0.16, approach);
-                float coverageThreshold = lerp(idleCoverageThreshold, 0.075, seal);
+                float idleCoverageThreshold = lerp(0.20, 0.055, approach);
+                float coverageThreshold = lerp(idleCoverageThreshold, 0.035, seal);
                 float body = smoothstep(
                     coverageThreshold - 0.075,
                     coverageThreshold + 0.145,
                     organicDensity);
-                float persistentWisp = smoothstep(0.54, 0.90, organicDensity) * (0.42 + seal * 0.12);
+                float persistentWisp = smoothstep(0.28, 0.72, organicDensity) * (0.38 + seal * 0.16);
                 float verticalEdge = smoothstep(0.0, 0.035, fogUv.y)
                     * (1.0 - smoothstep(0.965, 1.0, fogUv.y));
                 float approachBody = smoothstep(0.18, 0.72, organicDensity)
@@ -232,10 +236,10 @@ Shader "Necrocis/BossArenaFog"
                 float centerDistance = abs(fogUv.y - 0.5 + crossDistortion * 0.035);
                 float centerProfile = 1.0 - smoothstep(0.20, 0.49, centerDistance);
                 float centerMass = centerProfile * saturate(
-                    0.38
-                    + organicDensity * 0.34
-                    + approach * 0.26
-                    + seal * 0.34
+                    0.04
+                    + organicDensity * 0.72
+                    + approach * 0.20
+                    + seal * 0.36
                     + liver * clotBeat * 0.14 * intensity);
                 float groundTurbulence = sin(along * 0.91 + flowTime * 0.63)
                     * (organicDensity - 0.5)

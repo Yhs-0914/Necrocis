@@ -1219,9 +1219,10 @@ namespace Necrocis
             fogPropertyBlock ??= new MaterialPropertyBlock();
             renderer.GetPropertyBlock(fogPropertyBlock);
             SpriteRenderer spriteRenderer = renderer as SpriteRenderer;
+            Sprite densitySprite = GetFogSprite(interiorMode);
             Texture mainTexture = spriteRenderer != null && spriteRenderer.sprite != null
                 ? spriteRenderer.sprite.texture
-                : GetFogSprite(true) != null ? GetFogSprite(true).texture : null;
+                : densitySprite != null ? densitySprite.texture : null;
             if (mainTexture != null)
             {
                 fogPropertyBlock.SetTexture(MainTexId, mainTexture);

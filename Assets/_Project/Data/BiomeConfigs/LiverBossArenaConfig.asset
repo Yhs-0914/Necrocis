@@ -28,13 +28,13 @@ MonoBehaviour:
     groundFogOffset: 0.15
     triggerHeight: 4
     sortingOrder: 3500
-    fogSprite: {fileID: 21300000, guid: fb2006427d75441c8a9fd4ad8331e75b, type: 3}
-    interiorFogSprite: {fileID: 21300000, guid: ad996c93fd6b422397dc7140c000b52e, type: 3}
+    fogSprite: {fileID: 21300000, guid: 191d5298903f4d9db1e8c83ce1bcace7, type: 3}
+    interiorFogSprite: {fileID: 21300000, guid: 191d5298903f4d9db1e8c83ce1bcace7, type: 3}
     unlockedFogColor: {r: 0.58, g: 0.07, b: 0.12, a: 0.86}
     lockedFogColor: {r: 0.26, g: 0.035, b: 0.055, a: 0.92}
     fogMaterial: {fileID: 2100000, guid: 4d3a4c7333804448899e263a19fe19ce, type: 2}
     fogSecondaryColor: {r: 0.92, g: 0.18, b: 0.28, a: 1}
-    fogWorldTileSize: 8
+    fogWorldTileSize: 20
     fogPrimaryScrollSpeed: {x: 0.018, y: 0.009}
     fogSecondaryScrollSpeed: {x: -0.012, y: 0.016}
     fogDistortionStrength: 0.035
@@ -47,7 +47,7 @@ MonoBehaviour:
     fogPulseSpeed: 1.25
     fogPulseAmount: 0.045
     fogApproachPreviewDistance: 5
-    fogPixelDensity: 96
+    fogPixelDensity: 72
     fogAnimationFps: 12
     fogTransitionFlowBoost: 1.35
     fogMotionProfile: 1
