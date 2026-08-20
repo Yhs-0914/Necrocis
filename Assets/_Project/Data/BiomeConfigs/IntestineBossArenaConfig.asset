@@ -30,7 +30,7 @@ MonoBehaviour:
     sortingOrder: 3500
     fogSprite: {fileID: 21300000, guid: 70c863afd107460dab02f0a6fec05322, type: 3}
     interiorFogSprite: {fileID: 21300000, guid: 70c863afd107460dab02f0a6fec05322, type: 3}
-    unlockedFogColor: {r: 0.36, g: 0.48, b: 0.12, a: 0.86}
+    unlockedFogColor: {r: 0.55, g: 0.72, b: 0.1, a: 0.95}
     lockedFogColor: {r: 0.13, g: 0.22, b: 0.08, a: 0.92}
     fogMaterial: {fileID: 2100000, guid: 4d3a4c7333804448899e263a19fe19ce, type: 2}
     fogSecondaryColor: {r: 0.64, g: 0.82, b: 0.25, a: 1}
@@ -46,7 +46,7 @@ MonoBehaviour:
     interiorFogBaseOpacity: 0.2
     fogPulseSpeed: 1.25
     fogPulseAmount: 0.045
-    fogApproachPreviewDistance: 5
+    fogApproachPreviewDistance: 8
     fogPixelDensity: 64
     fogAnimationFps: 12
     fogTransitionFlowBoost: 1.35

@@ -2031,7 +2031,7 @@ namespace Necrocis
 
         private float GetWallApproachAmount(int sideIndex)
         {
-            const float idleReadability = 0.18f;
+            const float idleReadability = 0.3f;
             if (arenaLocked || bossDefeated || biome == null || sideIndex < 0 || sideIndex >= 4)
             {
                 return idleReadability;

@@ -260,6 +260,8 @@ Shader "Necrocis/BossArenaFog"
                     max(max(max(body, persistentWisp), approachBody), centerMass)
                     * verticalEdge
                     * groundSpread);
+                float readableShape = smoothstep(0.025, 0.34, organicDensity) * verticalEdge;
+                fogAlpha = saturate(fogAlpha + readableShape * (0.1 + approach * 0.42));
 
                 float transitionVein = smoothstep(
                     coverageThreshold - 0.12,
@@ -284,8 +286,8 @@ Shader "Necrocis/BossArenaFog"
                 fixed3 fogColor = lerp(darkCoreColor, veinColor, accentAmount * 0.74);
                 fogColor = lerp(
                     fogColor,
-                    _SecondaryColor.rgb * 0.72,
-                    saturate(approachBody * 0.22));
+                    _SecondaryColor.rgb * 1.08 + fixed3(0.035, 0.035, 0.035),
+                    saturate(approach * 0.52 + approachBody * 0.28));
                 return fixed4(fogColor, fogAlpha * input.color.a);
             }
 
