@@ -23,49 +23,9 @@ MonoBehaviour:
     wallThicknessInCells: 1
     lockBoundaryInsetInCells: 1
     triggerInsetInCells: 2
-    wallHeight: 4
     wallHeightOffset: 1.5
-    groundFogOffset: 0.15
     triggerHeight: 4
     sortingOrder: 3500
-    fogSprite: {fileID: 21300000, guid: 14a4f52aedbb441cbc77de6f1014329c, type: 3}
-    interiorFogSprite: {fileID: 21300000, guid: 14a4f52aedbb441cbc77de6f1014329c, type: 3}
-    unlockedFogColor: {r: 0.05, g: 0.32, b: 0.65, a: 0.95}
-    lockedFogColor: {r: 0.08, g: 0.14, b: 0.25, a: 0.9}
-    fogMaterial: {fileID: 2100000, guid: 4d3a4c7333804448899e263a19fe19ce, type: 2}
-    fogSecondaryColor: {r: 0.38, g: 0.68, b: 0.95, a: 1}
-    fogWorldTileSize: 24
-    fogPrimaryScrollSpeed: {x: 0.018, y: 0.009}
-    fogSecondaryScrollSpeed: {x: -0.012, y: 0.016}
-    fogDistortionStrength: 0.035
-    fogEdgeSoftness: 0.16
-    fogDensity: 1.15
-    fogCoreDarkness: 0.82
-    fogWispBrightness: 0.82
-    interiorFogDensity: 1.05
-    interiorFogBaseOpacity: 0.2
-    fogPulseSpeed: 1.25
-    fogPulseAmount: 0.045
-    fogApproachPreviewDistance: 8
-    fogPixelDensity: 48
-    fogAnimationFps: 12
-    fogTransitionFlowBoost: 1.35
-    fogMotionProfile: 3
-    fogMotionIntensity: 1.08
-    fogRearLayerOpacity: 0.38
-    fogGroundContactOpacity: 0.27
-    fogGroundSpread: 1.36
-    bossIntroFogPreludeDuration: 0.65
-    fogSealDuration: 0.72
-    fogSealStagger: 0.11
-    fogSealCameraImpulse: 0.075
-    useInteriorFogCover: 1
-    interiorFogColor: {r: 0.5, g: 0.56, b: 0.63, a: 1}
-    interiorFogHiddenAlpha: 0.54
-    interiorFogRevealedAlpha: 0
-    fogRevealDuration: 1.4
-    fogDissolveDuration: 1.1
-    interiorFogSortingOrderOffset: 3000
     hideBossUntilEncounter: 1
     boss:
       displayName: LungBoss

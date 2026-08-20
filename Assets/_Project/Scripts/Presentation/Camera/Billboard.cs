@@ -134,20 +134,6 @@ namespace Necrocis
             hasUpdated = false;
         }
 
-        public void Configure(BillboardMode billboardMode, float verticalOffset, UpdateMode mode)
-        {
-            this.mode = billboardMode;
-            yOffset = verticalOffset;
-            updateMode = mode;
-            enabled = true;
-            hasUpdated = false;
-
-            if (hasBaseLocalPosition)
-            {
-                ApplyYOffset();
-            }
-        }
-
         public void ResetBaseLocalPosition(Vector3 newBaseLocalPosition)
         {
             baseLocalPosition = newBaseLocalPosition;
