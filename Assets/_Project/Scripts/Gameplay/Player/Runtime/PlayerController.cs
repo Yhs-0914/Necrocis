@@ -558,7 +558,7 @@ namespace Necrocis
 
             Vector3 currentPos = transform.position;
             Vector3 targetPos = currentPos + moveVector;
-            if (biome.CanMove(currentPos, targetPos))
+            if (CanMoveInBiome(biome, currentPos, targetPos))
             {
                 ApplyMove(moveVector);
                 return true;
@@ -570,13 +570,13 @@ namespace Necrocis
 
             if (Mathf.Abs(moveVector.x) >= Mathf.Abs(moveVector.z))
             {
-                if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveX))
+                if (moveX.sqrMagnitude > 0f && CanMoveInBiome(biome, currentPos, currentPos + moveX))
                 {
                     ApplyMove(moveX);
                     return true;
                 }
 
-                if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveZ))
+                if (moveZ.sqrMagnitude > 0f && CanMoveInBiome(biome, currentPos, currentPos + moveZ))
                 {
                     ApplyMove(moveZ);
                     return true;
@@ -585,19 +585,26 @@ namespace Necrocis
                 return false;
             }
 
-            if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveZ))
+            if (moveZ.sqrMagnitude > 0f && CanMoveInBiome(biome, currentPos, currentPos + moveZ))
             {
                 ApplyMove(moveZ);
                 return true;
             }
 
-            if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPos, currentPos + moveX))
+            if (moveX.sqrMagnitude > 0f && CanMoveInBiome(biome, currentPos, currentPos + moveX))
             {
                 ApplyMove(moveX);
                 return true;
             }
 
             return false;
+        }
+
+        private bool CanMoveInBiome(BiomeManager biome, Vector3 currentPosition, Vector3 targetPosition)
+        {
+            bool clearsBossArenaBoundary = proceduralTerrainMotor == null
+                || proceduralTerrainMotor.CanMove(currentPosition, targetPosition);
+            return clearsBossArenaBoundary && biome.CanMove(currentPosition, targetPosition);
         }
 
         public bool TryMoveByWorld(Vector3 displacement)

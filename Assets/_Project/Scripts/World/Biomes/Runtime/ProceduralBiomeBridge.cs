@@ -76,6 +76,12 @@ namespace Necrocis
             int padding = Mathf.Max(
                 2,
                 arenaConfig.wallThicknessInCells + arenaConfig.lockBoundaryInsetInCells + 2);
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            if (presentation.enabled)
+            {
+                padding = Mathf.Max(padding, presentation.approachLengthInCells + 2);
+            }
+
             mapGenerator.ConfigureBossArenaReservation(center, arenaConfig.arenaSize, padding);
         }
 

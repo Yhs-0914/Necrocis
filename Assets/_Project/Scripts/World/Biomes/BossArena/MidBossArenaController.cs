@@ -15,6 +15,7 @@ namespace Necrocis
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
 
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
+        private readonly List<Vector2Int> approachBoundaryCells = new List<Vector2Int>();
         private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
 
         private BiomeManager biome;
@@ -33,6 +34,8 @@ namespace Necrocis
         private bool arenaLocked;
         private bool bossDefeated;
         private bool bossIntroPlaying;
+        private bool approachBoundaryActive;
+        private BossArenaPresentation arenaPresentation;
 
         public bool IsLocked => arenaLocked;
 
@@ -52,11 +55,13 @@ namespace Necrocis
                 Mathf.Max(8, arenaConfig.arenaSize.x),
                 Mathf.Max(8, arenaConfig.arenaSize.y));
 
-            transform.position = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y);
+            transform.position = ResolveArenaCenterWorld();
             transform.name = "MidBossArena";
 
             BuildBoundaryCellCache();
+            ActivateApproachBoundary();
             BuildTrigger();
+            arenaPresentation = BossArenaPresentation.Create(transform, biome, arenaSize, arenaConfig);
 
             SpawnBoss();
         }
@@ -111,6 +116,16 @@ namespace Necrocis
 
         private void OnTriggerEnter(Collider other)
         {
+            TryActivateFromCollider(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            TryActivateFromCollider(other);
+        }
+
+        private void TryActivateFromCollider(Collider other)
+        {
             if (arenaLocked || bossDefeated)
             {
                 return;
@@ -127,6 +142,13 @@ namespace Necrocis
                 return;
             }
 
+            Vector2 playerHalfExtents = GetPlayerClampExtents(player);
+            ArenaWorldBounds bounds = GetArenaWorldBounds(playerHalfExtents);
+            if (!bounds.ContainsPlayableCenter(player.transform.position))
+            {
+                return;
+            }
+
             TryActivateArena(player);
         }
 
@@ -138,9 +160,14 @@ namespace Necrocis
             if (activeBoss != null)
                 activeBoss.Defeated -= HandleBossDefeated;
 
-            if (arenaLocked && biome != null)
+            if (biome != null)
             {
-                biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
+                if (arenaLocked)
+                {
+                    biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
+                }
+
+                DeactivateApproachBoundary();
             }
         }
 
@@ -159,7 +186,9 @@ namespace Necrocis
             }
 
             arenaLocked = true;
+            DeactivateApproachBoundary();
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
+            arenaPresentation?.SetState(BossArenaPresentationState.Locked);
             RecenterBossEncounter();
             SetBossEncounterActive(false);
 
@@ -277,7 +306,7 @@ namespace Necrocis
                 return;
             }
 
-            Vector3 bossSpawnPosition = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, bossRule.heightOffset);
+            Vector3 bossSpawnPosition = ResolveArenaCenterWorld(bossRule.heightOffset);
             int poolArchetypeId = EnemyController.GetPoolArchetypeId(bossRule);
             activeBoss = EnemyController.Acquire(transform, $"{bossRule.name}_MidBoss", poolArchetypeId);
             activeBoss.Configure(null, bossRule, bossSpawnPosition, bossSpawnPosition);
@@ -531,7 +560,7 @@ namespace Necrocis
                 return;
             }
 
-            Vector3 center = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, bossRule.heightOffset);
+            Vector3 center = ResolveArenaCenterWorld(bossRule.heightOffset);
             if (activeLungPattern != null)
             {
                 activeLungPattern.RecenterEncounter();
@@ -603,6 +632,7 @@ namespace Necrocis
 
             arenaLocked = false;
             bossDefeated = true;
+            arenaPresentation?.SetState(BossArenaPresentationState.Cleared);
             BossIntroPresentation.Cancel(this);
             bossIntroPlaying = false;
             SetBossEncounterActive(false);
@@ -710,7 +740,7 @@ namespace Necrocis
             }
 
             float heightOffset = returnPortalConfig != null ? returnPortalConfig.heightOffset : 0f;
-            return biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, heightOffset);
+            return ResolveArenaCenterWorld(heightOffset);
         }
 
         private void SpawnReturnPortal(Vector3 portalPos)
@@ -798,13 +828,22 @@ namespace Necrocis
                 trigger = gameObject.AddComponent<BoxCollider>();
             }
 
-            int triggerInset = GetTriggerInsetCells();
-            float innerWidth = Mathf.Max(biome.TileSize, (arenaSize.x - triggerInset * 2) * biome.TileSize);
-            float innerDepth = Mathf.Max(biome.TileSize, (arenaSize.y - triggerInset * 2) * biome.TileSize);
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            int entranceWidth = Mathf.Clamp(
+                arenaConfig.GetPresentationConfig().entranceWidthInCells,
+                2,
+                Mathf.Max(2, arenaSize.x - 2));
+            float triggerWidth = entranceWidth * tileSize;
+            float triggerDepth = Mathf.Max(tileSize, arenaConfig.triggerInsetInCells * tileSize);
+            ArenaWorldBounds arenaBounds = GetArenaWorldBounds(Vector2.zero);
+            float southInnerEdgeLocal = arenaBounds.playableMinZ - transform.position.z;
 
             trigger.isTrigger = true;
-            trigger.size = new Vector3(innerWidth, arenaConfig.triggerHeight, innerDepth);
-            trigger.center = new Vector3(0f, arenaConfig.wallHeightOffset, 0f);
+            trigger.size = new Vector3(triggerWidth, arenaConfig.triggerHeight, triggerDepth);
+            trigger.center = new Vector3(
+                0f,
+                arenaConfig.wallHeightOffset,
+                southInnerEdgeLocal + triggerDepth * 0.5f);
         }
 
         private void HandleBossDefeated(EnemyController boss)
@@ -824,13 +863,25 @@ namespace Necrocis
 
         public bool ContainsWorldPosition(Vector3 worldPosition)
         {
-            Vector3 centerWorld = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float halfWidth = arenaSize.x * biome.TileSize * 0.5f;
-            float halfDepth = arenaSize.y * biome.TileSize * 0.5f;
-            return worldPosition.x >= centerWorld.x - halfWidth
-                && worldPosition.x <= centerWorld.x + halfWidth
-                && worldPosition.z >= centerWorld.z - halfDepth
-                && worldPosition.z <= centerWorld.z + halfDepth;
+            return GetArenaWorldBounds(Vector2.zero).ContainsOuter(worldPosition);
+        }
+
+        public static bool CanPlayerTraverseArenaBoundary(
+            Vector3 currentPosition,
+            Vector3 desiredPosition,
+            Vector2 playerHalfExtents)
+        {
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena != null
+                    && !arena.CanTraverseBoundary(currentPosition, desiredPosition, playerHalfExtents))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool TryClampPlayerMovementInsideLockedArena(
@@ -964,21 +1015,174 @@ namespace Necrocis
 
         private Vector3 ClampToPlayableBounds(Vector3 worldPosition, float margin)
         {
+            float safeMargin = Mathf.Max(0f, margin);
+            return ClampToPlayableBounds(worldPosition, new Vector2(safeMargin, safeMargin));
+        }
+
+        private Vector3 ClampToPlayableBounds(Vector3 worldPosition, Vector2 margins)
+        {
             if (biome == null || arenaConfig == null)
             {
                 return worldPosition;
             }
 
-            Vector3 centerWorld = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float tileSize = Mathf.Max(0.01f, biome.TileSize);
-            float wallPadding = (Mathf.Max(1, arenaConfig.wallThicknessInCells) + GetLockBoundaryInsetCells()) * tileSize;
-            float extraMargin = Mathf.Max(0f, margin);
-            float halfWidth = Mathf.Max(tileSize * 0.5f, arenaSize.x * tileSize * 0.5f - wallPadding - extraMargin);
-            float halfDepth = Mathf.Max(tileSize * 0.5f, arenaSize.y * tileSize * 0.5f - wallPadding - extraMargin);
-
-            worldPosition.x = Mathf.Clamp(worldPosition.x, centerWorld.x - halfWidth, centerWorld.x + halfWidth);
-            worldPosition.z = Mathf.Clamp(worldPosition.z, centerWorld.z - halfDepth, centerWorld.z + halfDepth);
+            ArenaWorldBounds bounds = GetArenaWorldBounds(margins);
+            worldPosition.x = Mathf.Clamp(worldPosition.x, bounds.playableMinX, bounds.playableMaxX);
+            worldPosition.z = Mathf.Clamp(worldPosition.z, bounds.playableMinZ, bounds.playableMaxZ);
             return worldPosition;
+        }
+
+        private bool CanTraverseBoundary(
+            Vector3 currentPosition,
+            Vector3 desiredPosition,
+            Vector2 playerHalfExtents)
+        {
+            if (bossDefeated || biome == null || arenaConfig == null)
+            {
+                return true;
+            }
+
+            IReadOnlyList<Vector2Int> solidCells = arenaLocked
+                ? blockedBoundaryCells
+                : approachBoundaryCells;
+            if (solidCells == null || solidCells.Count == 0)
+            {
+                return true;
+            }
+
+            Vector2 safeHalfExtents = new Vector2(
+                Mathf.Max(0f, playerHalfExtents.x),
+                Mathf.Max(0f, playerHalfExtents.y));
+            float currentOverlap = GetBoundaryOverlapScore(
+                currentPosition,
+                safeHalfExtents,
+                solidCells);
+            float desiredOverlap = GetBoundaryOverlapScore(
+                desiredPosition,
+                safeHalfExtents,
+                solidCells);
+
+            if (currentOverlap > 0f)
+            {
+                ArenaWorldBounds rawBounds = GetArenaWorldBounds(Vector2.zero);
+                bool currentOutsideWall = !rawBounds.ContainsOuter(currentPosition);
+                bool currentInsideWall = rawBounds.ContainsPlayableCenter(currentPosition);
+                if ((currentOutsideWall && rawBounds.ContainsOuter(desiredPosition))
+                    || (currentInsideWall && !rawBounds.ContainsPlayableCenter(desiredPosition)))
+                {
+                    return false;
+                }
+
+                return desiredOverlap + 0.000001f < currentOverlap;
+            }
+
+            if (desiredOverlap > 0f)
+            {
+                return false;
+            }
+
+            return !SegmentCrossesSolidBoundary(
+                currentPosition,
+                desiredPosition,
+                safeHalfExtents,
+                solidCells);
+        }
+
+        private float GetBoundaryOverlapScore(
+            Vector3 position,
+            Vector2 playerHalfExtents,
+            IReadOnlyList<Vector2Int> solidCells)
+        {
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            float score = 0f;
+            for (int i = 0; i < solidCells.Count; i++)
+            {
+                Vector2Int cell = solidCells[i];
+                Vector3 center = biome.GridToWorld(cell.x, cell.y);
+                float minX = center.x - tileSize * 0.5f - playerHalfExtents.x;
+                float maxX = center.x + tileSize * 0.5f + playerHalfExtents.x;
+                float minZ = center.z - tileSize * 0.5f - playerHalfExtents.y;
+                float maxZ = center.z + tileSize * 0.5f + playerHalfExtents.y;
+                if (position.x <= minX
+                    || position.x >= maxX
+                    || position.z <= minZ
+                    || position.z >= maxZ)
+                {
+                    continue;
+                }
+
+                float penetrationX = Mathf.Min(position.x - minX, maxX - position.x);
+                float penetrationZ = Mathf.Min(position.z - minZ, maxZ - position.z);
+                score += Mathf.Min(penetrationX, penetrationZ);
+            }
+
+            return score;
+        }
+
+        private bool SegmentCrossesSolidBoundary(
+            Vector3 start,
+            Vector3 end,
+            Vector2 playerHalfExtents,
+            IReadOnlyList<Vector2Int> solidCells)
+        {
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            Vector3 delta = end - start;
+            for (int i = 0; i < solidCells.Count; i++)
+            {
+                Vector2Int cell = solidCells[i];
+                Vector3 center = biome.GridToWorld(cell.x, cell.y);
+                float enter = 0f;
+                float exit = 1f;
+                if (!ClipSegmentAxis(
+                        start.x,
+                        delta.x,
+                        center.x - tileSize * 0.5f - playerHalfExtents.x,
+                        center.x + tileSize * 0.5f + playerHalfExtents.x,
+                        ref enter,
+                        ref exit)
+                    || !ClipSegmentAxis(
+                        start.z,
+                        delta.z,
+                        center.z - tileSize * 0.5f - playerHalfExtents.y,
+                        center.z + tileSize * 0.5f + playerHalfExtents.y,
+                        ref enter,
+                        ref exit))
+                {
+                    continue;
+                }
+
+                if (exit - enter > 0.0001f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ClipSegmentAxis(
+            float start,
+            float delta,
+            float minimum,
+            float maximum,
+            ref float enter,
+            ref float exit)
+        {
+            if (Mathf.Abs(delta) <= 0.000001f)
+            {
+                return start >= minimum && start <= maximum;
+            }
+
+            float first = (minimum - start) / delta;
+            float second = (maximum - start) / delta;
+            if (first > second)
+            {
+                (first, second) = (second, first);
+            }
+
+            enter = Mathf.Max(enter, first);
+            exit = Mathf.Min(exit, second);
+            return enter <= exit;
         }
 
         private void EnforcePlayerInsidePlayableBounds()
@@ -989,9 +1193,9 @@ namespace Necrocis
                 return;
             }
 
-            float margin = GetPlayerClampMargin(player);
+            Vector2 margins = GetPlayerClampExtents(player);
             Vector3 currentPosition = player.transform.position;
-            Vector3 clampedPosition = ClampToPlayableBounds(currentPosition, margin);
+            Vector3 clampedPosition = ClampToPlayableBounds(currentPosition, margins);
             Vector3 planarDelta = clampedPosition - currentPosition;
             planarDelta.y = 0f;
             if (planarDelta.sqrMagnitude <= 0.000001f)
@@ -1002,27 +1206,37 @@ namespace Necrocis
             player.SpawnAt(clampedPosition);
         }
 
-        private static float GetPlayerClampMargin(PlayerController player)
+        private static Vector2 GetPlayerClampExtents(PlayerController player)
         {
+            ProceduralTerrainMotor terrainMotor = player != null
+                ? player.GetComponent<ProceduralTerrainMotor>()
+                : null;
+            if (terrainMotor != null)
+            {
+                return terrainMotor.TerrainHalfExtents;
+            }
+
             Collider hitCollider = player != null ? player.HitCollider : null;
             if (hitCollider == null)
             {
-                return 0.55f;
+                return new Vector2(0.5f, 0.5f);
             }
 
-            return Mathf.Max(0.35f, Mathf.Max(hitCollider.bounds.extents.x, hitCollider.bounds.extents.z) + 0.2f);
+            return new Vector2(
+                Mathf.Max(0.1f, hitCollider.bounds.extents.x),
+                Mathf.Max(0.1f, hitCollider.bounds.extents.z));
         }
 
         private void BuildBoundaryCellCache()
         {
             blockedBoundaryCells.Clear();
+            approachBoundaryCells.Clear();
+
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            bool usesPresentedEntrance = presentation.enabled;
 
             int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int lockInset = GetLockBoundaryInsetCells();
-            int minX = centerGrid.x - arenaSize.x / 2 + lockInset;
-            int minY = centerGrid.y - arenaSize.y / 2 + lockInset;
-            int maxX = centerGrid.x - arenaSize.x / 2 + arenaSize.x - 1 - lockInset;
-            int maxY = centerGrid.y - arenaSize.y / 2 + arenaSize.y - 1 - lockInset;
+            GetBoundaryGridBounds(out int minX, out int minY, out int maxX, out int maxY);
 
             for (int x = minX; x <= maxX; x++)
             {
@@ -1039,8 +1253,147 @@ namespace Necrocis
                     }
 
                     blockedBoundaryCells.Add(new Vector2Int(x, y));
+                    if (usesPresentedEntrance
+                        && !IsEntranceOpeningCell(x, y, minX, minY, maxX, maxY, thickness))
+                    {
+                        approachBoundaryCells.Add(new Vector2Int(x, y));
+                    }
                 }
             }
+        }
+
+        private void ActivateApproachBoundary()
+        {
+            if (approachBoundaryActive || biome == null || approachBoundaryCells.Count == 0)
+            {
+                return;
+            }
+
+            biome.AddRuntimeBlockedCells(approachBoundaryCells);
+            approachBoundaryActive = true;
+        }
+
+        private void DeactivateApproachBoundary()
+        {
+            if (!approachBoundaryActive || biome == null)
+            {
+                return;
+            }
+
+            biome.RemoveRuntimeBlockedCells(approachBoundaryCells);
+            approachBoundaryActive = false;
+        }
+
+        private bool IsEntranceOpeningCell(
+            int x,
+            int y,
+            int minX,
+            int minY,
+            int maxX,
+            int maxY,
+            int thickness)
+        {
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+
+            bool isOnEntranceSide = presentation.entranceSide switch
+            {
+                BossArenaEntranceSide.North => y > maxY - thickness,
+                BossArenaEntranceSide.West => x < minX + thickness,
+                BossArenaEntranceSide.East => x > maxX - thickness,
+                _ => y < minY + thickness
+            };
+            if (!isOnEntranceSide)
+            {
+                return false;
+            }
+
+            GetEntranceOpeningRange(
+                minX,
+                minY,
+                maxX,
+                maxY,
+                thickness,
+                out int openingStart,
+                out int openingEnd,
+                out bool horizontalEntrance);
+            int coordinate = horizontalEntrance ? x : y;
+            return coordinate >= openingStart && coordinate <= openingEnd;
+        }
+
+        private void GetEntranceOpeningRange(
+            int minX,
+            int minY,
+            int maxX,
+            int maxY,
+            int thickness,
+            out int openingStart,
+            out int openingEnd,
+            out bool horizontalEntrance)
+        {
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            horizontalEntrance = presentation.entranceSide == BossArenaEntranceSide.South
+                || presentation.entranceSide == BossArenaEntranceSide.North;
+            int sideMin = horizontalEntrance ? minX : minY;
+            int sideMax = horizontalEntrance ? maxX : maxY;
+            int availableWidth = Mathf.Max(2, sideMax - sideMin + 1 - thickness * 2);
+            int openingWidth = Mathf.Clamp(presentation.entranceWidthInCells, 2, availableWidth);
+            openingStart = sideMin + (sideMax - sideMin + 1 - openingWidth) / 2;
+            openingEnd = openingStart + openingWidth - 1;
+        }
+
+        private void GetBoundaryGridBounds(
+            out int minX,
+            out int minY,
+            out int maxX,
+            out int maxY)
+        {
+            int lockInset = GetLockBoundaryInsetCells();
+            minX = centerGrid.x - arenaSize.x / 2 + lockInset;
+            minY = centerGrid.y - arenaSize.y / 2 + lockInset;
+            maxX = centerGrid.x - arenaSize.x / 2 + arenaSize.x - 1 - lockInset;
+            maxY = centerGrid.y - arenaSize.y / 2 + arenaSize.y - 1 - lockInset;
+        }
+
+        private ArenaWorldBounds GetArenaWorldBounds(Vector2 playerHalfExtents)
+        {
+            GetBoundaryGridBounds(out int minX, out int minY, out int maxX, out int maxY);
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
+            Vector3 minimumCellCenter = biome.GridToWorld(minX, minY);
+            Vector3 maximumCellCenter = biome.GridToWorld(maxX, maxY);
+
+            float outerMinX = minimumCellCenter.x - tileSize * 0.5f;
+            float outerMaxX = maximumCellCenter.x + tileSize * 0.5f;
+            float outerMinZ = minimumCellCenter.z - tileSize * 0.5f;
+            float outerMaxZ = maximumCellCenter.z + tileSize * 0.5f;
+            float playableMinX = outerMinX + thickness * tileSize + Mathf.Max(0f, playerHalfExtents.x);
+            float playableMaxX = outerMaxX - thickness * tileSize - Mathf.Max(0f, playerHalfExtents.x);
+            float playableMinZ = outerMinZ + thickness * tileSize + Mathf.Max(0f, playerHalfExtents.y);
+            float playableMaxZ = outerMaxZ - thickness * tileSize - Mathf.Max(0f, playerHalfExtents.y);
+
+            if (playableMinX > playableMaxX)
+            {
+                float midpoint = (outerMinX + outerMaxX) * 0.5f;
+                playableMinX = midpoint;
+                playableMaxX = midpoint;
+            }
+
+            if (playableMinZ > playableMaxZ)
+            {
+                float midpoint = (outerMinZ + outerMaxZ) * 0.5f;
+                playableMinZ = midpoint;
+                playableMaxZ = midpoint;
+            }
+
+            return new ArenaWorldBounds(
+                outerMinX,
+                outerMaxX,
+                outerMinZ,
+                outerMaxZ,
+                playableMinX,
+                playableMaxX,
+                playableMinZ,
+                playableMaxZ);
         }
 
         private int GetLockBoundaryInsetCells()
@@ -1051,12 +1404,21 @@ namespace Necrocis
             return Mathf.Min(configuredInset, maxInset);
         }
 
-        private int GetTriggerInsetCells()
+        private Vector3 ResolveArenaCenterWorld(float heightOffset = 0f)
         {
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int configuredInset = Mathf.Max(0, arenaConfig.triggerInsetInCells);
-            int maxInset = Mathf.Max(0, (Mathf.Min(arenaSize.x, arenaSize.y) - 1) / 2);
-            return Mathf.Min(thickness + configuredInset, maxInset);
+            Vector3 center = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, heightOffset);
+            float halfCell = biome.TileSize * 0.5f;
+            if (arenaSize.x % 2 == 0)
+            {
+                center.x -= halfCell;
+            }
+
+            if (arenaSize.y % 2 == 0)
+            {
+                center.z -= halfCell;
+            }
+
+            return center;
         }
 
         private Vector2Int ResolveCenterGrid()
@@ -1390,6 +1752,54 @@ namespace Necrocis
             runtimeBossSprite = Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), width);
             runtimeBossSprite.name = "RuntimeMidBossSprite";
             return runtimeBossSprite;
+        }
+
+        private readonly struct ArenaWorldBounds
+        {
+            public readonly float outerMinX;
+            public readonly float outerMaxX;
+            public readonly float outerMinZ;
+            public readonly float outerMaxZ;
+            public readonly float playableMinX;
+            public readonly float playableMaxX;
+            public readonly float playableMinZ;
+            public readonly float playableMaxZ;
+
+            public ArenaWorldBounds(
+                float outerMinX,
+                float outerMaxX,
+                float outerMinZ,
+                float outerMaxZ,
+                float playableMinX,
+                float playableMaxX,
+                float playableMinZ,
+                float playableMaxZ)
+            {
+                this.outerMinX = outerMinX;
+                this.outerMaxX = outerMaxX;
+                this.outerMinZ = outerMinZ;
+                this.outerMaxZ = outerMaxZ;
+                this.playableMinX = playableMinX;
+                this.playableMaxX = playableMaxX;
+                this.playableMinZ = playableMinZ;
+                this.playableMaxZ = playableMaxZ;
+            }
+
+            public bool ContainsOuter(Vector3 position)
+            {
+                return position.x >= outerMinX
+                    && position.x <= outerMaxX
+                    && position.z >= outerMinZ
+                    && position.z <= outerMaxZ;
+            }
+
+            public bool ContainsPlayableCenter(Vector3 position)
+            {
+                return position.x >= playableMinX
+                    && position.x <= playableMaxX
+                    && position.z >= playableMinZ
+                    && position.z <= playableMaxZ;
+            }
         }
     }
 }

@@ -331,12 +331,72 @@ namespace Necrocis
         [Tooltip("아레나에 진입하기 전까지 보스 Renderer를 꺼서 미리 노출되지 않게 한다.")]
         public bool hideBossUntilEncounter = true;
 
+        [Header("Arena Presentation")]
+        public BossArenaPresentationConfig presentation = new BossArenaPresentationConfig();
+
         [Header("Return Portal")]
         public Sprite returnPortalSprite;
         public Vector3 returnPortalScale = Vector3.one;
 
         [Header("Boss")]
         public MidBossDefinition boss = new MidBossDefinition();
+
+        public BossArenaPresentationConfig GetPresentationConfig()
+        {
+            if (presentation == null)
+            {
+                presentation = new BossArenaPresentationConfig();
+            }
+
+            return presentation;
+        }
+    }
+
+    public enum BossArenaEntranceSide
+    {
+        South,
+        North,
+        West,
+        East
+    }
+
+    [System.Serializable]
+    public class BossArenaPresentationConfig
+    {
+        public bool enabled = true;
+
+        [Header("Entrance")]
+        public BossArenaEntranceSide entranceSide = BossArenaEntranceSide.South;
+        [Min(2)] public int entranceWidthInCells = 4;
+        [Min(3)] public int approachLengthInCells = 9;
+
+        [Header("Animation")]
+        [Min(0.1f)] public float pulseSpeed = 1.4f;
+        [Range(0f, 1f)] public float approachOpacity = 0.72f;
+
+        [Header("Rendering")]
+        public Sprite entranceSprite;
+        [Min(0.25f)] public float entranceVisualScale = 1.35f;
+
+        [Header("Biome Wall Tiles")]
+        public Sprite[] wallStraightSprites;
+        public Sprite wallCornerSprite;
+        [Range(1, 4)] public int wallCornerSpanInCells = 2;
+        [Tooltip("NW 코너에 적용할 원본 코너 스프라이트의 Y 회전값")]
+        public float wallCornerBaseYaw = 270f;
+        [Tooltip("코너의 가로·세로 접속 셀을 동일한 직선 벽 조각으로 덮어 연결한다.")]
+        public bool wallUseStraightCornerConnectors;
+
+        public int floorSortingOrder = 40;
+        public int gateSortingOrder = 3490;
+
+        [Header("Optional Palette Override")]
+        [Tooltip("꺼면 장·간·위·폐 기본 팔레트를 사용한다.")]
+        public bool useBiomePalette = true;
+        public Color primaryColor = new Color(0.43f, 0.72f, 0.22f, 1f);
+        public Color accentColor = new Color(0.82f, 0.48f, 0.16f, 1f);
+        public Color lockedColor = new Color(0.92f, 0.12f, 0.08f, 1f);
+        public Color clearedColor = new Color(0.34f, 0.32f, 0.3f, 1f);
     }
 
     [System.Serializable]

@@ -21,12 +21,36 @@ MonoBehaviour:
     centerGrid: {x: 150, y: 150}
     arenaSize: {x: 32, y: 32}
     wallThicknessInCells: 1
-    lockBoundaryInsetInCells: 1
+    lockBoundaryInsetInCells: 0
     triggerInsetInCells: 2
     wallHeightOffset: 1.5
     triggerHeight: 4
     sortingOrder: 3500
     hideBossUntilEncounter: 1
+    presentation:
+      enabled: 1
+      entranceSide: 0
+      entranceWidthInCells: 4
+      approachLengthInCells: 9
+      pulseSpeed: 1.2
+      approachOpacity: 0.72
+      entranceSprite: {fileID: 21300000, guid: 70c47e9c213e44eb6b6e8b700d81b307, type: 3}
+      entranceVisualScale: 1.45
+      wallStraightSprites:
+      - {fileID: 1401001, guid: ab6963773a8c74c118fcbf6c0fd72359, type: 3}
+      - {fileID: 1401002, guid: ab6963773a8c74c118fcbf6c0fd72359, type: 3}
+      - {fileID: 1401003, guid: ab6963773a8c74c118fcbf6c0fd72359, type: 3}
+      wallCornerSprite: {fileID: 1401090, guid: ab6963773a8c74c118fcbf6c0fd72359, type: 3}
+      wallCornerSpanInCells: 2
+      wallCornerBaseYaw: 270
+      wallUseStraightCornerConnectors: 1
+      floorSortingOrder: 40
+      gateSortingOrder: 3490
+      useBiomePalette: 1
+      primaryColor: {r: 0.43, g: 0.72, b: 0.22, a: 1}
+      accentColor: {r: 0.82, g: 0.48, b: 0.16, a: 1}
+      lockedColor: {r: 0.92, g: 0.12, b: 0.08, a: 1}
+      clearedColor: {r: 0.34, g: 0.32, b: 0.3, a: 1}
     boss:
       displayName: IntestineBoss
       useCustomBossRule: 1
