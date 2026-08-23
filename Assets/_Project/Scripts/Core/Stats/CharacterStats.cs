@@ -379,7 +379,7 @@ namespace Necrocis
                 return 0f;
             }
 
-            return Mathf.Max(1f, Mathf.Ceil(value - HealthUnitEpsilon));
+            return Mathf.Max(1f, Mathf.Floor(value + 0.5f + HealthUnitEpsilon));
         }
 
         // HP 변경 이벤트 발행 (force=true면 값 변화 없어도 강제 발행)

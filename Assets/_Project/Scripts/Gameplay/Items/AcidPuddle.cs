@@ -11,10 +11,10 @@ namespace Necrocis
         private float tickDamage;
         private float radius;
         private float tickInterval;
-        private float endTime;
         private float nextTickTime;
         private float startTime;
         private float lifeDuration;
+        private int remainingTicks;
         private SpriteRenderer visualRenderer;
 
         public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
@@ -39,8 +39,8 @@ namespace Necrocis
             tickInterval = Mathf.Max(0.05f, interval);
             lifeDuration = Mathf.Max(0.1f, duration);
             startTime = Time.time;
-            endTime = startTime + lifeDuration;
-            nextTickTime = Time.time;
+            remainingTicks = Mathf.Max(1, Mathf.RoundToInt(lifeDuration / tickInterval));
+            nextTickTime = startTime + tickInterval;
             EnsureVisual();
             visualRenderer.enabled = true;
             transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
@@ -50,7 +50,7 @@ namespace Necrocis
 
         private void Update()
         {
-            if (Time.time >= endTime)
+            if (remainingTicks <= 0)
             {
                 RuntimePool.Release(gameObject);
                 return;
@@ -62,8 +62,9 @@ namespace Necrocis
                 return;
             }
 
-            nextTickTime = Time.time + tickInterval;
+            nextTickTime += tickInterval;
             ApplyTickDamage();
+            remainingTicks--;
             UpdateVisual();
         }
 

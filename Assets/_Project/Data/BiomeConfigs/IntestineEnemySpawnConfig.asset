@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: IntestineEnemySpawnConfig
   m_EditorClassIdentifier: 
+  normalKillsPerElite: 10
   enemySpawnRules:
   - name: Macrophage
     density: 0.05

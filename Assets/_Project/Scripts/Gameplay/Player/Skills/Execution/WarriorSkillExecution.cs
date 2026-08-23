@@ -7,36 +7,36 @@ namespace Necrocis
     public partial class PlayerClassSkillController
     {
 
-        private void ExecuteWarriorSkill1Bite()
+        private void ExecuteWarriorSkill1Cleave()
         {
             Vector3 center = GetSkillCenter(0f);
-            if (!TryFindNearestEnemyInForwardArc(center, warriorSkill1.range, warriorSkill1.forwardAngle, out EnemyController target))
-            {
-                if (enableDebugLogs)
-                {
-                    Debug.Log("Warrior Skill E failed: no enemy in range.");
-                }
-                return;
-            }
-
+            Vector3 facingDirection = GetFacingDirection();
             float damage = PlayerCombatCalculator.GetSkillDamage(warriorSkill1.damage, CurrentPlayerStats);
-            target.TakeDamage(damage);
-
-            EnemyStatusEffectController status = EnsureStatusController(target);
             float bleedTickDamage = PlayerCombatCalculator.GetSkillDamage(warriorSkill1.bleedTickDamage, CurrentPlayerStats);
-            status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, bleedTickDamage);
+            int hitCount = ApplyForwardArcSkill(
+                center,
+                warriorSkill1.range,
+                warriorSkill1.forwardAngle,
+                warriorSkill1.maxTargets,
+                enemy =>
+                {
+                    enemy.TakeDamage(damage);
+                    EnemyStatusEffectController status = EnsureStatusController(enemy);
+                    status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, bleedTickDamage);
+                });
 
-            Vector3 effectPos = GetTargetEffectPosition(target);
-            SpawnSkillEffect(
+            GameObject effect = SpawnSkillEffect(
                 warriorSkill1.hitEffectPrefab,
-                effectPos,
+                center,
                 warriorSkill1.hitEffectLifetime,
                 warriorSkill1.fallbackEffectScale,
                 new Color(0.85f, 0.1f, 0.1f, 0.6f));
+            OrientSkillEffectToward(effect, center, facingDirection);
+            StartCoroutine(AnimateWarriorSkillEffect(effect, warriorSkill1.hitEffectLifetime, 0.72f, 1.08f));
 
             if (enableDebugLogs)
             {
-                Debug.Log($"Warrior Skill E hit {target.name}. Damage={damage}, Bleed={bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
+                Debug.Log($"Warrior Skill E cleave hit {hitCount} targets. Damage={damage}, Bleed={bleedTickDamage}/s for {warriorSkill1.bleedDuration}s");
             }
         }
 
@@ -85,12 +85,13 @@ namespace Necrocis
                 status?.ApplyStun(warriorSkill2.rootDuration);
 
                 Vector3 effectPos = GetTargetEffectPosition(hitTarget);
-                SpawnSkillEffect(
+                GameObject effect = SpawnSkillEffect(
                     warriorSkill2.hitEffectPrefab,
                     effectPos,
                     warriorSkill2.hitEffectLifetime,
                     warriorSkill2.fallbackEffectScale,
                     new Color(0.9f, 0.2f, 0.05f, 0.7f));
+                StartCoroutine(AnimateWarriorSkillEffect(effect, warriorSkill2.hitEffectLifetime, 0.62f, 1.12f));
 
                 if (enableDebugLogs)
                     Debug.Log($"Warrior Skill R hit {hitTarget.name}. Damage={damage}, Root={warriorSkill2.rootDuration}s");
@@ -98,6 +99,98 @@ namespace Necrocis
             else if (enableDebugLogs)
             {
                 Debug.Log("Warrior Skill R dash: no enemy at destination.");
+            }
+        }
+
+        private static void OrientSkillEffectToward(GameObject effect, Vector3 origin, Vector3 direction)
+        {
+            if (effect == null || direction.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            Camera activeCamera = DontStarveCamera.GetActiveCamera();
+            if (activeCamera == null)
+            {
+                effect.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.z, direction.x) * Mathf.Rad2Deg);
+                return;
+            }
+
+            Vector3 screenOrigin = activeCamera.WorldToScreenPoint(origin);
+            Vector3 screenForward = activeCamera.WorldToScreenPoint(origin + direction.normalized);
+            Vector2 screenDirection = screenForward - screenOrigin;
+            if (screenDirection.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            float screenAngle = Mathf.Atan2(screenDirection.y, screenDirection.x) * Mathf.Rad2Deg;
+            effect.transform.rotation = Quaternion.Euler(0f, 0f, screenAngle);
+        }
+
+        private static IEnumerator AnimateWarriorSkillEffect(
+            GameObject effect,
+            float duration,
+            float startScaleMultiplier,
+            float endScaleMultiplier)
+        {
+            if (effect == null)
+            {
+                yield break;
+            }
+
+            float safeDuration = Mathf.Max(0.05f, duration);
+            Vector3 baseScale = effect.transform.localScale;
+            SpriteRenderer[] renderers = effect.GetComponentsInChildren<SpriteRenderer>(true);
+            Color[] baseColors = new Color[renderers.Length];
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null)
+                {
+                    baseColors[i] = Color.white;
+                    continue;
+                }
+
+                Color restoredColor = renderers[i].color;
+                restoredColor.a = 1f;
+                renderers[i].color = restoredColor;
+                baseColors[i] = restoredColor;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < safeDuration && effect != null && effect.activeInHierarchy)
+            {
+                float normalizedTime = Mathf.Clamp01(elapsed / safeDuration);
+                float easedTime = 1f - Mathf.Pow(1f - normalizedTime, 3f);
+                effect.transform.localScale = baseScale * Mathf.Lerp(startScaleMultiplier, endScaleMultiplier, easedTime);
+                float alphaMultiplier = 1f - normalizedTime * normalizedTime;
+
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    if (renderers[i] == null)
+                    {
+                        continue;
+                    }
+
+                    Color color = baseColors[i];
+                    color.a *= alphaMultiplier;
+                    renderers[i].color = color;
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (effect != null)
+            {
+                effect.transform.localScale = baseScale;
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    if (renderers[i] != null)
+                    {
+                        renderers[i].color = baseColors[i];
+                    }
+                }
             }
         }
 

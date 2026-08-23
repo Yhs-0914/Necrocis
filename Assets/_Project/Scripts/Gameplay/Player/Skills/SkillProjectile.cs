@@ -43,6 +43,7 @@ namespace Necrocis
         private float despawnTime;
         private bool initialized;
         private bool hasImpacted;
+        private int visualSortingOrder = 5200;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
         private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
         private Action<EnemyController, Vector3> onEnemyHit;
@@ -78,6 +79,12 @@ namespace Necrocis
             hitCheckRadius = Mathf.Max(0.05f, radius);
             hitCheckHeightOffset = heightOffset;
             hitCheckVerticalHalfHeight = Mathf.Max(0.05f, verticalHalfHeight);
+        }
+
+        public void ConfigureVisualSorting(int sortingOrder)
+        {
+            visualSortingOrder = sortingOrder;
+            ApplyVisualSorting(gameObject, visualSortingOrder);
         }
 
         private void OnEnable()
@@ -257,7 +264,48 @@ namespace Necrocis
 
             effect.transform.position = position;
             effect.transform.rotation = Quaternion.identity;
+            ApplyVisualSorting(effect, visualSortingOrder);
             RuntimePool.EnsureAutoReturn(effect)?.Schedule(Mathf.Max(0.1f, hitEffectLifetime));
+        }
+
+        private static void ApplyVisualSorting(GameObject target, int baseSortingOrder)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            SpriteRenderer[] renderers = target.GetComponentsInChildren<SpriteRenderer>(true);
+            if (renderers.Length == 0)
+            {
+                return;
+            }
+
+            int minimumOrder = int.MaxValue;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null)
+                {
+                    minimumOrder = Mathf.Min(minimumOrder, renderers[i].sortingOrder);
+                }
+            }
+
+            if (minimumOrder == int.MaxValue)
+            {
+                return;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SpriteRenderer renderer = renderers[i];
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                int relativeOrder = Mathf.Max(0, renderer.sortingOrder - minimumOrder);
+                renderer.sortingOrder = baseSortingOrder + relativeOrder;
+            }
         }
 
         private void ReleaseSelf()

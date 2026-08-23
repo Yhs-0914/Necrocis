@@ -191,21 +191,21 @@ namespace Necrocis
             float rangeMultiplier = itemEffects != null ? itemEffects.GetMeleeRangeMultiplier() : 1f;
             float effectiveAttackOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset * rangeMultiplier, stats);
             Vector3 boxCenter = transform.position + direction * effectiveAttackOffset;
-            float effectiveWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
-            float effectiveDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z * rangeMultiplier, stats);
+            float configuredWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
+            float configuredDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z * rangeMultiplier, stats);
+            Sprite slashSprite = GetMeleeSlashSprite();
+            float slashWorldSize = GetMeleeSlashTargetWorldSize(configuredWidth, configuredDepth);
+            float effectiveWidth = slashSprite != null ? slashWorldSize : configuredWidth;
+            float effectiveDepth = slashSprite != null ? slashWorldSize : configuredDepth;
             Vector3 tallBoxSize = new Vector3(effectiveWidth, 20f, effectiveDepth);
-            CombatVfx.PlayMeleeSwing(
-                transform.position,
-                direction,
-                Mathf.Max(1.1f, effectiveAttackOffset + effectiveDepth * 0.5f));
             Quaternion rotation = Quaternion.LookRotation(direction);
             float damageMultiplier = itemEffects != null ? itemEffects.GetOutgoingBasicDamageMultiplier() : 1f;
             float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
             float unstableMultiplier = itemEffects != null ? itemEffects.RollUnstableCoreDamageMultiplier() : 1f;
             float baseDamage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage) + flatDamageBonus;
             float finalDamage = baseDamage * damageMultiplier * unstableMultiplier;
-            itemEffects?.NotifyBasicAttackPerformed(finalDamage, meleeTargetMask, effectiveAttackOffset + effectiveDepth, direction);
-            SpawnMeleeSlashVisual(boxCenter, direction, effectiveWidth, effectiveDepth);
+            itemEffects?.NotifyBasicAttackPerformed(finalDamage, meleeTargetMask, effectiveAttackOffset + effectiveDepth * 0.5f, direction);
+            SpawnMeleeSlashVisual(boxCenter, direction, slashSprite, slashWorldSize);
 
             EnsureMeleeOverlapBuffer();
             meleeHitEnemies.Clear();
@@ -240,9 +240,8 @@ namespace Necrocis
             }
         }
 
-        private void SpawnMeleeSlashVisual(Vector3 center, Vector3 direction, float effectiveWidth, float effectiveDepth)
+        private void SpawnMeleeSlashVisual(Vector3 center, Vector3 direction, Sprite sprite, float targetWorldSize)
         {
-            Sprite sprite = GetMeleeSlashSprite();
             if (sprite == null)
             {
                 return;
@@ -250,7 +249,7 @@ namespace Necrocis
 
             GameObject visualObject = new GameObject("BasicMeleeSlashVisual");
             visualObject.transform.position = new Vector3(center.x, transform.position.y + meleeSlashHeightOffset, center.z);
-            visualObject.transform.localScale = Vector3.one * GetMeleeSlashWorldScale(sprite, effectiveWidth, effectiveDepth);
+            visualObject.transform.localScale = Vector3.one * GetMeleeSlashWorldScale(sprite, targetWorldSize);
             visualObject.transform.rotation = GetScreenAlignedRotation(direction);
 
             SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
@@ -281,7 +280,12 @@ namespace Necrocis
             return meleeSlashSprite;
         }
 
-        private float GetMeleeSlashWorldScale(Sprite sprite, float effectiveWidth, float effectiveDepth)
+        private float GetMeleeSlashTargetWorldSize(float effectiveWidth, float effectiveDepth)
+        {
+            return Mathf.Max(0.1f, Mathf.Max(effectiveWidth, effectiveDepth) * meleeSlashScale);
+        }
+
+        private float GetMeleeSlashWorldScale(Sprite sprite, float targetWorldSize)
         {
             if (sprite == null)
             {
@@ -294,7 +298,6 @@ namespace Necrocis
                 return Mathf.Max(0.05f, meleeSlashScale);
             }
 
-            float targetWorldSize = Mathf.Max(0.1f, Mathf.Max(effectiveWidth, effectiveDepth) * meleeSlashScale);
             return Mathf.Max(0.05f, targetWorldSize / spriteWorldSize);
         }
 
@@ -390,6 +393,7 @@ namespace Necrocis
             if (itemEffects != null)
             {
                 damage *= itemEffects.GetOutgoingBasicDamageMultiplier();
+                damage *= itemEffects.GetRangedBasicDamageMultiplier();
                 unstableMultiplier = itemEffects.RollUnstableCoreDamageMultiplier();
                 damage *= unstableMultiplier;
             }
@@ -403,7 +407,11 @@ namespace Necrocis
 
             if (itemEffects != null && itemEffects.HasBeamOrgan)
             {
-                FireBeam(direction, damage * itemEffects.BeamDamageMultiplier, effectiveProjectileRange);
+                FireBeamVolley(
+                    direction,
+                    damage * itemEffects.BeamDamageMultiplier,
+                    effectiveProjectileRange,
+                    true);
                 return;
             }
 
@@ -420,10 +428,14 @@ namespace Necrocis
             float spread = itemEffects != null ? itemEffects.GetSpreadAngleForCount(projectileCount) : 0f;
             float accuracyPenalty = itemEffects != null ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
             Vector3 firingDirection = ApplyAccuracyPenalty(direction, accuracyPenalty);
+            float forwardDamageMultiplier = itemEffects != null
+                ? itemEffects.GetForwardProjectileDamageMultiplier(projectileCount)
+                : 1f;
+            float forwardDamage = damage * forwardDamageMultiplier;
 
             if (projectileCount <= 1)
             {
-                SpawnProjectile(firingDirection, damage, range, Projectile.SpawnKind.Normal);
+                SpawnProjectile(firingDirection, forwardDamage, range, Projectile.SpawnKind.Normal);
             }
             else
             {
@@ -432,7 +444,7 @@ namespace Necrocis
                 {
                     float offset = (i - center) * spread;
                     Vector3 shotDirection = Quaternion.Euler(0f, offset, 0f) * firingDirection;
-                    SpawnProjectile(shotDirection, damage, range, Projectile.SpawnKind.Normal);
+                    SpawnProjectile(shotDirection, forwardDamage, range, Projectile.SpawnKind.Normal);
                 }
             }
 
@@ -476,6 +488,65 @@ namespace Necrocis
             }
 
             FireProjectileVolley(
+                direction,
+                damage * itemEffects.CellProliferationDamageMultiplier,
+                range,
+                false);
+        }
+
+        private void FireBeamVolley(Vector3 direction, float damage, float range, bool allowExtraVolley)
+        {
+            int beamCount = itemEffects != null ? itemEffects.GetForwardProjectileCount() : 1;
+            float spread = itemEffects != null ? itemEffects.GetSpreadAngleForCount(beamCount) : 0f;
+            float accuracyPenalty = itemEffects != null ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
+            Vector3 firingDirection = ApplyAccuracyPenalty(direction, accuracyPenalty);
+            float forwardDamageMultiplier = itemEffects != null
+                ? itemEffects.GetForwardProjectileDamageMultiplier(beamCount)
+                : 1f;
+            float forwardDamage = damage * forwardDamageMultiplier;
+
+            if (beamCount <= 1)
+            {
+                FireBeam(firingDirection, forwardDamage, range);
+            }
+            else
+            {
+                float center = (beamCount - 1) * 0.5f;
+                for (int i = 0; i < beamCount; i++)
+                {
+                    float offset = (i - center) * spread;
+                    Vector3 beamDirection = Quaternion.Euler(0f, offset, 0f) * firingDirection;
+                    FireBeam(beamDirection, forwardDamage, range);
+                }
+            }
+
+            if (itemEffects != null && itemEffects.HasLaryngealNerve)
+            {
+                FireBeam(
+                    -firingDirection,
+                    damage * itemEffects.GetBackShotDamageMultiplier(),
+                    range);
+            }
+
+            if (allowExtraVolley && itemEffects != null && itemEffects.RollCellProliferation())
+            {
+                StartCoroutine(FireCellProliferationBeamVolleyDelayed(direction, damage, range));
+            }
+        }
+
+        private IEnumerator FireCellProliferationBeamVolleyDelayed(Vector3 direction, float damage, float range)
+        {
+            if (cellProliferationDelay > 0f)
+            {
+                yield return new WaitForSeconds(cellProliferationDelay);
+            }
+
+            if (itemEffects == null || !isActiveAndEnabled)
+            {
+                yield break;
+            }
+
+            FireBeamVolley(
                 direction,
                 damage * itemEffects.CellProliferationDamageMultiplier,
                 range,

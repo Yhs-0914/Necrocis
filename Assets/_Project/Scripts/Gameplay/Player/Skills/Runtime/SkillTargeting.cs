@@ -56,6 +56,66 @@ namespace Necrocis
             return hitCount;
         }
 
+        private int ApplyForwardArcSkill(
+            Vector3 center,
+            float radius,
+            float forwardAngle,
+            int maxTargets,
+            System.Action<EnemyController> apply)
+        {
+            areaSkillCandidates.Clear();
+            Vector3 forward = GetFacingDirection();
+            float safeRadius = Mathf.Max(0f, radius);
+            float radiusSqr = safeRadius * safeRadius;
+            float halfAngle = Mathf.Clamp(forwardAngle * 0.5f, 0.5f, 180f);
+            IReadOnlyList<EnemyController> enemies = EnemyController.ActiveEnemyControllers;
+
+            if (enemies == null || enemies.Count == 0)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (enemy == null || enemy.IsDead)
+                {
+                    continue;
+                }
+
+                Vector3 toEnemy = enemy.transform.position - center;
+                toEnemy.y = 0f;
+                float distanceSqr = toEnemy.sqrMagnitude;
+                if (distanceSqr > radiusSqr)
+                {
+                    continue;
+                }
+
+                if (distanceSqr > 0.0001f && Vector3.Angle(forward, toEnemy) > halfAngle)
+                {
+                    continue;
+                }
+
+                areaSkillCandidates.Add(new AreaSkillCandidate(enemy, distanceSqr));
+            }
+
+            areaSkillCandidates.Sort(CompareAreaSkillCandidates);
+
+            int hitLimit = Mathf.Max(1, Mathf.Min(maxTargets, maxAreaSkillHitTargets));
+            int hitCount = Mathf.Min(areaSkillCandidates.Count, hitLimit);
+            for (int i = 0; i < hitCount; i++)
+            {
+                apply?.Invoke(areaSkillCandidates[i].Enemy);
+            }
+
+            if (enableDebugLogs)
+            {
+                Debug.Log($"[SkillHit] ForwardArc Radius={safeRadius:0.##}, Angle={forwardAngle:0.#}, Candidates={areaSkillCandidates.Count}, Hit={hitCount}, MaxHit={hitLimit}");
+            }
+
+            return hitCount;
+        }
+
         private bool TryFindNearestEnemyInForwardArc(Vector3 center, float radius, float forwardAngle, out EnemyController nearestEnemy)
         {
             nearestEnemy = null;

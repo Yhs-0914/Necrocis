@@ -45,12 +45,15 @@ namespace Necrocis
                     false);
             }
 
-            SpawnSkillEffect(
-                archerSkill1.shootEffectPrefab,
-                GetProjectileSpawnPosition(centerDirection),
-                archerSkill1.shootEffectLifetime,
-                0.25f,
-                new Color(0.7f, 1f, 0.5f, 0.55f));
+            if (archerSkill1.shootEffectPrefab != null)
+            {
+                SpawnSkillEffect(
+                    archerSkill1.shootEffectPrefab,
+                    GetProjectileSpawnPosition(centerDirection),
+                    archerSkill1.shootEffectLifetime,
+                    0.25f,
+                    new Color(0.7f, 1f, 0.5f, 0.55f));
+            }
 
             if (enableDebugLogs)
             {
@@ -128,6 +131,7 @@ namespace Necrocis
                 projectile = projectileObject.AddComponent<SkillProjectile>();
             }
 
+            projectile.ConfigureVisualSorting(skillEffectSortingOrder);
             projectile.ConfigureHitDetection(
                 archerSkill2.projectileHitRadius,
                 skillHitHeightOffset,

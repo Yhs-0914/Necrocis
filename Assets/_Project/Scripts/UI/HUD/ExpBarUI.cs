@@ -39,30 +39,28 @@ namespace Necrocis
         private const float ExpBarBottomMargin = -150f;
         private const float ExpBarWidth = 1160f;
         private const float ExpBarHeight = 540f;
+        private static readonly Vector2 LevelTextPosition = new Vector2(-491f, 4f);
+        private static readonly Vector2 LevelTextSize = new Vector2(150f, 88f);
+        private static readonly Vector2 ExpTextPosition = new Vector2(53f, 2f);
+        private static readonly Vector2 ExpTextSize = new Vector2(360f, 88f);
+        private const int HudFontSize = 24;
+        private static readonly Color HudTextColor = new Color(1f, 0.92f, 0.95f, 1f);
+        private static readonly Color HudTextOutlineColor = new Color(0.12f, 0.015f, 0.07f, 0.95f);
+        private static readonly Vector2 HudTextOutlineDistance = new Vector2(1.5f, -1.5f);
 
         private static GameObject persistentCanvas;
         private bool runtimeUIBuilt;
         private int lastAppliedScreenWidth = -1;
         private int lastAppliedScreenHeight = -1;
 
-        private void Awake()
-        {
-            EnsureUIReady();
-        }
-
-        private void Start()
-        {
-            EnsureUIReady();
-            ApplyResponsiveLayout();
-            UpdateDisplay();
-        }
-
         private void OnEnable()
         {
             EnsureUIReady();
             ApplyResponsiveLayout();
             LevelUpManager.OnExpGained += OnExpGained;
-            LevelUpManager.OnLevelUp += OnLevelUp;
+            LevelUpManager.OnLevelUp += OnProgressionChanged;
+            LevelUpManager.OnJobSelect += OnProgressionChanged;
+            LevelUpManager.OnJobChanged += OnJobChanged;
             SceneManager.sceneLoaded += HandleSceneLoaded;
             UpdateDisplay();
         }
@@ -70,7 +68,9 @@ namespace Necrocis
         private void OnDisable()
         {
             LevelUpManager.OnExpGained -= OnExpGained;
-            LevelUpManager.OnLevelUp -= OnLevelUp;
+            LevelUpManager.OnLevelUp -= OnProgressionChanged;
+            LevelUpManager.OnJobSelect -= OnProgressionChanged;
+            LevelUpManager.OnJobChanged -= OnJobChanged;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
         }
 
@@ -89,7 +89,12 @@ namespace Necrocis
             UpdateDisplay();
         }
 
-        private void OnLevelUp()
+        private void OnProgressionChanged()
+        {
+            UpdateDisplay();
+        }
+
+        private void OnJobChanged(JobType _)
         {
             UpdateDisplay();
         }
@@ -239,12 +244,20 @@ namespace Necrocis
 
             if (levelText != null)
             {
-                levelText.text = $"Lv.{level}";
+                string levelLabel = $"Lv.{level}";
+                if (levelText.text != levelLabel)
+                {
+                    levelText.text = levelLabel;
+                }
             }
 
             if (expText != null)
             {
-                expText.text = $"{currentExp}/{expRequired}";
+                string expLabel = $"{currentExp} / {expRequired}";
+                if (expText.text != expLabel)
+                {
+                    expText.text = expLabel;
+                }
             }
         }
 
@@ -258,9 +271,13 @@ namespace Necrocis
             if (fillVisualMode == FillVisualMode.SpriteByStep && progressSprites != null && progressSprites.Length > 0)
             {
                 int index = Mathf.Clamp(Mathf.FloorToInt(progress * progressSprites.Length), 0, progressSprites.Length - 1);
-                fillImage.sprite = progressSprites[index];
+                Sprite targetSprite = progressSprites[index];
+                if (fillImage.sprite != targetSprite)
+                {
+                    fillImage.sprite = targetSprite;
+                }
 
-                if (applyFillAmountWhenUsingSprites)
+                if (applyFillAmountWhenUsingSprites && !Mathf.Approximately(fillImage.fillAmount, progress))
                 {
                     fillImage.fillAmount = progress;
                 }
@@ -268,7 +285,10 @@ namespace Necrocis
                 return;
             }
 
-            fillImage.fillAmount = progress;
+            if (!Mathf.Approximately(fillImage.fillAmount, progress))
+            {
+                fillImage.fillAmount = progress;
+            }
         }
 
         private void BuildRuntimeUI()
@@ -331,10 +351,6 @@ namespace Necrocis
 
             levelText = levelObject.AddComponent<Text>();
             levelText.text = "Lv.1";
-            levelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            levelText.fontSize = 18;
-            levelText.color = Color.white;
-            levelText.alignment = TextAnchor.MiddleCenter;
 
             GameObject expObject = CreateUIElement("ExpText", barRoot.transform);
             RectTransform expRect = expObject.GetComponent<RectTransform>();
@@ -344,11 +360,7 @@ namespace Necrocis
             expRect.offsetMax = Vector2.zero;
 
             expText = expObject.AddComponent<Text>();
-            expText.text = "0/100";
-            expText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            expText.fontSize = 14;
-            expText.color = Color.white;
-            expText.alignment = TextAnchor.MiddleCenter;
+            expText.text = "0 / 100";
 
             persistentCanvas = canvasObj;
             EnsureCanvasPersistence();
@@ -435,8 +447,52 @@ namespace Necrocis
             barRoot.anchoredPosition = new Vector2(0f, ExpBarBottomMargin);
             barRoot.sizeDelta = new Vector2(ExpBarWidth, ExpBarHeight);
 
+            ApplyHudTextStyle(levelText, LevelTextPosition, LevelTextSize, TextAnchor.MiddleLeft, new Vector2(0f, 0.5f));
+            ApplyHudTextStyle(expText, ExpTextPosition, ExpTextSize, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f));
+
             lastAppliedScreenWidth = Screen.width;
             lastAppliedScreenHeight = Screen.height;
+        }
+
+        private static void ApplyHudTextStyle(
+            Text text,
+            Vector2 anchoredPosition,
+            Vector2 size,
+            TextAnchor alignment,
+            Vector2 pivot)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            RectTransform rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            rect.localScale = Vector3.one;
+
+            text.font = GameUiTheme.LoadFont();
+            text.fontSize = HudFontSize;
+            text.fontStyle = FontStyle.Normal;
+            text.alignment = alignment;
+            text.alignByGeometry = true;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.color = HudTextColor;
+            text.raycastTarget = false;
+
+            Outline outline = text.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = text.gameObject.AddComponent<Outline>();
+            }
+
+            outline.effectColor = HudTextOutlineColor;
+            outline.effectDistance = HudTextOutlineDistance;
+            outline.useGraphicAlpha = true;
         }
 
         private static GameObject CreateUIElement(string name, Transform parent)

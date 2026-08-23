@@ -11,8 +11,8 @@ namespace Necrocis
 
         [Header("Experience")]
         [Min(1)] public int maxLevel = 30;
-        [Min(1)] public int baseExp = 100;
-        [Min(0.01f)] public float expMultiplier = 1.25f;
+        [Min(1)] public int baseExp = 30;
+        [Min(0)] public int expIncreasePerLevel = 20;
         [Min(0)] public int enemyKillExp = 10;
 
         [Header("Experience Multipliers")]
@@ -37,13 +37,13 @@ namespace Necrocis
         public List<LevelUpStatValueConfig> levelUpStatValues = CreateDefaultLevelUpStatValues();
 
         [Header("Bio Gamble")]
-        public bool bioGambleEnabled;
-        public int bioGambleMinDelta = -2;
+        public bool bioGambleEnabled = true;
+        public int bioGambleMinDelta = -1;
         public int bioGambleMaxDelta = 3;
 
         public int MaxLevel => Mathf.Max(1, maxLevel);
         public int BaseExp => Mathf.Max(1, baseExp);
-        public float ExpMultiplier => Mathf.Max(0.01f, expMultiplier);
+        public int ExpIncreasePerLevel => Mathf.Max(0, expIncreasePerLevel);
         public int EnemyKillExp => Mathf.Max(0, enemyKillExp);
         public int JobSelectionLevel => Mathf.Max(1, jobSelectionLevel);
         public int JobBasedChoiceStartLevel => Mathf.Max(1, jobBasedChoiceStartLevel);
@@ -52,8 +52,8 @@ namespace Necrocis
 
         public int GetRequiredExpForCurrentLevel(int currentLevel)
         {
-            int exponent = Mathf.Max(0, currentLevel - 2);
-            return Mathf.Max(1, Mathf.RoundToInt(BaseExp * Mathf.Pow(ExpMultiplier, exponent)));
+            int completedLevelUps = Mathf.Max(0, currentLevel - 1);
+            return Mathf.Max(1, BaseExp + completedLevelUps * ExpIncreasePerLevel);
         }
 
         public float GetExpGainMultiplier(int currentLevel, JobType currentJob)

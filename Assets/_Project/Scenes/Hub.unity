@@ -514,7 +514,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 53, y: 2}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 360, y: 88}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &83498316
 MonoBehaviour:
@@ -537,17 +537,17 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 18
+    m_Font: {fileID: 12800000, guid: d193baab8f495254cb8a890dcd6d949c, type: 3}
+    m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
     m_Alignment: 4
-    m_AlignByGeometry: 0
+    m_AlignByGeometry: 1
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: 0 / 100
 --- !u!222 &83498317
@@ -8735,9 +8735,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -470, y: 4}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -491, y: 4}
+  m_SizeDelta: {x: 150, y: 88}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1769159487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8759,17 +8759,17 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 18
+    m_Font: {fileID: 12800000, guid: d193baab8f495254cb8a890dcd6d949c, type: 3}
+    m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 4
-    m_AlignByGeometry: 0
+    m_Alignment: 3
+    m_AlignByGeometry: 1
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Lv.1
 --- !u!222 &1769159488
@@ -10962,24 +10962,26 @@ MonoBehaviour:
   skillHitHeightOffset: 0.75
   skillHitVerticalHalfHeight: 4
   maxAreaSkillHitTargets: 32
+  skillEffectSortingOrder: 5200
   enableDebugLogs: 0
   mageSkill1:
-    cooldown: 1
-    radius: 5
+    cooldown: 7
+    radius: 3.75
     forwardOffset: 0
-    baseDamage: 5
-    additionalDamage: 5
-    additionalDamageMin: 5
-    additionalDamageMax: 7
+    baseDamage: 0
+    additionalDamage: 0
+    additionalDamageMin: 4
+    additionalDamageMax: 6
     stunDuration: 1
     areaEffectPrefab: {fileID: 3983581763031629201, guid: f73f946bcf806594fb157aac0fee0209, type: 3}
     areaEffectLifetime: 1
-    fallbackEffectScale: 2.5
+    fallbackEffectScale: 10
+    effectReferenceRadius: 5
   mageSkill2:
-    cooldown: 3
+    cooldown: 12
     radius: 3.5
     forwardOffset: 2.5
-    baseDamage: 15
+    baseDamage: 10
     detonationDelay: 0.7
     damageTakenIncreaseRatio: 0.1
     damageTakenIncreaseDuration: 3
@@ -10996,29 +10998,29 @@ MonoBehaviour:
     explosionEffectLifetime: 1
     fallbackEffectScale: 3
   archerSkill1:
-    cooldown: 1
-    projectileCount: 3
+    cooldown: 6
+    projectileCount: 5
     fanAngle: 55
     projectileDamage: 1
     projectileSpeed: 16
-    projectileRange: 8
+    projectileRange: 6
     projectileLifeTime: 2
     projectilePrefab: {fileID: 4631496915048584632, guid: c1cbf5f8078a0444d8f033977407ff70, type: 3}
     projectileScale: 0.5
-    poisonDuration: 4
+    poisonDuration: 3
     poisonTickInterval: 1
     poisonTickDamage: 1
     shootEffectPrefab: {fileID: 0}
     shootEffectLifetime: 0.4
   archerSkill2:
-    cooldown: 3
+    cooldown: 10
     aimDuration: 0.5
     range: 10
     projectileHitRadius: 0.55
     projectileVisualLength: 4
     projectileVisualThickness: 0.8
     targetForwardOffset: 6
-    projectileDamage: 5
+    projectileDamage: 4
     projectileTravelSpeed: 24
     projectileLifeTime: 0.65
     projectilePrefab: {fileID: 5377739703324984544, guid: 21c6d35c963bab846bfde230ca8d29fa, type: 3}
@@ -11027,7 +11029,7 @@ MonoBehaviour:
     prefabRotationOffsetEuler: {x: 0, y: 0, z: 0}
     autoRollToCamera: 1
     prefabSurfaceNormalAxis: 2
-    virusExplosionDamage: 10
+    virusExplosionDamage: 5
     virusExplosionRadius: 1.8
     virusExplosionEffectPrefab: {fileID: 545757833818925850, guid: e85d0693183cd4c4ca091330d68d1599, type: 3}
     virusExplosionEffectLifetime: 1
@@ -11038,28 +11040,29 @@ MonoBehaviour:
     afterImageMaxVisibleCount: 3
   warriorSkill1:
     cooldown: 4
-    range: 2.5
-    forwardAngle: 120
-    damage: 6
-    bleedDuration: 3
+    range: 4.125
+    forwardAngle: 140
+    maxTargets: 8
+    damage: 4
+    bleedDuration: 2
     bleedTickInterval: 1
-    bleedTickDamage: 1.5
-    hitEffectPrefab: {fileID: 0}
-    hitEffectLifetime: 0.5
+    bleedTickDamage: 1
+    hitEffectPrefab: {fileID: 840110001, guid: 67f284e219c3405b98cdb7df65e8bf81, type: 3}
+    hitEffectLifetime: 0.35
     fallbackEffectScale: 0.8
   warriorSkill2:
     cooldown: 8
     searchRange: 6
     dashSpeed: 18
-    damage: 11
+    damage: 8
     rootDuration: 2
     searchAngle: 90
-    hitEffectPrefab: {fileID: 0}
+    hitEffectPrefab: {fileID: 840120001, guid: e1b7d39d0ac54e2098105cb7a35a0da4, type: 3}
     hitEffectLifetime: 0.5
     fallbackEffectScale: 1
   autoTargetForwardEnemyForArcherSkill2: 1
   archerSkill2AutoTargetAngle: 90
-  useTestCooldownOverride: 1
+  useTestCooldownOverride: 0
   testSkill1Cooldown: 1
   testSkill2Cooldown: 3
 --- !u!114 &1905923579

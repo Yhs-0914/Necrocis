@@ -95,6 +95,8 @@ namespace Necrocis
         [Header("Multi Shot")]
         [SerializeField] private float doubleShotSpreadAngle = 7f;
         [SerializeField] private float tripleShotSpreadAngle = 11f;
+        [SerializeField] private float doubleShotDamageMultiplier = 0.75f;
+        [SerializeField] private float tripleShotDamageMultiplier = 0.55f;
         [SerializeField] private float backShotDamageMultiplier = 0.9f;
 
         [Header("Projectile Movement")]
@@ -102,7 +104,9 @@ namespace Necrocis
         [SerializeField] private float homingSearchRadius = 8f;
         [SerializeField] private float boomerangReturnDistance = 8f;
         [SerializeField] private float boomerangRepeatHitDamageMultiplier = 0.75f;
-        [SerializeField, Min(1)] private int piercingHitCount = 4;
+        [SerializeField, Min(1)] private int boomerangMaxHitsPerPass = 3;
+        [SerializeField, Min(1)] private int piercingHitCount = 3;
+        [SerializeField] private float piercingSubsequentHitDamageMultiplier = 0.75f;
         [SerializeField, Min(1)] private int reflectionBounceCount = 3;
 
         [Header("Projectile Scale")]
@@ -112,19 +116,20 @@ namespace Necrocis
         [SerializeField] private float pulseShrinkEndScale = 0.2f;
 
         [Header("On-Hit")]
-        [SerializeField] private float splitDamageMultiplier = 0.7f;
+        [SerializeField] private float splitDamageMultiplier = 0.5f;
         [SerializeField] private float splitRangeMultiplier = 0.65f;
         [SerializeField] private float splitAngle = 90f;
         [SerializeField] private float explosionRadius = 2f;
-        [SerializeField] private float explosionDamageMultiplier = 0.75f;
+        [SerializeField] private float explosionDamageMultiplier = 1f;
+        [SerializeField] private float explosiveBloodCellRangedDamageMultiplier = 0.5f;
         [SerializeField] private float acidDuration = 4f;
-        [SerializeField] private float acidTickInterval = 0.5f;
-        [SerializeField] private float acidTickDamageRatio = 0.18f;
+        [SerializeField] private float acidTickInterval = 1f;
+        [SerializeField] private float acidTickDamage = 0.5f;
         [SerializeField] private float poisonDuration = 4f;
         [SerializeField] private float poisonTickInterval = 1f;
         [SerializeField] private float poisonTickDamageRatio = 0.2f;
-        [SerializeField] private float freezeSlowRatio = 0.35f;
-        [SerializeField] private float freezeDuration = 2.5f;
+        [SerializeField] private float freezeSlowRatio = 0.3f;
+        [SerializeField] private float freezeDuration = 2f;
         [SerializeField] private float bleedDuration = 3.5f;
         [SerializeField] private float bleedTickInterval = 0.8f;
         [SerializeField] private float bleedTickDamageRatio = 0.18f;
@@ -135,110 +140,113 @@ namespace Necrocis
 
         [Header("Beam")]
         [SerializeField] private float beamRadius = 0.8f;
-        [SerializeField] private float beamDamageMultiplier = 0.95f;
+        [SerializeField] private float beamDamageMultiplier = 0.8f;
         [SerializeField, Min(1)] private int beamHitBufferSize = 48;
 
         [Header("Special Items")]
         [SerializeField] private int overheatMaxStacks = 10;
         [SerializeField] private float overheatStackWindow = 1.4f;
-        [SerializeField] private float overheatPerStackAttackSpeedBonus = 2f;
+        [SerializeField] private float overheatPerStackAttackSpeedBonus = 0.1f;
         [SerializeField] private float overheatDecayInterval = 5f;
-        [SerializeField] private float overheatExplosionSelfDamage = 2f;
-        [SerializeField] private float mutantEyeAccuracyPenaltyAngle = 90f;
-        [SerializeField] private float mutantEyeFlatDamageBonus = 5f;
-        [SerializeField] private float organTentacleAutoAttackInterval = 0.75f;
+        [SerializeField] private float overheatExplosionRadius = 2.5f;
+        [SerializeField] private float overheatExplosionDamageMultiplier = 1.5f;
+        [SerializeField] private float overheatExplosionSelfDamage = 1f;
+        [SerializeField] private float mutantEyeAccuracyPenaltyAngle = 40f;
+        [SerializeField] private float mutantEyeFlatDamageBonus = 2f;
+        [SerializeField] private float organTentacleAutoAttackInterval = 1.2f;
         [SerializeField] private float organTentacleAutoAttackRadius = 4.5f;
-        [SerializeField] private float organTentacleAutoAttackDamageMultiplier = 0.55f;
-        [SerializeField] private int organTentacleMaxTargets = 3;
-        [SerializeField] private float organTentacleBaseAttackPenaltyMultiplier = 0.72f;
-        [SerializeField] private float rampageMoveSecondsPerBonus = 5f;
-        [SerializeField] private int rampageMaxAttackBonus = 3;
-        [SerializeField] private float rampageIdleSecondsPerDecay = 5f;
-        [SerializeField] private float muscleSpasmMeleeRangeMultiplier = 8f;
-        [SerializeField] private float muscleSpasmAttackSpeedMultiplier = 0.72f;
-        [SerializeField] private float unstableCoreMinAttackRatio = 0.5f;
-        [SerializeField] private float unstableCoreMaxAttackFlatBonus = 3f;
+        [SerializeField] private float organTentacleAutoAttackDamageMultiplier = 0.3f;
+        [SerializeField] private int organTentacleMaxTargets = 2;
+        [SerializeField] private float organTentacleBaseAttackPenaltyMultiplier = 0.8f;
+        [SerializeField] private float rampageMoveSecondsPerBonus = 8f;
+        [SerializeField] private int rampageMaxAttackBonus = 2;
+        [SerializeField] private float rampageIdleSecondsPerDecay = 4f;
+        [SerializeField] private float muscleSpasmMeleeRangeMultiplier = 1.7f;
+        [SerializeField] private float muscleSpasmAttackSpeedMultiplier = 0.8f;
+        [SerializeField] private float unstableCoreMinAttackRatio = 0.6f;
+        [SerializeField] private float unstableCoreMaxAttackRatio = 1.6f;
         [SerializeField] private float unstableCoreRerollInterval = 5f;
-        [SerializeField] private float bioResonanceStackDamageBonus = 0.3f;
+        [SerializeField] private float bioResonanceStackDamageBonus = 0.15f;
         [SerializeField] private int bioResonanceMaxStacks = 3;
         [SerializeField] private float bioResonanceStackWindow = 3f;
-        [SerializeField] private float bloodPressureBaseAttackSpeedAdd = 0.2f;
-        [SerializeField] private float bloodPressurePerTenPercentMissingAdd = 0.2f;
+        [SerializeField] private float bloodPressureBaseAttackSpeedAdd;
+        [SerializeField] private float bloodPressurePerTenPercentMissingAdd = 0.06f;
         [SerializeField] private float voidCellChance = 0.2f;
         [SerializeField] private float voidCellDamageMultiplier = 0.85f;
         [SerializeField] private float voidCellSpawnRadius = 2.2f;
-        [SerializeField] private float forbiddenGrowthMaxHealthPenalty = 4f;
-        [SerializeField] private float forbiddenGrowthFlatAttackBonus = 6f;
+        [SerializeField] private float forbiddenGrowthMaxHealthPenalty = 3f;
+        [SerializeField] private float forbiddenGrowthFlatAttackBonus = 2f;
         [SerializeField] private float overclockNerveMaxHealthPenalty = 2f;
-        [SerializeField] private float overclockNerveFlatMoveSpeedBonus = 4f;
-        [SerializeField] private float bloodContractIncomingDamageMultiplier = 1.5f;
-        [SerializeField, Min(1)] private int bloodContractKillsPerHeal = 10;
+        [SerializeField] private float overclockNerveFlatMoveSpeedBonus = 2f;
+        [SerializeField] private float bloodContractIncomingDamageMultiplier = 1.3f;
+        [SerializeField, Min(1)] private int bloodContractKillsPerHeal = 20;
         [SerializeField] private float bloodContractHealthGainAmount = 1f;
-        [SerializeField] private float hyperplasiaMissingHealthAttackBonusMax = 6f;
+        [SerializeField, Min(1)] private int bloodContractMaxHealthGainCount = 5;
+        [SerializeField] private float hyperplasiaMissingHealthAttackBonusMax = 2f;
         [SerializeField] private float decayOrganSecondsPerAttackBonus = 180f;
-        [SerializeField] private int decayOrganMaxAttackBonus = 8;
-        [SerializeField] private float ruptureMuscleAttackBonusPerStack = 2f;
-        [SerializeField] private float ruptureMuscleMovePenaltyPerStack = 1f;
-        [SerializeField] private int ruptureMuscleMaxStacks = 5;
+        [SerializeField] private int decayOrganMaxAttackBonus = 4;
+        [SerializeField] private float ruptureMuscleAttackBonusPerStack = 0.5f;
+        [SerializeField] private float ruptureMuscleMovePenaltyPerStack = 0.25f;
+        [SerializeField] private int ruptureMuscleMaxStacks = 3;
         [SerializeField] private float ruptureMuscleDecayDelay = 3f;
-        [SerializeField] private float imperfectRegenMaxHealthPenalty = 4f;
-        [SerializeField] private float imperfectRegenDelay = 3f;
+        [SerializeField] private float imperfectRegenMaxHealthPenalty = 2f;
+        [SerializeField] private float imperfectRegenDelay = 2f;
         [SerializeField] private float imperfectRegenHealPerTrigger = 1f;
-        [SerializeField] private float imperfectRegenCooldownDuration = 15f;
+        [SerializeField] private float imperfectRegenCooldownDuration = 10f;
         [SerializeField] private float severanceReflexDuration = 2f;
-        [SerializeField] private float severanceReflexFlatAttackBonus = 6f;
-        [SerializeField] private float exoskeletonDamageReductionRatio = 0.3f;
-        [SerializeField] private float exoskeletonMoveSpeedPenalty = 2f;
-        [SerializeField] private float plateletMembraneInterval = 30f;
+        [SerializeField] private float severanceReflexFlatAttackBonus = 2f;
+        [SerializeField] private float exoskeletonDamageReductionRatio = 0.25f;
+        [SerializeField] private float exoskeletonMoveSpeedPenalty = 1.5f;
+        [SerializeField] private float plateletMembraneInterval = 20f;
         [SerializeField] private float plateletMembraneShieldAmount = 1f;
-        [SerializeField] private float recoveryFactorInterval = 45f;
+        [SerializeField] private float recoveryFactorInterval = 30f;
         [SerializeField] private float recoveryFactorHealAmount = 1f;
-        [SerializeField] private float reflectiveSkinDamageRatio = 0.5f;
-        [SerializeField] private float bioBarrierIdleSecondsPerStep = 1f;
+        [SerializeField] private float reflectiveSkinDamageRatio = 0.75f;
+        [SerializeField] private float bioBarrierIdleSecondsPerStep = 1.5f;
         [SerializeField] private float bioBarrierReductionPerStep = 0.1f;
-        [SerializeField] private float bioBarrierMaxReduction = 0.5f;
+        [SerializeField] private float bioBarrierMaxReduction = 0.4f;
         [SerializeField] private float splitRegenerationReviveHealth = 2f;
 
         [Header("Bio Companions")]
-        [SerializeField, Range(0f, 1f)] private float infectedHostChance = 0.22f;
-        [SerializeField] private float infectedHostLifetime = 9f;
-        [SerializeField] private float infectedHostDamageMultiplier = 1f;
-        [SerializeField] private float infectedHostAttackInterval = 0.8f;
+        [SerializeField, Range(0f, 1f)] private float infectedHostChance = 0.15f;
+        [SerializeField] private float infectedHostLifetime = 6f;
+        [SerializeField] private float infectedHostDamageMultiplier = 0.35f;
+        [SerializeField] private float infectedHostAttackInterval = 1f;
         [SerializeField] private float infectedHostAttackRadius = 1.25f;
         [SerializeField] private float infectedHostSearchRadius = 7f;
-        [SerializeField, Min(1)] private int infectedHostMaxAllies = 3;
+        [SerializeField, Min(1)] private int infectedHostMaxAllies = 2;
         [SerializeField] private float sporeSpawnInterval = 8f;
         [SerializeField] private float sporeLifetime = 6f;
         [SerializeField] private float sporeDamageMultiplier = 1f;
         [SerializeField] private float sporeSearchRadius = 8f;
         [SerializeField] private float sporeBurstRadius = 1.1f;
         [SerializeField] private float bloodDroneOrbitRadius = 1.4f;
-        [SerializeField] private float bloodDroneFireInterval = 0.9f;
-        [SerializeField] private float bloodDroneDamageMultiplier = 0.4f;
+        [SerializeField] private float bloodDroneFireInterval = 1f;
+        [SerializeField] private float bloodDroneDamageMultiplier = 0.3f;
         [SerializeField] private float bloodDroneTargetRadius = 9f;
         [SerializeField] private float guardianOrganOrbitRadius = 1.2f;
         [SerializeField] private float guardianOrganBlockRadius = 0.9f;
-        [SerializeField] private float guardianOrganCooldown = 2.5f;
-        [SerializeField] private float tentacleBindInterval = 2.2f;
+        [SerializeField] private float guardianOrganCooldown = 3.5f;
+        [SerializeField] private float tentacleBindInterval = 3f;
         [SerializeField] private float tentacleBindRadius = 5.5f;
-        [SerializeField] private float tentacleBindDuration = 1.5f;
-        [SerializeField] private float tentacleSlowRatio = 0.95f;
-        [SerializeField] private float tentacleDamageMultiplier = 0.15f;
+        [SerializeField] private float tentacleBindDuration = 1.2f;
+        [SerializeField] private float tentacleSlowRatio = 0.6f;
+        [SerializeField] private float tentacleDamageMultiplier = 0.1f;
         [SerializeField, Min(1)] private int tentacleMaxTargets = 2;
 
         [Header("Kill Chain Items")]
-        [SerializeField] private float electricChainDamage = 2f;
-        [SerializeField] private float electricChainRadius = 8f;
-        [SerializeField, Min(1)] private int electricChainMaxHits = 4;
+        [SerializeField] private float electricChainDamage = 1f;
+        [SerializeField] private float electricChainRadius = 6f;
+        [SerializeField, Min(1)] private int electricChainMaxHits = 3;
         [SerializeField] private float electricChainCooldown = 5f;
         [SerializeField] private float infectionTransferRadius = 4.5f;
         [SerializeField, Min(1)] private int infectionTransferMaxTargets = 3;
         [SerializeField] private float infectionTransferDuration = 3f;
         [SerializeField] private float infectionTransferTickInterval = 1f;
-        [SerializeField] private float infectionTransferTickDamage = 1f;
+        [SerializeField] private float infectionTransferTickDamage = 0.5f;
         [SerializeField] private float infectionTransferCooldown = 5f;
         [SerializeField] private float macrophageDuration = 5f;
-        [SerializeField] private float macrophageAttackBonusPerStack = 1f;
+        [SerializeField] private float macrophageAttackBonusPerStack = 0.5f;
         [SerializeField, Min(1)] private int macrophageMaxStacks = 3;
         [SerializeField] private float gluttonousOrganDuration = 3f;
         [SerializeField] private float gluttonousOrganMoveBonusPerStack = 0.5f;
@@ -246,48 +254,48 @@ namespace Necrocis
 
         [Header("Boss Fight Items")]
         [SerializeField] private float heartSniperHealthThreshold = 0.6f;
-        [SerializeField] private float heartSniperDamageBonusRatio = 0.5f;
+        [SerializeField] private float heartSniperDamageBonusRatio = 0.35f;
         [SerializeField] private float bloodflowAccelerationRadius = 9f;
-        [SerializeField] private float bloodflowAccelerationAttackSpeedBonus = 0.5f;
+        [SerializeField] private float bloodflowAccelerationAttackSpeedBonus = 0.35f;
         [SerializeField] private float focusedNerveRadius = 6f;
-        [SerializeField] private float focusedNerveHighAttackBonus = 3f;
-        [SerializeField] private float focusedNerveLowAttackBonus = 1f;
-        [SerializeField] private float executionInstinctHealthThreshold = 0.3f;
-        [SerializeField, Range(0f, 1f)] private float executionInstinctChance = 0.3f;
-        [SerializeField] private float executionInstinctBossDamageMultiplier = 2f;
-        [SerializeField] private float berserkCellDuration = 30f;
-        [SerializeField] private float berserkCellAttackBonus = 3f;
-        [SerializeField] private float berserkCellMoveBonus = 1f;
-        [SerializeField] private float berserkCellAttackSpeedBonus = 2f;
+        [SerializeField] private float focusedNerveHighAttackBonus = 1.5f;
+        [SerializeField] private float focusedNerveLowAttackBonus = 0.5f;
+        [SerializeField] private float executionInstinctHealthThreshold = 0.2f;
+        [SerializeField, Range(0f, 1f)] private float executionInstinctChance = 0.2f;
+        [SerializeField] private float executionInstinctBossDamageMultiplier = 1.5f;
+        [SerializeField] private float berserkCellDuration = 15f;
+        [SerializeField] private float berserkCellAttackBonus = 1.5f;
+        [SerializeField] private float berserkCellMoveBonus = 0.5f;
+        [SerializeField] private float berserkCellAttackSpeedBonus = 0.5f;
         [SerializeField] private float berserkCellBossDetectionRadius = 18f;
 
         [Header("Mutation Chaos Items")]
         [SerializeField] private float unstableCellMinProjectileSpeedMultiplier = 0.5f;
         [SerializeField] private float unstableCellMaxProjectileSpeedMultiplier = 1.5f;
-        [SerializeField] private float unstableCellSlowThreshold = 0.9f;
-        [SerializeField] private float unstableCellSlowDamageMultiplier = 2f;
+        [SerializeField] private float unstableCellSlowThreshold = 0.8f;
+        [SerializeField] private float unstableCellSlowDamageMultiplier = 1.5f;
         [SerializeField] private float grotesqueGrowthInterval = 10f;
         [SerializeField] private float grotesqueGrowthSmallScale = 0.75f;
         [SerializeField] private float grotesqueGrowthLargeScale = 1.35f;
-        [SerializeField] private float grotesqueGrowthSmallMoveBonus = 2f;
-        [SerializeField] private float grotesqueGrowthLargeAttackBonus = 2f;
+        [SerializeField] private float grotesqueGrowthSmallMoveBonus = 1f;
+        [SerializeField] private float grotesqueGrowthLargeAttackBonus = 1f;
         [SerializeField] private float grotesqueGrowthLargeMovePenalty = 0.5f;
         [SerializeField] private float mutationRampageInterval = 15f;
         [SerializeField] private float mutationRampageDuration = 7f;
-        [SerializeField, Range(0f, 1f)] private float mutationRampageBuffChance = 0.7f;
-        [SerializeField] private float mutationRampageAttackBuff = 2f;
-        [SerializeField] private float mutationRampageMoveBuff = 1.5f;
-        [SerializeField] private float mutationRampageAttackSpeedBuff = 1f;
-        [SerializeField] private float mutationRampageAttackDebuff = 1f;
-        [SerializeField] private float mutationRampageMoveDebuff = 1f;
-        [SerializeField] private float mutationRampageAttackSpeedDebuff = 0.5f;
-        [SerializeField, Range(0f, 1f)] private float parasiticBombChance = 0.3f;
-        [SerializeField] private float parasiticBombRadius = 5f;
-        [SerializeField] private float parasiticBombDamageMultiplier = 2f;
-        [SerializeField] private float frenzyHormoneDuration = 4f;
-        [SerializeField] private float frenzyHormoneCooldown = 5f;
-        [SerializeField] private float frenzyHormoneMinBonus = 1f;
-        [SerializeField] private float frenzyHormoneMaxBonus = 2f;
+        [SerializeField, Range(0f, 1f)] private float mutationRampageBuffChance = 0.6f;
+        [SerializeField] private float mutationRampageAttackBuff = 1f;
+        [SerializeField] private float mutationRampageMoveBuff = 1f;
+        [SerializeField] private float mutationRampageAttackSpeedBuff = 0.5f;
+        [SerializeField] private float mutationRampageAttackDebuff = 0.5f;
+        [SerializeField] private float mutationRampageMoveDebuff = 0.75f;
+        [SerializeField] private float mutationRampageAttackSpeedDebuff = 0.25f;
+        [SerializeField, Range(0f, 1f)] private float parasiticBombChance = 0.2f;
+        [SerializeField] private float parasiticBombRadius = 4f;
+        [SerializeField] private float parasiticBombDamageMultiplier = 1.5f;
+        [SerializeField] private float frenzyHormoneDuration = 3f;
+        [SerializeField] private float frenzyHormoneCooldown = 8f;
+        [SerializeField] private float frenzyHormoneMinBonus = 0.5f;
+        [SerializeField] private float frenzyHormoneMaxBonus = 1f;
 
 
         private PlayerItemManager itemManager;
@@ -711,6 +719,21 @@ namespace Necrocis
             return 0f;
         }
 
+        public float GetForwardProjectileDamageMultiplier(int projectileCount)
+        {
+            if (projectileCount >= 3)
+            {
+                return Mathf.Clamp(tripleShotDamageMultiplier, 0.05f, 1f);
+            }
+
+            if (projectileCount == 2)
+            {
+                return Mathf.Clamp(doubleShotDamageMultiplier, 0.05f, 1f);
+            }
+
+            return 1f;
+        }
+
         public float GetBackShotDamageMultiplier()
         {
             return Mathf.Max(0.05f, backShotDamageMultiplier);
@@ -736,6 +759,17 @@ namespace Necrocis
             return HasPiercingMucus ? Mathf.Max(1, piercingHitCount) : 1;
         }
 
+        public float GetPiercingHitDamageMultiplier(int previousHitCount)
+        {
+            if (!HasPiercingMucus || previousHitCount <= 0)
+            {
+                return 1f;
+            }
+
+            float falloff = Mathf.Clamp(piercingSubsequentHitDamageMultiplier, 0.05f, 1f);
+            return Mathf.Pow(falloff, previousHitCount);
+        }
+
         public int GetReflectionBounceCount()
         {
             return HasVascularReflection ? Mathf.Max(1, reflectionBounceCount) : 0;
@@ -754,6 +788,11 @@ namespace Necrocis
         public float GetBoomerangRepeatHitDamageMultiplier()
         {
             return Mathf.Clamp(boomerangRepeatHitDamageMultiplier, 0.05f, 1f);
+        }
+
+        public int GetBoomerangMaxHitsPerPass()
+        {
+            return Mathf.Max(1, boomerangMaxHitsPerPass);
         }
 
         public float GetHomingTurnRate()
@@ -799,6 +838,13 @@ namespace Necrocis
         public float GetExplosionDamageMultiplier()
         {
             return Mathf.Max(0.05f, explosionDamageMultiplier);
+        }
+
+        public float GetRangedBasicDamageMultiplier()
+        {
+            return HasExplosiveBloodCell
+                ? Mathf.Clamp(explosiveBloodCellRangedDamageMultiplier, 0.05f, 1f)
+                : 1f;
         }
 
         public float GetAttackCooldownMultiplier()
@@ -918,7 +964,9 @@ namespace Necrocis
             {
                 float attackPower = playerStats != null ? Mathf.Max(0.01f, playerStats.AttackPower) : 1f;
                 float minDamage = attackPower * Mathf.Max(0f, unstableCoreMinAttackRatio);
-                float maxDamage = attackPower + Mathf.Max(0f, unstableCoreMaxAttackFlatBonus);
+                float maxDamage = attackPower * Mathf.Max(
+                    unstableCoreMinAttackRatio,
+                    unstableCoreMaxAttackRatio);
                 maxDamage = Mathf.Max(minDamage, maxDamage);
                 float rolledDamage = UnityEngine.Random.Range(minDamage, maxDamage);
                 unstableCoreCurrentMultiplier = rolledDamage / attackPower;
@@ -1078,6 +1126,13 @@ namespace Necrocis
                 return;
             }
 
+            int maxHealthGains = Mathf.Max(1, bloodContractMaxHealthGainCount);
+            if (bloodContractHealthGainCount >= maxHealthGains)
+            {
+                bloodContractKillProgress = 0;
+                return;
+            }
+
             bloodContractKillProgress++;
             int killsPerHeal = Mathf.Max(1, bloodContractKillsPerHeal);
             if (bloodContractKillProgress < killsPerHeal)
@@ -1217,7 +1272,7 @@ namespace Necrocis
             // Spawn acid puddle immediately at hit position even when the enemy dies on impact.
             if (HasAcidicRupture)
             {
-                float tickDamage = Mathf.Max(1f, hitDamage * acidTickDamageRatio);
+                float tickDamage = Mathf.Max(0.1f, acidTickDamage);
                 AcidPuddle.Spawn(hitPosition, tickDamage, acidDuration, GetExplosionRadius(), acidTickInterval);
             }
 
@@ -1230,7 +1285,7 @@ namespace Necrocis
 
             if (HasToxicMucosa)
             {
-                float tickDamage = Mathf.Max(1f, hitDamage * poisonTickDamageRatio);
+                float tickDamage = Mathf.Max(0.05f, hitDamage * poisonTickDamageRatio);
                 status?.ApplyPoison(poisonDuration, poisonTickInterval, tickDamage);
             }
 
@@ -1241,7 +1296,7 @@ namespace Necrocis
 
             if (HasHemorrhageOrgan)
             {
-                float tickDamage = Mathf.Max(1f, hitDamage * bleedTickDamageRatio);
+                float tickDamage = Mathf.Max(0.05f, hitDamage * bleedTickDamageRatio);
                 status?.ApplyBleed(bleedDuration, bleedTickInterval, tickDamage);
             }
         }
@@ -1303,6 +1358,13 @@ namespace Necrocis
             }
 
             projectile.Launch(direction, damage, mask, range, this, spawnKind);
+            ProjectileDirectionalSprite directionalSprite = projectileObject.GetComponent<ProjectileDirectionalSprite>();
+            if (directionalSprite == null)
+            {
+                directionalSprite = projectileObject.AddComponent<ProjectileDirectionalSprite>();
+            }
+
+            directionalSprite.SetDirection(direction);
         }
 
         private void HandleItemAcquired(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem acquiredItem)
@@ -1420,7 +1482,10 @@ namespace Necrocis
                             state.bloodContractKillProgress,
                             0,
                             Mathf.Max(1, bloodContractKillsPerHeal) - 1);
-                        bloodContractHealthGainCount = Mathf.Max(0, state.bloodContractHealthGainCount);
+                        bloodContractHealthGainCount = Mathf.Clamp(
+                            state.bloodContractHealthGainCount,
+                            0,
+                            Mathf.Max(1, bloodContractMaxHealthGainCount));
                     }
                     else if (hasSplitRegenerationItem
                              && string.Equals(state.itemId, SplitRegenerationId, StringComparison.OrdinalIgnoreCase))
@@ -3593,9 +3658,41 @@ namespace Necrocis
 
         private void TriggerOverheatExplosionSelfDamage(float attackDamage)
         {
-            float damage = Mathf.Max(0.1f, overheatExplosionSelfDamage);
             SpawnOverheatExplosionVisual();
-            playerStats?.RuntimeStats?.ApplyDamage(damage);
+
+            Vector3 center = transform.position;
+            float radius = Mathf.Max(0.1f, overheatExplosionRadius);
+            float radiusSqr = radius * radius;
+            float explosionDamage = Mathf.Max(
+                0.1f,
+                attackDamage * Mathf.Max(0.05f, overheatExplosionDamageMultiplier));
+            var enemies = EnemyController.ActiveEnemyControllers;
+            if (enemies != null)
+            {
+                for (int i = 0; i < enemies.Count; i++)
+                {
+                    EnemyController enemy = enemies[i];
+                    if (enemy == null || enemy.IsDead)
+                    {
+                        continue;
+                    }
+
+                    Vector3 toEnemy = enemy.transform.position - center;
+                    toEnemy.y = 0f;
+                    if (toEnemy.sqrMagnitude > radiusSqr)
+                    {
+                        continue;
+                    }
+
+                    float appliedDamage = ApplyPerTargetDamageModifiers(enemy, explosionDamage);
+                    enemy.TakeDamage(appliedDamage);
+                    TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
+                    ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+                }
+            }
+
+            float selfDamage = Mathf.Max(0.1f, overheatExplosionSelfDamage);
+            playerStats?.RuntimeStats?.ApplyDamage(selfDamage);
         }
 
         private void SpawnVoidCellProjectile(float attackDamage, LayerMask mask, float range, Vector3 fallbackDirection)
@@ -3610,7 +3707,6 @@ namespace Necrocis
             Vector2 randomCircle = UnityEngine.Random.insideUnitCircle.normalized * Mathf.Max(0.3f, voidCellSpawnRadius);
             Vector3 spawnPos = targetPos + new Vector3(randomCircle.x, 0f, randomCircle.y);
             spawnPos.y = transform.position.y + 0.2f;
-            TeleportPlayerTo(spawnPos);
 
             Vector3 shootDir = targetPos - spawnPos;
             shootDir.y = 0f;
@@ -3704,9 +3800,8 @@ namespace Necrocis
             }
 
             float multiplier = RollUnstableCoreDamageMultiplier();
-            float attackPower = playerStats != null ? Mathf.Max(0.01f, playerStats.AttackPower) : 1f;
             float minMultiplier = Mathf.Max(0f, unstableCoreMinAttackRatio);
-            float maxMultiplier = Mathf.Max(minMultiplier, (attackPower + Mathf.Max(0f, unstableCoreMaxAttackFlatBonus)) / attackPower);
+            float maxMultiplier = Mathf.Max(minMultiplier, unstableCoreMaxAttackRatio);
             float lowToHigh = Mathf.InverseLerp(
                 minMultiplier,
                 maxMultiplier,
@@ -3974,7 +4069,7 @@ namespace Necrocis
                 OverheatExplosionVisualPoolName,
                 "OverheatExplosionFx",
                 center,
-                1.6f,
+                Mathf.Max(0.2f, overheatExplosionRadius * 2f),
                 Color.white,
                 5300,
                 0.2f,
@@ -3990,17 +4085,6 @@ namespace Necrocis
             }
 
             return transform.position + Vector3.up * 0.6f;
-        }
-
-        private void TeleportPlayerTo(Vector3 position)
-        {
-            if (playerController != null)
-            {
-                playerController.SpawnAt(position);
-                return;
-            }
-
-            transform.position = position;
         }
 
         private class PlayerBioSummon : MonoBehaviour

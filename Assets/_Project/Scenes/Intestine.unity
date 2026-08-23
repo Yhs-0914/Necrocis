@@ -534,6 +534,9 @@ MonoBehaviour:
   proceduralChunkSize: 32
   proceduralLoadDistance: 2
   proceduralUnloadDistance: 3
+  useAreaBalancedEnemySpawning: 1
+  enemySpawnerCellSize: 16
+  enemySpawnerActivationRadius: 28
 --- !u!114 &497294027
 MonoBehaviour:
   m_ObjectHideFlags: 0

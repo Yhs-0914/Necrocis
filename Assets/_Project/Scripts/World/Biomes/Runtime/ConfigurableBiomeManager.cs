@@ -170,7 +170,7 @@ namespace Necrocis
                 return 0f;
             }
 
-            WorldDifficultyBalance world = DifficultyBalanceService.ActiveProfile?.world;
+            WorldDifficultyBalance world = DifficultyBalanceService.GetWorldBalance(BiomeType);
             float multiplier = rule.category == SpawnCategory.EnemySpawner
                 ? world?.enemySpawnerDensity ?? 1f
                 : world?.sceneObjectDensity ?? 1f;
@@ -193,6 +193,10 @@ namespace Necrocis
             if (eliteSpawner == null)
                 eliteSpawner = gameObject.AddComponent<EliteSpawner>();
             eliteSpawner.ClearConfigs();
+            eliteSpawner.ConfigureKillInterval(
+                config.enemySpawnConfig != null
+                    ? config.enemySpawnConfig.NormalKillsPerElite
+                    : 10);
 
             int allMask = 0;
             for (int i = 0; i < config.regions.Count; i++)
@@ -240,6 +244,8 @@ namespace Necrocis
                         eliteSpawner.RegisterEliteConfig(ruleConfig);
                         continue;
                     }
+
+                    eliteSpawner.RegisterNormalEnemyConfig(ruleConfig);
 
                     int mask = BuildRegionMask(ruleConfig.allowedRegions, allMask);
                     int salt = ruleConfig.poissonSalt != 0 ? ruleConfig.poissonSalt : 600 + i;

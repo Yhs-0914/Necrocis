@@ -63,6 +63,14 @@ namespace Necrocis
             return profile != null ? profile.ResolveBiomeConfig(biome, fallback) : fallback;
         }
 
+        public static WorldDifficultyBalance GetWorldBalance(BiomeType biome)
+        {
+            DifficultyBalanceProfile profile = ActiveProfile;
+            return profile != null
+                ? profile.ResolveWorldBalance(biome)
+                : new WorldDifficultyBalance();
+        }
+
 #if UNITY_EDITOR
         public static void ResetForTests()
         {

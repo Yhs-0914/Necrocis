@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Necrocis;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -12,6 +14,15 @@ using UnityEngine.UI;
 public class LevelUpStackChoiceUI : MonoBehaviour
 {
     private const int VisibleChoiceCount = 5;
+    private const float BioGambleResultRevealSeconds = 0.8f;
+
+    private static readonly Color32 NormalBadgeColor = new Color32(58, 31, 37, 248);
+    private static readonly Color32 BioGambleBadgeColor = new Color32(49, 28, 54, 250);
+    private static readonly Color32 NormalValueColor = new Color32(236, 207, 199, 255);
+    private static readonly Color32 UnknownValueColor = new Color32(246, 207, 99, 255);
+    private static readonly Color32 PositiveValueColor = new Color32(143, 227, 136, 255);
+    private static readonly Color32 ZeroValueColor = new Color32(193, 183, 183, 255);
+    private static readonly Color32 NegativeValueColor = new Color32(255, 119, 119, 255);
 
     private enum StackStatType
     {
@@ -52,6 +63,9 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
     private readonly List<StackStatType> currentChoices = new List<StackStatType>(VisibleChoiceCount);
     private readonly Dictionary<Button, UnityEngine.Events.UnityAction> boundButtonActions = new Dictionary<Button, UnityEngine.Events.UnityAction>();
+    private readonly TMP_Text[] statValueTexts = new TMP_Text[VisibleChoiceCount];
+    private readonly TMP_Text[] statRangeTexts = new TMP_Text[VisibleChoiceCount];
+    private readonly Image[] statValueBadges = new Image[VisibleChoiceCount];
 
     private Canvas levelUpCanvasRoot;
     private bool pausedByThisUI;
@@ -143,6 +157,10 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         Shuffle(allStats);
         currentChoices.AddRange(allStats.Take(VisibleChoiceCount));
         selectionInProgress = false;
+        EnsureStatValueUI();
+
+        LevelProgressionConfig config = LevelUpManager.Config;
+        bool hasBioGamble = HasBioGamble(config);
 
         for (int i = 0; i < statButtons.Length; i++)
         {
@@ -177,6 +195,8 @@ public class LevelUpStackChoiceUI : MonoBehaviour
                 image.sprite = sprite;
             }
             image.preserveAspect = true;
+
+            UpdateStatValueDisplay(i, currentChoices[i], config, hasBioGamble);
         }
 
         ShowUI();
@@ -204,9 +224,21 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         selectionInProgress = true;
         SetButtonsInteractable(false);
 
-        ApplyStat(currentChoices[index]);
+        int? bioGambleResult = ApplyStat(currentChoices[index]);
         LevelUpManager.RecordSelection(MapToLegacyChoice(currentChoices[index]));
 
+        if (bioGambleResult.HasValue)
+        {
+            ShowBioGambleResult(index, bioGambleResult.Value);
+            StartCoroutine(CompleteBioGambleSelectionAfterReveal());
+            return;
+        }
+
+        CompleteSelection();
+    }
+
+    private void CompleteSelection()
+    {
         if (LevelUpManager.HasPendingLevelUp())
         {
             HideUI();
@@ -219,6 +251,12 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         selectionInProgress = false;
     }
 
+    private IEnumerator CompleteBioGambleSelectionAfterReveal()
+    {
+        yield return new WaitForSecondsRealtime(BioGambleResultRevealSeconds);
+        CompleteSelection();
+    }
+
     private IEnumerator ProcessPendingLevelUpNextFrame()
     {
         yield return null;
@@ -226,36 +264,33 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         selectionInProgress = false;
     }
 
-    private void ApplyStat(StackStatType statType)
+    private int? ApplyStat(StackStatType statType)
     {
         PlayerStats playerStats = PlayerStats.Instance ?? FindFirstObjectByType<PlayerStats>();
         if (playerStats == null)
         {
             Debug.LogWarning("[LevelUpStackChoiceUI] PlayerStats instance not found.");
-            return;
+            return null;
         }
 
         string source = $"LevelUpStackChoiceUI_{statType}_{selectionSerial++}";
         PlayerItemManager itemManager = PlayerItemManager.Instance ?? playerStats.GetComponent<PlayerItemManager>();
         LevelProgressionConfig config = LevelUpManager.Config;
-        bool hasBioGamble = config != null
-            && config.bioGambleEnabled
-            && itemManager != null
-            && itemManager.ContainsItem(PlayerItemCombatEffects.BioGambleId);
+        bool hasBioGamble = HasBioGamble(config, itemManager);
         if (hasBioGamble)
         {
             int minDelta = config.bioGambleMinDelta;
             int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
             int randomDelta = Random.Range(minDelta, maxDelta + 1);
             ApplyBioGambleStat(playerStats, statType, randomDelta, source);
-            return;
+            return randomDelta;
         }
 
         CharacterStatType characterStatType = ToCharacterStatType(statType);
         if (config == null || !config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
         {
             Debug.LogWarning($"[LevelUpStackChoiceUI] Missing level-up stat config for {characterStatType}.");
-            return;
+            return null;
         }
 
         float modifierValue = config.GetRuntimeModifierValue(valueConfig);
@@ -268,6 +303,17 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         {
             playerStats.Heal(valueConfig.value);
         }
+
+        return null;
+    }
+
+    private static bool HasBioGamble(LevelProgressionConfig config, PlayerItemManager itemManager = null)
+    {
+        itemManager ??= PlayerItemManager.Instance ?? Object.FindFirstObjectByType<PlayerItemManager>();
+        return config != null
+            && config.bioGambleEnabled
+            && itemManager != null
+            && itemManager.ContainsItem(PlayerItemCombatEffects.BioGambleId);
     }
 
     private static void PlayStatSelectionSfx(StackStatType statType)
@@ -319,6 +365,208 @@ public class LevelUpStackChoiceUI : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    private void EnsureStatValueUI()
+    {
+        if (statButtons == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < statButtons.Length && i < VisibleChoiceCount; i++)
+        {
+            Button button = statButtons[i];
+            if (button == null)
+            {
+                continue;
+            }
+
+            Transform existingBadge = button.transform.Find("DynamicStatValueBadge");
+            GameObject badgeObject;
+            if (existingBadge != null)
+            {
+                badgeObject = existingBadge.gameObject;
+            }
+            else
+            {
+                badgeObject = new GameObject(
+                    "DynamicStatValueBadge",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                badgeObject.layer = button.gameObject.layer;
+                badgeObject.transform.SetParent(button.transform, false);
+            }
+
+            RectTransform badgeRect = badgeObject.GetComponent<RectTransform>();
+            badgeRect.anchorMin = new Vector2(0.26f, 0.39f);
+            badgeRect.anchorMax = new Vector2(0.74f, 0.54f);
+            badgeRect.anchoredPosition = Vector2.zero;
+            badgeRect.sizeDelta = Vector2.zero;
+            badgeRect.localScale = Vector3.one;
+
+            Image badgeImage = badgeObject.GetComponent<Image>();
+            badgeImage.color = NormalBadgeColor;
+            badgeImage.raycastTarget = false;
+
+            Outline badgeOutline = badgeObject.GetComponent<Outline>();
+            if (badgeOutline == null)
+            {
+                badgeOutline = badgeObject.AddComponent<Outline>();
+            }
+            badgeOutline.effectColor = new Color32(31, 15, 21, 230);
+            badgeOutline.effectDistance = new Vector2(1f, -1f);
+            badgeOutline.useGraphicAlpha = true;
+
+            TMP_Text valueText = FindOrCreateBadgeText(
+                badgeRect,
+                "Value",
+                new Vector2(0f, 0.30f),
+                Vector2.one,
+                22f,
+                12f);
+            TMP_Text rangeText = FindOrCreateBadgeText(
+                badgeRect,
+                "Range",
+                Vector2.zero,
+                new Vector2(1f, 0.40f),
+                8f,
+                5f);
+
+            badgeObject.transform.SetAsLastSibling();
+            statValueBadges[i] = badgeImage;
+            statValueTexts[i] = valueText;
+            statRangeTexts[i] = rangeText;
+        }
+    }
+
+    private static TMP_Text FindOrCreateBadgeText(
+        RectTransform parent,
+        string childName,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        float maxFontSize,
+        float minFontSize)
+    {
+        Transform existing = parent.Find(childName);
+        GameObject textObject;
+        if (existing != null)
+        {
+            textObject = existing.gameObject;
+        }
+        else
+        {
+            textObject = new GameObject(childName, typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObject.layer = parent.gameObject.layer;
+            textObject.transform.SetParent(parent, false);
+        }
+
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = Vector2.zero;
+        rect.localScale = Vector3.one;
+
+        TMP_Text text = textObject.GetComponent<TMP_Text>();
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontStyle = FontStyles.Bold;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = minFontSize;
+        text.fontSizeMax = maxFontSize;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Overflow;
+        text.raycastTarget = false;
+        text.outlineColor = new Color32(30, 13, 18, 255);
+        text.outlineWidth = 0.18f;
+        return text;
+    }
+
+    private void UpdateStatValueDisplay(
+        int index,
+        StackStatType statType,
+        LevelProgressionConfig config,
+        bool hasBioGamble)
+    {
+        if (!TryGetStatValueUI(index, out Image badge, out TMP_Text valueText, out TMP_Text rangeText))
+        {
+            return;
+        }
+
+        if (hasBioGamble)
+        {
+            int minDelta = config.bioGambleMinDelta;
+            int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
+            badge.color = BioGambleBadgeColor;
+            valueText.text = "?";
+            valueText.color = UnknownValueColor;
+            rangeText.text = $"{FormatSignedValue(minDelta)}~{FormatSignedValue(maxDelta)}";
+            rangeText.color = NormalValueColor;
+            return;
+        }
+
+        float displayedValue = 1f;
+        CharacterStatType characterStatType = ToCharacterStatType(statType);
+        if (config != null && config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
+        {
+            displayedValue = valueConfig.value;
+        }
+
+        badge.color = NormalBadgeColor;
+        valueText.text = FormatSignedValue(displayedValue);
+        valueText.color = NormalValueColor;
+        rangeText.text = string.Empty;
+    }
+
+    private void ShowBioGambleResult(int selectedIndex, int result)
+    {
+        if (!TryGetStatValueUI(selectedIndex, out Image badge, out TMP_Text valueText, out TMP_Text rangeText))
+        {
+            return;
+        }
+
+        badge.color = BioGambleBadgeColor;
+        valueText.text = FormatSignedValue(result);
+        valueText.color = result > 0
+            ? PositiveValueColor
+            : result < 0
+                ? NegativeValueColor
+                : ZeroValueColor;
+        rangeText.text = string.Empty;
+    }
+
+    private bool TryGetStatValueUI(int index, out Image badge, out TMP_Text valueText, out TMP_Text rangeText)
+    {
+        badge = null;
+        valueText = null;
+        rangeText = null;
+
+        if (index < 0 || index >= VisibleChoiceCount)
+        {
+            return false;
+        }
+
+        badge = statValueBadges[index];
+        valueText = statValueTexts[index];
+        rangeText = statRangeTexts[index];
+        return badge != null && valueText != null && rangeText != null;
+    }
+
+    private static string FormatSignedValue(float value)
+    {
+        string magnitude = Mathf.Abs(value).ToString("0.##", CultureInfo.InvariantCulture);
+        if (value > 0f)
+        {
+            return $"+{magnitude}";
+        }
+
+        if (value < 0f)
+        {
+            return $"-{magnitude}";
+        }
+
+        return "0";
     }
 
     private void ResolveReferences()

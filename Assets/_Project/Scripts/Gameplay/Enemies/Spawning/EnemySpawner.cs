@@ -24,29 +24,39 @@ namespace Necrocis
         private bool initializedWave;            // 초기 웨이브 생성 완료 여부
         private int enemyPoolArchetypeId;        // 풀 분류 ID
         private float nextEvaluationTime;
+        private float activationRadiusOverride = -1f;
 
-        private int DifficultyMaxAlive
+        private int GetDifficultyMaxAlive(WorldDifficultyBalance balance)
         {
-            get
-            {
-                float multiplier = DifficultyBalanceService.ActiveProfile?.world?.enemyMaxAlive ?? 1f;
-                return Mathf.Max(0, Mathf.RoundToInt(config.maxAlive * Mathf.Max(0f, multiplier)));
-            }
+            float multiplier = balance != null ? balance.enemyMaxAlive : 1f;
+            return Mathf.Max(0, Mathf.RoundToInt(config.maxAlive * Mathf.Max(0f, multiplier)));
         }
 
-        private float DifficultyRespawnCooldown =>
-            config.respawnCooldown
-            * Mathf.Max(
-                0.01f,
-                DifficultyBalanceService.ActiveProfile?.world?.enemyRespawnCooldown ?? 1f);
+        private float GetDifficultyRespawnCooldown(WorldDifficultyBalance balance)
+        {
+            float multiplier = balance != null ? balance.enemyRespawnCooldown : 1f;
+            return config.respawnCooldown * Mathf.Max(0.01f, multiplier);
+        }
+
+        private static WorldDifficultyBalance GetActiveWorldBalance()
+        {
+            BiomeType biome = BiomeManager.Active != null
+                ? BiomeManager.Active.BiomeType
+                : BiomeType.None;
+            return DifficultyBalanceService.GetWorldBalance(biome);
+        }
 
         // 스포너 초기 설정: 이전 적 정리 → 새 설정 적용
-        public void Configure(EnemySpawnRuleConfig config, Vector3 anchorPosition)
+        public void Configure(
+            EnemySpawnRuleConfig config,
+            Vector3 anchorPosition,
+            float activationRadiusOverride = -1f)
         {
             ClearSpawnedEnemies();
 
             this.config = config;
             this.anchorPosition = anchorPosition;
+            this.activationRadiusOverride = activationRadiusOverride;
             playerTransform = null;
             spawnParent = transform.parent;
             nextSpawnTime = 0f;
@@ -80,8 +90,14 @@ namespace Necrocis
                 return;
             }
 
+            WorldDifficultyBalance worldBalance = GetActiveWorldBalance();
+            int maxAlive = GetDifficultyMaxAlive(worldBalance);
+            float respawnCooldown = GetDifficultyRespawnCooldown(worldBalance);
+
             // 활성화 범위 밖이면 모든 적 해제
-            float activationRadius = config.activationRadius;
+            float activationRadius = activationRadiusOverride >= 0f
+                ? activationRadiusOverride
+                : config.activationRadius;
             Vector3 playerDelta = playerTransform.position - anchorPosition;
             float playerDistanceSqr = playerDelta.x * playerDelta.x + playerDelta.z * playerDelta.z;
             if (activationRadius < 0f || playerDistanceSqr > activationRadius * activationRadius)
@@ -96,15 +112,15 @@ namespace Necrocis
 
             if (!initializedWave)
             {
-                if (TrySpawnWave())
+                if (TrySpawnWave(maxAlive))
                 {
                     initializedWave = true;
-                    nextSpawnTime = Time.time + DifficultyRespawnCooldown;
+                    nextSpawnTime = Time.time + respawnCooldown;
                 }
                 return;
             }
 
-            if (activeEnemies.Count >= DifficultyMaxAlive || Time.time < nextSpawnTime)
+            if (activeEnemies.Count >= maxAlive || Time.time < nextSpawnTime)
             {
                 return;
             }
@@ -114,9 +130,9 @@ namespace Necrocis
                 return;
             }
 
-            if (TrySpawnWave())
+            if (TrySpawnWave(maxAlive))
             {
-                nextSpawnTime = Time.time + DifficultyRespawnCooldown;
+                nextSpawnTime = Time.time + respawnCooldown;
             }
         }
 
@@ -165,15 +181,17 @@ namespace Necrocis
         public void NotifyEnemyReleased(EnemyController enemy)
         {
             activeEnemies.Remove(enemy);
-            if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < DifficultyMaxAlive)
+            WorldDifficultyBalance worldBalance = GetActiveWorldBalance();
+            int maxAlive = GetDifficultyMaxAlive(worldBalance);
+            if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < maxAlive)
             {
-                nextSpawnTime = Time.time + DifficultyRespawnCooldown;
+                nextSpawnTime = Time.time + GetDifficultyRespawnCooldown(worldBalance);
             }
         }
 
-        private bool TrySpawnWave()
+        private bool TrySpawnWave(int maxAlive)
         {
-            while (activeEnemies.Count < DifficultyMaxAlive)
+            while (activeEnemies.Count < maxAlive)
             {
                 if (!SpawnEnemy())
                 {

@@ -6,19 +6,17 @@ namespace Necrocis
 {
     /// <summary>
     /// 엘리트 몹 스포너.
-    /// 1단계: 일반 적 각 5마리 처치 → 경고 자막 → 엘리트가 킬 기반으로 지속 소환
-    /// 이후: 7마리마다 엘리트 1마리 + 미니 경고 "면역 반응 강화 중..."
+    /// 등록된 일반 적을 합산해 10마리 처치할 때마다 엘리트 1마리를 소환한다.
+    /// 첫 소환은 전체 경고, 이후 소환은 미니 경고를 표시한다.
     /// </summary>
     public class EliteSpawner : MonoBehaviour
     {
         [Header("Spawn Settings")]
         [SerializeField] private float spawnDistanceMin = 8f;
         [SerializeField] private float spawnDistanceMax = 12f;
-        [SerializeField] private int eliteSpawnEveryNKills = 7;
+        [SerializeField, Min(1)] private int eliteSpawnEveryNKills = 10;
 
-        private readonly List<EliteEntry> eliteConfigs = new List<EliteEntry>();
-        private readonly Dictionary<string, int> killCounts = new Dictionary<string, int>();
-        private readonly HashSet<string> unlockedElites = new HashSet<string>();
+        private readonly HashSet<string> normalEnemyNames = new HashSet<string>();
         private readonly List<EnemySpawnRuleConfig> activeEliteConfigs = new List<EnemySpawnRuleConfig>();
 
         // 경고 UI (풀 자막)
@@ -38,10 +36,8 @@ namespace Necrocis
         private float miniDuration = 1.5f;
         private bool showingMini;
 
-        // 지속 소환
-        private bool elitePhaseActive;
-        private int totalKillsSincePhase;
-        private int lastEliteSpawnKills;
+        // 일반몹 합산 처치 기반 지속 소환
+        private int totalNormalKills;
         private bool warningShown;
 
         // 자막 대기열
@@ -49,20 +45,6 @@ namespace Necrocis
 
         // 폰트
         private Font pixelFont;
-
-        // 엘리트별 해금 자막
-        private readonly Dictionary<string, string> eliteUnlockMessages = new Dictionary<string, string>
-        {
-            { "Granuloma", "면역 경고: 대식세포 집결\n— 육아종 형성 개시!" },
-            { "Antibody", "적응 면역 활성화\n— 항체 투입 승인!" }
-        };
-
-        private struct EliteEntry
-        {
-            public EnemySpawnRuleConfig config;
-            public string triggerEnemyName;
-            public int triggerKillCount;
-        }
 
         public static EliteSpawner Instance { get; private set; }
 
@@ -81,23 +63,27 @@ namespace Necrocis
         {
             if (config == null || !config.isElite) return;
 
-            eliteConfigs.Add(new EliteEntry
-            {
-                config = config,
-                triggerEnemyName = config.killTriggerEnemyName,
-                triggerKillCount = config.killTriggerCount > 0 ? config.killTriggerCount : 5
-            });
+            if (!activeEliteConfigs.Contains(config))
+                activeEliteConfigs.Add(config);
+        }
+
+        public void ConfigureKillInterval(int normalKillsPerElite)
+        {
+            eliteSpawnEveryNKills = Mathf.Max(1, normalKillsPerElite);
+        }
+
+        public void RegisterNormalEnemyConfig(EnemySpawnRuleConfig config)
+        {
+            if (config == null || config.isElite || string.IsNullOrEmpty(config.name)) return;
+
+            normalEnemyNames.Add(config.name);
         }
 
         public void ClearConfigs()
         {
-            eliteConfigs.Clear();
-            killCounts.Clear();
-            unlockedElites.Clear();
+            normalEnemyNames.Clear();
             activeEliteConfigs.Clear();
-            elitePhaseActive = false;
-            totalKillsSincePhase = 0;
-            lastEliteSpawnKills = 0;
+            totalNormalKills = 0;
             warningShown = false;
             showingWarning = false;
             showingMini = false;
@@ -110,74 +96,39 @@ namespace Necrocis
 
         public void NotifyEnemyKilled(string enemyName)
         {
-            if (string.IsNullOrEmpty(enemyName)) return;
-
-            if (!killCounts.ContainsKey(enemyName))
-                killCounts[enemyName] = 0;
-
-            killCounts[enemyName]++;
-
-            // 엘리트 단계 활성화 후: N마리마다 엘리트 소환 + 미니 경고
-            if (elitePhaseActive && activeEliteConfigs.Count > 0)
+            if (string.IsNullOrEmpty(enemyName)
+                || !normalEnemyNames.Contains(enemyName)
+                || activeEliteConfigs.Count == 0)
             {
-                totalKillsSincePhase++;
-                if (totalKillsSincePhase - lastEliteSpawnKills >= eliteSpawnEveryNKills)
-                {
-                    lastEliteSpawnKills = totalKillsSincePhase;
-                    SpawnRandomElite();
-                    ShowMiniWarning("면역 반응 강화 중...");
-                }
+                return;
             }
 
-            // 해금 조건 확인
-            foreach (EliteEntry entry in eliteConfigs)
+            totalNormalKills++;
+            int killsPerElite = Mathf.Max(1, eliteSpawnEveryNKills);
+            if (totalNormalKills % killsPerElite != 0) return;
+
+            QueueEliteSpawn();
+        }
+
+        private void QueueEliteSpawn()
+        {
+            if (!warningShown)
             {
-                if (unlockedElites.Contains(entry.config.name)) continue;
-                if (entry.triggerEnemyName != enemyName) continue;
-                if (killCounts[enemyName] < entry.triggerKillCount) continue;
-
-                unlockedElites.Add(entry.config.name);
-                activeEliteConfigs.Add(entry.config);
-
-                // 엘리트별 고유 해금 메시지
-                string message;
-                if (!eliteUnlockMessages.TryGetValue(entry.config.name, out message))
-                    message = $"새로운 위협 감지!\n{entry.config.name} 출현!";
-
-                bool isFirst = !warningShown;
                 warningShown = true;
-
-                if (!showingWarning)
-                {
-                    ShowWarning(message, () =>
-                    {
-                        if (isFirst)
-                        {
-                            elitePhaseActive = true;
-                            totalKillsSincePhase = 0;
-                            lastEliteSpawnKills = 0;
-                        }
-                        SpawnRandomElite();
-                    });
-                }
-                else
-                {
-                    string msg = message;
-                    warningQueue.Enqueue(() =>
-                    {
-                        ShowWarning(msg, () =>
-                        {
-                            if (!elitePhaseActive)
-                            {
-                                elitePhaseActive = true;
-                                totalKillsSincePhase = 0;
-                                lastEliteSpawnKills = 0;
-                            }
-                            SpawnRandomElite();
-                        });
-                    });
-                }
+                ShowWarning("면역 경고\n엘리트 적 출현!", SpawnRandomElite);
+                return;
             }
+
+            System.Action spawnAction = () =>
+            {
+                SpawnRandomElite();
+                ShowMiniWarning("면역 반응 강화 중...");
+            };
+
+            if (showingWarning)
+                warningQueue.Enqueue(spawnAction);
+            else
+                spawnAction();
         }
 
         private void Update()
@@ -249,7 +200,7 @@ namespace Necrocis
         }
 
         // ─────────────────────────────────
-        // 미니 경고 (7마리마다)
+        // 미니 경고 (첫 소환 이후)
         // ─────────────────────────────────
 
         private void ShowMiniWarning(string message)

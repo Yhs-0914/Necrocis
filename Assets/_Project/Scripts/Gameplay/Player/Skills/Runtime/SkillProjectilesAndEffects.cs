@@ -45,6 +45,7 @@ namespace Necrocis
                 projectile = projectileObject.AddComponent<SkillProjectile>();
             }
 
+            projectile.ConfigureVisualSorting(skillEffectSortingOrder);
             projectile.Launch(direction, damage, speed, lifeTime, enemyMask, shouldDisableOnHit, debuff);
         }
 
@@ -201,6 +202,7 @@ namespace Necrocis
 
             effect.transform.position = target.transform.position;
             effect.transform.rotation = Quaternion.identity;
+            ConfigureSkillEffectRenderers(effect);
 
             TargetAttachedEffect attachedEffect = effect.GetComponent<TargetAttachedEffect>();
             if (attachedEffect == null)
@@ -222,7 +224,7 @@ namespace Necrocis
         }
 
 
-        private void SpawnSkillEffect(
+        private GameObject SpawnSkillEffect(
             GameObject prefab,
             Vector3 position,
             float lifeTime,
@@ -236,14 +238,15 @@ namespace Necrocis
                 GameObject effect = RuntimePool.Acquire(prefab);
                 if (effect == null)
                 {
-                    return;
+                    return null;
                 }
 
                 effect.transform.position = position;
                 effect.transform.rotation = Quaternion.identity;
                 effect.transform.localScale *= safeScaleMultiplier;
+                ConfigureSkillEffectRenderers(effect);
                 SchedulePoolReturn(effect, lifeTime);
-                return;
+                return effect;
             }
 
             GameObject fallback = AcquireFallbackVisual(
@@ -253,12 +256,54 @@ namespace Necrocis
                 fallbackColor);
             if (fallback == null)
             {
-                return;
+                return null;
             }
 
             fallback.transform.position = position;
             fallback.transform.rotation = Quaternion.identity;
             SchedulePoolReturn(fallback, lifeTime);
+            return fallback;
+        }
+
+
+        private void ConfigureSkillEffectRenderers(GameObject effect)
+        {
+            if (effect == null)
+            {
+                return;
+            }
+
+            SpriteRenderer[] renderers = effect.GetComponentsInChildren<SpriteRenderer>(true);
+            if (renderers.Length == 0)
+            {
+                return;
+            }
+
+            int minimumOrder = int.MaxValue;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null)
+                {
+                    minimumOrder = Mathf.Min(minimumOrder, renderers[i].sortingOrder);
+                }
+            }
+
+            if (minimumOrder == int.MaxValue)
+            {
+                return;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                SpriteRenderer renderer = renderers[i];
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                int relativeOrder = Mathf.Max(0, renderer.sortingOrder - minimumOrder);
+                renderer.sortingOrder = skillEffectSortingOrder + relativeOrder;
+            }
         }
 
 
@@ -372,7 +417,7 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
-                    DrawSkillRadius(0f, warriorSkill1.range, new Color(0.9f, 0.1f, 0.1f, 0.4f));
+                    DrawSkillArc(warriorSkill1.range, warriorSkill1.forwardAngle, new Color(0.9f, 0.1f, 0.1f, 0.65f));
                     DrawSkillRadius(0f, warriorSkill2.searchRange, new Color(1f, 0.4f, 0.0f, 0.3f));
                     break;
             }
@@ -392,6 +437,37 @@ namespace Necrocis
 
             Gizmos.color = color;
             Gizmos.DrawWireSphere(center, Mathf.Max(0f, radius));
+        }
+
+        private void DrawSkillArc(float radius, float angle, Color color)
+        {
+            Vector3 forward = Application.isPlaying ? GetFacingDirection() : Vector3.forward;
+            if (forward.sqrMagnitude < 0.0001f)
+            {
+                forward = Vector3.forward;
+            }
+
+            Vector3 center = transform.position;
+            center.y = transform.position.y + skillVerticalOffset;
+            float safeRadius = Mathf.Max(0f, radius);
+            float halfAngle = Mathf.Clamp(angle * 0.5f, 0.5f, 180f);
+            const int segments = 24;
+
+            Gizmos.color = color;
+            Vector3 leftDirection = Quaternion.AngleAxis(-halfAngle, Vector3.up) * forward.normalized;
+            Vector3 previousPoint = center + leftDirection * safeRadius;
+            Gizmos.DrawLine(center, previousPoint);
+
+            for (int i = 1; i <= segments; i++)
+            {
+                float currentAngle = Mathf.Lerp(-halfAngle, halfAngle, i / (float)segments);
+                Vector3 currentDirection = Quaternion.AngleAxis(currentAngle, Vector3.up) * forward.normalized;
+                Vector3 currentPoint = center + currentDirection * safeRadius;
+                Gizmos.DrawLine(previousPoint, currentPoint);
+                previousPoint = currentPoint;
+            }
+
+            Gizmos.DrawLine(center, previousPoint);
         }
 
 
