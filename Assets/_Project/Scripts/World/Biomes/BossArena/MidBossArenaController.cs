@@ -5,34 +5,18 @@ namespace Necrocis
 {
     /// <summary>
     /// 맵 중앙 중간보스 구역을 관리한다.
-    /// 안개 벽 시각효과, 진입 후 봉쇄, 보스 처치 후 해제를 담당한다.
+    /// 진입 후 봉쇄, 보스 전투, 보스 처치 후 해제를 담당한다.
     /// </summary>
     [DisallowMultipleComponent]
     public class MidBossArenaController : MonoBehaviour
     {
-        private static readonly int FogTilingId = Shader.PropertyToID("_FogTiling");
-        private static readonly int PrimarySpeedId = Shader.PropertyToID("_PrimarySpeed");
-        private static readonly int SecondarySpeedId = Shader.PropertyToID("_SecondarySpeed");
-        private static readonly int SecondaryColorId = Shader.PropertyToID("_SecondaryColor");
-        private static readonly int DistortionStrengthId = Shader.PropertyToID("_DistortionStrength");
-        private static readonly int EdgeSoftnessId = Shader.PropertyToID("_EdgeSoftness");
-        private static readonly int DensityId = Shader.PropertyToID("_Density");
-        private static readonly int BaseOpacityId = Shader.PropertyToID("_BaseOpacity");
-        private static readonly int InteriorModeId = Shader.PropertyToID("_InteriorMode");
-        private static readonly int CoreDarknessId = Shader.PropertyToID("_CoreDarkness");
-        private static readonly int WispBrightnessId = Shader.PropertyToID("_WispBrightness");
-        private static readonly int SeedId = Shader.PropertyToID("_Seed");
-
-        private static Sprite fogSprite;
         private static Sprite runtimeBossSprite;
-        private static Material runtimeFogMaterial;
+        private static Sprite runtimePortalSprite;
         private static readonly List<MidBossArenaController> ActiveArenas = new List<MidBossArenaController>();
 
-        private readonly List<SpriteRenderer> fogRenderers = new List<SpriteRenderer>();
         private readonly List<Vector2Int> blockedBoundaryCells = new List<Vector2Int>();
+        private readonly List<Vector2Int> approachBoundaryCells = new List<Vector2Int>();
         private readonly HashSet<Renderer> concealedBossRenderers = new HashSet<Renderer>();
-        private SpriteRenderer interiorFogRenderer;
-        private MaterialPropertyBlock fogPropertyBlock;
 
         private BiomeManager biome;
         private MidBossArenaConfig arenaConfig;
@@ -50,8 +34,8 @@ namespace Necrocis
         private bool arenaLocked;
         private bool bossDefeated;
         private bool bossIntroPlaying;
-        private float fogRevealAmount;
-        private float borderFogAmount;
+        private bool approachBoundaryActive;
+        private BossArenaPresentation arenaPresentation;
 
         public bool IsLocked => arenaLocked;
 
@@ -71,16 +55,15 @@ namespace Necrocis
                 Mathf.Max(8, arenaConfig.arenaSize.x),
                 Mathf.Max(8, arenaConfig.arenaSize.y));
 
-            transform.position = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y);
+            transform.position = ResolveArenaCenterWorld();
             transform.name = "MidBossArena";
 
             BuildBoundaryCellCache();
+            ActivateApproachBoundary();
             BuildTrigger();
-            BuildFogWalls();
+            arenaPresentation = BossArenaPresentation.Create(transform, biome, arenaSize, arenaConfig);
 
             SpawnBoss();
-
-            ApplyFogVisualState();
         }
 
         private void OnEnable()
@@ -100,8 +83,6 @@ namespace Necrocis
 
         private void Update()
         {
-            UpdateFogReveal(Time.deltaTime);
-
             if (!arenaLocked || bossDefeated)
                 return;
 
@@ -135,6 +116,16 @@ namespace Necrocis
 
         private void OnTriggerEnter(Collider other)
         {
+            TryActivateFromCollider(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            TryActivateFromCollider(other);
+        }
+
+        private void TryActivateFromCollider(Collider other)
+        {
             if (arenaLocked || bossDefeated)
             {
                 return;
@@ -151,7 +142,14 @@ namespace Necrocis
                 return;
             }
 
-            TryActivateArena();
+            Vector2 playerHalfExtents = GetPlayerClampExtents(player);
+            ArenaWorldBounds bounds = GetArenaWorldBounds(playerHalfExtents);
+            if (!bounds.ContainsPlayableCenter(player.transform.position))
+            {
+                return;
+            }
+
+            TryActivateArena(player);
         }
 
         private void OnDestroy()
@@ -162,13 +160,18 @@ namespace Necrocis
             if (activeBoss != null)
                 activeBoss.Defeated -= HandleBossDefeated;
 
-            if (arenaLocked && biome != null)
+            if (biome != null)
             {
-                biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
+                if (arenaLocked)
+                {
+                    biome.RemoveRuntimeBlockedCells(blockedBoundaryCells);
+                }
+
+                DeactivateApproachBoundary();
             }
         }
 
-        private void TryActivateArena()
+        private void TryActivateArena(PlayerController player)
         {
             if (biome == null)
             {
@@ -183,8 +186,9 @@ namespace Necrocis
             }
 
             arenaLocked = true;
+            DeactivateApproachBoundary();
             biome.AddRuntimeBlockedCells(blockedBoundaryCells);
-            ApplyFogVisualState();
+            arenaPresentation?.SetState(BossArenaPresentationState.Locked);
             RecenterBossEncounter();
             SetBossEncounterActive(false);
 
@@ -193,13 +197,18 @@ namespace Necrocis
                 GameManager.Instance.SetGameState(GameState.InBossRoom);
             }
 
+            StartBossIntroOrEncounter();
+
+            Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
+        }
+
+        private void StartBossIntroOrEncounter()
+        {
             bossIntroPlaying = TryPlayBossIntro();
             if (!bossIntroPlaying)
             {
                 BeginBossEncounter();
             }
-
-            Debug.Log($"[MidBossArena] 중간보스 구역 진입 - 탈출 차단 활성화 ({biome.BiomeType})");
         }
 
         private bool TryPlayBossIntro()
@@ -297,7 +306,7 @@ namespace Necrocis
                 return;
             }
 
-            Vector3 bossSpawnPosition = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, bossRule.heightOffset);
+            Vector3 bossSpawnPosition = ResolveArenaCenterWorld(bossRule.heightOffset);
             int poolArchetypeId = EnemyController.GetPoolArchetypeId(bossRule);
             activeBoss = EnemyController.Acquire(transform, $"{bossRule.name}_MidBoss", poolArchetypeId);
             activeBoss.Configure(null, bossRule, bossSpawnPosition, bossSpawnPosition);
@@ -551,7 +560,7 @@ namespace Necrocis
                 return;
             }
 
-            Vector3 center = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, bossRule.heightOffset);
+            Vector3 center = ResolveArenaCenterWorld(bossRule.heightOffset);
             if (activeLungPattern != null)
             {
                 activeLungPattern.RecenterEncounter();
@@ -623,6 +632,9 @@ namespace Necrocis
 
             arenaLocked = false;
             bossDefeated = true;
+            arenaPresentation?.SetState(BossArenaPresentationState.Cleared);
+            BossIntroPresentation.Cancel(this);
+            bossIntroPlaying = false;
             SetBossEncounterActive(false);
             PlayBossDeathSfx();
 
@@ -649,8 +661,6 @@ namespace Necrocis
                 activeLungPattern.DisposeEncounter();
                 activeLungPattern = null;
             }
-
-            ApplyFogVisualState();
 
             if (GameManager.Instance != null)
             {
@@ -730,7 +740,7 @@ namespace Necrocis
             }
 
             float heightOffset = returnPortalConfig != null ? returnPortalConfig.heightOffset : 0f;
-            return biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, heightOffset);
+            return ResolveArenaCenterWorld(heightOffset);
         }
 
         private void SpawnReturnPortal(Vector3 portalPos)
@@ -755,7 +765,7 @@ namespace Necrocis
             bool hasArenaSprite = !hasConfiguredSprite && arenaConfig != null && arenaConfig.returnPortalSprite != null;
             sr.sprite = hasConfiguredSprite
                 ? returnPortalConfig.sprite
-                : hasArenaSprite ? arenaConfig.returnPortalSprite : GetFogSprite(true);
+                : hasArenaSprite ? arenaConfig.returnPortalSprite : GetRuntimePortalSprite();
             sr.color = hasConfiguredSprite || hasArenaSprite
                 ? Color.white
                 : new Color(0.6f, 0.2f, 1f, 0.85f);
@@ -818,207 +828,22 @@ namespace Necrocis
                 trigger = gameObject.AddComponent<BoxCollider>();
             }
 
-            int triggerInset = GetTriggerInsetCells();
-            float innerWidth = Mathf.Max(biome.TileSize, (arenaSize.x - triggerInset * 2) * biome.TileSize);
-            float innerDepth = Mathf.Max(biome.TileSize, (arenaSize.y - triggerInset * 2) * biome.TileSize);
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            int entranceWidth = Mathf.Clamp(
+                arenaConfig.GetPresentationConfig().entranceWidthInCells,
+                2,
+                Mathf.Max(2, arenaSize.x - 2));
+            float triggerWidth = entranceWidth * tileSize;
+            float triggerDepth = Mathf.Max(tileSize, arenaConfig.triggerInsetInCells * tileSize);
+            ArenaWorldBounds arenaBounds = GetArenaWorldBounds(Vector2.zero);
+            float southInnerEdgeLocal = arenaBounds.playableMinZ - transform.position.z;
 
             trigger.isTrigger = true;
-            trigger.size = new Vector3(innerWidth, arenaConfig.triggerHeight, innerDepth);
-            trigger.center = new Vector3(0f, arenaConfig.wallHeightOffset, 0f);
-        }
-
-        private void BuildFogWalls()
-        {
-            fogRenderers.Clear();
-            interiorFogRenderer = null;
-
-            Vector3 worldCenter = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float widthWorld = arenaSize.x * biome.TileSize;
-            float depthWorld = arenaSize.y * biome.TileSize;
-            float thicknessWorld = Mathf.Max(1, arenaConfig.wallThicknessInCells) * biome.TileSize;
-            float halfWidth = widthWorld * 0.5f;
-            float halfDepth = depthWorld * 0.5f;
-            float wallOffsetX = halfWidth - thicknessWorld * 0.5f;
-            float wallOffsetZ = halfDepth - thicknessWorld * 0.5f;
-
-            if (arenaConfig.useInteriorFogCover)
-            {
-                CreateInteriorFogCover(worldCenter, new Vector2(widthWorld, depthWorld));
-            }
-
-            CreateFogWall(
-                "NorthFogWall",
-                worldCenter + new Vector3(0f, 0f, wallOffsetZ),
-                new Vector2(widthWorld, thicknessWorld));
-
-            CreateFogWall(
-                "SouthFogWall",
-                worldCenter + new Vector3(0f, 0f, -wallOffsetZ),
-                new Vector2(widthWorld, thicknessWorld));
-
-            CreateFogWall(
-                "EastFogWall",
-                worldCenter + new Vector3(wallOffsetX, 0f, 0f),
-                new Vector2(thicknessWorld, depthWorld));
-
-            CreateFogWall(
-                "WestFogWall",
-                worldCenter + new Vector3(-wallOffsetX, 0f, 0f),
-                new Vector2(thicknessWorld, depthWorld));
-        }
-
-        private void CreateFogWall(string name, Vector3 position, Vector2 size)
-        {
-            position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset;
-            bool horizontal = size.x >= size.y;
-            Vector2 visualSize = size;
-            if (horizontal)
-            {
-                visualSize.y *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
-            }
-            else
-            {
-                visualSize.x *= Mathf.Max(1f, arenaConfig.fogSoftLayerWidth);
-            }
-
-            int wallIndex = fogRenderers.Count;
-            SpriteRenderer renderer = CreateFogLayer(
-                name,
-                position + Vector3.up * 0.02f,
-                visualSize,
-                arenaConfig.sortingOrder);
-            ConfigureFogMaterial(
-                renderer,
-                visualSize,
-                wallIndex * 2f + 1.17f,
-                arenaConfig.fogDensity,
-                arenaConfig.fogEdgeSoftness,
+            trigger.size = new Vector3(triggerWidth, arenaConfig.triggerHeight, triggerDepth);
+            trigger.center = new Vector3(
                 0f,
-                1f);
-            fogRenderers.Add(renderer);
-        }
-
-        private SpriteRenderer CreateFogLayer(string objectName, Vector3 position, Vector2 size, int sortingOrder)
-        {
-            GameObject layer = new GameObject(objectName);
-            layer.transform.SetParent(transform, false);
-            layer.transform.position = position;
-            layer.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-            SpriteRenderer renderer = layer.AddComponent<SpriteRenderer>();
-            renderer.sprite = GetFogSprite(false);
-            renderer.sortingOrder = sortingOrder;
-            bool verticalWall = size.y > size.x;
-            if (verticalWall)
-            {
-                layer.transform.rotation = Quaternion.Euler(90f, 0f, 90f);
-                size = new Vector2(size.y, size.x);
-            }
-
-            ApplyFogWorldSize(layer.transform, renderer.sprite, size);
-            return renderer;
-        }
-
-        private void CreateInteriorFogCover(Vector3 position, Vector2 size)
-        {
-            GameObject cover = new GameObject("InteriorFogCover");
-            cover.transform.SetParent(transform, false);
-            position.y = biome.GetGroundHeight(position) + arenaConfig.groundFogOffset + 0.02f;
-            cover.transform.position = position;
-            cover.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-            interiorFogRenderer = cover.AddComponent<SpriteRenderer>();
-            interiorFogRenderer.sprite = GetFogSprite(true);
-            ApplyFogWorldSize(cover.transform, interiorFogRenderer.sprite, size);
-            interiorFogRenderer.sortingOrder = arenaConfig.sortingOrder + arenaConfig.interiorFogSortingOrderOffset;
-            ConfigureFogMaterial(
-                interiorFogRenderer,
-                size,
-                19.73f,
-                arenaConfig.interiorFogDensity,
-                Mathf.Max(0.025f, arenaConfig.fogEdgeSoftness * 0.35f),
-                arenaConfig.interiorFogBaseOpacity,
-                0.58f,
-                true);
-        }
-
-        private void ConfigureFogMaterial(
-            SpriteRenderer renderer,
-            Vector2 worldSize,
-            float seed,
-            float density,
-            float edgeSoftness,
-            float baseOpacity,
-            float speedMultiplier,
-            bool interiorMode = false)
-        {
-            if (renderer == null)
-            {
-                return;
-            }
-
-            Material material = GetFogMaterial();
-            if (material == null)
-            {
-                return;
-            }
-
-            renderer.sharedMaterial = material;
-            fogPropertyBlock ??= new MaterialPropertyBlock();
-            renderer.GetPropertyBlock(fogPropertyBlock);
-
-            float worldTileSize = Mathf.Max(0.5f, arenaConfig.fogWorldTileSize);
-            Vector2 tiling = interiorMode
-                ? new Vector2(
-                    Mathf.Max(0.5f, worldSize.x / worldTileSize),
-                    Mathf.Max(0.5f, worldSize.y / worldTileSize))
-                : new Vector2(Mathf.Max(1f, Mathf.Max(worldSize.x, worldSize.y) / worldTileSize), 1f);
-            fogPropertyBlock.SetVector(
-                FogTilingId,
-                new Vector4(tiling.x, tiling.y, 0f, 0f));
-            fogPropertyBlock.SetVector(
-                PrimarySpeedId,
-                new Vector4(
-                    arenaConfig.fogPrimaryScrollSpeed.x * speedMultiplier,
-                    arenaConfig.fogPrimaryScrollSpeed.y * speedMultiplier,
-                    0f,
-                    0f));
-            fogPropertyBlock.SetVector(
-                SecondarySpeedId,
-                new Vector4(
-                    arenaConfig.fogSecondaryScrollSpeed.x * speedMultiplier,
-                    arenaConfig.fogSecondaryScrollSpeed.y * speedMultiplier,
-                    0f,
-                    0f));
-            fogPropertyBlock.SetColor(SecondaryColorId, arenaConfig.fogSecondaryColor);
-            fogPropertyBlock.SetFloat(DistortionStrengthId, arenaConfig.fogDistortionStrength);
-            fogPropertyBlock.SetFloat(EdgeSoftnessId, Mathf.Clamp(edgeSoftness, 0.001f, 0.45f));
-            fogPropertyBlock.SetFloat(DensityId, Mathf.Clamp(density, 0f, 2f));
-            fogPropertyBlock.SetFloat(BaseOpacityId, Mathf.Clamp01(baseOpacity));
-            fogPropertyBlock.SetFloat(InteriorModeId, interiorMode ? 1f : 0f);
-            fogPropertyBlock.SetFloat(CoreDarknessId, Mathf.Clamp01(arenaConfig.fogCoreDarkness));
-            fogPropertyBlock.SetFloat(WispBrightnessId, Mathf.Max(0f, arenaConfig.fogWispBrightness));
-            fogPropertyBlock.SetFloat(SeedId, seed);
-            renderer.SetPropertyBlock(fogPropertyBlock);
-        }
-
-        private static void ApplyFogWorldSize(Transform target, Sprite sprite, Vector2 worldSize)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            if (sprite == null)
-            {
-                target.localScale = new Vector3(worldSize.x, worldSize.y, 1f);
-                return;
-            }
-
-            Vector3 spriteSize = sprite.bounds.size;
-            float scaleX = spriteSize.x > 0.0001f ? worldSize.x / spriteSize.x : worldSize.x;
-            float scaleY = spriteSize.y > 0.0001f ? worldSize.y / spriteSize.y : worldSize.y;
-            target.localScale = new Vector3(scaleX, scaleY, 1f);
+                arenaConfig.wallHeightOffset,
+                southInnerEdgeLocal + triggerDepth * 0.5f);
         }
 
         private void HandleBossDefeated(EnemyController boss)
@@ -1038,13 +863,25 @@ namespace Necrocis
 
         public bool ContainsWorldPosition(Vector3 worldPosition)
         {
-            Vector3 centerWorld = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float halfWidth = arenaSize.x * biome.TileSize * 0.5f;
-            float halfDepth = arenaSize.y * biome.TileSize * 0.5f;
-            return worldPosition.x >= centerWorld.x - halfWidth
-                && worldPosition.x <= centerWorld.x + halfWidth
-                && worldPosition.z >= centerWorld.z - halfDepth
-                && worldPosition.z <= centerWorld.z + halfDepth;
+            return GetArenaWorldBounds(Vector2.zero).ContainsOuter(worldPosition);
+        }
+
+        public static bool CanPlayerTraverseArenaBoundary(
+            Vector3 currentPosition,
+            Vector3 desiredPosition,
+            Vector2 playerHalfExtents)
+        {
+            for (int i = 0; i < ActiveArenas.Count; i++)
+            {
+                MidBossArenaController arena = ActiveArenas[i];
+                if (arena != null
+                    && !arena.CanTraverseBoundary(currentPosition, desiredPosition, playerHalfExtents))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public static bool TryClampPlayerMovementInsideLockedArena(
@@ -1178,21 +1015,174 @@ namespace Necrocis
 
         private Vector3 ClampToPlayableBounds(Vector3 worldPosition, float margin)
         {
+            float safeMargin = Mathf.Max(0f, margin);
+            return ClampToPlayableBounds(worldPosition, new Vector2(safeMargin, safeMargin));
+        }
+
+        private Vector3 ClampToPlayableBounds(Vector3 worldPosition, Vector2 margins)
+        {
             if (biome == null || arenaConfig == null)
             {
                 return worldPosition;
             }
 
-            Vector3 centerWorld = biome.GridToWorld(centerGrid.x, centerGrid.y);
-            float tileSize = Mathf.Max(0.01f, biome.TileSize);
-            float wallPadding = (Mathf.Max(1, arenaConfig.wallThicknessInCells) + GetLockBoundaryInsetCells()) * tileSize;
-            float extraMargin = Mathf.Max(0f, margin);
-            float halfWidth = Mathf.Max(tileSize * 0.5f, arenaSize.x * tileSize * 0.5f - wallPadding - extraMargin);
-            float halfDepth = Mathf.Max(tileSize * 0.5f, arenaSize.y * tileSize * 0.5f - wallPadding - extraMargin);
-
-            worldPosition.x = Mathf.Clamp(worldPosition.x, centerWorld.x - halfWidth, centerWorld.x + halfWidth);
-            worldPosition.z = Mathf.Clamp(worldPosition.z, centerWorld.z - halfDepth, centerWorld.z + halfDepth);
+            ArenaWorldBounds bounds = GetArenaWorldBounds(margins);
+            worldPosition.x = Mathf.Clamp(worldPosition.x, bounds.playableMinX, bounds.playableMaxX);
+            worldPosition.z = Mathf.Clamp(worldPosition.z, bounds.playableMinZ, bounds.playableMaxZ);
             return worldPosition;
+        }
+
+        private bool CanTraverseBoundary(
+            Vector3 currentPosition,
+            Vector3 desiredPosition,
+            Vector2 playerHalfExtents)
+        {
+            if (bossDefeated || biome == null || arenaConfig == null)
+            {
+                return true;
+            }
+
+            IReadOnlyList<Vector2Int> solidCells = arenaLocked
+                ? blockedBoundaryCells
+                : approachBoundaryCells;
+            if (solidCells == null || solidCells.Count == 0)
+            {
+                return true;
+            }
+
+            Vector2 safeHalfExtents = new Vector2(
+                Mathf.Max(0f, playerHalfExtents.x),
+                Mathf.Max(0f, playerHalfExtents.y));
+            float currentOverlap = GetBoundaryOverlapScore(
+                currentPosition,
+                safeHalfExtents,
+                solidCells);
+            float desiredOverlap = GetBoundaryOverlapScore(
+                desiredPosition,
+                safeHalfExtents,
+                solidCells);
+
+            if (currentOverlap > 0f)
+            {
+                ArenaWorldBounds rawBounds = GetArenaWorldBounds(Vector2.zero);
+                bool currentOutsideWall = !rawBounds.ContainsOuter(currentPosition);
+                bool currentInsideWall = rawBounds.ContainsPlayableCenter(currentPosition);
+                if ((currentOutsideWall && rawBounds.ContainsOuter(desiredPosition))
+                    || (currentInsideWall && !rawBounds.ContainsPlayableCenter(desiredPosition)))
+                {
+                    return false;
+                }
+
+                return desiredOverlap + 0.000001f < currentOverlap;
+            }
+
+            if (desiredOverlap > 0f)
+            {
+                return false;
+            }
+
+            return !SegmentCrossesSolidBoundary(
+                currentPosition,
+                desiredPosition,
+                safeHalfExtents,
+                solidCells);
+        }
+
+        private float GetBoundaryOverlapScore(
+            Vector3 position,
+            Vector2 playerHalfExtents,
+            IReadOnlyList<Vector2Int> solidCells)
+        {
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            float score = 0f;
+            for (int i = 0; i < solidCells.Count; i++)
+            {
+                Vector2Int cell = solidCells[i];
+                Vector3 center = biome.GridToWorld(cell.x, cell.y);
+                float minX = center.x - tileSize * 0.5f - playerHalfExtents.x;
+                float maxX = center.x + tileSize * 0.5f + playerHalfExtents.x;
+                float minZ = center.z - tileSize * 0.5f - playerHalfExtents.y;
+                float maxZ = center.z + tileSize * 0.5f + playerHalfExtents.y;
+                if (position.x <= minX
+                    || position.x >= maxX
+                    || position.z <= minZ
+                    || position.z >= maxZ)
+                {
+                    continue;
+                }
+
+                float penetrationX = Mathf.Min(position.x - minX, maxX - position.x);
+                float penetrationZ = Mathf.Min(position.z - minZ, maxZ - position.z);
+                score += Mathf.Min(penetrationX, penetrationZ);
+            }
+
+            return score;
+        }
+
+        private bool SegmentCrossesSolidBoundary(
+            Vector3 start,
+            Vector3 end,
+            Vector2 playerHalfExtents,
+            IReadOnlyList<Vector2Int> solidCells)
+        {
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            Vector3 delta = end - start;
+            for (int i = 0; i < solidCells.Count; i++)
+            {
+                Vector2Int cell = solidCells[i];
+                Vector3 center = biome.GridToWorld(cell.x, cell.y);
+                float enter = 0f;
+                float exit = 1f;
+                if (!ClipSegmentAxis(
+                        start.x,
+                        delta.x,
+                        center.x - tileSize * 0.5f - playerHalfExtents.x,
+                        center.x + tileSize * 0.5f + playerHalfExtents.x,
+                        ref enter,
+                        ref exit)
+                    || !ClipSegmentAxis(
+                        start.z,
+                        delta.z,
+                        center.z - tileSize * 0.5f - playerHalfExtents.y,
+                        center.z + tileSize * 0.5f + playerHalfExtents.y,
+                        ref enter,
+                        ref exit))
+                {
+                    continue;
+                }
+
+                if (exit - enter > 0.0001f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ClipSegmentAxis(
+            float start,
+            float delta,
+            float minimum,
+            float maximum,
+            ref float enter,
+            ref float exit)
+        {
+            if (Mathf.Abs(delta) <= 0.000001f)
+            {
+                return start >= minimum && start <= maximum;
+            }
+
+            float first = (minimum - start) / delta;
+            float second = (maximum - start) / delta;
+            if (first > second)
+            {
+                (first, second) = (second, first);
+            }
+
+            enter = Mathf.Max(enter, first);
+            exit = Mathf.Min(exit, second);
+            return enter <= exit;
         }
 
         private void EnforcePlayerInsidePlayableBounds()
@@ -1203,9 +1193,9 @@ namespace Necrocis
                 return;
             }
 
-            float margin = GetPlayerClampMargin(player);
+            Vector2 margins = GetPlayerClampExtents(player);
             Vector3 currentPosition = player.transform.position;
-            Vector3 clampedPosition = ClampToPlayableBounds(currentPosition, margin);
+            Vector3 clampedPosition = ClampToPlayableBounds(currentPosition, margins);
             Vector3 planarDelta = clampedPosition - currentPosition;
             planarDelta.y = 0f;
             if (planarDelta.sqrMagnitude <= 0.000001f)
@@ -1216,27 +1206,37 @@ namespace Necrocis
             player.SpawnAt(clampedPosition);
         }
 
-        private static float GetPlayerClampMargin(PlayerController player)
+        private static Vector2 GetPlayerClampExtents(PlayerController player)
         {
+            ProceduralTerrainMotor terrainMotor = player != null
+                ? player.GetComponent<ProceduralTerrainMotor>()
+                : null;
+            if (terrainMotor != null)
+            {
+                return terrainMotor.TerrainHalfExtents;
+            }
+
             Collider hitCollider = player != null ? player.HitCollider : null;
             if (hitCollider == null)
             {
-                return 0.55f;
+                return new Vector2(0.5f, 0.5f);
             }
 
-            return Mathf.Max(0.35f, Mathf.Max(hitCollider.bounds.extents.x, hitCollider.bounds.extents.z) + 0.2f);
+            return new Vector2(
+                Mathf.Max(0.1f, hitCollider.bounds.extents.x),
+                Mathf.Max(0.1f, hitCollider.bounds.extents.z));
         }
 
         private void BuildBoundaryCellCache()
         {
             blockedBoundaryCells.Clear();
+            approachBoundaryCells.Clear();
+
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            bool usesPresentedEntrance = presentation.enabled;
 
             int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int lockInset = GetLockBoundaryInsetCells();
-            int minX = centerGrid.x - arenaSize.x / 2 + lockInset;
-            int minY = centerGrid.y - arenaSize.y / 2 + lockInset;
-            int maxX = centerGrid.x - arenaSize.x / 2 + arenaSize.x - 1 - lockInset;
-            int maxY = centerGrid.y - arenaSize.y / 2 + arenaSize.y - 1 - lockInset;
+            GetBoundaryGridBounds(out int minX, out int minY, out int maxX, out int maxY);
 
             for (int x = minX; x <= maxX; x++)
             {
@@ -1253,8 +1253,147 @@ namespace Necrocis
                     }
 
                     blockedBoundaryCells.Add(new Vector2Int(x, y));
+                    if (usesPresentedEntrance
+                        && !IsEntranceOpeningCell(x, y, minX, minY, maxX, maxY, thickness))
+                    {
+                        approachBoundaryCells.Add(new Vector2Int(x, y));
+                    }
                 }
             }
+        }
+
+        private void ActivateApproachBoundary()
+        {
+            if (approachBoundaryActive || biome == null || approachBoundaryCells.Count == 0)
+            {
+                return;
+            }
+
+            biome.AddRuntimeBlockedCells(approachBoundaryCells);
+            approachBoundaryActive = true;
+        }
+
+        private void DeactivateApproachBoundary()
+        {
+            if (!approachBoundaryActive || biome == null)
+            {
+                return;
+            }
+
+            biome.RemoveRuntimeBlockedCells(approachBoundaryCells);
+            approachBoundaryActive = false;
+        }
+
+        private bool IsEntranceOpeningCell(
+            int x,
+            int y,
+            int minX,
+            int minY,
+            int maxX,
+            int maxY,
+            int thickness)
+        {
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+
+            bool isOnEntranceSide = presentation.entranceSide switch
+            {
+                BossArenaEntranceSide.North => y > maxY - thickness,
+                BossArenaEntranceSide.West => x < minX + thickness,
+                BossArenaEntranceSide.East => x > maxX - thickness,
+                _ => y < minY + thickness
+            };
+            if (!isOnEntranceSide)
+            {
+                return false;
+            }
+
+            GetEntranceOpeningRange(
+                minX,
+                minY,
+                maxX,
+                maxY,
+                thickness,
+                out int openingStart,
+                out int openingEnd,
+                out bool horizontalEntrance);
+            int coordinate = horizontalEntrance ? x : y;
+            return coordinate >= openingStart && coordinate <= openingEnd;
+        }
+
+        private void GetEntranceOpeningRange(
+            int minX,
+            int minY,
+            int maxX,
+            int maxY,
+            int thickness,
+            out int openingStart,
+            out int openingEnd,
+            out bool horizontalEntrance)
+        {
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            horizontalEntrance = presentation.entranceSide == BossArenaEntranceSide.South
+                || presentation.entranceSide == BossArenaEntranceSide.North;
+            int sideMin = horizontalEntrance ? minX : minY;
+            int sideMax = horizontalEntrance ? maxX : maxY;
+            int availableWidth = Mathf.Max(2, sideMax - sideMin + 1 - thickness * 2);
+            int openingWidth = Mathf.Clamp(presentation.entranceWidthInCells, 2, availableWidth);
+            openingStart = sideMin + (sideMax - sideMin + 1 - openingWidth) / 2;
+            openingEnd = openingStart + openingWidth - 1;
+        }
+
+        private void GetBoundaryGridBounds(
+            out int minX,
+            out int minY,
+            out int maxX,
+            out int maxY)
+        {
+            int lockInset = GetLockBoundaryInsetCells();
+            minX = centerGrid.x - arenaSize.x / 2 + lockInset;
+            minY = centerGrid.y - arenaSize.y / 2 + lockInset;
+            maxX = centerGrid.x - arenaSize.x / 2 + arenaSize.x - 1 - lockInset;
+            maxY = centerGrid.y - arenaSize.y / 2 + arenaSize.y - 1 - lockInset;
+        }
+
+        private ArenaWorldBounds GetArenaWorldBounds(Vector2 playerHalfExtents)
+        {
+            GetBoundaryGridBounds(out int minX, out int minY, out int maxX, out int maxY);
+            float tileSize = Mathf.Max(0.01f, biome.TileSize);
+            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
+            Vector3 minimumCellCenter = biome.GridToWorld(minX, minY);
+            Vector3 maximumCellCenter = biome.GridToWorld(maxX, maxY);
+
+            float outerMinX = minimumCellCenter.x - tileSize * 0.5f;
+            float outerMaxX = maximumCellCenter.x + tileSize * 0.5f;
+            float outerMinZ = minimumCellCenter.z - tileSize * 0.5f;
+            float outerMaxZ = maximumCellCenter.z + tileSize * 0.5f;
+            float playableMinX = outerMinX + thickness * tileSize + Mathf.Max(0f, playerHalfExtents.x);
+            float playableMaxX = outerMaxX - thickness * tileSize - Mathf.Max(0f, playerHalfExtents.x);
+            float playableMinZ = outerMinZ + thickness * tileSize + Mathf.Max(0f, playerHalfExtents.y);
+            float playableMaxZ = outerMaxZ - thickness * tileSize - Mathf.Max(0f, playerHalfExtents.y);
+
+            if (playableMinX > playableMaxX)
+            {
+                float midpoint = (outerMinX + outerMaxX) * 0.5f;
+                playableMinX = midpoint;
+                playableMaxX = midpoint;
+            }
+
+            if (playableMinZ > playableMaxZ)
+            {
+                float midpoint = (outerMinZ + outerMaxZ) * 0.5f;
+                playableMinZ = midpoint;
+                playableMaxZ = midpoint;
+            }
+
+            return new ArenaWorldBounds(
+                outerMinX,
+                outerMaxX,
+                outerMinZ,
+                outerMaxZ,
+                playableMinX,
+                playableMaxX,
+                playableMinZ,
+                playableMaxZ);
         }
 
         private int GetLockBoundaryInsetCells()
@@ -1265,12 +1404,21 @@ namespace Necrocis
             return Mathf.Min(configuredInset, maxInset);
         }
 
-        private int GetTriggerInsetCells()
+        private Vector3 ResolveArenaCenterWorld(float heightOffset = 0f)
         {
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int configuredInset = Mathf.Max(0, arenaConfig.triggerInsetInCells);
-            int maxInset = Mathf.Max(0, (Mathf.Min(arenaSize.x, arenaSize.y) - 1) / 2);
-            return Mathf.Min(thickness + configuredInset, maxInset);
+            Vector3 center = biome.GridToWorldWithHeight(centerGrid.x, centerGrid.y, heightOffset);
+            float halfCell = biome.TileSize * 0.5f;
+            if (arenaSize.x % 2 == 0)
+            {
+                center.x -= halfCell;
+            }
+
+            if (arenaSize.y % 2 == 0)
+            {
+                center.z -= halfCell;
+            }
+
+            return center;
         }
 
         private Vector2Int ResolveCenterGrid()
@@ -1540,106 +1688,38 @@ namespace Necrocis
             return 0f;
         }
 
-        private void ApplyFogVisualState()
+        private static Sprite GetRuntimePortalSprite()
         {
-            UpdateFogVisuals();
-        }
-
-        private void UpdateFogReveal(float deltaTime)
-        {
-            float revealTarget = ShouldRevealInteriorFog() ? 1f : 0f;
-            float revealDuration = Mathf.Max(0.01f, arenaConfig.fogRevealDuration);
-            fogRevealAmount = Mathf.MoveTowards(fogRevealAmount, revealTarget, deltaTime / revealDuration);
-
-            float borderTarget = arenaLocked && !bossDefeated ? 1f : 0f;
-            float borderDuration = borderTarget > borderFogAmount
-                ? revealDuration
-                : Mathf.Max(0.01f, arenaConfig.fogDissolveDuration);
-            borderFogAmount = Mathf.MoveTowards(borderFogAmount, borderTarget, deltaTime / borderDuration);
-            UpdateFogVisuals();
-        }
-
-        private bool ShouldRevealInteriorFog()
-        {
-            return arenaLocked || bossDefeated;
-        }
-
-        private void UpdateFogVisuals()
-        {
-            Color borderColor = Color.Lerp(
-                arenaConfig.unlockedFogColor,
-                arenaConfig.lockedFogColor,
-                borderFogAmount);
-            for (int i = 0; i < fogRenderers.Count; i++)
+            if (runtimePortalSprite != null)
             {
-                if (fogRenderers[i] != null)
+                return runtimePortalSprite;
+            }
+
+            const int size = 48;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Point;
+            Vector2 center = new Vector2((size - 1) * 0.5f, (size - 1) * 0.5f);
+            float outerRadius = size * 0.44f;
+            float innerRadius = size * 0.27f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
                 {
-                    float pulse = 1f + Mathf.Sin(
-                        Time.time * Mathf.Max(0f, arenaConfig.fogPulseSpeed) + i * 0.65f)
-                        * arenaConfig.fogPulseAmount;
-                    Color animatedColor = borderColor;
-                    animatedColor.a = Mathf.Clamp01(borderColor.a * borderFogAmount * pulse);
-                    fogRenderers[i].color = animatedColor;
+                    float distance = Vector2.Distance(new Vector2(x, y), center);
+                    bool isRing = distance <= outerRadius && distance >= innerRadius;
+                    texture.SetPixel(x, y, isRing ? Color.white : Color.clear);
                 }
             }
 
-            if (interiorFogRenderer != null)
-            {
-                Color interiorColor = arenaConfig.interiorFogColor;
-                interiorColor.a = Mathf.Lerp(
-                    Mathf.Clamp01(arenaConfig.interiorFogHiddenAlpha),
-                    Mathf.Clamp01(arenaConfig.interiorFogRevealedAlpha),
-                    fogRevealAmount);
-                interiorFogRenderer.color = interiorColor;
-            }
-        }
-
-        private Material GetFogMaterial()
-        {
-            if (arenaConfig != null && arenaConfig.fogMaterial != null)
-            {
-                return arenaConfig.fogMaterial;
-            }
-
-            if (runtimeFogMaterial != null)
-            {
-                return runtimeFogMaterial;
-            }
-
-            Shader shader = Shader.Find("Necrocis/BossArenaFog");
-            if (shader == null)
-            {
-                return null;
-            }
-
-            runtimeFogMaterial = new Material(shader)
-            {
-                name = "RuntimeBossArenaFog",
-                hideFlags = HideFlags.HideAndDontSave
-            };
-            return runtimeFogMaterial;
-        }
-
-        private Sprite GetFogSprite(bool interior)
-        {
-            if (interior && arenaConfig != null && arenaConfig.interiorFogSprite != null)
-            {
-                return arenaConfig.interiorFogSprite;
-            }
-
-            if (arenaConfig != null && arenaConfig.fogSprite != null)
-            {
-                return arenaConfig.fogSprite;
-            }
-
-            if (fogSprite != null)
-            {
-                return fogSprite;
-            }
-
-            fogSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
-            fogSprite.name = "MidBossFogSprite";
-            return fogSprite;
+            texture.Apply();
+            runtimePortalSprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, size, size),
+                new Vector2(0.5f, 0.5f),
+                size);
+            runtimePortalSprite.name = "RuntimeBossReturnPortalSprite";
+            return runtimePortalSprite;
         }
 
         private static Sprite GetRuntimeBossSprite()
@@ -1672,6 +1752,54 @@ namespace Necrocis
             runtimeBossSprite = Sprite.Create(texture, new Rect(0f, 0f, width, height), new Vector2(0.5f, 0.5f), width);
             runtimeBossSprite.name = "RuntimeMidBossSprite";
             return runtimeBossSprite;
+        }
+
+        private readonly struct ArenaWorldBounds
+        {
+            public readonly float outerMinX;
+            public readonly float outerMaxX;
+            public readonly float outerMinZ;
+            public readonly float outerMaxZ;
+            public readonly float playableMinX;
+            public readonly float playableMaxX;
+            public readonly float playableMinZ;
+            public readonly float playableMaxZ;
+
+            public ArenaWorldBounds(
+                float outerMinX,
+                float outerMaxX,
+                float outerMinZ,
+                float outerMaxZ,
+                float playableMinX,
+                float playableMaxX,
+                float playableMinZ,
+                float playableMaxZ)
+            {
+                this.outerMinX = outerMinX;
+                this.outerMaxX = outerMaxX;
+                this.outerMinZ = outerMinZ;
+                this.outerMaxZ = outerMaxZ;
+                this.playableMinX = playableMinX;
+                this.playableMaxX = playableMaxX;
+                this.playableMinZ = playableMinZ;
+                this.playableMaxZ = playableMaxZ;
+            }
+
+            public bool ContainsOuter(Vector3 position)
+            {
+                return position.x >= outerMinX
+                    && position.x <= outerMaxX
+                    && position.z >= outerMinZ
+                    && position.z <= outerMaxZ;
+            }
+
+            public bool ContainsPlayableCenter(Vector3 position)
+            {
+                return position.x >= playableMinX
+                    && position.x <= playableMaxX
+                    && position.z >= playableMinZ
+                    && position.z <= playableMaxZ;
+            }
         }
     }
 }

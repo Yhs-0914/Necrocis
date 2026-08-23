@@ -88,12 +88,28 @@ namespace Necrocis
                 yield break;
             }
 
+            bool restoreNormalProgress = false;
+            if (SaveService.HasActiveSession
+                && SaveService.ActiveDifficulty == GameDifficulty.Normal)
+            {
+                if (!SaveService.TryPrepareNormalDeathRespawn(out string normalDeathError))
+                {
+                    Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 보존 실패: {normalDeathError}");
+                    isLoading = false;
+                    AudioManager.Instance?.PlaySFX("UIInvalid");
+                    yield break;
+                }
+
+                restoreNormalProgress = true;
+            }
+
             Time.timeScale = 1f;
             HideImmediate();
             PreparePlayerForRespawn();
 
             GameManager.Instance?.ReturnToHub();
-            if (SaveService.HasActiveSession
+            if (!restoreNormalProgress
+                && SaveService.HasActiveSession
                 && !SaveService.TrySaveActiveRun(out string normalDeathSaveError))
             {
                 Debug.LogError($"[PlayerDeathScreen] Normal 사망 저장 실패: {normalDeathSaveError}");
@@ -102,6 +118,17 @@ namespace Necrocis
             if (SceneLoader.Instance != null)
             {
                 SceneLoader.Instance.ReturnToHub();
+                while (!string.Equals(
+                           SceneManager.GetActiveScene().name,
+                           SceneLoader.SCENE_HUB,
+                           System.StringComparison.Ordinal))
+                {
+                    yield return null;
+                }
+
+                // Wait one frame for the Hub initializer to finish attaching all
+                // runtime player components before restoring saved modifiers.
+                yield return null;
             }
             else
             {
@@ -110,6 +137,13 @@ namespace Necrocis
                 {
                     yield return null;
                 }
+            }
+
+            if (restoreNormalProgress
+                && !SaveService.TryRestorePendingSession(out _, out string restoreError))
+            {
+                Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 복원 실패: {restoreError}");
+                AudioManager.Instance?.PlaySFX("UIInvalid");
             }
 
             isLoading = false;

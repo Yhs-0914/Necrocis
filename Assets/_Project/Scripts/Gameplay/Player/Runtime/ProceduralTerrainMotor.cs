@@ -34,6 +34,7 @@ namespace Necrocis
 
         public bool HasActiveMap => map && map.IsReady;
         public bool IsTraversing => isTraversing;
+        public Vector2 TerrainHalfExtents => terrainHalfExtents;
 
         private void Awake()
         {
@@ -50,6 +51,11 @@ namespace Necrocis
 
         public bool CanMove(Vector3 current, Vector3 target)
         {
+            if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(current, target, terrainHalfExtents))
+            {
+                return false;
+            }
+
             return !HasActiveMap || map.CanPlayerMoveWorld(current, target, terrainHalfExtents);
         }
 
@@ -103,6 +109,15 @@ namespace Necrocis
 
         private void StartTraversal(Vector3 destination, bool lavaJump)
         {
+            if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(
+                    transform.position,
+                    destination,
+                    terrainHalfExtents))
+            {
+                ResetHold();
+                return;
+            }
+
             traversalStart = transform.position;
             int targetLevel = map.GetHeightLevelAtWorld(destination);
             destination.y = baseWorldY + targetLevel * heightStep;

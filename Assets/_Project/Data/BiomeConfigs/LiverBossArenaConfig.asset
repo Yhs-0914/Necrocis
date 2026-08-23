@@ -19,42 +19,37 @@ MonoBehaviour:
     minimumMapHeight: 300
     useCustomCenter: 0
     centerGrid: {x: 150, y: 150}
-    arenaSize: {x: 26, y: 26}
+    arenaSize: {x: 32, y: 32}
     wallThicknessInCells: 1
-    lockBoundaryInsetInCells: 1
+    lockBoundaryInsetInCells: 0
     triggerInsetInCells: 2
-    wallHeight: 4
     wallHeightOffset: 1.5
-    groundFogOffset: 0.15
     triggerHeight: 4
     sortingOrder: 3500
-    fogSprite: {fileID: 21300000, guid: 98c6e2a274b14b16929a92b0dddaef11, type: 3}
-    interiorFogSprite: {fileID: 21300000, guid: c10f2071bfff404491e4b780e2c614dd, type: 3}
-    unlockedFogColor: {r: 0.12, g: 0.02, b: 0.035, a: 0.12}
-    lockedFogColor: {r: 0.26, g: 0.035, b: 0.055, a: 0.92}
-    fogMaterial: {fileID: 2100000, guid: 4d3a4c7333804448899e263a19fe19ce, type: 2}
-    fogSecondaryColor: {r: 0.92, g: 0.18, b: 0.28, a: 1}
-    fogWorldTileSize: 8
-    fogPrimaryScrollSpeed: {x: 0.018, y: 0.009}
-    fogSecondaryScrollSpeed: {x: -0.012, y: 0.016}
-    fogDistortionStrength: 0.035
-    fogEdgeSoftness: 0.16
-    fogDensity: 1.15
-    fogCoreDarkness: 0.84
-    fogWispBrightness: 0.8
-    interiorFogDensity: 1.05
-    interiorFogBaseOpacity: 0.42
-    fogSoftLayerWidth: 1.75
-    fogPulseSpeed: 1.25
-    fogPulseAmount: 0.025
-    useInteriorFogCover: 1
-    interiorFogColor: {r: 0.58, g: 0.5, b: 0.52, a: 1}
-    interiorFogHiddenAlpha: 0.62
-    interiorFogRevealedAlpha: 0
-    fogRevealDuration: 1.4
-    fogDissolveDuration: 1.1
-    interiorFogSortingOrderOffset: 3000
     hideBossUntilEncounter: 1
+    presentation:
+      enabled: 1
+      entranceSide: 0
+      entranceWidthInCells: 4
+      approachLengthInCells: 10
+      pulseSpeed: 1.7
+      approachOpacity: 0.76
+      entranceSprite: {fileID: 21300000, guid: b597b9b9edb14483ab33adb7be88d60d, type: 3}
+      entranceVisualScale: 1.45
+      wallStraightSprites:
+      - {fileID: 1402001, guid: 41bbda372e3f9459a8aa3cc55248df1f, type: 3}
+      - {fileID: 1402002, guid: 41bbda372e3f9459a8aa3cc55248df1f, type: 3}
+      wallCornerSprite: {fileID: 21300000, guid: f7947f3ff84cc43d0ad46dab6801c7cd, type: 3}
+      wallCornerSpanInCells: 2
+      wallCornerBaseYaw: 270
+      wallUseStraightCornerConnectors: 1
+      floorSortingOrder: 40
+      gateSortingOrder: 3490
+      useBiomePalette: 1
+      primaryColor: {r: 0.43, g: 0.72, b: 0.22, a: 1}
+      accentColor: {r: 0.82, g: 0.48, b: 0.16, a: 1}
+      lockedColor: {r: 0.92, g: 0.12, b: 0.08, a: 1}
+      clearedColor: {r: 0.34, g: 0.32, b: 0.3, a: 1}
     boss:
       displayName: LiverBoss
       useCustomBossRule: 1

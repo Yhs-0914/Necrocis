@@ -371,13 +371,17 @@ namespace Necrocis
                 ? midBossArenaConfig.centerGrid
                 : new Vector2Int(mapWidth / 2, mapHeight / 2);
 
-            int halfWidth = Mathf.Max(4, midBossArenaConfig.arenaSize.x / 2);
-            int halfHeight = Mathf.Max(4, midBossArenaConfig.arenaSize.y / 2);
+            int arenaWidth = Mathf.Max(8, midBossArenaConfig.arenaSize.x);
+            int arenaHeight = Mathf.Max(8, midBossArenaConfig.arenaSize.y);
+            int minX = center.x - arenaWidth / 2;
+            int minY = center.y - arenaHeight / 2;
+            int maxX = minX + arenaWidth - 1;
+            int maxY = minY + arenaHeight - 1;
 
-            return gridX >= center.x - halfWidth
-                && gridX <= center.x + halfWidth
-                && gridY >= center.y - halfHeight
-                && gridY <= center.y + halfHeight;
+            return gridX >= minX
+                && gridX <= maxX
+                && gridY >= minY
+                && gridY <= maxY;
         }
 
         private void SpawnConfiguredObject(BiomeObjectRuleConfig rule, ChunkSpawnRecord record, Chunk chunk)
