@@ -67,6 +67,6 @@ MonoBehaviour:
     mode: 0
     value: 1
     healWhenPositive: 1
-  bioGambleEnabled: 0
-  bioGambleMinDelta: -2
+  bioGambleEnabled: 1
+  bioGambleMinDelta: -1
   bioGambleMaxDelta: 3

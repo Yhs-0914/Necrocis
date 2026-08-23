@@ -214,6 +214,7 @@ namespace Necrocis
             if (!flash)
             {
                 yield return new WaitForSeconds(duration);
+                RestoreSpriteColors();
                 isInvincible = false;
                 invincibilityRoutine = null;
                 yield break;
@@ -255,6 +256,7 @@ namespace Necrocis
                 invincibilityRoutine = null;
             }
 
+            RestoreSpriteColors();
             isInvincible = false;
         }
 

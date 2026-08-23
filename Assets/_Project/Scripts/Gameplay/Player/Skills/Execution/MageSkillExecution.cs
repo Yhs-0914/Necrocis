@@ -36,12 +36,20 @@ namespace Necrocis
                 center,
                 mageSkill1.areaEffectLifetime,
                 mageSkill1.fallbackEffectScale,
-                new Color(0.35f, 0.8f, 1f, 0.45f));
+                new Color(0.35f, 0.8f, 1f, 0.45f),
+                GetMageSkill1EffectScaleMultiplier());
 
             if (enableDebugLogs)
             {
                 Debug.Log($"Mage Skill E hit {hitCount} enemies. BonusDamage={bonusMin:0.#}~{bonusMax:0.#}");
             }
+        }
+
+
+        private float GetMageSkill1EffectScaleMultiplier()
+        {
+            float referenceRadius = Mathf.Max(0.01f, mageSkill1.effectReferenceRadius);
+            return Mathf.Max(0.01f, mageSkill1.radius) / referenceRadius;
         }
 
 

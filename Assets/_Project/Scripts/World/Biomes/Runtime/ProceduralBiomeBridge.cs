@@ -19,6 +19,14 @@ namespace Necrocis
         [SerializeField, Min(1)] private int proceduralLoadDistance = 2;
         [SerializeField, Min(1)] private int proceduralUnloadDistance = 3;
 
+        [Header("Enemy Spawner Coverage")]
+        [Tooltip("새 절차 맵에서 이전 맵의 면적당 스포너 밀도를 복원합니다.")]
+        [SerializeField] private bool useAreaBalancedEnemySpawning;
+        [Tooltip("이전 맵의 스포너 배치 단위입니다. 16이면 기존 16x16 청크 밀도를 유지합니다.")]
+        [SerializeField, Min(4)] private int enemySpawnerCellSize = 16;
+        [Tooltip("촘촘히 배치된 스포너 중 플레이어 주변에서 실제 전투를 활성화할 반경입니다.")]
+        [SerializeField, Min(1f)] private float enemySpawnerActivationRadius = 28f;
+
         private MapGenerator mapGenerator;
         private readonly List<EnemySpawnRuleConfig> normalEnemyRules = new List<EnemySpawnRuleConfig>();
         private MidBossArenaController bossArena;
@@ -101,6 +109,10 @@ namespace Necrocis
             EliteSpawner eliteSpawner = GetComponent<EliteSpawner>();
             if (eliteSpawner == null) eliteSpawner = gameObject.AddComponent<EliteSpawner>();
             eliteSpawner.ClearConfigs();
+            eliteSpawner.ConfigureKillInterval(
+                config.enemySpawnConfig != null
+                    ? config.enemySpawnConfig.NormalKillsPerElite
+                    : 10);
 
             IReadOnlyList<EnemySpawnRuleConfig> rules = config.GetEnemySpawnRules();
             for (int i = 0; i < rules.Count; i++)
@@ -108,7 +120,11 @@ namespace Necrocis
                 EnemySpawnRuleConfig rule = rules[i];
                 if (rule == null) continue;
                 if (rule.isElite) eliteSpawner.RegisterEliteConfig(rule);
-                else normalEnemyRules.Add(rule);
+                else
+                {
+                    normalEnemyRules.Add(rule);
+                    eliteSpawner.RegisterNormalEnemyConfig(rule);
+                }
             }
         }
 
@@ -157,6 +173,12 @@ namespace Necrocis
 
         protected override void GenerateObjectsForChunk(Chunk chunk)
         {
+            if (useAreaBalancedEnemySpawning)
+            {
+                GenerateAreaBalancedEnemySpawners(chunk);
+                return;
+            }
+
             for (int ruleIndex = 0; ruleIndex < normalEnemyRules.Count; ruleIndex++)
             {
                 EnemySpawnRuleConfig rule = normalEnemyRules[ruleIndex];
@@ -175,6 +197,154 @@ namespace Necrocis
                 ObjectPoolKey poolKey = new ObjectPoolKey(BiomeObjectKind.EnemySpawner, ruleIndex);
                 RegisterObject(chunk, spawnerObject, id, poolKey, false);
             }
+        }
+
+        private void GenerateAreaBalancedEnemySpawners(Chunk chunk)
+        {
+            int placementCellSize = Mathf.Max(4, enemySpawnerCellSize);
+            int chunkStartX = chunk.chunkX * chunkSize;
+            int chunkStartY = chunk.chunkY * chunkSize;
+            int chunkEndX = Mathf.Min(chunkStartX + chunkSize, mapWidth);
+            int chunkEndY = Mathf.Min(chunkStartY + chunkSize, mapHeight);
+            WorldDifficultyBalance worldBalance = DifficultyBalanceService.GetWorldBalance(BiomeType);
+            float densityMultiplier = worldBalance != null
+                ? Mathf.Max(0f, worldBalance.enemySpawnerDensity)
+                : 1f;
+            HashSet<Vector2Int> occupiedPositions = new HashSet<Vector2Int>();
+
+            for (int cellStartY = chunkStartY; cellStartY < chunkEndY; cellStartY += placementCellSize)
+            {
+                for (int cellStartX = chunkStartX; cellStartX < chunkEndX; cellStartX += placementCellSize)
+                {
+                    int cellEndX = Mathf.Min(cellStartX + placementCellSize, chunkEndX);
+                    int cellEndY = Mathf.Min(cellStartY + placementCellSize, chunkEndY);
+                    int cellKeyX = Mathf.FloorToInt((float)cellStartX / placementCellSize);
+                    int cellKeyY = Mathf.FloorToInt((float)cellStartY / placementCellSize);
+                    int cellArea = Mathf.Max(1, (cellEndX - cellStartX) * (cellEndY - cellStartY));
+
+                    for (int ruleIndex = 0; ruleIndex < normalEnemyRules.Count; ruleIndex++)
+                    {
+                        EnemySpawnRuleConfig rule = normalEnemyRules[ruleIndex];
+                        // 기존 배치기는 minDistance 크기의 셀마다 density 확률로 후보를 뽑았습니다.
+                        // 같은 면적 기준을 사용해 새 청크 크기와 무관하게 이전 밀도를 유지합니다.
+                        float spacingArea = Mathf.Max(1f, rule.minDistance * rule.minDistance);
+                        float chance = Mathf.Clamp01(rule.density * densityMultiplier * cellArea / spacingArea);
+                        int chanceHash = BiomeDeterministic.HashRange(
+                            seed, cellKeyX, cellKeyY, rule.poissonSalt + 1701, 10000);
+                        if (chanceHash >= Mathf.RoundToInt(chance * 10000f)) continue;
+
+                        if (!TryFindWalkableCellInArea(
+                                cellStartX,
+                                cellStartY,
+                                cellEndX,
+                                cellEndY,
+                                cellKeyX,
+                                cellKeyY,
+                                rule,
+                                occupiedPositions,
+                                out int x,
+                                out int y))
+                        {
+                            continue;
+                        }
+
+                        SpawnEnemySpawner(chunk, rule, ruleIndex, x, y, enemySpawnerActivationRadius);
+                        occupiedPositions.Add(new Vector2Int(x, y));
+                    }
+                }
+            }
+        }
+
+        private bool TryFindWalkableCellInArea(
+            int startX,
+            int startY,
+            int endX,
+            int endY,
+            int cellKeyX,
+            int cellKeyY,
+            EnemySpawnRuleConfig rule,
+            HashSet<Vector2Int> occupiedPositions,
+            out int resultX,
+            out int resultY)
+        {
+            int inset = Mathf.Max(1, Mathf.CeilToInt(rule.minDistance * 0.5f));
+            int minX = Mathf.Min(endX - 1, startX + inset);
+            int minY = Mathf.Min(endY - 1, startY + inset);
+            int maxX = Mathf.Max(minX, endX - inset - 1);
+            int maxY = Mathf.Max(minY, endY - inset - 1);
+            int width = Mathf.Max(1, maxX - minX + 1);
+            int height = Mathf.Max(1, maxY - minY + 1);
+
+            for (int attempt = 0; attempt < 24; attempt++)
+            {
+                int salt = rule.poissonSalt + attempt * 2;
+                int x = minX + BiomeDeterministic.HashRange(seed, cellKeyX, cellKeyY, salt, width);
+                int y = minY + BiomeDeterministic.HashRange(seed, cellKeyX, cellKeyY, salt + 1, height);
+                Vector2Int position = new Vector2Int(x, y);
+                if (occupiedPositions.Contains(position)) continue;
+                if (!IsEnemySpawnAreaAllowed(x, y)) continue;
+                if (!IsValidPosition(x, y) || !mapGenerator.IsCellWalkable(x, y)) continue;
+                if (IsInsideMidBossArenaBounds(x, y)) continue;
+
+                resultX = x;
+                resultY = y;
+                return true;
+            }
+
+            resultX = resultY = 0;
+            return false;
+        }
+
+        private bool IsEnemySpawnAreaAllowed(int x, int y)
+        {
+            if (config == null) return true;
+
+            int left = Mathf.Max(0, config.marginLeft);
+            int right = Mathf.Max(0, config.marginRight);
+            int bottom = Mathf.Max(0, config.marginBottom);
+            int top = Mathf.Max(0, config.marginTop);
+            return x >= left && x < mapWidth - right && y >= bottom && y < mapHeight - top;
+        }
+
+        private bool IsInsideMidBossArenaBounds(int gridX, int gridY)
+        {
+            if (config == null) return false;
+
+            MidBossArenaConfig arenaConfig = config.GetMidBossArenaConfig();
+            if (arenaConfig == null || !arenaConfig.enabled) return false;
+            if (arenaConfig.onlyEnableOnLargeMaps
+                && (mapWidth < arenaConfig.minimumMapWidth || mapHeight < arenaConfig.minimumMapHeight))
+            {
+                return false;
+            }
+
+            Vector2Int center = arenaConfig.useCustomCenter
+                ? arenaConfig.centerGrid
+                : new Vector2Int(mapWidth / 2, mapHeight / 2);
+            int halfWidth = Mathf.Max(4, arenaConfig.arenaSize.x / 2);
+            int halfHeight = Mathf.Max(4, arenaConfig.arenaSize.y / 2);
+            return gridX >= center.x - halfWidth
+                && gridX <= center.x + halfWidth
+                && gridY >= center.y - halfHeight
+                && gridY <= center.y + halfHeight;
+        }
+
+        private void SpawnEnemySpawner(
+            Chunk chunk,
+            EnemySpawnRuleConfig rule,
+            int ruleIndex,
+            int x,
+            int y,
+            float activationRadiusOverride = -1f)
+        {
+            GameObject spawnerObject = new GameObject($"{rule.name}_Spawner_{x}_{y}");
+            spawnerObject.transform.position = GridToWorldWithHeight(x, y, rule.heightOffset);
+            EnemySpawner spawner = spawnerObject.AddComponent<EnemySpawner>();
+            spawner.Configure(rule, spawnerObject.transform.position, activationRadiusOverride);
+
+            ObjectId id = new ObjectId(x, y, BiomeObjectKind.EnemySpawner);
+            ObjectPoolKey poolKey = new ObjectPoolKey(BiomeObjectKind.EnemySpawner, ruleIndex);
+            RegisterObject(chunk, spawnerObject, id, poolKey, false);
         }
 
         private bool TryFindWalkableCell(Chunk chunk, int salt, out int resultX, out int resultY)

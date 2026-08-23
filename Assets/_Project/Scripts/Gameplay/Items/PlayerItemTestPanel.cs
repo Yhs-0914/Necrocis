@@ -134,14 +134,15 @@ namespace Necrocis
             CreateLabel("CatalogLabel", panelObject.transform, new Vector2(-450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "전체 아이템 목록";
             CreateLabel("AcquiredLabel", panelObject.transform, new Vector2(450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "현재 보유 아이템";
 
-            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -30f), new Vector2(840f, 660f));
-            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -30f), new Vector2(840f, 660f));
+            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -10f), new Vector2(840f, 620f));
+            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -10f), new Vector2(840f, 620f));
 
-            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-690f, -425f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
-            CreateActionButton("AddButton", panelObject.transform, new Vector2(-430f, -425f), new Vector2(260f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
-            CreateActionButton("SpawnButton", panelObject.transform, new Vector2(-120f, -425f), new Vector2(300f, 68f), "플레이어 위치 생성", SpawnSelectedCatalogItemAtPlayer, new Color(0.44f, 0.32f, 0.12f, 1f));
-            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(210f, -425f), new Vector2(260f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
-            CreateActionButton("ClearButton", panelObject.transform, new Vector2(500f, -425f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
+            CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-690f, -365f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
+            CreateActionButton("AddButton", panelObject.transform, new Vector2(-430f, -365f), new Vector2(260f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
+            CreateActionButton("SpawnButton", panelObject.transform, new Vector2(-120f, -365f), new Vector2(300f, 68f), "플레이어 위치 생성", SpawnSelectedCatalogItemAtPlayer, new Color(0.44f, 0.32f, 0.12f, 1f));
+            CreateActionButton("RemoveButton", panelObject.transform, new Vector2(210f, -365f), new Vector2(260f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
+            CreateActionButton("ClearButton", panelObject.transform, new Vector2(500f, -365f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
+            CreateActionButton("HealButton", panelObject.transform, new Vector2(0f, -445f), new Vector2(340f, 58f), "플레이어 체력 전체 회복", RestorePlayerHealth, new Color(0.12f, 0.48f, 0.4f, 1f));
 
             statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -500f), new Vector2(1740f, 46f), 24, TextAnchor.MiddleCenter);
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
@@ -429,6 +430,26 @@ namespace Necrocis
             selectedAcquiredItemId = null;
             UpdateStatus("모든 보유 아이템을 삭제했습니다.");
             RefreshLists();
+        }
+
+        private void RestorePlayerHealth()
+        {
+            PlayerStats playerStats = GetComponent<PlayerStats>();
+            if (playerStats == null)
+            {
+                playerStats = PlayerStats.Instance;
+            }
+
+            if (playerStats == null || playerStats.RuntimeStats == null)
+            {
+                UpdateStatus("플레이어 스탯을 찾을 수 없어 체력을 회복하지 못했습니다.");
+                return;
+            }
+
+            float previousHealth = playerStats.CurrentHealth;
+            float maxHealth = playerStats.MaxHealth;
+            playerStats.RuntimeStats.ResetHealthToMax();
+            UpdateStatus($"플레이어 체력 전체 회복: {previousHealth:0.##} → {maxHealth:0.##}");
         }
 
         private void UpdateStatus(string message)

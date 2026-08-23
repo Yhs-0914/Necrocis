@@ -24,6 +24,7 @@ namespace Necrocis
         private bool initializedWave;            // 초기 웨이브 생성 완료 여부
         private int enemyPoolArchetypeId;        // 풀 분류 ID
         private float nextEvaluationTime;
+        private float activationRadiusOverride = -1f;
 
         private int GetDifficultyMaxAlive(WorldDifficultyBalance balance)
         {
@@ -46,12 +47,16 @@ namespace Necrocis
         }
 
         // 스포너 초기 설정: 이전 적 정리 → 새 설정 적용
-        public void Configure(EnemySpawnRuleConfig config, Vector3 anchorPosition)
+        public void Configure(
+            EnemySpawnRuleConfig config,
+            Vector3 anchorPosition,
+            float activationRadiusOverride = -1f)
         {
             ClearSpawnedEnemies();
 
             this.config = config;
             this.anchorPosition = anchorPosition;
+            this.activationRadiusOverride = activationRadiusOverride;
             playerTransform = null;
             spawnParent = transform.parent;
             nextSpawnTime = 0f;
@@ -90,7 +95,9 @@ namespace Necrocis
             float respawnCooldown = GetDifficultyRespawnCooldown(worldBalance);
 
             // 활성화 범위 밖이면 모든 적 해제
-            float activationRadius = config.activationRadius;
+            float activationRadius = activationRadiusOverride >= 0f
+                ? activationRadiusOverride
+                : config.activationRadius;
             Vector3 playerDelta = playerTransform.position - anchorPosition;
             float playerDistanceSqr = playerDelta.x * playerDelta.x + playerDelta.z * playerDelta.z;
             if (activationRadius < 0f || playerDistanceSqr > activationRadius * activationRadius)

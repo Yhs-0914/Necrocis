@@ -5,6 +5,7 @@ namespace Necrocis
     public static class PlayerCombatCalculator
     {
         private const float PercentToRatio = 0.01f;
+        private const float MaximumSkillCooldownReductionPercent = 40f;
 
         public static float GetBasicAttackDamage(PlayerStats stats, float fallbackDamage = 0f)
         {
@@ -31,6 +32,7 @@ namespace Necrocis
         public static float GetSkillCooldown(float baseCooldown, PlayerStats stats)
         {
             float reductionPercent = stats != null ? stats.SkillCooldownReduction : 0f;
+            reductionPercent = Mathf.Clamp(reductionPercent, 0f, MaximumSkillCooldownReductionPercent);
             float multiplier = 1f - reductionPercent * PercentToRatio;
             float difficultyMultiplier = DifficultyBalanceService.ActiveProfile?.player?.skillCooldown ?? 1f;
             return Mathf.Max(0f, baseCooldown * multiplier * Mathf.Max(0.01f, difficultyMultiplier));

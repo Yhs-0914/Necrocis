@@ -175,6 +175,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ProjectileDirectionalSprite
   useIncomingSprite: 0
-  spriteScale: 0.2
-  incomingSpriteScale: 0.5
+  spriteScale: 0.4
+  incomingSpriteScale: 0.4
   sortingOrder: 2700

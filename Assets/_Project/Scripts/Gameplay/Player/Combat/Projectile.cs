@@ -44,6 +44,7 @@ namespace Necrocis
         private float launchRange;
         private Vector3 activeBaseScale = Vector3.one;
         private bool boomerangRehitResetDone;
+        private int boomerangPassHitCount;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
         private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
         private readonly RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
@@ -86,6 +87,7 @@ namespace Necrocis
             returning = false;
             splitTriggered = false;
             boomerangRehitResetDone = false;
+            boomerangPassHitCount = 0;
             launchRange = Mathf.Max(0.05f, range);
             pulseScaleModeInitialized = false;
             pulseRangeBudget = launchRange;
@@ -241,15 +243,25 @@ namespace Necrocis
                 return;
             }
 
+            bool isBoomerang = spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasRefluxOrgan;
+            if (isBoomerang && boomerangPassHitCount >= itemEffects.GetBoomerangMaxHitsPerPass())
+            {
+                return;
+            }
+
             int enemyId = enemy.GetInstanceID();
             if (!hitEnemyIds.Add(enemyId))
             {
                 return;
             }
 
-            bool isBoomerang = spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasRefluxOrgan;
             float appliedDamage = damage;
-            if (isBoomerang)
+            if (itemEffects != null && itemEffects.HasPiercingMucus && !isBoomerang)
+            {
+                appliedDamage *= itemEffects.GetPiercingHitDamageMultiplier(currentHitCount);
+            }
+
+            if (isBoomerang && returning)
             {
                 appliedDamage *= itemEffects.GetBoomerangRepeatHitDamageMultiplier();
             }
@@ -260,6 +272,10 @@ namespace Necrocis
             }
 
             currentHitCount++;
+            if (isBoomerang)
+            {
+                boomerangPassHitCount++;
+            }
             enemy.TakeDamage(appliedDamage);
             CombatVfx.PlayProjectileImpact(transform.position, moveDirection);
 
@@ -294,7 +310,7 @@ namespace Necrocis
                 return;
             }
 
-            float radius = Mathf.Max(0.05f, hitCheckRadius);
+            float radius = GetScaledHitCheckRadius();
             Vector3 hitCenter = transform.position;
             hitCenter.y += hitCheckHeightOffset;
             float halfHeight = Mathf.Max(0.05f, hitCheckVerticalHalfHeight);
@@ -409,6 +425,7 @@ namespace Necrocis
             {
                 // Allow one more hit pass while returning to the player.
                 hitEnemyIds.Clear();
+                boomerangPassHitCount = 0;
                 boomerangRehitResetDone = true;
             }
         }
@@ -489,7 +506,7 @@ namespace Necrocis
             }
 
             Vector3 direction = step / stepDistance;
-            float probeRadius = Mathf.Max(0.05f, hitCheckRadius * 0.65f);
+            float probeRadius = Mathf.Max(0.05f, GetScaledHitCheckRadius() * 0.65f);
             int hitCount = Physics.SphereCastNonAlloc(
                 transform.position,
                 probeRadius,
@@ -596,6 +613,20 @@ namespace Necrocis
 
             float scaleRatio = Mathf.Lerp(startScale, endScale, acceleratedProgress);
             transform.localScale = activeBaseScale * scaleRatio;
+        }
+
+        private float GetScaledHitCheckRadius()
+        {
+            float defaultSize = Mathf.Max(
+                0.0001f,
+                Mathf.Max(
+                    Mathf.Abs(defaultLocalScale.x),
+                    Mathf.Max(Mathf.Abs(defaultLocalScale.y), Mathf.Abs(defaultLocalScale.z))));
+            float currentSize = Mathf.Max(
+                Mathf.Abs(transform.localScale.x),
+                Mathf.Max(Mathf.Abs(transform.localScale.y), Mathf.Abs(transform.localScale.z)));
+            float scaleRatio = Mathf.Max(0.05f, currentSize / defaultSize);
+            return Mathf.Max(0.05f, hitCheckRadius * scaleRatio);
         }
 
         private void ApplyExplosionDamage(EnemyController primaryEnemy, float sourceDamage)

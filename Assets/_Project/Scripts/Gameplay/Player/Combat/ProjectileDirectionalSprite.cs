@@ -29,8 +29,8 @@ namespace Necrocis
 
         [Tooltip("Off: HEAD 8-direction sprites first. On: Incoming generated sprite first.")]
         [SerializeField] private bool useIncomingSprite;
-        [SerializeField] private float spriteScale = 0.2f;
-        [SerializeField] private float incomingSpriteScale = 0.5f;
+        [SerializeField] private float spriteScale = 0.4f;
+        [SerializeField] private float incomingSpriteScale = 0.4f;
         [SerializeField] private int sortingOrder = 2700;
 
         private Sprite[] headSprites;

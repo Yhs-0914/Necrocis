@@ -51,26 +51,27 @@ namespace Necrocis
         [System.Serializable]
         private class MageSkill1Config
         {
-            public float cooldown = 1f;
-            public float radius = 3f;
+            public float cooldown = 7f;
+            public float radius = 3.75f;
             public float forwardOffset = 0f;
             public float baseDamage = 0f;
             public float additionalDamage = 0f;
-            public float additionalDamageMin = 5f;
-            public float additionalDamageMax = 7f;
+            public float additionalDamageMin = 4f;
+            public float additionalDamageMax = 6f;
             public float stunDuration = 1f;
             public GameObject areaEffectPrefab;
             public float areaEffectLifetime = 1f;
-            public float fallbackEffectScale = 2.5f;
+            public float fallbackEffectScale = 10f;
+            public float effectReferenceRadius = 5f;
         }
 
         [System.Serializable]
         private class MageSkill2Config
         {
-            public float cooldown = 3f;
+            public float cooldown = 12f;
             public float radius = 3.5f;
             public float forwardOffset = 0f;
-            public float baseDamage = 15f;
+            public float baseDamage = 10f;
             public float detonationDelay = 3f;
             public float damageTakenIncreaseRatio = 0.1f;
             public float damageTakenIncreaseDuration = 3f;
@@ -91,16 +92,16 @@ namespace Necrocis
         [System.Serializable]
         private class ArcherSkill1Config
         {
-            public float cooldown = 1f;
+            public float cooldown = 6f;
             public int projectileCount = 5;
             public float fanAngle = 55f;
-            public float projectileDamage = 3f;
+            public float projectileDamage = 1f;
             public float projectileSpeed = 16f;
-            public float projectileRange = 4f;
+            public float projectileRange = 6f;
             public float projectileLifeTime = 2f;
             public GameObject projectilePrefab;
             public float projectileScale = 0.25f;
-            public float poisonDuration = 5f;
+            public float poisonDuration = 3f;
             public float poisonTickInterval = 1f;
             public float poisonTickDamage = 1f;
             public GameObject shootEffectPrefab;
@@ -110,7 +111,7 @@ namespace Necrocis
         [System.Serializable]
         private class ArcherSkill2Config
         {
-            public float cooldown = 3f;
+            public float cooldown = 10f;
             public float aimDuration = 0.5f;
             public float range = 10f;
             [FormerlySerializedAs("lineHitRadius")]
@@ -118,7 +119,7 @@ namespace Necrocis
             public float projectileVisualLength = 4f;
             public float projectileVisualThickness = 0.8f;
             public float targetForwardOffset = 6f;
-            public float projectileDamage = 10f;
+            public float projectileDamage = 4f;
             public float projectileTravelSpeed = 16f;
             public float projectileLifeTime = 0f;
             public GameObject projectilePrefab;
@@ -128,7 +129,7 @@ namespace Necrocis
             public bool autoRollToCamera = true;
             public ProjectileDirectionReferenceAxis prefabSurfaceNormalAxis = ProjectileDirectionReferenceAxis.Forward;
             [FormerlySerializedAs("poisonExplosionDamage")]
-            public float virusExplosionDamage = 10f;
+            public float virusExplosionDamage = 5f;
             [FormerlySerializedAs("poisonExplosionRadius")]
             public float virusExplosionRadius = 1.8f;
             [FormerlySerializedAs("poisonExplosionEffectPrefab")]
@@ -146,14 +147,15 @@ namespace Necrocis
         private class WarriorSkill1Config
         {
             public float cooldown = 4f;
-            public float range = 2.5f;
-            public float forwardAngle = 120f;  // 전방 탐색 각도 (좌우 각 60도)
-            public float damage = 6f;
-            public float bleedDuration = 3f;
+            public float range = 4.125f;
+            public float forwardAngle = 140f;
+            public int maxTargets = 8;
+            public float damage = 4f;
+            public float bleedDuration = 2f;
             public float bleedTickInterval = 1f;
-            public float bleedTickDamage = 2f;
+            public float bleedTickDamage = 1f;
             public GameObject hitEffectPrefab;
-            public float hitEffectLifetime = 0.5f;
+            public float hitEffectLifetime = 0.35f;
             public float fallbackEffectScale = 0.8f;
         }
 
@@ -163,7 +165,7 @@ namespace Necrocis
             public float cooldown = 8f;
             public float searchRange = 6f;   // 돌진 대상 탐색 범위
             public float dashSpeed = 18f;    // 돌진 속도
-            public float damage = 11f;
+            public float damage = 8f;
             public float rootDuration = 2f;  // 구속(이동불가) 시간
             public float searchAngle = 90f;  // 전방 탐색 각도
             public GameObject hitEffectPrefab;
@@ -184,6 +186,7 @@ namespace Necrocis
         [SerializeField] private float skillHitHeightOffset = 0.75f;
         [SerializeField] private float skillHitVerticalHalfHeight = 4f;
         [SerializeField, Min(1)] private int maxAreaSkillHitTargets = 32;
+        [SerializeField] private int skillEffectSortingOrder = 5200;
         [SerializeField] private bool enableDebugLogs;
 
         [Header("Mage")]
@@ -201,7 +204,7 @@ namespace Necrocis
         [SerializeField] private float archerSkill2AutoTargetAngle = 90f;
 
         [Header("Test Cooldown Override")]
-        [SerializeField] private bool useTestCooldownOverride = true;
+        [SerializeField] private bool useTestCooldownOverride;
         [SerializeField] private float testSkill1Cooldown = 1f;
         [SerializeField] private float testSkill2Cooldown = 3f;
 
@@ -396,13 +399,28 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
+                    Vector3 warriorSkill1Center = GetSkillCenter(0f);
+                    if (!TryFindNearestEnemyInForwardArc(
+                            warriorSkill1Center,
+                            warriorSkill1.range,
+                            warriorSkill1.forwardAngle,
+                            out _))
+                    {
+                        if (enableDebugLogs)
+                        {
+                            Debug.Log("Warrior Skill E failed: no enemy in range.");
+                        }
+
+                        return;
+                    }
+
                     if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E", SkillSlot.Skill1))
                     {
                         return;
                     }
 
                     AudioManager.Instance?.PlaySFX("WarriorSkill1");
-                    ExecuteWarriorSkill1Bite();
+                    ExecuteWarriorSkill1Cleave();
                     break;
             }
         }

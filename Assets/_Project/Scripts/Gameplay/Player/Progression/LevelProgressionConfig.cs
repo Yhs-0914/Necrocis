@@ -37,8 +37,8 @@ namespace Necrocis
         public List<LevelUpStatValueConfig> levelUpStatValues = CreateDefaultLevelUpStatValues();
 
         [Header("Bio Gamble")]
-        public bool bioGambleEnabled;
-        public int bioGambleMinDelta = -2;
+        public bool bioGambleEnabled = true;
+        public int bioGambleMinDelta = -1;
         public int bioGambleMaxDelta = 3;
 
         public int MaxLevel => Mathf.Max(1, maxLevel);
