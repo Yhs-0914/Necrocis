@@ -35,6 +35,8 @@ namespace Necrocis
         [SerializeField] private float height = 10f;           // 카메라 높이
         [SerializeField] private float distance = 5f;          // 뒤로 떨어진 거리
         [SerializeField] private float angle = 45f;            // 내려다보는 각도
+        [Tooltip("Disabled by default so the camera stays locked to the player without perceptible follow latency.")]
+        [SerializeField] private bool useSmoothFollow = false;
         [SerializeField] private float smoothSpeed = 5f;       // 부드러운 이동
         [SerializeField] private bool centerTargetInView = true;
         [SerializeField] private bool useTargetRendererCenter = true;
@@ -109,12 +111,18 @@ namespace Necrocis
             // 줌 처리
             HandleZoom();
 
-            // 부드러운 추적
+            // Follow the target exactly by default. LateUpdate runs after player movement,
+            // so direct assignment keeps the target at a stable screen position this frame.
             Vector3 desiredPosition = GetTargetViewCenter() + offset;
             Vector3 unshakenPosition = transform.position - appliedCombatShakeOffset;
-            Vector3 smoothedPosition = Vector3.Lerp(unshakenPosition, desiredPosition, smoothSpeed * Time.deltaTime);
+            Vector3 followedPosition = useSmoothFollow
+                ? Vector3.Lerp(
+                    unshakenPosition,
+                    desiredPosition,
+                    1f - Mathf.Exp(-Mathf.Max(0f, smoothSpeed) * Time.deltaTime))
+                : desiredPosition;
             appliedCombatShakeOffset = EvaluateCombatShake();
-            transform.position = smoothedPosition + appliedCombatShakeOffset;
+            transform.position = followedPosition + appliedCombatShakeOffset;
         }
 
         public void AddCombatImpulse(float strength, float duration)
