@@ -157,6 +157,7 @@ namespace Necrocis
         public bool IsDead => playerStats != null && playerStats.IsDead;
         public bool IsMoving => isMoving;
         public bool IsDashInvincible => isDashing && invincibleDuringDash;
+        public Sprite CurrentVisualSprite => spriteRenderer != null ? spriteRenderer.sprite : null;
         public Collider HitCollider
         {
             get
@@ -172,6 +173,38 @@ namespace Necrocis
 
                 return cachedHitCollider;
             }
+        }
+
+        /// <summary>
+        /// Returns the currently selected class's right-facing run cycle for portal loading UI.
+        /// The loading screen only reads these asset references and never modifies the player animation.
+        /// </summary>
+        public Sprite[] GetLoadingRunAnimationFrames()
+        {
+            if (HasUsableSprites(walkRightSprites))
+            {
+                return walkRightSprites;
+            }
+
+            return HasUsableSprites(idleSprites) ? idleSprites : System.Array.Empty<Sprite>();
+        }
+
+        private static bool HasUsableSprites(Sprite[] sprites)
+        {
+            if (sprites == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                if (sprites[i] != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Health HealthComponent

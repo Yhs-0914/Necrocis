@@ -35,6 +35,9 @@ namespace Necrocis
 
         private bool isLoading = false;
         private bool forceHubRespawn = false;
+        private PortalLoadingScreen loadingScreen;
+
+        private const float MinimumLoadingScreenDuration = 0.55f;
 
         private void Awake()
         {
@@ -100,21 +103,49 @@ namespace Necrocis
         {
             isLoading = true;
 
-            // TODO: 페이드 아웃 효과 추가 가능
+            PlayerController loadingPlayer = PlayerController.Instance;
+            if (loadingPlayer == null)
+            {
+                loadingPlayer = FindFirstObjectByType<PlayerController>();
+            }
+
+            if (loadingScreen == null)
+            {
+                loadingScreen = PortalLoadingScreen.Create(transform);
+            }
+
+            loadingScreen.Show(
+                loadingPlayer != null ? loadingPlayer.GetLoadingRunAnimationFrames() : null,
+                loadingPlayer != null ? loadingPlayer.CurrentVisualSprite : null);
+
+            // Give the overlay one rendered frame before scene loading starts.
+            yield return null;
 
             Debug.Log($"[SceneLoader] {sceneName} 씬 로딩 시작...");
 
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+            if (asyncLoad == null)
+            {
+                Debug.LogError($"[SceneLoader] {sceneName} 씬 로딩을 시작하지 못했습니다.");
+                loadingScreen.Hide();
+                isLoading = false;
+                yield break;
+            }
+
+            float displayedProgress = 0f;
 
             while (!asyncLoad.isDone)
             {
-                // 로딩 진행률: asyncLoad.progress
+                float actualProgress = Mathf.Clamp01(asyncLoad.progress / 0.9f);
+                displayedProgress = Mathf.MoveTowards(
+                    displayedProgress,
+                    actualProgress,
+                    Time.unscaledDeltaTime * 1.8f);
+                loadingScreen.SetProgress(displayedProgress);
                 yield return null;
             }
 
             Debug.Log($"[SceneLoader] {sceneName} 씬 로딩 완료!");
-
-            isLoading = false;
 
             if (sceneName == SCENE_HUB && forceHubRespawn)
             {
@@ -135,7 +166,22 @@ namespace Necrocis
                 }
             }
 
-            // TODO: 페이드 인 효과 추가 가능
+            // Finish the bar cleanly and prevent very fast loads from producing a brief flash.
+            while (displayedProgress < 1f
+                   || loadingScreen.VisibleDuration < MinimumLoadingScreenDuration)
+            {
+                displayedProgress = Mathf.MoveTowards(
+                    displayedProgress,
+                    1f,
+                    Time.unscaledDeltaTime * 3.5f);
+                loadingScreen.SetProgress(displayedProgress);
+                yield return null;
+            }
+
+            loadingScreen.SetProgress(1f);
+            yield return null;
+            loadingScreen.Hide();
+            isLoading = false;
         }
 
         private void SnapCameraToPlayer(Transform playerTransform)
