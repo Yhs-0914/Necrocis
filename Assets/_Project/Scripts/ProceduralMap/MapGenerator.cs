@@ -147,6 +147,11 @@ namespace ProceduralMap
         public int MapHeight => mapHeight;
         public int RandomSeed => randomSeed;
 
+        public void ConfigureRandomSeed(int seed)
+        {
+            randomSeed = seed;
+        }
+
         public void ConfigureBossArenaReservation(
             Vector2Int center, Vector2Int size, int padding)
         {

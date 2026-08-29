@@ -57,8 +57,7 @@ namespace Necrocis
             chunkUpdateInterval = 0.2f;
             objectGenerationBudget = 8;
             tileSize = 1f;
-            seed = mapGenerator.RandomSeed;
-            useRandomSeed = false;
+            useRandomSeed = true;
             enableHeight = true;
             minHeightLevel = 0;
             maxHeightLevel = 2;
@@ -68,6 +67,7 @@ namespace Necrocis
             useChunkRootPooling = true;
             ConfigureBossArenaReservation();
             base.Awake();
+            mapGenerator.ConfigureRandomSeed(seed);
         }
 
         private void ConfigureBossArenaReservation()

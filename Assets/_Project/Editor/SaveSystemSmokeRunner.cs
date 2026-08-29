@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Necrocis;
+using ProceduralMap;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,6 +39,31 @@ namespace NecrocisEditor
                     "Normal 세션이 Normal Balance Profile을 선택하지 않았습니다.");
                 Require(SaveService.HasContinueSave(GameDifficulty.Normal), "Normal 단일 슬롯이 생성되지 않았습니다.");
 
+                int firstIntestineSeed = SaveService.GetOrCreateBiomeSeed(BiomeType.Intestine);
+                int firstLiverSeed = SaveService.GetOrCreateBiomeSeed(BiomeType.Liver);
+                int firstStomachSeed = SaveService.GetOrCreateBiomeSeed(BiomeType.Stomach);
+                int firstLungSeed = SaveService.GetOrCreateBiomeSeed(BiomeType.Lung);
+                Require(firstIntestineSeed != 0, "Normal 새 게임에 장 시드가 생성되지 않았습니다.");
+                Require(firstLiverSeed != 0, "Normal 새 게임에 간 시드가 생성되지 않았습니다.");
+                Require(firstStomachSeed != 0, "Normal 새 게임에 위 시드가 생성되지 않았습니다.");
+                Require(firstLungSeed != 0, "Normal 새 게임에 폐 시드가 생성되지 않았습니다.");
+                Require(
+                    SaveService.GetOrCreateBiomeSeed(BiomeType.Intestine) == firstIntestineSeed,
+                    "같은 Normal run에서 장 시드가 변경되었습니다.");
+
+                SaveService.ResetStaticStateForTests();
+                SaveService.UseStorageRootForTests(storageRoot);
+                Require(
+                    SaveService.TryContinue(GameDifficulty.Normal, out error),
+                    $"시드 저장 검증용 Normal 계속하기 실패: {error}");
+                Require(
+                    SaveService.GetOrCreateBiomeSeed(BiomeType.Intestine) == firstIntestineSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Liver) == firstLiverSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Stomach) == firstStomachSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Lung) == firstLungSeed,
+                    "저장 후 계속하기에서 바이옴 시드가 유지되지 않았습니다.");
+                VerifyProceduralMapUsesSavedSeed(firstIntestineSeed);
+
                 SaveService.MarkBossDefeated(BiomeType.Intestine);
                 Require(
                     SaveService.IsBossDefeated(BiomeType.Intestine),
@@ -54,6 +81,12 @@ namespace NecrocisEditor
                 Require(
                     SaveService.TryBeginNewGame(GameDifficulty.Normal, out error),
                     $"Normal 슬롯 덮어쓰기 실패: {error}");
+                Require(
+                    SaveService.GetOrCreateBiomeSeed(BiomeType.Intestine) != firstIntestineSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Liver) != firstLiverSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Stomach) != firstStomachSeed
+                    && SaveService.GetOrCreateBiomeSeed(BiomeType.Lung) != firstLungSeed,
+                    "Normal 새 게임이 이전 run의 바이옴 시드를 재사용했습니다.");
                 Require(
                     !SaveService.IsBossDefeated(BiomeType.Intestine),
                     "Normal 새 게임이 기존 run 보스 진행도를 유지했습니다.");
@@ -109,7 +142,7 @@ namespace NecrocisEditor
                     "손상된 Profile 주 파일에서 backup Profile로 복구하지 못했습니다.");
 
                 Debug.Log(
-                    "[SaveSystemSmoke] PASS - profile, Normal slot, Hard unlock, Hard-death reset and backup recovery verified");
+                    "[SaveSystemSmoke] PASS - profile, biome seeds, Normal slot, Hard unlock, Hard-death reset and backup recovery verified");
                 EditorApplication.Exit(0);
             }
             catch (Exception exception)
@@ -132,6 +165,35 @@ namespace NecrocisEditor
             if (!condition)
             {
                 throw new InvalidOperationException(message);
+            }
+        }
+
+        private static void VerifyProceduralMapUsesSavedSeed(int expectedSeed)
+        {
+            GameObject owner = new GameObject("Procedural Seed Smoke");
+            owner.SetActive(false);
+            BiomeConfig config = ScriptableObject.CreateInstance<BiomeConfig>();
+
+            try
+            {
+                config.biomeType = BiomeType.Intestine;
+                MapGenerator generator = owner.AddComponent<MapGenerator>();
+                ProceduralBiomeBridge bridge = owner.AddComponent<ProceduralBiomeBridge>();
+                bridge.Configure(config);
+                MethodInfo awake = typeof(ProceduralBiomeBridge).GetMethod(
+                    "Awake",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Require(awake != null, "ProceduralBiomeBridge.Awake를 찾지 못했습니다.");
+                awake.Invoke(bridge, null);
+
+                Require(
+                    generator.RandomSeed == expectedSeed,
+                    "절차 맵 생성기가 저장된 바이옴 시드를 사용하지 않았습니다.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(owner);
+                UnityEngine.Object.DestroyImmediate(config);
             }
         }
     }
