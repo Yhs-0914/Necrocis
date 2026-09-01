@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -6,7 +7,9 @@ namespace Necrocis
     public class AcidPuddle : MonoBehaviour
     {
         private const string PoolName = "PlayerItem.AcidPuddle";
+        private const int MaxActivePuddles = 2;
         private static readonly Func<GameObject> CreateFunc = CreatePuddleObject;
+        private static readonly List<AcidPuddle> ActivePuddles = new List<AcidPuddle>(MaxActivePuddles);
 
         private float tickDamage;
         private float radius;
@@ -19,6 +22,17 @@ namespace Necrocis
 
         public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
         {
+            PruneInactivePuddles();
+            if (ActivePuddles.Count >= MaxActivePuddles)
+            {
+                AcidPuddle oldestPuddle = ActivePuddles[0];
+                ActivePuddles.RemoveAt(0);
+                if (oldestPuddle != null && oldestPuddle.gameObject.activeInHierarchy)
+                {
+                    RuntimePool.Release(oldestPuddle.gameObject);
+                }
+            }
+
             GameObject puddleObject = RuntimePool.Acquire(PoolName, CreateFunc);
             if (puddleObject == null || !puddleObject.TryGetComponent(out AcidPuddle puddle))
             {
@@ -29,7 +43,14 @@ namespace Necrocis
             puddleObject.name = "AcidPuddle";
             puddleObject.transform.position = new Vector3(position.x, position.y + 0.05f, position.z);
             puddle.Initialize(tickDamage, duration, radius, tickInterval);
+            ActivePuddles.Remove(puddle);
+            ActivePuddles.Add(puddle);
             return puddle;
+        }
+
+        private void OnDisable()
+        {
+            ActivePuddles.Remove(this);
         }
 
         public void Initialize(float damage, float duration, float areaRadius, float interval)
@@ -143,6 +164,18 @@ namespace Necrocis
             obj.AddComponent<SpriteRenderer>();
             obj.AddComponent<AcidPuddle>();
             return obj;
+        }
+
+        private static void PruneInactivePuddles()
+        {
+            for (int i = ActivePuddles.Count - 1; i >= 0; i--)
+            {
+                AcidPuddle puddle = ActivePuddles[i];
+                if (puddle == null || !puddle.gameObject.activeInHierarchy)
+                {
+                    ActivePuddles.RemoveAt(i);
+                }
+            }
         }
     }
 }
