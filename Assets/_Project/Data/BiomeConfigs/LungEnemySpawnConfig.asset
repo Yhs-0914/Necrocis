@@ -11,5 +11,261 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: LungEnemySpawnConfig
-  m_EditorClassIdentifier: 
-  enemySpawnRules: []
+  m_EditorClassIdentifier:
+  normalKillsPerElite: 10
+  enemySpawnRules:
+  - name: LungBreathBubble
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1610
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 4
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.6, y: 1.4}
+    maxHealth: 4
+    attackDamage: 1
+    attackRange: 7
+    attackCooldown: 1.5
+    expReward: 15
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.3
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: f49fbf401761473c995b793e115a812e, type: 3}
+    - {fileID: 21300000, guid: 746ff059623b441facaae2c2b5672036, type: 3}
+    - {fileID: 21300000, guid: 912a868470b843e1aba8aa4219867540, type: 3}
+    - {fileID: 21300000, guid: 47ac75f96c794c1094eb235d8e09dd88, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: 3d2ffc55e10f448eab94446a06474b96, type: 3}
+    - {fileID: 21300000, guid: 37ee51bbb92f47edaf5fc2f09ee44024, type: 3}
+    - {fileID: 21300000, guid: d4774d5196844347afe99e061fb343d0, type: 3}
+    - {fileID: 21300000, guid: 0ef0bd5b3f7f43b8877e2635bbfb76cb, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: e46b13708cc4423192239e48ad943886, type: 3}
+    - {fileID: 21300000, guid: 6015f8d077324f2d89c00522f464981c, type: 3}
+    - {fileID: 21300000, guid: f7484ecdd2434157a081621fb032055c, type: 3}
+    - {fileID: 21300000, guid: 300e753c673a44c3a2f2891fef614679, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.45, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: 95f89d61b32940ac86295af802e68f33, type: 3}
+    - {fileID: 21300000, guid: be0fca587e6a46f68780f370878c3020, type: 3}
+    - {fileID: 21300000, guid: a2b04e4e68a44c15b6ef8fe5f8898880, type: 3}
+    - {fileID: 21300000, guid: 33ae27ea7c8e44b1a6a48d7da5d087b1, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: LungCiliaBrush
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1611
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 1.1
+    stoppingDistance: 0.1
+    wanderRadius: 5
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.4, y: 1.1}
+    maxHealth: 6
+    attackDamage: 1
+    attackRange: 1.7
+    attackCooldown: 1
+    expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.05
+    separationStrength: 1.2
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 5d88a9ca43dd4e068e68f340850a5138, type: 3}
+    - {fileID: 21300000, guid: d8a2d8064fe44d3b8e2aff682fb1eb20, type: 3}
+    - {fileID: 21300000, guid: f3d6a7c6121e478b8a09c6ae0bd1180b, type: 3}
+    - {fileID: 21300000, guid: e9780887e2134ab2893cac5e94ed5bda, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: babb767c76b14c358d6c6446b332bcb5, type: 3}
+    - {fileID: 21300000, guid: 0a470bcffd36426b899b61f0d1429571, type: 3}
+    - {fileID: 21300000, guid: cbb0051da4fc46b282d64be98bf21123, type: 3}
+    - {fileID: 21300000, guid: f26b6c76bfc04067818d2ba92c74112b, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: 3ae9f0930ba240c98d64db50925f93c3, type: 3}
+    - {fileID: 21300000, guid: 97fefdbf076e4a08b7137812bc05b8c4, type: 3}
+    - {fileID: 21300000, guid: 0cd20056daa14baeac8bcca505054332, type: 3}
+    - {fileID: 21300000, guid: 19c01caf23664465a0a8d40d24b35ce3, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
+    attackColliderCenter: {x: 0, y: 0.48, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: a802d91f115148babb51a0f2c448d82e, type: 3}
+    - {fileID: 21300000, guid: 7d5f7d06a45244b098522d5ee6810435, type: 3}
+    - {fileID: 21300000, guid: a7bd64de012943efbdb2e47b0f6fab16, type: 3}
+    - {fileID: 21300000, guid: 9210d3b6c65e4e33826b6a80c1664cf1, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: LungOverinflatedAlveoli
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1612
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 4
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.6, y: 1.4}
+    maxHealth: 6
+    attackDamage: 1
+    attackRange: 6.5
+    attackCooldown: 1.8
+    expReward: 15
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.3
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 8ff106239c8248489a30c45e6e94cec3, type: 3}
+    - {fileID: 21300000, guid: cb97170f6ba947aba255166ee74a28ea, type: 3}
+    - {fileID: 21300000, guid: 61096a8c6f0847a08ba3c481d929b570, type: 3}
+    - {fileID: 21300000, guid: 90cf554a45c5493b9dd674834cd91f2e, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: ad50e3587e4a47228099c82bce486d61, type: 3}
+    - {fileID: 21300000, guid: 181a8b72393a48e29de8e18325f044fb, type: 3}
+    - {fileID: 21300000, guid: 1358ff3cf9584ff4bf700c56b7021ca7, type: 3}
+    - {fileID: 21300000, guid: 89053310ced74ea5a9c6390b6310613d, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: 28dc1e48fb324a2287cb19a4c150dfc9, type: 3}
+    - {fileID: 21300000, guid: fa315be6323442c1a5c7e4def93ba202, type: 3}
+    - {fileID: 21300000, guid: b87a35453b074aaa8f2657433f32535d, type: 3}
+    - {fileID: 21300000, guid: 53aeeb78d2ec407db22b4ab2b4bd6415, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.45, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: 720a34d5cc1b440e85c397297c33bf72, type: 3}
+    - {fileID: 21300000, guid: 8bc893e7552f4bdd9a3c99fba9a8af26, type: 3}
+    - {fileID: 21300000, guid: f676a99ab9624fbb81202e9a69268d7b, type: 3}
+    - {fileID: 21300000, guid: 5c40afe89d7c45d58efef0b9283a1918, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12

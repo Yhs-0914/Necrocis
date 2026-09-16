@@ -11,5 +11,261 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: LiverEnemySpawnConfig
-  m_EditorClassIdentifier: 
-  enemySpawnRules: []
+  m_EditorClassIdentifier:
+  normalKillsPerElite: 10
+  enemySpawnRules:
+  - name: LiverSutureCell
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1607
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 4
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.6, y: 1.4}
+    maxHealth: 4
+    attackDamage: 1
+    attackRange: 7
+    attackCooldown: 1.5
+    expReward: 15
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.3
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: e9fe6b10baa44a9381494289c4d0b4d9, type: 3}
+    - {fileID: 21300000, guid: c41eb5e8b5c44295ba42b693c91a626e, type: 3}
+    - {fileID: 21300000, guid: 70f2ab7fcfa34a28b5dc3ebbc2ee94aa, type: 3}
+    - {fileID: 21300000, guid: 8224dd14a50547ca805a99a3612cb6cd, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: c56b55df4ab242be9d8f30d7fbf4861d, type: 3}
+    - {fileID: 21300000, guid: 0fbba67f0bf646c980373b5b30f0ea54, type: 3}
+    - {fileID: 21300000, guid: 0f6907ab02334059b0929e0720e6441c, type: 3}
+    - {fileID: 21300000, guid: 877228d39b4543f6a6269eb75d58a597, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: c059af4459954654801fa301e164702b, type: 3}
+    - {fileID: 21300000, guid: 21b322379f3f4d46880480cc98687bd8, type: 3}
+    - {fileID: 21300000, guid: 78f7148e080645ad80f633c7ccbb4a42, type: 3}
+    - {fileID: 21300000, guid: e4163f062f264a72af0bbca7bee7bf9b, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.45, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: a61f879dc5e74d94aaacb5dbde73ff84, type: 3}
+    - {fileID: 21300000, guid: ea61dae16bca4a37b8c4a9c471b62199, type: 3}
+    - {fileID: 21300000, guid: 842aebef647542eba0645a36ed0d807f, type: 3}
+    - {fileID: 21300000, guid: cd629772b7b34ba194f787be748a3f6c, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: LiverClot
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1608
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 5
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.4, y: 1.1}
+    maxHealth: 8
+    attackDamage: 1
+    attackRange: 1.5
+    attackCooldown: 1.2
+    expReward: 12
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.05
+    separationStrength: 1.2
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 70abbd3304f8427a93faa94de97f50ca, type: 3}
+    - {fileID: 21300000, guid: 5e6ad826ffcc40c8abb5cbd3a60423e8, type: 3}
+    - {fileID: 21300000, guid: 22122ce38b8a42969317363dc7c5562e, type: 3}
+    - {fileID: 21300000, guid: 4ef6025b762648c4b234d1d0664ee3c8, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: 0d1364b34ed245f6a87e5c1188c27733, type: 3}
+    - {fileID: 21300000, guid: 9286ae97adad4c98bd1f3247d70ef62a, type: 3}
+    - {fileID: 21300000, guid: bd9d8f986ed24198b9224a2474730686, type: 3}
+    - {fileID: 21300000, guid: b506fbb163da4334bc6cffbeb6b8b77e, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: 872bb4e2f87747a796821c2c161f8789, type: 3}
+    - {fileID: 21300000, guid: 2ae355667818403cbf14fb95be4cb3ca, type: 3}
+    - {fileID: 21300000, guid: 61d8f60499a94300bab74355caafb952, type: 3}
+    - {fileID: 21300000, guid: c7c1fe13f17340e095fe3434a6cb7ea8, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
+    attackColliderCenter: {x: 0, y: 0.48, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: efc5c821fc234e11af6838c1b9c8345d, type: 3}
+    - {fileID: 21300000, guid: bcc439ccea9f44d2932e7df880efd461, type: 3}
+    - {fileID: 21300000, guid: b047a797f0b24320be4f70693b4d45e1, type: 3}
+    - {fileID: 21300000, guid: 38ed295b699e454e9abd03f83cf53b61, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: LiverCoagulationCore
+    density: 0.05
+    minDistance: 6
+    poissonSalt: 1609
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 4
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.6, y: 1.4}
+    maxHealth: 6
+    attackDamage: 1
+    attackRange: 6.5
+    attackCooldown: 1.8
+    expReward: 15
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.3
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 0baf3f5d8dc1427a82c8e7ca76c50fd9, type: 3}
+    - {fileID: 21300000, guid: 3536a6d5e60c4ef099c05d7ee30d74b2, type: 3}
+    - {fileID: 21300000, guid: 0806084ee9884afcb97f7f3a35a02ff8, type: 3}
+    - {fileID: 21300000, guid: 9a8caefdf88a4a5da5417b1f9d6d2e81, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: 07efa85b943d4a219696f7da6fd8bb0a, type: 3}
+    - {fileID: 21300000, guid: 98a1c2c4d23041398d577612a0e44a80, type: 3}
+    - {fileID: 21300000, guid: 6d4d9fa6740041f998dd8632de3a086e, type: 3}
+    - {fileID: 21300000, guid: 821b439815b24dcabedce46a770a415c, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: f368ce6514bb4d92950bc762a7dd8c27, type: 3}
+    - {fileID: 21300000, guid: 2107ed3c68ba4e80a891cb65b57ac60a, type: 3}
+    - {fileID: 21300000, guid: 547ec58601dc472fb6567a503549c4ba, type: 3}
+    - {fileID: 21300000, guid: 14fa38bbe16745b681ff6a2538e99246, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.45, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: 951f6a2e642746f38c0ec41292715428, type: 3}
+    - {fileID: 21300000, guid: 90cd673487e64f118ab2d3156ea668c0, type: 3}
+    - {fileID: 21300000, guid: caea8d63d1844e8cabec59b6b8691c3c, type: 3}
+    - {fileID: 21300000, guid: c6eb8586b74c4e82adbbd34206d2953e, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
