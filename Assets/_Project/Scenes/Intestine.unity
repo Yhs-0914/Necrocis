@@ -511,6 +511,7 @@ GameObject:
   - component: {fileID: 497294028}
   - component: {fileID: 497294027}
   - component: {fileID: 497294029}
+  - component: {fileID: 497294030}
   m_Layer: 0
   m_Name: Map Generator
   m_TagString: Untagged
@@ -518,6 +519,33 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &497294030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497294026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6cf815a8a014f75b9c8e038dedc8a3d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.IntestineTransitHazard
+  ground: {fileID: 143192846}
+  bolusSprite: {fileID: 21300000, guid: 74ce80df133846afb908e96d2a403d35, type: 3}
+  initialDelay: 8
+  warningDuration: 4
+  restDuration: 10
+  latestArrival: 7
+  passageDuration: 12
+  carriageCount: 14
+  speed: 100
+  connectionOverlap: 0.1
+  laneWidth: 2.6
+  damage: 1
+  slowRatio: 0.35
+  slowDuration: 2
+  hitCooldown: 1.2
 --- !u!114 &497294029
 MonoBehaviour:
   m_ObjectHideFlags: 0
