@@ -535,9 +535,9 @@ MonoBehaviour:
   bolusSprite: {fileID: 21300000, guid: 74ce80df133846afb908e96d2a403d35, type: 3}
   initialDelay: 8
   warningDuration: 4
-  restDuration: 10
+  restDuration: 30
   latestArrival: 7
-  passageDuration: 12
+  passageDuration: 8
   carriageCount: 14
   speed: 100
   connectionOverlap: 0.1

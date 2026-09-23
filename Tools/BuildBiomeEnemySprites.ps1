@@ -1,4 +1,4 @@
-param([string]$SourceDirectory = 'Exports/EnemyConcepts/2026-09-16-animation-sources')
+param([string]$SourceDirectory = 'Exports/EnemyConcepts/2026-09-21-palette-sources')
 $ErrorActionPreference = 'Stop'
 $drawing = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Drawing.dll'
 Add-Type -Path $drawing
@@ -54,7 +54,9 @@ public static class BiomeSpriteSlicer {
             }
         }
     }
-    private static bool IsKey(Color c) { return c.A == 0 || (c.G > 90 && c.G-Math.Max(c.R,c.B) > 35); }
+    // Transparent generated edits may contain nearly invisible alpha noise.
+    // Exclude it from frame bounds, while retaining the meaningful source alpha.
+    private static bool IsKey(Color c) { return c.A < 32 || (c.G > 90 && c.G-Math.Max(c.R,c.B) > 35); }
     // Generated sheets can drift a few pixels off their nominal grid. Locate
     // the empty separator nearest each grid line so appendages aren't sliced.
     private static int[] Cuts(Bitmap sheet, bool horizontal, int start, int end) {
@@ -84,7 +86,9 @@ foreach ($sheet in Get-ChildItem -LiteralPath $sourceRoot -Filter '*.png') {
     [BiomeSpriteSlicer]::Slice($sheet.FullName, $destination)
     foreach ($frame in Get-ChildItem -LiteralPath $destination -Filter '*.png') {
         $metaPath = $frame.FullName + '.meta'
-        $guid = if (Test-Path -LiteralPath $metaPath) { [regex]::Match([IO.File]::ReadAllText($metaPath), 'guid: ([a-f0-9]+)').Groups[1].Value } else { [guid]::NewGuid().ToString('N') }
+        # Recoloring must retain GUIDs, pivots and any user-adjusted import settings.
+        if (Test-Path -LiteralPath $metaPath) { continue }
+        $guid = [guid]::NewGuid().ToString('N')
         $meta = @"
 fileFormatVersion: 2
 guid: $guid

@@ -15,11 +15,12 @@ namespace Necrocis
         [Header("Timing (scaled game seconds)")]
         [SerializeField, Min(0)] private float initialDelay = 8f;
         [SerializeField, Range(3, 5)] private float warningDuration = 4f;
-        [SerializeField, Min(1)] private float restDuration = 10f;
+        [Tooltip("Wait after the last segment leaves the map before showing the next warning.")]
+        [SerializeField, Min(1)] private float restDuration = 30f;
         [Tooltip("Latest front arrival anywhere on the lane, measured from warning start.")]
         [SerializeField, Min(6)] private float latestArrival = 7f;
         [Tooltip("Minimum continuous passage duration at any fixed point on the lane.")]
-        [SerializeField, Min(10)] private float passageDuration = 12f;
+        [SerializeField, Min(1)] private float passageDuration = 8f;
         [Header("Four-direction convoy")]
         [Tooltip("Minimum segment count. More are streamed automatically for the passage duration.")]
         [SerializeField, Range(3, 28)] private int carriageCount = 14;
@@ -140,7 +141,7 @@ namespace Necrocis
         {
             float travelBudget = Mathf.Max(0.5f, latestArrival - Mathf.Clamp(warningDuration, 3f, 5f));
             transitSpeed = Mathf.Max(1f, speed, length / travelBudget);
-            float requiredSpan = transitSpeed * Mathf.Max(10f, passageDuration);
+            float requiredSpan = transitSpeed * Mathf.Max(1f, passageDuration);
             transitCarriageCount = Mathf.Max(carriageCount,
                 Mathf.CeilToInt(Mathf.Max(0f, requiredSpan - HalfLength * 2f) / CarSpacing) + 1);
         }
