@@ -272,6 +272,7 @@ namespace Necrocis
                 Debug.LogWarning("[GameManager] 부산물이 부족합니다!");
                 return;
             }
+            currentBiome = BiomeType.None;
             SetGameState(GameState.InFinalBoss);
             Debug.Log("[GameManager] 대뇌 맵 진입!");
         }

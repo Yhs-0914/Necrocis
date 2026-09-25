@@ -31,6 +31,9 @@ namespace Necrocis
 
         private void Start()
         {
+            if (altarRenderer == null)
+                altarRenderer = GetComponent<SpriteRenderer>();
+            UpdateRelicDisplay();
             UpdateVisuals();
 
             // GameManager 이벤트 구독
@@ -64,17 +67,11 @@ namespace Necrocis
         {
             if (GameManager.Instance == null) return;
 
-            if (isActivated)
-            {
-                // 이미 활성화됨 → 대뇌 맵으로 이동
-                EnterFinalBoss();
-                return;
-            }
-
             if (GameManager.Instance.HasAllRelics)
             {
-                // 4개 부산물 보유 → 재단 활성화
-                ActivateAltar();
+                if (!isActivated)
+                    ActivateAltar();
+                EnterFinalBoss();
             }
             else
             {
@@ -112,16 +109,11 @@ namespace Necrocis
         /// </summary>
         private void EnterFinalBoss()
         {
-            Debug.Log("[Altar] 대뇌 맵으로 이동!");
-
-            if (GameManager.Instance != null)
+            if (SceneLoader.Instance != null && SceneLoader.Instance.LoadFinalBoss())
             {
-                GameManager.Instance.EnterFinalBoss();
+                AudioManager.Instance?.PlaySFX("PortalEnter");
+                OnFinalBossEnter?.Invoke();
             }
-
-            OnFinalBossEnter?.Invoke();
-
-            // TODO: 실제 대뇌 맵 로드
         }
 
         /// <summary>

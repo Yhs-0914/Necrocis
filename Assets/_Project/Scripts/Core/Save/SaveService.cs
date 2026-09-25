@@ -528,8 +528,11 @@ namespace Necrocis
                 run.checkpoint.biome = GameManager.Instance?.CurrentBiome ?? BiomeType.None;
                 run.checkpoint.wasInBossRoom = GameManager.Instance != null
                                                  && GameManager.Instance.CurrentState == GameState.InBossRoom;
-                if (string.Equals(sceneName, SceneLoader.SCENE_HUB, StringComparison.Ordinal))
+                // The final arena currently has no encounter/checkpoint state. Resume safely at its hub portal.
+                if (string.Equals(sceneName, SceneLoader.SCENE_HUB, StringComparison.Ordinal)
+                    || string.Equals(sceneName, SceneLoader.SCENE_FINAL_BOSS, StringComparison.Ordinal))
                 {
+                    run.checkpoint.sceneName = SceneLoader.SCENE_HUB;
                     run.checkpoint.biome = BiomeType.None;
                     run.checkpoint.wasInBossRoom = false;
                 }
