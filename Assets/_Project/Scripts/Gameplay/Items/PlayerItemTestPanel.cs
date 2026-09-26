@@ -144,6 +144,8 @@ namespace Necrocis
             CreateActionButton("ClearButton", panelObject.transform, new Vector2(500f, -365f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
             CreateActionButton("HealButton", panelObject.transform, new Vector2(0f, -445f), new Vector2(340f, 58f), "플레이어 체력 전체 회복", RestorePlayerHealth, new Color(0.12f, 0.48f, 0.4f, 1f));
 
+            CreateActionButton("CompleteBiomeBossesButton", panelObject.transform, new Vector2(520f, -445f), new Vector2(620f, 58f), "4개 맵 보스 처치 완료 (저장 반영)", CompleteBiomeBosses, new Color(0.38f, 0.24f, 0.53f, 1f));
+
             statusText = CreateLabel("Status", panelObject.transform, new Vector2(0f, -500f), new Vector2(1740f, 46f), 24, TextAnchor.MiddleCenter);
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
             canvasObject.SetActive(false);
@@ -430,6 +432,24 @@ namespace Necrocis
             selectedAcquiredItemId = null;
             UpdateStatus("모든 보유 아이템을 삭제했습니다.");
             RefreshLists();
+        }
+
+        private void CompleteBiomeBosses()
+        {
+            GameManager game = GameManager.Instance;
+            if (game == null)
+            {
+                UpdateStatus("게임 상태를 찾을 수 없습니다. 게임 시작 후 다시 시도하세요.");
+                return;
+            }
+
+            BiomeType[] biomes = { BiomeType.Intestine, BiomeType.Liver, BiomeType.Stomach, BiomeType.Lung };
+            foreach (BiomeType biome in biomes)
+            {
+                if (!game.HasRelic(biome) || !BossProgress.IsDefeated(biome))
+                    game.CollectRelic(biome);
+            }
+            UpdateStatus("보스 처치 및 부산물 4/4 완료. F8을 닫고 허브 중앙 포탈로 들어가세요. (현재 저장에 반영)");
         }
 
         private void RestorePlayerHealth()

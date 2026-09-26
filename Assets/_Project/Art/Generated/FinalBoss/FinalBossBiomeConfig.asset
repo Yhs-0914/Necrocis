@@ -1,0 +1,329 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 993fef1babbb42aa98f92869b556b425, type: 3}
+  m_Name: FinalBossBiomeConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.BiomeConfig
+  biomeType: 0
+  regionCellSize: 20
+  regionBlendWidth: 3
+  detailNoiseScale: 0.05
+  regions: []
+  heightNoiseScale: 0.02
+  heightNoiseAmplitude: 0.45
+  tileMappings: []
+  marginLeft: 0
+  marginRight: 0
+  marginBottom: 0
+  marginTop: 0
+  objectRules: []
+  enemySpawnConfig: {fileID: 0}
+  enemySpawnRules: []
+  bossArenaConfig: {fileID: 0}
+  midBossArena:
+    enabled: 0
+    onlyEnableOnLargeMaps: 1
+    minimumMapWidth: 300
+    minimumMapHeight: 300
+    useCustomCenter: 0
+    centerGrid: {x: 150, y: 150}
+    arenaSize: {x: 32, y: 32}
+    wallThicknessInCells: 1
+    lockBoundaryInsetInCells: 1
+    triggerInsetInCells: 2
+    wallHeightOffset: 1.5
+    triggerHeight: 4
+    sortingOrder: 3500
+    hideBossUntilEncounter: 1
+    presentation:
+      enabled: 1
+      entranceSide: 0
+      entranceWidthInCells: 4
+      approachLengthInCells: 9
+      pulseSpeed: 1.4
+      approachOpacity: 0.72
+      entranceSprite: {fileID: 0}
+      entranceVisualScale: 1.35
+      wallStraightSprites: []
+      wallCornerSprite: {fileID: 0}
+      wallCornerSpanInCells: 2
+      wallCornerBaseYaw: 270
+      wallUseStraightCornerConnectors: 0
+      floorSortingOrder: 40
+      gateSortingOrder: 3490
+      useBiomePalette: 1
+      primaryColor: {r: 0.43, g: 0.72, b: 0.22, a: 1}
+      accentColor: {r: 0.82, g: 0.48, b: 0.16, a: 1}
+      lockedColor: {r: 0.92, g: 0.12, b: 0.08, a: 1}
+      clearedColor: {r: 0.34, g: 0.32, b: 0.3, a: 1}
+    returnPortalSprite: {fileID: 0}
+    returnPortalScale: {x: 1, y: 1, z: 1}
+    boss:
+      displayName: MidBoss
+      useCustomBossRule: 0
+      bossRule:
+        name: Enemy
+        density: 0.0025
+        minDistance: 8
+        poissonSalt: 400
+        allowedRegions: 
+        maxAlive: 1
+        activationRadius: 20
+        respawnCooldown: 8
+        spawnRadius: 1.5
+        moveSpeed: 1.5
+        stoppingDistance: 0.1
+        wanderRadius: 4
+        chaseRadius: 6
+        leashRadius: 8
+        idleDelayRange: {x: 0.5, y: 1.5}
+        maxHealth: 30
+        attackDamage: 1
+        attackRange: 1.5
+        attackCooldown: 1
+        expReward: 10
+        enableContactDamage: 1
+        contactDamage: 1
+        contactKnockbackDistance: 0.45
+        additionalBaseStats: []
+        separationDistance: 1.1
+        separationStrength: 1
+        heightOffset: 0
+        scale: {x: 1, y: 1, z: 1}
+        sortingOrder: 1000
+        useBillboard: 1
+        useYSort: 1
+        animationSpeed: 0.15
+        addCollider: 1
+        isTrigger: 0
+        colliderSize: {x: 0.7, y: 1.1, z: 0.7}
+        colliderCenter: {x: 0, y: 0.55, z: 0}
+        idleSprites: []
+        idleSpritesUp: []
+        idleSpritesDown: []
+        moveSprites: []
+        moveSpritesUp: []
+        moveSpritesDown: []
+        attackSprites: []
+        attackSpritesUp: []
+        attackSpritesDown: []
+        attackAnimationSpeed: 0.12
+        isRanged: 0
+        projectileSpeed: 8
+        projectileLifeTime: 3
+        projectileSprite: {fileID: 0}
+        projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+        projectileSpawnOffset: 0.5
+        expandColliderOnAttack: 0
+        attackColliderSize: {x: 2, y: 2, z: 2}
+        attackColliderCenter: {x: 0, y: 0.55, z: 0}
+        deathSprites: []
+        deathAnimationSpeed: 0.15
+        isElite: 0
+        tintColor: {r: 1, g: 1, b: 1, a: 1}
+        killTriggerEnemyName: 
+        killTriggerCount: 10
+        splitsOnDeath: 0
+        splitCount: 2
+        splitEnemyName: 
+        splitVfxSprites: []
+        splitVfxScale: 3
+        splitVfxSpeed: 0.08
+        splitVfxDuration: 0.6
+        chargesAtPlayer: 0
+        chargeSpeed: 6
+        chargeAccelTime: 0.3
+        leavesDebrisOnDeath: 0
+        debrisDuration: 5
+        debrisAggroRadius: 8
+        debrisVfxSprites: []
+        debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
+      useEnemyRuleFallback: 1
+      fallbackEnemyRuleIndex: 0
+      patternType: 0
+      overrideStats: 0
+      maxHealthMultiplier: 1
+      attackDamageMultiplier: 1
+      moveSpeedMultiplier: 1
+      scaleMultiplier: {x: 1, y: 1, z: 1}
+      minimumMaxHealth: 0
+      intestinePattern:
+        phase2HealthRatio: 0.5
+        phase1FleeDistance: 7
+        phase1RoamRadius: 8
+        phase1MoveMultiplier: 1
+        phase2PreferredDistance: 2.5
+        phase2MoveMultiplier: 1.15
+        dungPreDelay: 0.5
+        phase1DungCooldown: 8
+        phase2ThrowCooldown: 5
+        dungCollisionDamage: 1
+        dungSlowRatio: 0.2
+        dungSlowDuration: 3
+        dungHazardRadius: 0.75
+        dungLifeTime: 10
+        throwTravelTime: 0.7
+        throwArcHeight: 2.5
+        parasiteMinCount: 2
+        parasiteMaxCount: 3
+        parasiteSpawnDelay: 0.45
+        parasiteSpawnRadius: 1.1
+        parasiteMaxHealth: 6
+        parasiteMoveSpeed: 2.3
+        parasiteAttackDamage: 1
+        parasiteAttackRange: 1.1
+        parasiteAttackCooldown: 1.3
+        parasiteScale: {x: 0.55, y: 0.55, z: 0.55}
+        stompMinDelay: 7
+        stompPreDelay: 0.55
+        stompRadius: 6
+        stompDamage: 2
+        stompSlowRatio: 0.3
+        stompSlowDuration: 3
+        dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
+        parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
+        shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      liverPattern:
+        phase2HealthRatio: 0.5
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        phase2AttackDamage: 2
+        phase2MoveSpeed: 1.5
+        bloodBombRange: 7
+        bloodBombExplosionRadius: 2.5
+        bloodBombFuseTime: 1
+        bloodBombCooldown: 4
+        attackPowerDebuffRatio: 0.15
+        attackPowerDebuffDuration: 5
+        bloodBombArcHeight: 1.4
+        bloodBombProjectileScale: 1.15
+        bloodBombSprite: {fileID: 0}
+        healingPosePreDelay: 1
+        healingPoseCooldown: 15
+        healingPoseDuration: 5
+        damageHealRatio: 0.7
+        healingPoseLowerSprites: []
+        healingPoseLowerSpritesDown: []
+        healingPoseRaiseSprites: []
+        healingPoseRaiseSpritesDown: []
+        healingPoseAnimationSpeed: 0.12
+        phase1PreferredDistanceRatio: 0.72
+        phase2PreferredDistance: 2.6
+        roamRadius: 9
+        bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
+        explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      stomachPattern:
+        phase2HealthRatio: 0.65
+        phase1AttackDamage: 3
+        phase1MoveSpeed: 0.5
+        phase2AttackDamage: 3
+        phase2MoveSpeed: 1
+        phase1MeleeRange: 1.6
+        phase1MeleeCooldown: 1.7
+        chargeSpeed: 4
+        chargeCooldown: 5
+        chargeDamage: 4
+        chargeKnockbackDistance: 2
+        chargeWindup: 0.35
+        chargeDuration: 1.2
+        chargeHitRadius: 1.25
+        phase2PatternInterval: 3
+        phase2PreferredDistance: 4
+        roamRadius: 9
+        acidRange: 9
+        acidDamage: 2
+        acidDebuffDuration: 5
+        acidTickInterval: 1
+        acidTickDamage: 1
+        acidProjectileTravelTime: 0.55
+        acidArcHeight: 0.8
+        acidProjectileScale: 0.9
+        acidHitRadius: 1.15
+        suctionRange: 4.2
+        suctionDuration: 0.4
+        suctionStopDistance: 1
+        spitDelay: 0.35
+        spitReturnDuration: 0.18
+        shortRangeDamage: 5
+        shortRangeRadius: 2.2
+        suctionAttackSprites: []
+        suctionAttackAnimationSpeed: 0.08
+        acidColor: {r: 0.55, g: 0.95, b: 0.15, a: 0.95}
+        acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
+        suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
+        leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      lungPattern:
+        phase1BrotherHealth: 40
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        windGustMoveSpeed: 3
+        windGustInterval: 5
+        windGustDuration: 1.25
+        brotherSpacing: 3.2
+        phase1GasRange: 7
+        phase1GasCooldown: 3.5
+        phase1GasKnockback: 1
+        phase2MaxHealth: 100
+        phase2AttackDamage: 4
+        phase2MoveSpeed: 1.5
+        phase2GasRange: 10
+        phase2GasCooldown: 4
+        phase2GasKnockback: 1.2
+        diveCooldown: 8
+        diveWindup: 0.55
+        diveTravelTime: 0.65
+        diveArcHeight: 4
+        diveLandingRadius: 1.45
+        diveLandingDamage: 3
+        diveKnockback: 1.4
+        gasProjectileSpeed: 8
+        gasProjectileRadius: 0.7
+        gasProjectileScale: 1
+        gasWindup: 0.25
+        gasProjectileHeightOffset: 2
+        phase1ContactDamage: 1
+        phase2ContactDamage: 2
+        contactRadius: 1.05
+        contactCooldown: 1.1
+        phase1PreferredDistance: 5.2
+        phase2PreferredDistance: 4.2
+        roamRadius: 10
+        gasColor: {r: 0.72, g: 0.95, b: 0.9, a: 0.72}
+        windColor: {r: 0.78, g: 0.9, b: 1, a: 0.34}
+        diveColor: {r: 0.5, g: 0.85, b: 1, a: 0.42}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+  returnPortal:
+    enabled: 0
+    name: ReturnPortal
+    poolKind: 100
+    sprite: {fileID: 0}
+    sortingOrder: 1000
+    useCustomPosition: 1
+    gridPosition: {x: 0, y: 4}
+    heightOffset: 0
+    useBillboard: 1
+    scale: {x: 0.5, y: 0.5, z: 0.5}
+    addCollider: 1
+    isTrigger: 1
+    colliderSize: {x: 2, y: 2, z: 2}
+    colliderCenter: {x: 0, y: 0, z: 0}

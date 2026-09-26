@@ -538,37 +538,12 @@ namespace Necrocis
         // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
-            if (FinalBossArena.Instance != null)
-            {
-                Vector2 footprint = proceduralTerrainMotor != null
-                    ? proceduralTerrainMotor.TerrainHalfExtents : new Vector2(0.68f, 0.48f);
-                Vector3 current = transform.position;
-                FinalBossArena arena = FinalBossArena.Instance;
-                if (arena.CanTraverse(current, current + moveVector, footprint))
-                {
-                    ApplyMove(moveVector);
-                    return true;
-                }
-
-                Vector3 first = Mathf.Abs(moveVector.x) >= Mathf.Abs(moveVector.z)
-                    ? new Vector3(moveVector.x, 0f, 0f) : new Vector3(0f, 0f, moveVector.z);
-                Vector3 second = moveVector - first;
-                if (first.sqrMagnitude > 0f && arena.CanTraverse(current, current + first, footprint))
-                {
-                    ApplyMove(first);
-                    return true;
-                }
-                if (second.sqrMagnitude > 0f && arena.CanTraverse(current, current + second, footprint))
-                {
-                    ApplyMove(second);
-                    return true;
-                }
-                return false;
-            }
 
             if (proceduralTerrainMotor != null && proceduralTerrainMotor.HasActiveMap)
             {
-                Vector3 proceduralCurrentPos = transform.position;
+                // MovePosition can advance rb.position before Transform is synchronized. Use
+                // the same position as ApplyMove when several dash/knockback steps run together.
+                Vector3 proceduralCurrentPos = characterController == null && rb != null ? rb.position : transform.position;
                 Vector3 proceduralTargetPos = proceduralCurrentPos + moveVector;
                 if (proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralTargetPos))
                 {
@@ -617,7 +592,7 @@ namespace Necrocis
                 return true;
             }
 
-            Vector3 currentPos = transform.position;
+            Vector3 currentPos = characterController == null && rb != null ? rb.position : transform.position;
             Vector3 targetPos = currentPos + moveVector;
             if (CanMoveInBiome(biome, currentPos, targetPos))
             {

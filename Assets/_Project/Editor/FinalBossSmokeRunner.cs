@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Necrocis;
+using ProceduralMap;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -12,7 +14,7 @@ namespace NecrocisEditor
     /// <summary>Exercises the real Hub trigger, persistent player, arena movement and return trigger.</summary>
     public static class FinalBossSmokeRunner
     {
-        private const string Output = "Exports/FinalBossConcepts/2026-09-25/Implementation";
+        private const string Output = "Exports/FinalBossConcepts/2026-09-26/TilemapImplementation";
         private static readonly Vector2 Footprint = new Vector2(.68f, .48f);
         private static SceneSetup[] sceneSetup;
         private static bool previousOptionsEnabled;
@@ -25,6 +27,8 @@ namespace NecrocisEditor
         private static int movementSteps;
         private static bool running;
         private static bool directPreview;
+        private static bool previousRunInBackground;
+        private static bool playModeEntered;
 
         [MenuItem("Tools/Necrocis/Final Boss/Run Exploration Smoke Test")]
         public static void Run()
@@ -53,6 +57,8 @@ namespace NecrocisEditor
                 throw new InvalidOperationException(error);
             previousOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
             previousOptions = EditorSettings.enterPlayModeOptions;
+            previousRunInBackground = Application.runInBackground;
+            Application.runInBackground = true;
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
             failure = null;
@@ -61,6 +67,7 @@ namespace NecrocisEditor
             nextAction = 0f;
             movementSteps = 0;
             running = true;
+            playModeEntered = false;
             deadline = EditorApplication.timeSinceStartup + 120;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
             EditorApplication.update += Tick;
@@ -78,12 +85,13 @@ namespace NecrocisEditor
         private static void Tick()
         {
             if (!running) return;
+            Application.runInBackground = true;
             if (EditorApplication.timeSinceStartup > deadline)
             {
                 Finish("Timed out at stage " + stage);
                 return;
             }
-            if (!EditorApplication.isPlaying || Time.timeSinceLevelLoad < 1.3f) return;
+            if (!playModeEntered || !EditorApplication.isPlaying || Time.timeSinceLevelLoad < 1.3f) return;
             if (failure != null) { Finish(failure); return; }
             if (Time.time < nextAction) return;
             nextAction = Time.time + .08f;
@@ -98,7 +106,8 @@ namespace NecrocisEditor
                     Require(arena != null && DontStarveCamera.Instance != null, "Direct preview bootstrap missing");
                     Require(!game.HasAllRelics, "Direct preview modified boss progress");
                     Require(game.CurrentState == GameState.InFinalBoss, "Direct preview state incorrect");
-                    Require(Vector3.Distance(player.transform.position, arena.SpawnPosition) < .1f, "Direct preview spawn incorrect");
+                    Require(SpawnDistance(player, arena) < .1f, "Direct preview spawn incorrect");
+                    VerifySharedPipeline(arena, player);
                     Require(player.CurrentVisualSprite != null, "Direct preview player invisible");
                     startPosition = player.transform.position;
                     Require(player.TryMoveByWorld(Vector3.forward), "Direct preview movement blocked");
@@ -135,10 +144,16 @@ namespace NecrocisEditor
                         Require(!SceneLoader.Instance.LoadFinalBoss(), "Incomplete clear mask admitted: " + mask);
                         Require(game.CurrentState != GameState.InFinalBoss, "Incomplete mask changed state");
                     }
-                    game.CollectRelic(BiomeType.Intestine);
-                    game.CollectRelic(BiomeType.Liver);
-                    game.CollectRelic(BiomeType.Stomach);
-                    game.CollectRelic(BiomeType.Lung);
+                    PlayerItemTestPanel panel = player.GetComponent<PlayerItemTestPanel>();
+                    Require(panel != null, "F8 panel missing");
+                    typeof(PlayerItemTestPanel).GetMethod("EnsureUi", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(panel, null);
+                    Transform buttonTransform = player.transform.Find("ItemTestCanvas/Panel/CompleteBiomeBossesButton");
+                    Require(buttonTransform != null, "F8 complete-bosses button missing");
+                    var button = buttonTransform.GetComponent<UnityEngine.UI.Button>();
+                    button.onClick.Invoke();
+                    button.onClick.Invoke(); // Repeated clicks must leave a consistent 4/4 state.
+                    foreach (BiomeType biome in new[] { BiomeType.Intestine, BiomeType.Liver, BiomeType.Stomach, BiomeType.Lung })
+                        Require(game.HasRelic(biome) && BossProgress.IsDefeated(biome), "F8 progress mismatch: " + biome);
                     Require(game.HasAllRelics, "Four clears not recorded");
                     Vector3 entry = altar.transform.position;
                     entry.y = player.transform.position.y;
@@ -152,7 +167,8 @@ namespace NecrocisEditor
                     if (SceneManager.GetActiveScene().name != SceneLoader.SCENE_FINAL_BOSS || SceneLoader.Instance.IsLoading) return;
                     FinalBossArena arena = FinalBossArena.Instance;
                     Require(arena != null && arena.PillarCount == 4, "Arena/pillars missing");
-                    Require(Vector3.Distance(player.transform.position, arena.SpawnPosition) < .1f, "Incorrect spawn");
+                    Require(SpawnDistance(player, arena) < .1f, "Incorrect spawn");
+                    VerifySharedPipeline(arena, player);
                     Require(game.CurrentState == GameState.InFinalBoss, "Incorrect game state");
                     VerifyGeometry(arena);
                     Require(UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length == 0, "Unexpected enemies");
@@ -173,15 +189,29 @@ namespace NecrocisEditor
                     player.SpawnAt(arena.UVToWorld(new Vector2(.5f, .53f)));
                     Physics.SyncTransforms();
                     startPosition = player.transform.position;
-                    Require(!player.TryMoveByWorld(Vector3.forward * 30f), "Dash teleported through north wall/boss");
-                    Require(!player.TryMoveByWorld(Vector3.right * 60f), "Dash teleported through east wall");
+                    Require(!player.GetComponent<ProceduralTerrainMotor>().CanMove(startPosition, startPosition + Vector3.forward * 30f), "North wall/boss sweep accepted");
+                    player.TryMoveByWorld(Vector3.forward * 30f);
                     stage = 3;
                     return;
                 }
                 if (stage == 3)
                 {
-                    Require(Vector3.Distance(player.transform.position, startPosition) < .1f, "Blocked movement changed position");
+                    // The common biome motor can move up to a wall; its bool reports any movement,
+                    // not whether the entire requested displacement was completed.
                     FinalBossArena arena = FinalBossArena.Instance;
+                    Require(arena.IsWalkable(player.transform.position, Footprint)
+                        && arena.CanTraverse(startPosition, player.transform.position, Footprint), $"North movement crossed blocked cells: {startPosition} -> {player.transform.position}; walkable={arena.IsWalkable(player.transform.position, Footprint)}; motor={player.GetComponent<ProceduralTerrainMotor>().TerrainHalfExtents}");
+                    startPosition = player.transform.position;
+                    Require(!player.GetComponent<ProceduralTerrainMotor>().CanMove(startPosition, startPosition + Vector3.right * 60f), "East wall sweep accepted");
+                    player.TryMoveByWorld(Vector3.right * 60f);
+                    stage = 6;
+                    return;
+                }
+                if (stage == 6)
+                {
+                    FinalBossArena arena = FinalBossArena.Instance;
+                    Require(arena.IsWalkable(player.transform.position, Footprint)
+                        && arena.CanTraverse(startPosition, player.transform.position, Footprint), $"East movement crossed blocked cells: {startPosition} -> {player.transform.position}");
                     Capture(Camera.main, "gameplay-center.png");
                     CaptureOverview(arena);
                     player.SpawnAt(arena.UVToWorld(new Vector2(.5f, .70f)));
@@ -207,6 +237,24 @@ namespace NecrocisEditor
                 }
             }
             catch (Exception e) { Finish(e.ToString()); }
+        }
+
+        private static float SpawnDistance(PlayerController player, FinalBossArena arena)
+        {
+            Vector3 delta = player.transform.position - arena.SpawnPosition;
+            delta.y = 0;
+            return delta.magnitude;
+        }
+
+        private static void VerifySharedPipeline(FinalBossArena arena, PlayerController player)
+        {
+            MapGenerator map = arena.GetComponent<MapGenerator>();
+            Require(map != null && map.IsReady && map.AuthoredLayout != null, "Shared map generator not ready");
+            Require(BiomeManager.Active == arena.GetComponent<ProceduralBiomeBridge>(), "Shared biome bridge not active");
+            Require(player.GetComponent<ProceduralTerrainMotor>().HasActiveMap, "Common terrain motor not bound");
+            Require(GameObject.Find("DormantCerebrum_MapArtwork") == null, "Old flattened map still present");
+            Require(UnityEngine.Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None)
+                .Length >= 4, "Shared tilemap layers missing");
         }
 
         private static void VerifyGeometry(FinalBossArena arena)
@@ -299,6 +347,13 @@ namespace NecrocisEditor
 
         private static void OnPlayModeChanged(PlayModeStateChange state)
         {
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                playModeEntered = true;
+                nextAction = Time.time + 1.5f;
+                Application.runInBackground = true;
+                return;
+            }
             if (state != PlayModeStateChange.EnteredEditMode) return;
             if (running) failure ??= "Test interrupted before completing stage " + stage;
             running = false;
@@ -307,6 +362,7 @@ namespace NecrocisEditor
             Application.logMessageReceived -= OnLog;
             EditorSettings.enterPlayModeOptionsEnabled = previousOptionsEnabled;
             EditorSettings.enterPlayModeOptions = previousOptions;
+            Application.runInBackground = previousRunInBackground;
             SaveService.ResetStaticStateForTests();
             EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
             string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; spawn, connected floor, four pillar sweeps, actual player movement, wall sweeps, return trigger and retained progress verified.";

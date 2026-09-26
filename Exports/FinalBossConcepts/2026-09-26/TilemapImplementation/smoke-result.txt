@@ -1,0 +1,1 @@
+PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; spawn, connected floor, four pillar sweeps, actual player movement, wall sweeps, return trigger and retained progress verified.
