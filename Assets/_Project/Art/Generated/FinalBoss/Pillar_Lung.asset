@@ -9,13 +9,13 @@ Sprite:
   m_Name: Pillar_Lung
   m_Rect:
     serializedVersion: 2
-    x: 1391
-    y: 223
-    width: 313
-    height: 287
-  m_Offset: {x: 0, y: -143.5}
+    x: 1135
+    y: 205
+    width: 256
+    height: 263
+  m_Offset: {x: 0, y: -131.5}
   m_Border: {x: 0, y: 0, z: 0, w: 0}
-  m_PixelsToUnits: 52.166668
+  m_PixelsToUnits: 34.858387
   m_Pivot: {x: 0.5, y: 0}
   m_Extrude: 0
   m_IsPolygon: 0
@@ -102,18 +102,18 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 80
-      _typelessdata: 000040c0160db0400000000000004040160db04000000000000040c000000000000000000000404000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: 0d026bc01b6ff140000000000d026b401b6ff140000000000d026bc000000000000000000d026b4000000000000000000000000000000000000000000000000000000000000000000000000000000000
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 1391
-      y: 223
-      width: 313
-      height: 287
+      x: 1135
+      y: 205
+      width: 256
+      height: 263
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 52.166668, y: 1547.5, z: 52.166668, w: 223}
+    uvTransform: {x: 34.858387, y: 1263, z: 34.858387, w: 205}
     downscaleMultiplier: 1
   m_AtlasRD:
     serializedVersion: 3
@@ -193,18 +193,18 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 80
-      _typelessdata: 000040c0160db0400000000000004040160db04000000000000040c000000000000000000000404000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: 0d026bc01b6ff140000000000d026b401b6ff140000000000d026bc000000000000000000d026b4000000000000000000000000000000000000000000000000000000000000000000000000000000000
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 1391
-      y: 223
-      width: 313
-      height: 287
+      x: 1135
+      y: 205
+      width: 256
+      height: 263
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 52.166668, y: 1547.5, z: 52.166668, w: 223}
+    uvTransform: {x: 34.858387, y: 1263, z: 34.858387, w: 205}
     downscaleMultiplier: 1
   m_PhysicsShape: []
   m_Bones: []

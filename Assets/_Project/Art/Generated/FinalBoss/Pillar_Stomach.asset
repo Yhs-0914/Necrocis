@@ -9,13 +9,13 @@ Sprite:
   m_Name: Pillar_Stomach
   m_Rect:
     serializedVersion: 2
-    x: 360
-    y: 600
-    width: 270
-    height: 298
-  m_Offset: {x: 0, y: -149}
+    x: 294
+    y: 551
+    width: 221
+    height: 274
+  m_Offset: {x: 0, y: -137}
   m_Border: {x: 0, y: 0, z: 0, w: 0}
-  m_PixelsToUnits: 45
+  m_PixelsToUnits: 34.88005
   m_Pivot: {x: 0.5, y: 0}
   m_Extrude: 0
   m_IsPolygon: 0
@@ -102,18 +102,18 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 80
-      _typelessdata: 000040c03fe9d34000000000000040403fe9d34000000000000040c000000000000000000000404000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: 83c04ac03360fb400000000083c04a403360fb400000000083c04ac0000000000000000083c04a4000000000000000000000000000000000000000000000000000000000000000000000000000000000
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 360
-      y: 600
-      width: 270
-      height: 298
+      x: 294
+      y: 551
+      width: 221
+      height: 274
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 45, y: 495, z: 45, w: 600}
+    uvTransform: {x: 34.88005, y: 404.5, z: 34.88005, w: 551}
     downscaleMultiplier: 1
   m_AtlasRD:
     serializedVersion: 3
@@ -193,18 +193,18 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 80
-      _typelessdata: 000040c03fe9d34000000000000040403fe9d34000000000000040c000000000000000000000404000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: 83c04ac03360fb400000000083c04a403360fb400000000083c04ac0000000000000000083c04a4000000000000000000000000000000000000000000000000000000000000000000000000000000000
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 360
-      y: 600
-      width: 270
-      height: 298
+      x: 294
+      y: 551
+      width: 221
+      height: 274
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 45, y: 495, z: 45, w: 600}
+    uvTransform: {x: 34.88005, y: 404.5, z: 34.88005, w: 551}
     downscaleMultiplier: 1
   m_PhysicsShape: []
   m_Bones: []

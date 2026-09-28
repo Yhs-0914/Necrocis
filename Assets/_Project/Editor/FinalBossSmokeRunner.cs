@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Necrocis;
 using ProceduralMap;
@@ -14,7 +15,7 @@ namespace NecrocisEditor
     /// <summary>Exercises the real Hub trigger, persistent player, arena movement and return trigger.</summary>
     public static class FinalBossSmokeRunner
     {
-        private const string Output = "Exports/FinalBossConcepts/2026-09-26/TilemapImplementation";
+        private const string Output = "Exports/FinalBossConcepts/2026-09-28/TilemapImplementation";
         private static readonly Vector2 Footprint = new Vector2(.68f, .48f);
         private static SceneSetup[] sceneSetup;
         private static bool previousOptionsEnabled;
@@ -29,6 +30,52 @@ namespace NecrocisEditor
         private static bool directPreview;
         private static bool previousRunInBackground;
         private static bool playModeEntered;
+
+        [MenuItem("Tools/Necrocis/Final Boss/Verify Existing Organ Maps")]
+        public static void VerifyExistingOrganMaps()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play Mode before checking organ maps.");
+            string[] names = { "Stomach", "Intestine", "Liver", "Lung" };
+            // Open separate scene copies only; do not clear or regenerate an already open scene.
+            foreach (string name in names)
+                if (SceneManager.GetSceneByPath("Assets/_Project/Scenes/" + name + ".unity").isLoaded)
+                    throw new InvalidOperationException("Close " + name + " before running this check.");
+            Scene previous = SceneManager.GetActiveScene();
+            try
+            {
+                foreach (string name in names)
+                {
+                    Scene scene = EditorSceneManager.OpenScene("Assets/_Project/Scenes/" + name + ".unity", OpenSceneMode.Additive);
+                    try
+                    {
+                        MapGenerator map = null;
+                        foreach (GameObject root in scene.GetRootGameObjects())
+                        {
+                            MapGenerator candidate = root.GetComponentInChildren<MapGenerator>();
+                            if (candidate != null) map = candidate;
+                        }
+                        Require(map != null && map.AuthoredLayout == null, name + " generator changed unexpectedly");
+                        ProceduralBiomeBridge bridge = map.GetComponent<ProceduralBiomeBridge>();
+                        Require(bridge != null && bridge.GetBiomeConfig().spawnWorldItems,
+                            name + " lost its default item spawning setting");
+                        map.GenerateMap();
+                        Vector2Int spawn = map.WorldToCell(map.GetPlayerSpawnWorldPosition());
+                        Require(map.IsReady && map.MapWidth == 300 && map.MapHeight == 300
+                            && map.IsCellWalkable(spawn.x, spawn.y), name + " generation/spawn regression");
+                        map.ClearMap();
+                    }
+                    finally { EditorSceneManager.CloseScene(scene, true); }
+                }
+                Directory.CreateDirectory(Output);
+                File.WriteAllText(Output + "/organ-regression-result.txt",
+                    "PASS: Stomach, Intestine, Liver and Lung retain procedural 300x300 generation, safe spawn and enabled world-item spawning.");
+            }
+            finally
+            {
+                if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
+            }
+        }
 
         [MenuItem("Tools/Necrocis/Final Boss/Run Exploration Smoke Test")]
         public static void Run()
@@ -212,6 +259,15 @@ namespace NecrocisEditor
                     FinalBossArena arena = FinalBossArena.Instance;
                     Require(arena.IsWalkable(player.transform.position, Footprint)
                         && arena.CanTraverse(startPosition, player.transform.position, Footprint), $"East movement crossed blocked cells: {startPosition} -> {player.transform.position}");
+                    Capture(Camera.main, "gameplay-wall-collision.png");
+                    player.SpawnAt(arena.UVToWorld(new Vector2(.5f, .53f)));
+                    Physics.SyncTransforms();
+                    stage = 7;
+                    return;
+                }
+                if (stage == 7)
+                {
+                    FinalBossArena arena = FinalBossArena.Instance;
                     Capture(Camera.main, "gameplay-center.png");
                     CaptureOverview(arena);
                     player.SpawnAt(arena.UVToWorld(new Vector2(.5f, .70f)));
@@ -250,9 +306,21 @@ namespace NecrocisEditor
         {
             MapGenerator map = arena.GetComponent<MapGenerator>();
             Require(map != null && map.IsReady && map.AuthoredLayout != null, "Shared map generator not ready");
+            Require(map.AuthoredLayout.environmentAtlas != null, "Reference environment atlas missing");
+            UnityEngine.Tilemaps.Tilemap floor = arena.gameObject.scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<UnityEngine.Tilemaps.Tilemap>())
+                .First(tilemap => tilemap.name == "Base Tilemap");
+            Require(floor.GetTile(new Vector3Int(24, 19, 0)) != floor.GetTile(new Vector3Int(25, 19, 0)),
+                "Authored environment must use position-specific tiles");
             Require(BiomeManager.Active == arena.GetComponent<ProceduralBiomeBridge>(), "Shared biome bridge not active");
             Require(player.GetComponent<ProceduralTerrainMotor>().HasActiveMap, "Common terrain motor not bound");
             Require(GameObject.Find("DormantCerebrum_MapArtwork") == null, "Old flattened map still present");
+            Require(arena.GetComponent<WorldItemSpawner>() == null, "Unexpected automatic item spawner");
+            SpriteOutline[] outlines = arena.GetComponentsInChildren<SpriteOutline>();
+            Require(outlines.Length == 5, "Four pillar outlines and cerebrum outline required");
+            foreach (SpriteOutline outline in outlines)
+                Require(outline.GetComponent<SpriteRenderer>().sprite.vertices.Length > 4,
+                    "Sprite outline was lost after reload: " + outline.name);
             Require(UnityEngine.Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None)
                 .Length >= 4, "Shared tilemap layers missing");
         }

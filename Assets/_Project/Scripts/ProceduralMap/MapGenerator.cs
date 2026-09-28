@@ -120,6 +120,8 @@ namespace ProceduralMap
         private OccupancyGrid thirdFloorOccupancyGrid;
         private readonly List<UnityEngine.Tilemaps.Tile> runtimeTiles = new List<UnityEngine.Tilemaps.Tile>();
         private UnityEngine.Tilemaps.Tile baseRuntimeTile;
+        private readonly Dictionary<Vector2Int, UnityEngine.Tilemaps.Tile> authoredTiles = new Dictionary<Vector2Int, UnityEngine.Tilemaps.Tile>();
+        private readonly List<Sprite> authoredSprites = new List<Sprite>();
         private readonly UnityEngine.Tilemaps.Tile[] grassRuntimeTiles = new UnityEngine.Tilemaps.Tile[9];
         private readonly UnityEngine.Tilemaps.Tile[] lungGrassRuntimeTiles = new UnityEngine.Tilemaps.Tile[6];
         private readonly List<UnityEngine.Tilemaps.Tile[]> grassTypeRuntimeTiles =
@@ -1140,7 +1142,9 @@ namespace ProceduralMap
             {
                 Vector3Int tilePosition = new Vector3Int(x, y, 0);
                 MapCell cell = gridData.GetCell(x, y);
-                if ((!cell.IsVoid && y > bottomEmptyRows) || (authoredLayout != null && authoredLayout.ContainsFloor(x, y)))
+                if (authoredLayout != null && authoredLayout.environmentAtlas != null)
+                    baseTilemap.SetTile(tilePosition, GetAuthoredTile(x, y));
+                else if ((!cell.IsVoid && y > bottomEmptyRows) || (authoredLayout != null && authoredLayout.ContainsFloor(x, y)))
                     baseTilemap.SetTile(tilePosition, baseRuntimeTile);
                 if (cell.HasRoad && cell.RoadKind != RoadTileKind.None && roadTilemap)
                     roadTilemap.SetTile(tilePosition, roadRuntimeTiles[(int)cell.RoadKind - 1]);
@@ -1157,7 +1161,7 @@ namespace ProceduralMap
                     secondFloorTilemap.SetTile(tilePosition, secondFloorRuntimeTile);
                 if (cell.TerrainType == TerrainType.ThirdFloor && thirdFloorTilemap)
                     thirdFloorTilemap.SetTile(tilePosition, thirdFloorRuntimeTile);
-                if (cell.HasCliff)
+                if (cell.HasCliff && !(authoredLayout != null && authoredLayout.environmentAtlas != null))
                 {
                     if (cell.CliffLevel == 2 && thirdFloorCliffTilemap)
                         thirdFloorCliffTilemap.SetTile(tilePosition, thirdFloorCliffRuntimeTile);
@@ -1376,8 +1380,34 @@ namespace ProceduralMap
             return tile;
         }
 
+        private UnityEngine.Tilemaps.Tile GetAuthoredTile(int x, int y)
+        {
+            var key = new Vector2Int(x, y);
+            if (authoredTiles.TryGetValue(key, out var cached)) return cached;
+            Texture2D texture = authoredLayout.environmentAtlas;
+            int left = Mathf.RoundToInt(x * (float)texture.width / mapWidth);
+            int right = Mathf.RoundToInt((x + 1) * (float)texture.width / mapWidth);
+            int bottom = Mathf.RoundToInt(y * (float)texture.height / mapHeight);
+            int top = Mathf.RoundToInt((y + 1) * (float)texture.height / mapHeight);
+            Sprite sprite = Sprite.Create(texture, new Rect(left, bottom, right - left, top - bottom),
+                new Vector2(.5f, .5f), right - left, 0, SpriteMeshType.FullRect);
+            sprite.hideFlags = HideFlags.HideAndDontSave;
+            authoredSprites.Add(sprite);
+            var tile = CreateRuntimeTile(sprite);
+            tile.transform = Matrix4x4.Scale(new Vector3(1f, (float)(right - left) / (top - bottom), 1f));
+            authoredTiles.Add(key, tile);
+            return tile;
+        }
+
         private void ReleaseRuntimeTiles()
         {
+            authoredTiles.Clear();
+            foreach (Sprite sprite in authoredSprites)
+            {
+                if (Application.isPlaying) Destroy(sprite);
+                else DestroyImmediate(sprite);
+            }
+            authoredSprites.Clear();
             for (int i = 0; i < runtimeTiles.Count; i++)
             {
                 if (!runtimeTiles[i]) continue;

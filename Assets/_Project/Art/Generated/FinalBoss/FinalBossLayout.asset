@@ -18,33 +18,38 @@ MonoBehaviour:
   - {x: 21, y: 2}
   - {x: 27, y: 2}
   - {x: 27, y: 7}
-  - {x: 38, y: 7}
-  - {x: 44, y: 13}
-  - {x: 44, y: 29}
-  - {x: 38, y: 35}
-  - {x: 10, y: 35}
-  - {x: 4, y: 29}
-  - {x: 4, y: 13}
-  - {x: 10, y: 7}
+  - {x: 35, y: 7}
+  - {x: 40, y: 10}
+  - {x: 43, y: 15}
+  - {x: 43, y: 24}
+  - {x: 41, y: 28}
+  - {x: 37, y: 31}
+  - {x: 11, y: 31}
+  - {x: 7, y: 28}
+  - {x: 5, y: 24}
+  - {x: 5, y: 15}
+  - {x: 8, y: 10}
+  - {x: 13, y: 7}
   - {x: 21, y: 7}
   blockedAreas:
-  - x: 10
-    y: 25
-    width: 5
-    height: 4
+  - x: 9
+    y: 23
+    width: 6
+    height: 3
   - x: 33
-    y: 25
-    width: 5
-    height: 4
-  - x: 10
-    y: 12
-    width: 5
-    height: 4
+    y: 23
+    width: 6
+    height: 3
+  - x: 9
+    y: 9
+    width: 6
+    height: 3
   - x: 33
-    y: 12
-    width: 5
-    height: 4
-  - x: 18
-    y: 31
-    width: 12
-    height: 4
+    y: 9
+    width: 6
+    height: 3
+  - x: 17
+    y: 30
+    width: 14
+    height: 5
+  environmentAtlas: {fileID: 2800000, guid: 159ca4f8bd9d6e74a9012838a3460234, type: 3}

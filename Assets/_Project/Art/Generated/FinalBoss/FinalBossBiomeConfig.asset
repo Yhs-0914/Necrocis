@@ -24,6 +24,7 @@ MonoBehaviour:
   marginRight: 0
   marginBottom: 0
   marginTop: 0
+  spawnWorldItems: 0
   objectRules: []
   enemySpawnConfig: {fileID: 0}
   enemySpawnRules: []

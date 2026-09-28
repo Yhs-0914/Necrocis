@@ -10,6 +10,8 @@ namespace ProceduralMap
         public Vector2Int spawnCell = new Vector2Int(24, 9);
         public Vector2[] floorPolygon;
         public RectInt[] blockedAreas;
+        [Tooltip("Optional room artwork sampled by cell through the normal chunk renderer. Does not define collision.")]
+        public Texture2D environmentAtlas;
 
         public bool ContainsFloor(int x, int y)
         {

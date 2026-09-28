@@ -30,11 +30,18 @@ XZ 평면으로 회전한 Grid 아래 Tilemap 레이어에 지형을 렌더링�
 
 ## 아트와 배치
 
-방 전체 이미지를 붙인 Quad는 사용하지 않습니다. 바닥은 반복 Tilemap,
-외곽은 기존 장기 맵 벽 타일, 네 장기 기둥과 잠든 대뇌는 개별 SpriteRenderer 오브젝트입니다.
-기존 대뇌 맵 원본 텍스처를 참조하는 별도 Sprite 자산과 윤곽 메시를 사용하며,
-원본 이미지를 수정하거나 새 이미지를 생성하지 않습니다.
+방 전체 이미지를 붙인 Quad는 사용하지 않습니다. 원본의 두꺼운 곡선 벽·신경망·연결 조직을
+유지한 `CerebrumEnvironment_v2.png`를 셀별 Sprite/Tile로 나눠 공통 MapGenerator의
+청크 로딩·해제 경로로 렌더링합니다. `AuthoredMapLayout.environmentAtlas`가 없는 기존 맵은
+원래의 반복 타일 렌더링을 유지합니다. 시각용 벽 그림과 이동 판정은 분리되어 있습니다.
+네 장기 기둥과 잠든 대뇌는 원본 텍스처를 참조하는 개별 SpriteRenderer와 윤곽 메시입니다.
+원본 이미지는 보존했고, 내장 image_gen으로 장기만 제거한 배경 자산을 별도 생성했습니다.
+생성 프롬프트는 `Art/Concepts/FinalBoss/CerebrumEnvironment_v2_prompt.md`에 기록했습니다.
 기둥은 Billboard와 SpriteYSort를 사용하고, 바닥 점유 영역은 레이아웃 자산에서 지정합니다.
+`SpriteOutline`이 씬에 저장된 윤곽 좌표로 표시용 Sprite 메시를 재구성하므로,
+Unity에서 Sprite 자산을 다시 가져오거나 씬을 재실행해도 사각형 배경으로 돌아가지 않습니다.
+최종보스용 BiomeConfig의 `spawnWorldItems`는 꺼져 있어 일반 아이템 상자를 자동 생성하지 않습니다.
+기존 네 장기 맵의 기본값은 켜짐으로 유지됩니다.
 대뇌와 기둥의 전투 AI·체력·파괴·페이즈는 아직 구현하지 않습니다.
 
 ## 편집과 검증
@@ -42,7 +49,9 @@ XZ 평면으로 회전한 Grid 아래 Tilemap 레이어에 지형을 렌더링�
 - `FinalBossLayout.asset`: 방 크기, 스폰 셀, 외곽 다각형, 기둥/대뇌 점유 영역.
 - `FinalBossBiomeConfig.asset`: 공통 바이옴 연결 설정.
 - `FinalBossSceneBuilder.cs`: 씬·개별 Sprite 자산·허브 기반 대체 플레이어/카메라 생성.
+- **Update Existing Prop Outlines**: 기존 씬의 배치를 유지하며 기둥·대뇌 윤곽과 자동 아이템 생성 설정만 갱신합니다.
 - **Tools > Necrocis > Final Boss > Build Exploration Scene**: 최종보스 씬을 닫은 상태에서 재생성합니다. 생성 씬과 관련 자산의 수동 편집을 덮어쓰므로 레이아웃 변경을 유지하려면 빌더도 함께 수정해야 합니다.
 - **Run Exploration Smoke Test**: 임시 저장으로 15종 미완료 조합의 잠금, 실제 F8 버튼 콜백, 4/4 기록, 허브 입장, 공통 지형 연결, 바닥 연결성, 기둥/벽 경로 차단, 이동 및 귀환 후 기록을 검증합니다.
 - **Run Direct Scene Smoke Test**: 단독 씬 시작과 스폰·공통 지형 연결·이동·귀환·처치 기록 비변경을 검증합니다.
-- 테스트 결과와 카메라 캡처: `Exports/FinalBossConcepts/2026-09-26/TilemapImplementation/`.
+- **Verify Existing Organ Maps**: 기존 4개 맵의 300×300 생성, 안전한 스폰, 일반 아이템 생성 옵션 유지를 확인합니다. 검사할 장기 씬을 닫고 실행합니다.
+- 테스트 결과와 카메라 캡처: `Exports/FinalBossConcepts/2026-09-28/TilemapImplementation/`.

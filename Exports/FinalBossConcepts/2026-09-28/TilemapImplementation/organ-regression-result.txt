@@ -1,0 +1,1 @@
+PASS: Stomach, Intestine, Liver and Lung retain procedural 300x300 generation, safe spawn and enabled world-item spawning.

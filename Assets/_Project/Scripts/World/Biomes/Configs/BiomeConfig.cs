@@ -30,6 +30,7 @@ namespace Necrocis
         public int marginTop;
 
         [Header("Objects")]
+        public bool spawnWorldItems = true;
         public List<BiomeObjectRuleConfig> objectRules = new List<BiomeObjectRuleConfig>();
 
         [Header("Enemy Config")]

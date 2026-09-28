@@ -9,13 +9,13 @@ Sprite:
   m_Name: CerebrumFloorTile
   m_Rect:
     serializedVersion: 2
-    x: 983
-    y: 440
-    width: 41
-    height: 41
+    x: 803
+    y: 405
+    width: 33
+    height: 33
   m_Offset: {x: 0, y: 0}
   m_Border: {x: 0, y: 0, z: 0, w: 0}
-  m_PixelsToUnits: 41
+  m_PixelsToUnits: 33
   m_Pivot: {x: 0.5, y: 0.5}
   m_Extrude: 0
   m_IsPolygon: 0
@@ -106,14 +106,14 @@ Sprite:
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 983
-      y: 440
-      width: 41
-      height: 41
+      x: 803
+      y: 405
+      width: 33
+      height: 33
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 41, y: 1003.5, z: 41, w: 460.5}
+    uvTransform: {x: 33, y: 819.5, z: 33, w: 421.5}
     downscaleMultiplier: 1
   m_AtlasRD:
     serializedVersion: 3
@@ -197,14 +197,14 @@ Sprite:
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
-      x: 983
-      y: 440
-      width: 41
-      height: 41
+      x: 803
+      y: 405
+      width: 33
+      height: 33
     textureRectOffset: {x: 0, y: 0}
     atlasRectOffset: {x: -1, y: -1}
     settingsRaw: 0
-    uvTransform: {x: 41, y: 1003.5, z: 41, w: 460.5}
+    uvTransform: {x: 33, y: 819.5, z: 33, w: 421.5}
     downscaleMultiplier: 1
   m_PhysicsShape: []
   m_Bones: []
