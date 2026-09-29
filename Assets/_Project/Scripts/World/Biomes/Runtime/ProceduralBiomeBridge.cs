@@ -119,9 +119,12 @@ namespace Necrocis
                 UpdateChunks();
             }
 
-            WorldItemSpawner itemSpawner = GetComponent<WorldItemSpawner>();
-            if (itemSpawner == null) itemSpawner = gameObject.AddComponent<WorldItemSpawner>();
-            itemSpawner.SpawnItemsNow();
+            if (config.spawnWorldItems)
+            {
+                WorldItemSpawner itemSpawner = GetComponent<WorldItemSpawner>();
+                if (itemSpawner == null) itemSpawner = gameObject.AddComponent<WorldItemSpawner>();
+                itemSpawner.SpawnItemsNow();
+            }
 
             CreateBossArena();
             PlayBiomeBgm();

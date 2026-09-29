@@ -32,6 +32,9 @@ namespace Necrocis
         public const string SCENE_LIVER = "Liver";
         public const string SCENE_STOMACH = "Stomach";
         public const string SCENE_LUNG = "Lung";
+        public const string SCENE_FINAL_BOSS = "FinalBoss";
+
+        public bool IsLoading => isLoading;
 
         private bool isLoading = false;
         private bool forceHubRespawn = false;
@@ -84,6 +87,23 @@ namespace Necrocis
 
             string sceneName = GetSceneName(biome);
             StartCoroutine(LoadSceneAsync(sceneName));
+        }
+
+        public bool LoadFinalBoss()
+        {
+            GameManager game = GameManager.Instance;
+            if (isLoading || game == null || !game.HasAllRelics)
+                return false;
+
+            if (!Application.CanStreamedLevelBeLoaded(SCENE_FINAL_BOSS))
+            {
+                Debug.LogError("[SceneLoader] FinalBoss scene is missing from Build Settings.");
+                return false;
+            }
+
+            game.EnterFinalBoss();
+            StartCoroutine(LoadSceneAsync(SCENE_FINAL_BOSS));
+            return true;
         }
 
         /// <summary>

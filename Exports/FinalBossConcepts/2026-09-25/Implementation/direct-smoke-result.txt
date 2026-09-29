@@ -1,0 +1,1 @@
+PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, Hub return, and no boss-progress unlock verified.

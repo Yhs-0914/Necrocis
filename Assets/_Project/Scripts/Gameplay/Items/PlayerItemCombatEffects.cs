@@ -184,7 +184,7 @@ namespace Necrocis
         [SerializeField, Min(1)] private int bloodContractMaxHealthGainCount = 5;
         [SerializeField] private float hyperplasiaMissingHealthAttackBonusMax = 2f;
         [SerializeField] private float decayOrganSecondsPerAttackBonus = 180f;
-        [SerializeField] private int decayOrganMaxAttackBonus = 4;
+        [SerializeField] private int decayOrganMaxAttackBonus = 2;
         [SerializeField] private float ruptureMuscleAttackBonusPerStack = 0.5f;
         [SerializeField] private float ruptureMuscleMovePenaltyPerStack = 0.25f;
         [SerializeField] private int ruptureMuscleMaxStacks = 3;
@@ -258,15 +258,15 @@ namespace Necrocis
         [SerializeField] private float bloodflowAccelerationRadius = 9f;
         [SerializeField] private float bloodflowAccelerationAttackSpeedBonus = 0.35f;
         [SerializeField] private float focusedNerveRadius = 6f;
-        [SerializeField] private float focusedNerveHighAttackBonus = 1.5f;
+        [SerializeField] private float focusedNerveHighAttackBonus = 0.75f;
         [SerializeField] private float focusedNerveLowAttackBonus = 0.5f;
         [SerializeField] private float executionInstinctHealthThreshold = 0.2f;
         [SerializeField, Range(0f, 1f)] private float executionInstinctChance = 0.2f;
         [SerializeField] private float executionInstinctBossDamageMultiplier = 1.5f;
         [SerializeField] private float berserkCellDuration = 15f;
-        [SerializeField] private float berserkCellAttackBonus = 1.5f;
+        [SerializeField] private float berserkCellAttackBonus = 0.75f;
         [SerializeField] private float berserkCellMoveBonus = 0.5f;
-        [SerializeField] private float berserkCellAttackSpeedBonus = 0.5f;
+        [SerializeField] private float berserkCellAttackSpeedBonus = 0.3f;
         [SerializeField] private float berserkCellBossDetectionRadius = 18f;
 
         [Header("Mutation Chaos Items")]

@@ -1,0 +1,66 @@
+# 최종보스 맵 — 공통 타일맵 구현
+
+## 사용법
+
+- 플레이 중 F8 → **4개 맵 보스 처치 완료 (저장 반영)** 버튼을 누릅니다.
+- 위·장·간·폐 보스 처치 기록과 부산물 4종이 정상 획득 경로인 `GameManager.CollectRelic`을 통해 반영됩니다. 반복 클릭해도 이미 완료된 기록은 중복 처리하지 않습니다.
+- 버튼은 현재 게임/저장 상태를 변경합니다. F8을 닫고 허브 중앙 포탈에 들어가면 최종보스 맵으로 이동합니다. 다른 맵에서 눌렀다면 먼저 허브로 귀환합니다.
+- `FinalBoss.unity`를 단독으로 열어 Play해도 허브와 같은 플레이어·카메라를 생성합니다. 단독 미리보기 자체는 보스 처치 기록을 해금하지 않습니다.
+- 아래쪽 입구의 귀환 트리거로 허브에 돌아갈 수 있습니다.
+
+## 기존 4개 맵 분석과 통합
+
+위·장·간·폐 씬은 모두 `ProceduralMap.MapGenerator`와 `ProceduralBiomeBridge`를 사용합니다.
+XZ 평면으로 회전한 Grid 아래 Tilemap 레이어에 지형을 렌더링하고,
+`GridData/MapCell`에서 이동 가능 여부를 관리합니다. 플레이어는
+`ProceduralTerrainMotor`를 통해 같은 데이터를 조회하며, 타일과 오브젝트는 청크 단위로 로드합니다.
+
+최종보스 맵도 같은 구조를 사용합니다.
+
+- `Grid → Base / Grass / Second Floor / Cliff Tilemap`
+- `MapGenerator → AuthoredMapLayout → GridData/MapCell → 공통 청크 렌더링`
+- `ProceduralBiomeBridge`: 공통 바이옴·카메라·청크 연결. 별도 최종보스용 BiomeConfig에는 일반 적과 중간보스 생성 규칙이 없습니다.
+- `ProceduralTerrainMotor`: 기존 4개 맵과 동일한 스폰·이동 경로.
+- `FinalBossArena`: 방 상태와 기둥·귀환 지점 참조만 담당합니다. 독립적인 UV 이동 판정과 PlayerController의 최종보스 전용 이동 분기를 제거했습니다.
+
+최종보스 방은 48×38 고정 배치를 유지합니다. 기존 탐험 맵의 300×300 무작위 지형을 그대로 복제하지 않고,
+공통 생성기에 선택적인 `AuthoredMapLayout` 자산을 추가해 보스방의 배치를 지정합니다.
+기존 4개 씬은 이 자산을 사용하지 않아 원래의 절차적 생성 경로를 그대로 실행합니다.
+고정 맵 이동에는 경로 중간도 검사하여 대시·넉백으로 기둥이나 벽을 넘어가지 못하게 합니다.
+
+## 아트와 배치
+
+방 전체 이미지를 붙인 Quad는 사용하지 않습니다. 원본의 두꺼운 곡선 벽·신경망·연결 조직을
+유지한 `CerebrumEnvironment_v2.png`를 셀별 Sprite/Tile로 나눠 공통 MapGenerator의
+청크 로딩·해제 경로로 렌더링합니다. `AuthoredMapLayout.environmentAtlas`가 없는 기존 맵은
+원래의 반복 타일 렌더링을 유지합니다. 시각용 벽 그림과 이동 판정은 분리되어 있습니다.
+네 장기 기둥과 잠든 대뇌는 원본 텍스처를 참조하는 개별 SpriteRenderer와 윤곽 메시입니다.
+원본 이미지는 보존했고, 내장 image_gen으로 장기만 제거한 배경 자산을 별도 생성했습니다.
+생성 프롬프트는 `Art/Concepts/FinalBoss/CerebrumEnvironment_v2_prompt.md`에 기록했습니다.
+기둥은 Billboard와 SpriteYSort를 사용하고, 바닥 점유 영역은 레이아웃 자산에서 지정합니다.
+`SpriteOutline`이 씬에 저장된 윤곽 좌표로 표시용 Sprite 메시를 재구성하므로,
+Unity에서 Sprite 자산을 다시 가져오거나 씬을 재실행해도 사각형 배경으로 돌아가지 않습니다.
+최종보스용 BiomeConfig의 `spawnWorldItems`는 꺼져 있어 일반 아이템 상자를 자동 생성하지 않습니다.
+기존 네 장기 맵의 기본값은 켜짐으로 유지됩니다.
+대뇌와 기둥의 전투 AI·체력·파괴·페이즈는 아직 구현하지 않습니다.
+
+## 편집과 검증
+
+- `FinalBossLayout.asset`: 방 크기, 스폰 셀, 외곽 다각형, 기둥/대뇌 점유 영역.
+- `FinalBossBiomeConfig.asset`: 공통 바이옴 연결 설정.
+- `FinalBossSceneBuilder.cs`: 씬·개별 Sprite 자산·허브 기반 대체 플레이어/카메라 생성.
+- **Update Existing Prop Outlines**: 기존 씬의 배치를 유지하며 기둥·대뇌 윤곽과 자동 아이템 생성 설정만 갱신합니다.
+- **Tools > Necrocis > Final Boss > Build Exploration Scene**: 최종보스 씬을 닫은 상태에서 재생성합니다. 생성 씬과 관련 자산의 수동 편집을 덮어쓰므로 레이아웃 변경을 유지하려면 빌더도 함께 수정해야 합니다.
+- **Run Exploration Smoke Test**: 임시 저장으로 15종 미완료 조합의 잠금, 실제 F8 버튼 콜백, 4/4 기록, 허브 입장, 공통 지형 연결, 바닥 연결성, 기둥/벽 경로 차단, 이동 및 귀환 후 기록을 검증합니다.
+- **Run Direct Scene Smoke Test**: 단독 씬 시작과 스폰·공통 지형 연결·이동·귀환·처치 기록 비변경을 검증합니다.
+- **Verify Existing Organ Maps**: 기존 4개 맵의 300×300 생성, 안전한 스폰, 일반 아이템 생성 옵션 유지를 확인합니다. 검사할 장기 씬을 닫고 실행합니다.
+- 테스트 결과와 카메라 캡처: `Exports/FinalBossConcepts/2026-09-28/TilemapImplementation/`.
+
+## 최종보스 1페이즈
+
+- 1페이즈에도 맵 상단의 최종보스 모습은 어둡고 잠든 상태로 표시하지만, `EnemyController` 전투 대상은 부여하지 않아 공격할 수 없습니다.
+- 네 바이옴 기둥은 배경 픽셀이 없는 독립 투명 스프라이트와 기존 `EnemyController` 피해 처리 경로를 사용합니다. 각 기둥은 체력 65, 바이옴 색상의 월드 체력바, 기둥 실루엣에만 적용되는 밝은 피격 플래시와 짧은 흔들림/팽창 반응을 가집니다.
+- 기둥이 남아 있는 네 바이옴은 일반 적을 계속 보충합니다. 기둥을 파괴하면 해당 바이옴의 일반 적 보충만 영구 중단됩니다.
+- 기둥 파괴 시 대응 바이옴의 중간보스가 원본 보스전 유효 크기의 50%, 체력·공격력·접촉 피해 33%, 경험치·유물 보상 없음 상태로 즉시 소환됩니다. 크기는 각 보스 설정의 `scaleMultiplier`까지 반영한 뒤 절반으로 계산합니다.
+- 파괴된 기둥은 각 장기 디자인에 맞춰 별도로 제작한 파괴 잔해 스프라이트로 교체되고, 차지하던 맵 충돌 영역을 해제합니다.
+- 네 기둥을 모두 파괴한 경우에만 2페이즈로 전환하고 상단 최종보스의 원래 밝기를 복구해 활성화 상태를 표현합니다.

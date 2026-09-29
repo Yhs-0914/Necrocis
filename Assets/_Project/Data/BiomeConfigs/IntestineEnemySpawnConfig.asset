@@ -527,3 +527,258 @@ MonoBehaviour:
     - {fileID: -157808609, guid: 83bd0097212cd6b47b8ad6fa37ea59f7, type: 3}
     debrisVfxScale: 25
     debrisVfxSpeed: 0.08
+  - name: IntestineFoldworm
+    density: 0.02
+    minDistance: 6
+    poissonSalt: 1604
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 1.1
+    stoppingDistance: 0.1
+    wanderRadius: 5
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.4, y: 1.1}
+    maxHealth: 6
+    attackDamage: 1
+    attackRange: 1.5
+    attackCooldown: 1
+    expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.05
+    separationStrength: 1.2
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 361ab4d09436423fa568923e6e0aaf29, type: 3}
+    - {fileID: 21300000, guid: 6e988d90fe0340a1bc216539c04d43e8, type: 3}
+    - {fileID: 21300000, guid: fde25c60bd40402fb944a51406f3afa1, type: 3}
+    - {fileID: 21300000, guid: 773bff98c659437bb0c870078c15d36c, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: aa2d0bad64af47b4ba7e3256975dc04b, type: 3}
+    - {fileID: 21300000, guid: 36cafedaf1da454a951ee9ceda1eeeee, type: 3}
+    - {fileID: 21300000, guid: 131786fdf91e43649662aee1da2565c6, type: 3}
+    - {fileID: 21300000, guid: 5e6dfd6e273d4292bce9fe6a3ab827a9, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: 93fcd6ac18734016b702738fd29168ab, type: 3}
+    - {fileID: 21300000, guid: 16607da2822b4ecbacc0a2a041329ba8, type: 3}
+    - {fileID: 21300000, guid: bb247899360243dcb7a7e6d67b809cc1, type: 3}
+    - {fileID: 21300000, guid: 9249cb4939464c0d8cd227acbe1101ef, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
+    attackColliderCenter: {x: 0, y: 0.48, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: adfd69f4cd4044db8b2e318a35958f2d, type: 3}
+    - {fileID: 21300000, guid: fadefce004f54515820bf7362df29f92, type: 3}
+    - {fileID: 21300000, guid: b1acddf16dfd4a96ad04cd52f537b327, type: 3}
+    - {fileID: 21300000, guid: af71efb204864ad98c8b34c1029c9dec, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: IntestineVillusHand
+    density: 0.02
+    minDistance: 6
+    poissonSalt: 1605
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.8
+    stoppingDistance: 0.1
+    wanderRadius: 5
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.4, y: 1.1}
+    maxHealth: 6
+    attackDamage: 1
+    attackRange: 1.8
+    attackCooldown: 1.2
+    expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.05
+    separationStrength: 1.2
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: c039bd6cd16047c688715d8772279634, type: 3}
+    - {fileID: 21300000, guid: dc92508fc8e241b2b4191d9af2b85c13, type: 3}
+    - {fileID: 21300000, guid: 16418169b5d547d1895238758d3a645c, type: 3}
+    - {fileID: 21300000, guid: eff69805cd064b18abcb1527122d2967, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: 6b67e6412f354430a377710f3ddcc74e, type: 3}
+    - {fileID: 21300000, guid: 07734beb46ef45f5b7cfaee3402d2709, type: 3}
+    - {fileID: 21300000, guid: 20516140ad0f4244bb01148e62ff7a45, type: 3}
+    - {fileID: 21300000, guid: 8faf23cf33c44eb39b843e829d0d39d0, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: e61f2486c3a143a19c775d33563cb932, type: 3}
+    - {fileID: 21300000, guid: bf79a28a162449f988f09003770d70a4, type: 3}
+    - {fileID: 21300000, guid: f5a48eec32a541cebe67ff3d6bd7f7b6, type: 3}
+    - {fileID: 21300000, guid: 38e9a3ec79774231894263faffbfae05, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
+    attackColliderCenter: {x: 0, y: 0.48, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: 1c9c549fa20946e791ccd5c77df20696, type: 3}
+    - {fileID: 21300000, guid: 1a5387e7e2bb4dc1a64c51e6e2dd8bed, type: 3}
+    - {fileID: 21300000, guid: a92c62963e804232bd156139fcb090e3, type: 3}
+    - {fileID: 21300000, guid: c3c12f087c924b8a964ab69fb4d01147, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - name: IntestineKnottedEel
+    density: 0.02
+    minDistance: 6
+    poissonSalt: 1606
+    allowedRegions:
+    maxAlive: 2
+    activationRadius: 55
+    respawnCooldown: 6
+    spawnRadius: 2
+    moveSpeed: 0.9
+    stoppingDistance: 0.1
+    wanderRadius: 5
+    chaseRadius: 10
+    leashRadius: 14
+    idleDelayRange: {x: 0.4, y: 1.1}
+    maxHealth: 8
+    attackDamage: 1
+    attackRange: 1.7
+    attackCooldown: 1.2
+    expReward: 12
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.05
+    separationStrength: 1.2
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.16
+    addCollider: 1
+    isTrigger: 0
+    colliderSize: {x: 0.85, y: 1.2, z: 0.85}
+    colliderCenter: {x: 0, y: 0.6, z: 0}
+    idleSprites:
+    - {fileID: 21300000, guid: 667ceddb04a342bc9900e05900a165fd, type: 3}
+    - {fileID: 21300000, guid: 9f2d9d1bf9a24d27b0266240d2f53123, type: 3}
+    - {fileID: 21300000, guid: 90926d89b4a649b2a4dcc4f1b7b3463c, type: 3}
+    - {fileID: 21300000, guid: 671499d553784e27b4b7ebf8100cca06, type: 3}
+    moveSprites:
+    - {fileID: 21300000, guid: f0444c5509a6414d8d0f4149f811180c, type: 3}
+    - {fileID: 21300000, guid: 457e69d8972d41c6ab47ae118519945b, type: 3}
+    - {fileID: 21300000, guid: 8bda41f95493416aa626bc6bf0fb3ce1, type: 3}
+    - {fileID: 21300000, guid: 35ff983489154849896cc4e32b4a4091, type: 3}
+    attackSprites:
+    - {fileID: 21300000, guid: 32ac135be8c541ed8a43b994aa836753, type: 3}
+    - {fileID: 21300000, guid: b2a34e51dd284676843dbeda4676a58f, type: 3}
+    - {fileID: 21300000, guid: d5f9ff57c76443a8a2f8b37fdd34e9d4, type: 3}
+    - {fileID: 21300000, guid: fe17f1d4fe194546a5388a1a99893a7d, type: 3}
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.14
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
+    attackColliderCenter: {x: 0, y: 0.48, z: 0}
+    deathSprites:
+    - {fileID: 21300000, guid: d736eb70a556482abe584097469d37ec, type: 3}
+    - {fileID: 21300000, guid: c59079a5e1b54d8fadf1a1896165e526, type: 3}
+    - {fileID: 21300000, guid: f90139b4f6c04f20ba6cd81ae4eefc4e, type: 3}
+    - {fileID: 21300000, guid: 176e99f6c4494958bcd6fb39d09e6731, type: 3}
+    deathAnimationSpeed: 0.16
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
+    isElite: 0
+    killTriggerEnemyName:
+    killTriggerCount: 5
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName:
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12

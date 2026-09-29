@@ -61,6 +61,8 @@ namespace Necrocis
 
         private void BindMapIfNeeded()
         {
+            // Do not let a pending checkpoint restore overwrite the map's spawn on the next frame.
+            if (SaveService.IsRestorePending) return;
             if (!map) map = FindFirstObjectByType<MapGenerator>();
             if (!map || !map.IsReady || boundMap == map) return;
 

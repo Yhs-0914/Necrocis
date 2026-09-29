@@ -538,9 +538,12 @@ namespace Necrocis
         // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
+
             if (proceduralTerrainMotor != null && proceduralTerrainMotor.HasActiveMap)
             {
-                Vector3 proceduralCurrentPos = transform.position;
+                // MovePosition can advance rb.position before Transform is synchronized. Use
+                // the same position as ApplyMove when several dash/knockback steps run together.
+                Vector3 proceduralCurrentPos = characterController == null && rb != null ? rb.position : transform.position;
                 Vector3 proceduralTargetPos = proceduralCurrentPos + moveVector;
                 if (proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralTargetPos))
                 {
@@ -589,7 +592,7 @@ namespace Necrocis
                 return true;
             }
 
-            Vector3 currentPos = transform.position;
+            Vector3 currentPos = characterController == null && rb != null ? rb.position : transform.position;
             Vector3 targetPos = currentPos + moveVector;
             if (CanMoveInBiome(biome, currentPos, targetPos))
             {

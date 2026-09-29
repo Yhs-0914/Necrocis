@@ -42,6 +42,8 @@ namespace ProceduralMap
         [SerializeField] private TerrainSpriteSet9 stomachRockTiles = new TerrainSpriteSet9();
 
         [Header("Map")]
+        [Tooltip("선택 사항: 고정 방도 공통 타일맵/청크/이동 시스템으로 생성합니다.")]
+        [SerializeField] private AuthoredMapLayout authoredLayout;
         [Tooltip("Necrocis 통합 씬처럼 Grid를 XZ 바닥으로 회전해 사용할 때 켭니다.")]
         [SerializeField] private bool useXZWorld = true;
         [SerializeField, Min(1)] private int mapWidth = 300;
@@ -118,6 +120,8 @@ namespace ProceduralMap
         private OccupancyGrid thirdFloorOccupancyGrid;
         private readonly List<UnityEngine.Tilemaps.Tile> runtimeTiles = new List<UnityEngine.Tilemaps.Tile>();
         private UnityEngine.Tilemaps.Tile baseRuntimeTile;
+        private readonly Dictionary<Vector2Int, UnityEngine.Tilemaps.Tile> authoredTiles = new Dictionary<Vector2Int, UnityEngine.Tilemaps.Tile>();
+        private readonly List<Sprite> authoredSprites = new List<Sprite>();
         private readonly UnityEngine.Tilemaps.Tile[] grassRuntimeTiles = new UnityEngine.Tilemaps.Tile[9];
         private readonly UnityEngine.Tilemaps.Tile[] lungGrassRuntimeTiles = new UnityEngine.Tilemaps.Tile[6];
         private readonly List<UnityEngine.Tilemaps.Tile[]> grassTypeRuntimeTiles =
@@ -146,6 +150,7 @@ namespace ProceduralMap
         public int MapWidth => mapWidth;
         public int MapHeight => mapHeight;
         public int RandomSeed => randomSeed;
+        public AuthoredMapLayout AuthoredLayout => authoredLayout;
 
         public void ConfigureRandomSeed(int seed)
         {
@@ -179,6 +184,25 @@ namespace ProceduralMap
             if (gridData == null || !gridData.IsInside(x, y)) return false;
             MapCell cell = gridData.GetCell(x, y);
             return !cell.IsVoid && !cell.HasCliff && (!cell.HasLava || cell.HasStomachRock);
+        }
+
+        public void SetAuthoredAreaBlocked(RectInt area, bool blocked)
+        {
+            if (authoredLayout == null || gridData == null) return;
+            int minX = Mathf.Clamp(area.xMin, 0, mapWidth);
+            int maxX = Mathf.Clamp(area.xMax, 0, mapWidth);
+            int minY = Mathf.Clamp(area.yMin, 0, mapHeight);
+            int maxY = Mathf.Clamp(area.yMax, 0, mapHeight);
+            for (int y = minY; y < maxY; y++)
+            for (int x = minX; x < maxX; x++)
+            {
+                MapCell cell = gridData.GetCell(x, y);
+                bool floor = authoredLayout.ContainsFloor(x, y);
+                cell.IsVoid = !floor || blocked;
+                cell.Occupied = blocked;
+                cell.HasCliff = false;
+                cell.CliffLevel = 0;
+            }
         }
 
         public int GetCellHeightLevel(int x, int y)
@@ -225,6 +249,25 @@ namespace ProceduralMap
         }
 
         public bool CanPlayerMoveWorld(
+            Vector3 currentWorldPosition, Vector3 targetWorldPosition, Vector2 halfExtents)
+        {
+            if (authoredLayout != null && gridData != null)
+            {
+                // Fixed rooms have solid props. Check the whole dash/knockback, not just its endpoint.
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(currentWorldPosition, targetWorldPosition) / .2f));
+                Vector3 previous = currentWorldPosition;
+                for (int i = 1; i <= steps; i++)
+                {
+                    Vector3 next = Vector3.Lerp(currentWorldPosition, targetWorldPosition, (float)i / steps);
+                    if (!CanPlayerMoveWorldStep(previous, next, halfExtents)) return false;
+                    previous = next;
+                }
+                return true;
+            }
+            return CanPlayerMoveWorldStep(currentWorldPosition, targetWorldPosition, halfExtents);
+        }
+
+        private bool CanPlayerMoveWorldStep(
             Vector3 currentWorldPosition, Vector3 targetWorldPosition, Vector2 halfExtents)
         {
             if (gridData == null) return true;
@@ -283,6 +326,8 @@ namespace ProceduralMap
 
         public Vector3 GetPlayerSpawnWorldPosition()
         {
+            if (authoredLayout != null)
+                return GetCellCenterWorld(authoredLayout.spawnCell);
             if (gridData == null)
                 return GetCellCenterWorld(new Vector2Int(mapWidth / 2, Mathf.Min(8, mapHeight - 1)));
 
@@ -471,7 +516,7 @@ namespace ProceduralMap
             return new Vector2Int(cell.x, cell.y);
         }
 
-        private Vector2Int WorldToCell(Vector3 worldPosition)
+        public Vector2Int WorldToCell(Vector3 worldPosition)
         {
             Vector3Int cell = baseTilemap.WorldToCell(worldPosition);
             return new Vector2Int(cell.x, cell.y);
@@ -530,6 +575,15 @@ namespace ProceduralMap
             gridData = new GridData(mapWidth, mapHeight);
             occupancyGrid = new OccupancyGrid(mapWidth, mapHeight);
             thirdFloorOccupancyGrid = new OccupancyGrid(mapWidth, mapHeight);
+            if (authoredLayout != null)
+            {
+                authoredLayout.Apply(gridData);
+                ConfigureTilemapOrder();
+                CreateRuntimeTiles();
+                currentPlayerChunk = new Vector2Int(int.MinValue, int.MinValue);
+                RefreshVisibleChunks(WorldToChunk(GetPlayerSpawnWorldPosition()));
+                return;
+            }
             ReserveBottomBoundaryCliff();
             ReserveBossArenaFootprint();
             if (generateRoads) GenerateRoads(new System.Random(unchecked(randomSeed ^ 0x2A6F91C3)));
@@ -1112,7 +1166,9 @@ namespace ProceduralMap
             {
                 Vector3Int tilePosition = new Vector3Int(x, y, 0);
                 MapCell cell = gridData.GetCell(x, y);
-                if (!cell.IsVoid && y > bottomEmptyRows)
+                if (authoredLayout != null && authoredLayout.environmentAtlas != null)
+                    baseTilemap.SetTile(tilePosition, GetAuthoredTile(x, y));
+                else if ((!cell.IsVoid && y > bottomEmptyRows) || (authoredLayout != null && authoredLayout.ContainsFloor(x, y)))
                     baseTilemap.SetTile(tilePosition, baseRuntimeTile);
                 if (cell.HasRoad && cell.RoadKind != RoadTileKind.None && roadTilemap)
                     roadTilemap.SetTile(tilePosition, roadRuntimeTiles[(int)cell.RoadKind - 1]);
@@ -1129,7 +1185,7 @@ namespace ProceduralMap
                     secondFloorTilemap.SetTile(tilePosition, secondFloorRuntimeTile);
                 if (cell.TerrainType == TerrainType.ThirdFloor && thirdFloorTilemap)
                     thirdFloorTilemap.SetTile(tilePosition, thirdFloorRuntimeTile);
-                if (cell.HasCliff)
+                if (cell.HasCliff && !(authoredLayout != null && authoredLayout.environmentAtlas != null))
                 {
                     if (cell.CliffLevel == 2 && thirdFloorCliffTilemap)
                         thirdFloorCliffTilemap.SetTile(tilePosition, thirdFloorCliffRuntimeTile);
@@ -1348,8 +1404,34 @@ namespace ProceduralMap
             return tile;
         }
 
+        private UnityEngine.Tilemaps.Tile GetAuthoredTile(int x, int y)
+        {
+            var key = new Vector2Int(x, y);
+            if (authoredTiles.TryGetValue(key, out var cached)) return cached;
+            Texture2D texture = authoredLayout.environmentAtlas;
+            int left = Mathf.RoundToInt(x * (float)texture.width / mapWidth);
+            int right = Mathf.RoundToInt((x + 1) * (float)texture.width / mapWidth);
+            int bottom = Mathf.RoundToInt(y * (float)texture.height / mapHeight);
+            int top = Mathf.RoundToInt((y + 1) * (float)texture.height / mapHeight);
+            Sprite sprite = Sprite.Create(texture, new Rect(left, bottom, right - left, top - bottom),
+                new Vector2(.5f, .5f), right - left, 0, SpriteMeshType.FullRect);
+            sprite.hideFlags = HideFlags.HideAndDontSave;
+            authoredSprites.Add(sprite);
+            var tile = CreateRuntimeTile(sprite);
+            tile.transform = Matrix4x4.Scale(new Vector3(1f, (float)(right - left) / (top - bottom), 1f));
+            authoredTiles.Add(key, tile);
+            return tile;
+        }
+
         private void ReleaseRuntimeTiles()
         {
+            authoredTiles.Clear();
+            foreach (Sprite sprite in authoredSprites)
+            {
+                if (Application.isPlaying) Destroy(sprite);
+                else DestroyImmediate(sprite);
+            }
+            authoredSprites.Clear();
             for (int i = 0; i < runtimeTiles.Count; i++)
             {
                 if (!runtimeTiles[i]) continue;
@@ -1452,6 +1534,11 @@ namespace ProceduralMap
 
         private void ClampSettings()
         {
+            if (authoredLayout != null)
+            {
+                mapWidth = authoredLayout.size.x;
+                mapHeight = authoredLayout.size.y;
+            }
             mapWidth = Mathf.Max(1, mapWidth);
             mapHeight = Mathf.Max(1, mapHeight);
             bottomEmptyRows = Mathf.Clamp(bottomEmptyRows, 0, Mathf.Max(0, mapHeight - 1));

@@ -1,0 +1,17 @@
+Stomach: 3 exclusive rules, scene reference and 48 sprite imports verified
+Intestine: 3 exclusive rules, scene reference and 48 sprite imports verified
+Liver: 3 exclusive rules, scene reference and 48 sprite imports verified
+Lung: 3 exclusive rules, scene reference and 48 sprite imports verified
+StomachGulp: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+StomachMucusSnail: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+StomachOverfedSac: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+IntestineFoldworm: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+IntestineVillusHand: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+IntestineKnottedEel: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LiverSutureCell: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LiverClot: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LiverCoagulationCore: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LungBreathBubble: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LungCiliaBrush: idle/move/attack, melee damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+LungOverinflatedAlveoli: idle/move/attack, projectile damage, contact, incoming damage, stun, interrupted-attack death, XP, pool reuse PASS
+PASS: 12/12 runtime interactions passed
