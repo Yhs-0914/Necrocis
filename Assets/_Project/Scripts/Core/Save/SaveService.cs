@@ -14,6 +14,7 @@ namespace Necrocis
         private const string HardFileName = "hard-run.json";
         private const int RandomSeedMin = 1;
         private const int RandomSeedMax = 100000;
+        private const int BiomeSeedBucketSize = 100000;
 
         private static SaveFileStore store;
         private static ProfileSaveData profile;
@@ -359,7 +360,7 @@ namespace Necrocis
             int seed = activeRun.world.GetSeed(biome);
             if (seed == 0)
             {
-                seed = UnityEngine.Random.Range(RandomSeedMin, RandomSeedMax) + ((int)biome * 100000);
+                seed = CreateBiomeSeed(biome, null);
                 activeRun.world.SetSeed(biome, seed);
                 TryWriteRun(activeRun, out _);
             }
@@ -408,6 +409,9 @@ namespace Necrocis
         private static RunSaveData CreateNewRun(GameDifficulty difficulty)
         {
             DateTime now = DateTime.UtcNow;
+            WorldRunSaveData previousWorld = difficulty == GameDifficulty.Normal
+                ? normal?.world
+                : hard?.world;
             return new RunSaveData
             {
                 schemaVersion = CurrentSchemaVersion,
@@ -419,10 +423,35 @@ namespace Necrocis
                 player = new PlayerProgressSaveData(),
                 bosses = new BossProgressSaveData(),
                 checkpoint = new ResumeCheckpointSaveData(),
-                world = new WorldRunSaveData(),
+                world = CreateWorldRunSaveData(previousWorld),
                 playTimeSeconds = 0L,
                 lastSavedUtcTicks = now.Ticks
             };
+        }
+
+        private static WorldRunSaveData CreateWorldRunSaveData(WorldRunSaveData previousWorld)
+        {
+            var world = new WorldRunSaveData();
+            world.SetSeed(BiomeType.Intestine, CreateBiomeSeed(BiomeType.Intestine, previousWorld));
+            world.SetSeed(BiomeType.Liver, CreateBiomeSeed(BiomeType.Liver, previousWorld));
+            world.SetSeed(BiomeType.Stomach, CreateBiomeSeed(BiomeType.Stomach, previousWorld));
+            world.SetSeed(BiomeType.Lung, CreateBiomeSeed(BiomeType.Lung, previousWorld));
+            return world;
+        }
+
+        private static int CreateBiomeSeed(BiomeType biome, WorldRunSaveData previousWorld)
+        {
+            int bucketOffset = (int)biome * BiomeSeedBucketSize;
+            int seed = UnityEngine.Random.Range(RandomSeedMin, RandomSeedMax) + bucketOffset;
+            int previousSeed = previousWorld?.GetSeed(biome) ?? 0;
+            if (seed != previousSeed)
+            {
+                return seed;
+            }
+
+            int localSeed = seed - bucketOffset;
+            localSeed = localSeed >= RandomSeedMax - 1 ? RandomSeedMin : localSeed + 1;
+            return localSeed + bucketOffset;
         }
 
         private static ProfileSaveData LoadProfile()

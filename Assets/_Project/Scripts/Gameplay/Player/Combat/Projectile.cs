@@ -235,10 +235,7 @@ namespace Necrocis
                 return;
             }
 
-            EnemyController enemy = other.GetComponent<EnemyController>()
-                ?? other.GetComponentInParent<EnemyController>();
-
-            if (enemy == null || enemy.IsDead)
+            if (!TryGetEnemyController(other, out EnemyController enemy) || enemy.IsDead)
             {
                 return;
             }
@@ -574,9 +571,7 @@ namespace Necrocis
                 return false;
             }
 
-            EnemyController enemy = obstacle.GetComponent<EnemyController>()
-                ?? obstacle.GetComponentInParent<EnemyController>();
-            if (enemy != null)
+            if (TryGetEnemyController(obstacle, out _))
             {
                 return false;
             }
@@ -649,10 +644,9 @@ namespace Necrocis
                     continue;
                 }
 
-                EnemyController enemy = collider.GetComponent<EnemyController>()
-                    ?? collider.GetComponentInParent<EnemyController>();
-
-                if (enemy == null || enemy.IsDead || enemy == primaryEnemy)
+                if (!TryGetEnemyController(collider, out EnemyController enemy)
+                    || enemy.IsDead
+                    || enemy == primaryEnemy)
                 {
                     continue;
                 }
@@ -682,6 +676,26 @@ namespace Necrocis
         {
             float remainingTime = Mathf.Max(0f, deactivateTime - Time.time);
             return remainingTime * Mathf.Max(0.01f, currentSpeed);
+        }
+
+        private static bool TryGetEnemyController(Component source, out EnemyController enemy)
+        {
+            if (source != null)
+            {
+                Transform current = source.transform;
+                while (current != null)
+                {
+                    if (current.TryGetComponent(out enemy))
+                    {
+                        return true;
+                    }
+
+                    current = current.parent;
+                }
+            }
+
+            enemy = null;
+            return false;
         }
 
         private void CacheDefaultScale()
