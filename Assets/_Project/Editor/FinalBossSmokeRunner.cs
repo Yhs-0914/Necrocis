@@ -125,6 +125,9 @@ namespace NecrocisEditor
 
         private static void OnLog(string message, string stack, LogType type)
         {
+            // A freshly imported Unity 6 project can emit this editor-only search-index exception
+            // during startup. It does not originate from or affect the running game scene.
+            if (stack != null && stack.Contains("UnityEditor.Search.SearchDatabase")) return;
             if (type == LogType.Exception || type == LogType.Error)
                 failure ??= message + "\n" + stack;
         }
@@ -218,7 +221,8 @@ namespace NecrocisEditor
                     VerifySharedPipeline(arena, player);
                     Require(game.CurrentState == GameState.InFinalBoss, "Incorrect game state");
                     VerifyGeometry(arena);
-                    Require(UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length == 0, "Unexpected enemies");
+                    Require(UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length == 4,
+                        "Phase one should start with four pillar damage targets only");
                     Capture(Camera.main, "gameplay-entry.png");
                     startPosition = player.transform.position;
                     stage = 2;
@@ -277,7 +281,49 @@ namespace NecrocisEditor
                 }
                 if (stage == 4)
                 {
-                    Capture(Camera.main, "gameplay-dormant-boss.png");
+                    FinalBossPhaseOneController phase = FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>();
+                    GameObject dormantBoss = GameObject.Find("DormantCerebrum");
+                    Require(phase.CurrentPhase == 1 && phase.BossVisible && dormantBoss != null
+                        && dormantBoss.GetComponent<EnemyController>() == null,
+                        "Dormant boss must remain visible but not be a combat target during phase one");
+                    Capture(Camera.main, "gameplay-phase-one-visible-boss.png");
+
+                    FinalBossPillar firstPillar = phase.Pillars[0];
+                    float healthBeforeHit = firstPillar.Health;
+                    firstPillar.DamageTarget.TakeDamage(5f);
+                    Require(firstPillar.Health < healthBeforeHit && !firstPillar.IsDestroyed,
+                        "Pillar did not receive normal combat damage before destruction");
+                    firstPillar.DestroyForTest();
+                    Require(phase.CurrentPhase == 1 && phase.BossVisible && phase.DestroyedPillarCount == 1,
+                        "Destroying one pillar changed the dormant boss phase unexpectedly");
+                    Require(firstPillar.BrokenSprite != null && firstPillar.CurrentSprite == firstPillar.BrokenSprite,
+                        "Destroyed pillar did not switch to its authored broken sprite");
+                    Require(!phase.IsBiomeSpawning(firstPillar.Biome),
+                        "Destroyed pillar biome kept its continuous spawn channel enabled");
+                    EnemyController weakenedBoss = UnityEngine.Object
+                        .FindObjectsByType<EnemyController>(FindObjectsSortMode.None)
+                        .FirstOrDefault(enemy => enemy.name.Contains("WeakenedMidBoss"));
+                    Require(weakenedBoss != null,
+                        "Destroying a pillar did not summon its weakened biome mid-boss");
+                    Require(Mathf.Abs(weakenedBoss.Config.scale.x - 2.2f) < .01f,
+                        "Stomach weakened mid-boss must be half of its effective original size");
+                    Require(Mathf.Abs(weakenedBoss.Config.maxHealth - 3.3f) < .01f
+                        && Mathf.Abs(weakenedBoss.Config.attackDamage - .99f) < .01f,
+                        "Weakened mid-boss health/attack stats must be 33% of the original boss rule");
+                    CaptureOverview(FinalBossArena.Instance, "arena-overview-pillar-broken.png");
+
+                    phase.DestroyAllPillarsForTest();
+                    Require(phase.DestroyedPillarCount == 4 && phase.CurrentPhase == 2 && phase.BossVisible,
+                        "Destroying four pillars did not unlock phase two");
+                    stage = 9;
+                    return;
+                }
+                if (stage == 9)
+                {
+                    SpriteRenderer revealedBoss = GameObject.Find("DormantCerebrum")?.GetComponent<SpriteRenderer>();
+                    Require(revealedBoss != null && revealedBoss.sprite != null && revealedBoss.sprite.vertices.Length > 4,
+                        "Revealed phase-two boss lost its authored outline");
+                    Capture(Camera.main, "gameplay-phase-two-unlocked.png");
                     player.SpawnAt(FinalBossArena.Instance.ReturnPosition);
                     Physics.SyncTransforms();
                     stage = 5;
@@ -314,13 +360,44 @@ namespace NecrocisEditor
                 "Authored environment must use position-specific tiles");
             Require(BiomeManager.Active == arena.GetComponent<ProceduralBiomeBridge>(), "Shared biome bridge not active");
             Require(player.GetComponent<ProceduralTerrainMotor>().HasActiveMap, "Common terrain motor not bound");
+            FinalBossPhaseOneController phase = arena.GetComponent<FinalBossPhaseOneController>();
+            Require(phase != null && phase.Pillars != null && phase.Pillars.Count == 4,
+                "Final boss phase-one controller or pillars missing");
+            Require(phase.ConfiguredBiomeCount == 4,
+                "All four source biome enemy rules are required for phase-one reinforcements");
+            GameObject dormantBoss = GameObject.Find("DormantCerebrum");
+            Require(phase.CurrentPhase == 1 && phase.BossVisible && dormantBoss != null
+                && dormantBoss.GetComponent<EnemyController>() == null,
+                "Phase one must show the dormant boss without making it a combat target");
+            foreach (FinalBossPillar pillar in phase.Pillars)
+            {
+                Require(pillar != null && pillar.DamageTarget != null && pillar.MaxHealth > 0f,
+                    "Pillar combat target/health missing");
+                Require(pillar.IntactSprite != null && pillar.BrokenSprite != null
+                    && pillar.CurrentSprite == pillar.IntactSprite,
+                    "Pillar isolated intact/broken sprite set is missing");
+                Require(pillar.CurrentSprite.texture.name.Contains("Pillar_"),
+                    "Pillar still uses a rectangular crop of the arena background");
+            }
+            Require(UnityEngine.Object.FindObjectsByType<FinalBossWorldHealthBar>(FindObjectsSortMode.None).Length == 4,
+                "One health bar is required above each pillar");
+            phase.PauseSpawningForTest();
             Require(GameObject.Find("DormantCerebrum_MapArtwork") == null, "Old flattened map still present");
             Require(arena.GetComponent<WorldItemSpawner>() == null, "Unexpected automatic item spawner");
-            SpriteOutline[] outlines = arena.GetComponentsInChildren<SpriteOutline>();
+            SpriteOutline[] outlines = arena.GetComponentsInChildren<SpriteOutline>(true);
             Require(outlines.Length == 5, "Four pillar outlines and cerebrum outline required");
             foreach (SpriteOutline outline in outlines)
-                Require(outline.GetComponent<SpriteRenderer>().sprite.vertices.Length > 4,
-                    "Sprite outline was lost after reload: " + outline.name);
+                if (outline.gameObject.activeInHierarchy)
+                {
+                    if (outline.name.StartsWith("Pillar_", StringComparison.Ordinal))
+                    {
+                        Require(!outline.enabled, "Transparent pillar sprites must not use the old cropped outline mesh");
+                        continue;
+                    }
+                    Sprite sprite = outline.GetComponent<SpriteRenderer>().sprite;
+                    Require(sprite != null && sprite.vertices.Length > 4,
+                        "Sprite outline was lost after reload: " + outline.name);
+                }
             Require(UnityEngine.Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None)
                 .Length >= 4, "Shared tilemap layers missing");
         }
@@ -365,7 +442,7 @@ namespace NecrocisEditor
             Require(walkable.Count == 0, "Unreachable floor cells: " + walkable.Count + " " + string.Join(", ", walkable));
         }
 
-        private static void CaptureOverview(FinalBossArena arena)
+        private static void CaptureOverview(FinalBossArena arena, string filename = "arena-overview.png")
         {
             var go = new GameObject("OverviewCapture");
             Camera camera = go.AddComponent<Camera>();
@@ -375,7 +452,7 @@ namespace NecrocisEditor
             camera.transform.position = arena.UVToWorld(new Vector2(.5f, .5f)) + new Vector3(0f, 40f, -40f);
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(.08f, .055f, .1f);
-            Capture(camera, "arena-overview.png");
+            Capture(camera, filename);
             UnityEngine.Object.Destroy(go);
         }
 
@@ -432,8 +509,18 @@ namespace NecrocisEditor
             EditorSettings.enterPlayModeOptions = previousOptions;
             Application.runInBackground = previousRunInBackground;
             SaveService.ResetStaticStateForTests();
-            EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
-            string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; spawn, connected floor, four pillar sweeps, actual player movement, wall sweeps, return trigger and retained progress verified.";
+            try
+            {
+                if (sceneSetup != null && sceneSetup.Any(item => item.isLoaded))
+                    EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
+                else
+                    EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
+            catch (Exception restoreError)
+            {
+                failure ??= "Scene restore failed after test: " + restoreError;
+            }
+            string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; visible but untargetable dormant boss, four isolated transparent pillar sprites, hit/health behavior, authored broken-state swaps, biome spawn shutdown, weakened mid-boss at 50% effective size and 33% combat stats, and phase-two activation verified; spawn, connected floor, pillar/wall collision, actual player movement, return trigger and retained progress verified.";
             if (directPreview && failure == null)
                 result = "PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, Hub return, and no boss-progress unlock verified.";
             File.WriteAllText(Output + (directPreview ? "/direct-smoke-result.txt" : "/smoke-result.txt"), result);

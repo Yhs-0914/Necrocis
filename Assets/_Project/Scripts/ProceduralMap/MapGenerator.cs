@@ -181,6 +181,25 @@ namespace ProceduralMap
             return !cell.IsVoid && !cell.HasCliff && (!cell.HasLava || cell.HasStomachRock);
         }
 
+        public void SetAuthoredAreaBlocked(RectInt area, bool blocked)
+        {
+            if (authoredLayout == null || gridData == null) return;
+            int minX = Mathf.Clamp(area.xMin, 0, mapWidth);
+            int maxX = Mathf.Clamp(area.xMax, 0, mapWidth);
+            int minY = Mathf.Clamp(area.yMin, 0, mapHeight);
+            int maxY = Mathf.Clamp(area.yMax, 0, mapHeight);
+            for (int y = minY; y < maxY; y++)
+            for (int x = minX; x < maxX; x++)
+            {
+                MapCell cell = gridData.GetCell(x, y);
+                bool floor = authoredLayout.ContainsFloor(x, y);
+                cell.IsVoid = !floor || blocked;
+                cell.Occupied = blocked;
+                cell.HasCliff = false;
+                cell.CliffLevel = 0;
+            }
+        }
+
         public int GetCellHeightLevel(int x, int y)
         {
             return gridData != null && gridData.IsInside(x, y)

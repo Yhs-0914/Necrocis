@@ -36,6 +36,10 @@ namespace Necrocis
         [Header("Enemy Config")]
         public EnemySpawnConfig enemySpawnConfig;
 
+        [Header("Final Boss Phase Sources")]
+        [Tooltip("Only used by the final-boss room to reuse each biome's enemies and mid boss.")]
+        public List<BiomeConfig> finalBossSourceBiomes = new List<BiomeConfig>();
+
         [SerializeField, HideInInspector]
         private List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();
 

@@ -153,15 +153,21 @@ namespace NecrocisEditor
                 };
                 Vector2[][] contours = PillarContours;
                 var pillarTransforms = new Transform[4];
+                var phasePillars = new FinalBossPillar[4];
+                BiomeType[] pillarBiomes = { BiomeType.Stomach, BiomeType.Intestine, BiomeType.Liver, BiomeType.Lung };
                 for (int i = 0; i < 4; i++)
                 {
                     Sprite sprite = SaveSprite("Pillar_" + names[i], artwork, regions[i], regions[i].width * 48f, new Vector2(.5f, 0));
                     RectInt bounds = PillarBounds[i];
                     pillarTransforms[i] = MakeProp(props, "Pillar_" + names[i], sprite,
                         new Vector3(regions[i].center.x * 48f, -2f, regions[i].y * 38f + 2f), contours[i]);
+                    phasePillars[i] = pillarTransforms[i].gameObject.AddComponent<FinalBossPillar>();
+                    phasePillars[i].Configure(pillarBiomes[i], PillarBounds[i],
+                        pillarTransforms[i].GetComponent<SpriteRenderer>());
                 }
                 Sprite boss = SaveSprite("DormantCerebrum", artwork, new Rect(.351f, .749f, .281f, .25f), .281f * 48f, new Vector2(.5f,0));
-                MakeProp(props, "DormantCerebrum", boss, new Vector3(.4915f * 48f, -2f, .749f * 38f + 2f), CerebrumOutline);
+                Transform bossTransform = MakeProp(props, "DormantCerebrum", boss,
+                    new Vector3(.4915f * 48f, -2f, .749f * 38f + 2f), CerebrumOutline);
 
                 GameObject exit = new GameObject("ReturnToHub_Entrance");
                 exit.transform.SetParent(mapObject.transform, false);
@@ -171,12 +177,24 @@ namespace NecrocisEditor
                 trigger.center = Vector3.up;
                 trigger.size = new Vector3(4f, 6f, 1.5f);
                 exit.AddComponent<ReturnPortal>().SetActive(true);
-                var arena = new SerializedObject(mapObject.AddComponent<FinalBossArena>());
+                FinalBossArena arenaComponent = mapObject.AddComponent<FinalBossArena>();
+                var arena = new SerializedObject(arenaComponent);
                 arena.FindProperty("returnEntrance").objectReferenceValue = exit.transform;
                 var pillars = arena.FindProperty("pillars");
                 pillars.arraySize = 4;
                 for (int i = 0; i < 4; i++) pillars.GetArrayElementAtIndex(i).objectReferenceValue = pillarTransforms[i];
                 arena.ApplyModifiedPropertiesWithoutUndo();
+                BiomeConfig[] sourceBiomes =
+                {
+                    AssetDatabase.LoadAssetAtPath<BiomeConfig>("Assets/_Project/Data/BiomeConfigs/StomachBiomeConfig.asset"),
+                    AssetDatabase.LoadAssetAtPath<BiomeConfig>("Assets/_Project/Data/BiomeConfigs/IntestineBiomeConfig.asset"),
+                    AssetDatabase.LoadAssetAtPath<BiomeConfig>("Assets/_Project/Data/BiomeConfigs/LiverBiomeConfig.asset"),
+                    AssetDatabase.LoadAssetAtPath<BiomeConfig>("Assets/_Project/Data/BiomeConfigs/LungBiomeConfig.asset")
+                };
+                if (sourceBiomes.Any(value => value == null))
+                    throw new InvalidOperationException("One or more source biome configs are missing.");
+                mapObject.AddComponent<FinalBossPhaseOneController>()
+                    .Configure(bossTransform, phasePillars, sourceBiomes);
 
                 GameInitializer initializer = new GameObject("DirectSceneBootstrap").AddComponent<GameInitializer>();
                 var bootstrap = new SerializedObject(initializer);

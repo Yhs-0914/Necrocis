@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using ProceduralMap;
 using UnityEngine;
 
@@ -22,6 +23,37 @@ namespace Necrocis
         {
             Instance = this;
             map = GetComponent<MapGenerator>();
+            EnsurePhaseOneController();
+        }
+
+        private void EnsurePhaseOneController()
+        {
+            if (GetComponent<FinalBossPhaseOneController>() != null) return;
+            Transform props = transform.Find("Arena Props");
+            if (props == null) return;
+            string[] names = { "Pillar_Stomach", "Pillar_Intestine", "Pillar_Liver", "Pillar_Lung" };
+            BiomeType[] biomes = { BiomeType.Stomach, BiomeType.Intestine, BiomeType.Liver, BiomeType.Lung };
+            RectInt[] areas =
+            {
+                new RectInt(9, 23, 6, 3), new RectInt(33, 23, 6, 3),
+                new RectInt(9, 9, 6, 3), new RectInt(33, 9, 6, 3)
+            };
+            var phasePillars = new FinalBossPillar[4];
+            for (int i = 0; i < names.Length; i++)
+            {
+                Transform target = props.Find(names[i]);
+                if (target == null) return;
+                phasePillars[i] = target.GetComponent<FinalBossPillar>() ?? target.gameObject.AddComponent<FinalBossPillar>();
+                phasePillars[i].Configure(biomes[i], areas[i], target.GetComponent<SpriteRenderer>());
+            }
+            Transform boss = props.Find("DormantCerebrum");
+            BiomeConfig config = GetComponent<ProceduralBiomeBridge>()?.GetBiomeConfig();
+            BiomeConfig[] sources = config != null && config.finalBossSourceBiomes != null
+                ? config.finalBossSourceBiomes.Where(value => value != null).ToArray()
+                : System.Array.Empty<BiomeConfig>();
+            GetComponent<FinalBossPhaseOneController>()?.Configure(boss, phasePillars, sources);
+            if (GetComponent<FinalBossPhaseOneController>() == null)
+                gameObject.AddComponent<FinalBossPhaseOneController>().Configure(boss, phasePillars, sources);
         }
 
         private IEnumerator Start()

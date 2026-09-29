@@ -27,6 +27,11 @@ MonoBehaviour:
   spawnWorldItems: 0
   objectRules: []
   enemySpawnConfig: {fileID: 0}
+  finalBossSourceBiomes:
+  - {fileID: 11400000, guid: ec818977ff60b4efc8b65e18c1044c1a, type: 2}
+  - {fileID: 11400000, guid: 52a5dbb38fd747e782c6aa1a8bb22b37, type: 2}
+  - {fileID: 11400000, guid: bff445e73af0d49d5ad293ec1504d9a0, type: 2}
+  - {fileID: 11400000, guid: fd3065cddbe4f4ccaa32e3103c046e92, type: 2}
   enemySpawnRules: []
   bossArenaConfig: {fileID: 0}
   midBossArena:
