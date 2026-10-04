@@ -10976,7 +10976,7 @@ MonoBehaviour:
     areaEffectPrefab: {fileID: 3983581763031629201, guid: f73f946bcf806594fb157aac0fee0209, type: 3}
     areaEffectLifetime: 1
     fallbackEffectScale: 10
-    effectReferenceRadius: 5
+    effectReferenceRadius: 5.28
   mageSkill2:
     cooldown: 12
     radius: 3.5

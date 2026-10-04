@@ -44,6 +44,7 @@ namespace Necrocis
         private void Update()
         {
             BindMapIfNeeded();
+            if (player != null && player.IsBossDisplaced) { ResetHold(); return; }
             if (!HasActiveMap) { ResetHold(); return; }
             if (isTraversing) { UpdateTraversal(); return; }
             HandleTraversalInput();
@@ -51,6 +52,9 @@ namespace Necrocis
 
         public bool CanMove(Vector3 current, Vector3 target)
         {
+            FinalBossPhaseThreeController boss = FinalBossArena.Instance != null
+                ? FinalBossArena.Instance.GetComponent<FinalBossPhaseThreeController>() : null;
+            if (boss != null && !boss.CanCrossBoundary(current, target, terrainHalfExtents)) return false;
             if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(current, target, terrainHalfExtents))
             {
                 return false;

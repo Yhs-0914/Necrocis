@@ -224,6 +224,13 @@ namespace Necrocis
             return true;
         }
 
+        // External boss choreography has already validated its movement against the map.
+        // Keep the Rigidbody and spatial lookup in sync with its externally controlled pose.
+        public void SetPositionFromExternalPattern(Vector3 position)
+        {
+            if (!IsDead) SetPosition(position);
+        }
+
         public void StartCharge()
         {
             if (playerTransform == null || config == null) return;

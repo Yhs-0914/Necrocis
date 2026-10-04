@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace NecrocisEditor
 {
-    /// <summary>Exercises the real Hub trigger, persistent player, arena movement and return trigger.</summary>
+    /// <summary>Exercises the real Hub entry, persistent player, arena movement and locked final-boss room.</summary>
     public static class FinalBossSmokeRunner
     {
         private const string Output = "Exports/FinalBossConcepts/2026-09-28/TilemapImplementation";
@@ -168,15 +168,6 @@ namespace NecrocisEditor
                 {
                     Require(player.transform.position.z > startPosition.z + .8f, "Direct preview did not move");
                     Capture(Camera.main, "gameplay-direct-preview.png");
-                    player.SpawnAt(FinalBossArena.Instance.ReturnPosition);
-                    Physics.SyncTransforms();
-                    stage = 12;
-                    return;
-                }
-                if (stage == 12)
-                {
-                    if (SceneManager.GetActiveScene().name != SceneLoader.SCENE_HUB || SceneLoader.Instance.IsLoading) return;
-                    Require(!game.HasAllRelics && game.CurrentState == GameState.InHub, "Preview return modified progress");
                     Finish(null);
                     return;
                 }
@@ -305,37 +296,93 @@ namespace NecrocisEditor
                         .FirstOrDefault(enemy => enemy.name.Contains("WeakenedMidBoss"));
                     Require(weakenedBoss != null,
                         "Destroying a pillar did not summon its weakened biome mid-boss");
-                    Require(Mathf.Abs(weakenedBoss.Config.scale.x - 2.2f) < .01f,
-                        "Stomach weakened mid-boss must be half of its effective original size");
+                    Require(Mathf.Abs(weakenedBoss.Config.scale.x - 4.4f) < .01f,
+                        "Stomach weakened mid-boss must be twice its previous final-boss-room size");
                     Require(Mathf.Abs(weakenedBoss.Config.maxHealth - 3.3f) < .01f
                         && Mathf.Abs(weakenedBoss.Config.attackDamage - .99f) < .01f,
                         "Weakened mid-boss health/attack stats must be 33% of the original boss rule");
+                    VerifyOnlyRemainingBiomesRespawn(phase, firstPillar.Biome);
+                    phase.PauseSpawningForTest();
                     CaptureOverview(FinalBossArena.Instance, "arena-overview-pillar-broken.png");
 
                     phase.DestroyAllPillarsForTest();
                     Require(phase.DestroyedPillarCount == 4 && phase.CurrentPhase == 2 && phase.BossVisible,
                         "Destroying four pillars did not unlock phase two");
+                    FinalBossPhaseTwoController phaseTwo = phase.GetComponent<FinalBossPhaseTwoController>();
+                    Require(phaseTwo != null && phaseTwo.IsActive && phaseTwo.BossDamageTarget != null
+                        && phaseTwo.Health > 0f,
+                        "Phase two did not create a directly damageable final boss");
+                    Require(UnityEngine.Object.FindObjectsByType<FinalBossScreenHealthBar>(
+                            FindObjectsSortMode.None).Length == 1,
+                        "Phase two did not create its bottom-center screen health bar");
                     stage = 9;
                     return;
                 }
                 if (stage == 9)
                 {
+                    FinalBossPhaseTwoController phaseTwo = FinalBossArena.Instance
+                        .GetComponent<FinalBossPhaseTwoController>();
+                    if (phaseTwo == null || !phaseTwo.IsAttacking) return;
+                    if (UnityEngine.Object.FindObjectsByType<FinalBossTelegraph>(FindObjectsSortMode.None).Length == 0)
+                        return;
                     SpriteRenderer revealedBoss = GameObject.Find("DormantCerebrum")?.GetComponent<SpriteRenderer>();
                     Require(revealedBoss != null && revealedBoss.sprite != null && revealedBoss.sprite.vertices.Length > 4,
                         "Revealed phase-two boss lost its authored outline");
                     Capture(Camera.main, "gameplay-phase-two-unlocked.png");
-                    player.SpawnAt(FinalBossArena.Instance.ReturnPosition);
-                    Physics.SyncTransforms();
-                    stage = 5;
+                    if (phaseTwo.IsReflecting) return;
+                    phaseTwo.BossDamageTarget.TakeDamage(phaseTwo.MaxHealth * .65f);
+                    Require(phaseTwo.CurrentPhase == 3 && phaseTwo.Health > 0f
+                        && phaseTwo.Health <= phaseTwo.MaxHealth * .4f
+                        && phaseTwo.PhaseThree != null && phaseTwo.PhaseThree.IsDetaching,
+                        "40% threshold did not start phase three with preserved health");
+                    Require(FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>().CurrentPhase == 3,
+                        "Encounter phase did not advance to three");
+                    Require(phaseTwo.BossDamageTarget.GetComponentsInChildren<BoxCollider>().Length == 8,
+                        "Phase-three ground-anchor/brain/stem/tentacle hitboxes were not created");
+                    nextAction = Time.time + 2.2f;
+                    stage = 12;
                     return;
                 }
-                if (stage == 5)
+                if (stage == 12)
                 {
-                    if (SceneManager.GetActiveScene().name != SceneLoader.SCENE_HUB || SceneLoader.Instance.IsLoading) return;
-                    Require(game.HasAllRelics && game.CurrentState == GameState.InHub, "Hub return lost progress/state");
-                    Require(Vector3.Distance(player.transform.position, new Vector3(16f, -2f, 7f)) < .2f, "Hub return spawn incorrect");
-                    Require(FinalBossArena.Instance == null, "Stale arena after return");
+                    if (Time.time < nextAction) return;
+                    FinalBossPhaseThreeController phaseThree = FinalBossArena.Instance
+                        .GetComponent<FinalBossPhaseThreeController>();
+                    Require(phaseThree != null && phaseThree.IsActive && !phaseThree.IsDetaching
+                        && phaseThree.HasMobileAppearance,
+                        "Phase-three separation did not finish");
+                    Require(phaseThree.transform.GetComponent<FinalBossPhaseTwoController>()
+                            .BossDamageTarget.GetComponentsInChildren<BoxCollider>().Length == 8,
+                        "Phase-two cleanup removed phase-three hitboxes");
+                    SpriteRenderer mobileBoss = GameObject.Find("DormantCerebrum")?.GetComponent<SpriteRenderer>();
+                    Require(mobileBoss != null && mobileBoss.sprite
+                        == Resources.Load<Sprite>("FinalBoss/PhaseThree/MobileCerebrum"),
+                        "Phase three did not transform into the dedicated cerebrum-boss artwork");
+                    startPosition = phaseThree.Position;
+                    player.SpawnAt(FinalBossArena.Instance.UVToWorld(new Vector2(.25f, .38f)));
+                    Physics.SyncTransforms();
+                    nextAction = Time.time + .8f;
+                    stage = 13;
+                    return;
+                }
+                if (stage == 13)
+                {
+                    if (Time.time < nextAction) return;
+                    FinalBossPhaseTwoController encounter = FinalBossArena.Instance
+                        .GetComponent<FinalBossPhaseTwoController>();
+                    Vector3 position = encounter.PhaseThree.Position;
+                    Require((position - startPosition).sqrMagnitude > .1f,
+                        "Detached boss did not pursue the player");
+                    Require((position - player.transform.position).sqrMagnitude
+                        < (startPosition - player.transform.position).sqrMagnitude,
+                        "Detached boss moved away from the player");
+                    Vector3 bodyDelta = encounter.BossDamageTarget.transform.position - position;
+                    bodyDelta.y = 0f;
+                    Require(bodyDelta.sqrMagnitude < .01f,
+                        "Phase-three damage target did not follow the visible body");
+                    Capture(Camera.main, "gameplay-phase-three-pursuit.png");
                     Finish(null);
+                    return;
                 }
             }
             catch (Exception e) { Finish(e.ToString()); }
@@ -365,6 +412,11 @@ namespace NecrocisEditor
                 "Final boss phase-one controller or pillars missing");
             Require(phase.ConfiguredBiomeCount == 4,
                 "All four source biome enemy rules are required for phase-one reinforcements");
+            Require(phase.CommonRuleCount == 3,
+                "The three shared phase-one enemy rules are required");
+            foreach (FinalBossPillar pillar in phase.Pillars)
+                Require(phase.GetExclusiveRuleCount(pillar.Biome) == 3,
+                    $"{pillar.Biome} must provide three biome-exclusive enemy rules");
             GameObject dormantBoss = GameObject.Find("DormantCerebrum");
             Require(phase.CurrentPhase == 1 && phase.BossVisible && dormantBoss != null
                 && dormantBoss.GetComponent<EnemyController>() == null,
@@ -381,9 +433,13 @@ namespace NecrocisEditor
             }
             Require(UnityEngine.Object.FindObjectsByType<FinalBossWorldHealthBar>(FindObjectsSortMode.None).Length == 4,
                 "One health bar is required above each pillar");
+            VerifyPhaseOneMinionComposition(phase);
             phase.PauseSpawningForTest();
             Require(GameObject.Find("DormantCerebrum_MapArtwork") == null, "Old flattened map still present");
             Require(arena.GetComponent<WorldItemSpawner>() == null, "Unexpected automatic item spawner");
+            Require(arena.GetComponentInChildren<ReturnPortal>(true) == null
+                && GameObject.Find("ReturnToHub_Entrance") == null,
+                "Final-boss room must not have a walk-out return portal");
             SpriteOutline[] outlines = arena.GetComponentsInChildren<SpriteOutline>(true);
             Require(outlines.Length == 5, "Four pillar outlines and cerebrum outline required");
             foreach (SpriteOutline outline in outlines)
@@ -402,11 +458,74 @@ namespace NecrocisEditor
                 .Length >= 4, "Shared tilemap layers missing");
         }
 
+        private static void VerifyPhaseOneMinionComposition(FinalBossPhaseOneController phase)
+        {
+            EnemyController[] enemies = UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+            EnemyController[] common = enemies
+                .Where(enemy => enemy.name.StartsWith("FinalBoss_Common_", StringComparison.Ordinal))
+                .ToArray();
+            Require(common.Length == 4, "Phase one must keep a four-enemy shared wave active");
+            Require(common.Select(enemy => enemy.Config.name).Distinct().Count() == 3,
+                "The initial shared wave must draw from all three shared enemy types");
+
+            foreach (FinalBossPillar pillar in phase.Pillars)
+            {
+                string prefix = $"FinalBoss_{pillar.Biome}_BiomeMinion_";
+                EnemyController[] biomeEnemies = enemies
+                    .Where(enemy => enemy.name.StartsWith(prefix, StringComparison.Ordinal))
+                    .ToArray();
+                Require(biomeEnemies.Length == 4,
+                    $"{pillar.Biome} must spawn two copies of two exclusive enemy types");
+                int[] copiesPerType = biomeEnemies.GroupBy(enemy => enemy.Config.name)
+                    .Select(group => group.Count()).OrderBy(count => count).ToArray();
+                Require(copiesPerType.SequenceEqual(new[] { 2, 2 }),
+                    $"{pillar.Biome} exclusive group must contain exactly two types with two copies each");
+                biomeEnemies[0].ReleaseToPool();
+            }
+
+            foreach (EnemyController enemy in common) enemy.ReleaseToPool();
+            phase.ReplenishMinionsForTest();
+            EnemyController[] replenished = UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None)
+                .Where(enemy => enemy.name.StartsWith("FinalBoss_Common_", StringComparison.Ordinal))
+                .ToArray();
+            Require(replenished.Length == 4 && replenished.Select(enemy => enemy.Config.name).Distinct().Count() == 3,
+                "Shared phase-one minions were not continuously replenished as a four-enemy wave");
+            foreach (FinalBossPillar pillar in phase.Pillars)
+            {
+                string prefix = $"FinalBoss_{pillar.Biome}_BiomeMinion_";
+                EnemyController[] biomeEnemies = UnityEngine.Object
+                    .FindObjectsByType<EnemyController>(FindObjectsSortMode.None)
+                    .Where(enemy => enemy.name.StartsWith(prefix, StringComparison.Ordinal))
+                    .ToArray();
+                int[] copiesPerType = biomeEnemies.GroupBy(enemy => enemy.Config.name)
+                    .Select(group => group.Count()).OrderBy(count => count).ToArray();
+                Require(biomeEnemies.Length == 4 && copiesPerType.SequenceEqual(new[] { 2, 2 }),
+                    $"{pillar.Biome} exclusive minions were not replenished after one was removed");
+            }
+        }
+
+        private static void VerifyOnlyRemainingBiomesRespawn(
+            FinalBossPhaseOneController phase, BiomeType destroyedBiome)
+        {
+            phase.ReplenishMinionsForTest();
+            EnemyController[] enemies = UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+            Require(enemies.Count(enemy => enemy.name.StartsWith("FinalBoss_Common_", StringComparison.Ordinal)) == 4,
+                "Shared minions stopped respawning after a biome pillar was destroyed");
+
+            foreach (FinalBossPillar pillar in phase.Pillars)
+            {
+                string prefix = $"FinalBoss_{pillar.Biome}_BiomeMinion_";
+                int count = enemies.Count(enemy => enemy.name.StartsWith(prefix, StringComparison.Ordinal));
+                int expected = pillar.Biome == destroyedBiome ? 0 : 4;
+                Require(count == expected,
+                    $"{pillar.Biome} respawn count was {count}; expected {expected} after destroying {destroyedBiome}");
+            }
+        }
+
         private static void VerifyGeometry(FinalBossArena arena)
         {
             Require(arena.IsWalkable(arena.SpawnPosition, Footprint), "Spawn blocked");
             Require(arena.CanTraverse(arena.SpawnPosition, arena.UVToWorld(new Vector2(.5f, .70f)), Footprint), "Central route blocked");
-            Require(arena.CanTraverse(arena.SpawnPosition, arena.ReturnPosition, Footprint), "Return corridor blocked");
             for (int i = 0; i < 4; i++)
             {
                 Vector3 pillar = arena.GetPillarPosition(i);
@@ -520,9 +639,9 @@ namespace NecrocisEditor
             {
                 failure ??= "Scene restore failed after test: " + restoreError;
             }
-            string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; visible but untargetable dormant boss, four isolated transparent pillar sprites, hit/health behavior, authored broken-state swaps, biome spawn shutdown, weakened mid-boss at 50% effective size and 33% combat stats, and phase-two activation verified; spawn, connected floor, pillar/wall collision, actual player movement, return trigger and retained progress verified.";
+            string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; walk-out return portal absent; visible but untargetable dormant boss, four shared minions, two-by-two biome-exclusive groups, four isolated transparent pillar sprites, hit/health behavior, authored broken-state swaps, weakened mid-boss at doubled room size and 33% combat stats, and phase-two damage target plus floor-warning attack activation verified; spawn, connected floor, pillar/wall collision and actual player movement verified.";
             if (directPreview && failure == null)
-                result = "PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, Hub return, and no boss-progress unlock verified.";
+                result = "PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, no walk-out return portal, and no boss-progress unlock verified.";
             File.WriteAllText(Output + (directPreview ? "/direct-smoke-result.txt" : "/smoke-result.txt"), result);
             File.WriteAllText("Library/FinalBossSmoke.result", result);
             Debug.Log("[FinalBossSmoke] " + result);

@@ -10,13 +10,11 @@ namespace Necrocis
     public sealed class FinalBossArena : MonoBehaviour
     {
         public static FinalBossArena Instance { get; private set; }
-        [SerializeField] private Transform returnEntrance;
         [SerializeField] private Transform[] pillars;
         private MapGenerator map;
 
         public Vector2 WorldSize => new Vector2(map.MapWidth, map.MapHeight);
         public Vector3 SpawnPosition => map.GetPlayerSpawnWorldPosition();
-        public Vector3 ReturnPosition => returnEntrance.position;
         public int PillarCount => pillars != null ? pillars.Length : 0;
 
         private void Awake()
