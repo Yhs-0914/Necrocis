@@ -29,6 +29,8 @@ namespace Necrocis
         private Vector3 mobileVisualScale;
         private static Material transparentMobileMaterial;
         private float bodyLean;
+        private FinalBossSpriteAnimator spriteAnimation;
+        private Vector3 lastAnimationPosition;
         private BoxCollider[] artworkHitboxes;
         // Normalized image-space regions (bottom-left origin). Small overlaps forgive edges,
         // while separate tentacle regions leave the large transparent corners unhittable.
@@ -61,6 +63,9 @@ namespace Necrocis
             mobileSprite = Resources.Load<Sprite>("FinalBoss/PhaseThree/CerebrumBoss");
             mobileMaterial = Resources.Load<Material>("FinalBoss/PhaseThree/CerebrumBoss");
             Sprite newArtwork = Resources.Load<Sprite>("FinalBoss/PhaseThree/MobileCerebrum");
+            spriteAnimation = visual.GetComponent<FinalBossSpriteAnimator>();
+            if (spriteAnimation == null) spriteAnimation = visual.gameObject.AddComponent<FinalBossSpriteAnimator>();
+            if (spriteAnimation.Initialize()) newArtwork = spriteAnimation.IdleSprite;
             if (newArtwork != null)
             {
                 mobileSprite = newArtwork;
@@ -224,6 +229,9 @@ namespace Necrocis
             bossRenderer.sharedMaterial = mobileMaterial;
             bossRenderer.color = Color.white;
             bossRenderer.flipX = false;
+            if (spriteAnimation != null && spriteAnimation.HasFrames)
+                spriteAnimation.Play(FinalBossSpriteAnimator.Pose.Idle, restart: true);
+            lastAnimationPosition = mobileRoot.position;
             appearanceApplied = true;
             Camera camera = DontStarveCamera.GetActiveCamera();
             if (camera != null) bossVisual.rotation = camera.transform.rotation;
@@ -296,6 +304,7 @@ namespace Necrocis
         private void LateUpdate()
         {
             if (!IsActive || bossVisual == null) return;
+            if (appearanceApplied) UpdateSpriteAnimation();
             if (appearanceApplied)
             {
                 Camera camera = DontStarveCamera.GetActiveCamera();
@@ -315,6 +324,31 @@ namespace Necrocis
                 bossRenderer.color = reflectingAppearance ? new Color(.55f, .95f, 1f)
                     : Color.Lerp(Color.white, new Color(1f, .6f, .72f), charge * 8f);
             UpdateArtworkHitboxes();
+        }
+
+        private void UpdateSpriteAnimation()
+        {
+            bool moving = (mobileRoot.position - lastAnimationPosition).sqrMagnitude > .000001f;
+            lastAnimationPosition = mobileRoot.position;
+            if (spriteAnimation == null || !spriteAnimation.HasFrames || spriteAnimation.IsOneShotPlaying) return;
+            FinalBossSpriteAnimator.Pose pose = reflectingAppearance ? FinalBossSpriteAnimator.Pose.Reflection
+                : Time.time < chargeEnd ? FinalBossSpriteAnimator.Pose.Cast
+                : moving ? FinalBossSpriteAnimator.Pose.Move
+                : attacking ? FinalBossSpriteAnimator.Pose.Cast : FinalBossSpriteAnimator.Pose.Idle;
+            spriteAnimation.Play(pose);
+        }
+
+        private void PlayMeleeAnimation(float duration)
+        {
+            if (spriteAnimation != null)
+                spriteAnimation.Play(FinalBossSpriteAnimator.Pose.Melee, duration, restart: true);
+        }
+
+        public void PlayDeathAnimation()
+        {
+            if (spriteAnimation == null || !spriteAnimation.HasFrames) return;
+            spriteAnimation.Play(FinalBossSpriteAnimator.Pose.Death, 1.6f);
+            if (bossRenderer != null) bossRenderer.color = Color.white;
         }
 
         private float GroundHeight(Vector3 position)
@@ -359,6 +393,9 @@ namespace Necrocis
             IsActive = false;
             detaching = false;
             StopAllCoroutines();
+            if (spriteAnimation != null && spriteAnimation.HasFrames
+                && spriteAnimation.CurrentPose != FinalBossSpriteAnimator.Pose.Death)
+                spriteAnimation.Play(FinalBossSpriteAnimator.Pose.Idle, restart: true);
             if (targetBody != null) targetBody.interpolation = previousInterpolation;
         }
 

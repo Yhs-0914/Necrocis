@@ -22,6 +22,19 @@ namespace Necrocis
         private bool neuralStyle;
         private bool circleShape;
         private float countdownDuration;
+        private bool floorOverlay;
+
+        // Collapsed floor is a persistent matte, not an impact warning. Warning outlines
+        // become nearly opaque black seams when stretched around the shrinking arena.
+        public static FinalBossTelegraph CreateFloorOverlay(Transform parent, Vector3 center,
+            Vector2 size, Color tint)
+        {
+            FinalBossTelegraph overlay = Create(parent, "FinalBoss_CollapsedFloor", center,
+                new Vector3(Mathf.Max(.05f, size.x), 1f, Mathf.Max(.05f, size.y)),
+                GetRectangleMesh(), 3600f, tint, true, false);
+            overlay.floorOverlay = true;
+            return overlay;
+        }
 
         public void UseNeuralStyle(float windup)
         {
@@ -89,7 +102,8 @@ namespace Necrocis
             Mesh mesh,
             float lifeTime,
             Color warningColor,
-            bool isImpact)
+            bool isImpact,
+            bool drawBoundary = true)
         {
             GameObject go = new GameObject(objectName);
             go.transform.SetParent(parent, true);
@@ -109,13 +123,14 @@ namespace Necrocis
             warning.color = warningColor;
             warning.duration = Mathf.Max(.02f, lifeTime);
             warning.impact = isImpact;
-            warning.CreateBoundary(mesh == GetCircleMesh());
+            if (drawBoundary) warning.CreateBoundary(mesh == GetCircleMesh());
             warning.ApplyColor(warningColor);
             return warning;
         }
 
         private void Update()
         {
+            if (floorOverlay) return;
             elapsed += Time.deltaTime;
             float normalized = Mathf.Clamp01(elapsed / duration);
             if (neuralStyle)

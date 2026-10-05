@@ -11,6 +11,48 @@ namespace NecrocisEditor
     /// <summary>Renders production VFX in an isolated preview scene without loading gameplay or saves.</summary>
     public static class FinalBossPhaseThreePreview
     {
+        [MenuItem("Tools/Necrocis/Final Boss/Validate and Render Sprite Animations")]
+        public static void ValidateAndRenderAnimations()
+        {
+            FinalBossPhaseThreeChecks.Validate();
+            string output = Environment.GetEnvironmentVariable("NECROCIS_PREVIEW_OUTPUT");
+            if (string.IsNullOrEmpty(output)) output = "Exports/FinalBossConcepts/2026-10-05-animations/Unity";
+            Directory.CreateDirectory(output);
+            Scene scene = EditorSceneManager.NewPreviewScene();
+            GameObject root = EditorUtility.CreateGameObjectWithHideFlags("AnimationPreview", HideFlags.HideAndDontSave);
+            SceneManager.MoveGameObjectToScene(root, scene);
+            try
+            {
+                GameObject cameraObject = new GameObject("Camera", typeof(Camera));
+                cameraObject.transform.SetParent(root.transform, false);
+                Camera camera = cameraObject.GetComponent<Camera>();
+                camera.scene = scene;
+                camera.orthographic = true;
+                camera.orthographicSize = 5.4f;
+                camera.aspect = 1f;
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(.075f, .06f, .1f);
+                camera.transform.position = new Vector3(0f, 4.5f, -15f);
+                GameObject artwork = new GameObject("Artwork", typeof(SpriteRenderer));
+                artwork.transform.SetParent(root.transform, false);
+                FinalBossSpriteAnimator animation = artwork.AddComponent<FinalBossSpriteAnimator>();
+                if (!animation.Initialize()) throw new InvalidOperationException("Missing animation frames");
+                artwork.transform.localScale = Vector3.one * (9.5f / animation.IdleSprite.bounds.size.x);
+                foreach (FinalBossSpriteAnimator.Pose pose in Enum.GetValues(typeof(FinalBossSpriteAnimator.Pose)))
+                {
+                    for (int frame = 0; frame < 4; frame++)
+                    {
+                        animation.Play(pose, 1.6f, restart: true);
+                        animation.Advance(frame * .4f + .001f);
+                        Capture(camera, Path.Combine(output, pose + "_" + frame.ToString("00") + ".png"), 768, 768);
+                    }
+                }
+                File.WriteAllText(Path.Combine(output, "validation-result.txt"),
+                    "PASS: 24 imported sprites; consistent size/pivots; state transitions, loops, melee impact/recovery and terminal death; existing geometry/hitboxes; 24 Unity-rendered previews.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [MenuItem("Tools/Necrocis/Final Boss/Render Phase Three Combat Previews")]
         public static void Render()
         {
@@ -108,15 +150,15 @@ namespace NecrocisEditor
             return sprite;
         }
 
-        private static void Capture(Camera camera, string path)
+        private static void Capture(Camera camera, string path, int width = 1920, int height = 1080)
         {
-            var target = new RenderTexture(1920, 1080, 24, RenderTextureFormat.ARGB32);
-            var image = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
+            var target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
+            var image = new Texture2D(width, height, TextureFormat.RGB24, false);
             RenderTexture previous = RenderTexture.active;
             try
             {
                 camera.targetTexture = target; camera.Render(); RenderTexture.active = target;
-                image.ReadPixels(new Rect(0f, 0f, 1920f, 1080f), 0, 0); image.Apply();
+                image.ReadPixels(new Rect(0f, 0f, width, height), 0, 0); image.Apply();
                 File.WriteAllBytes(path, image.EncodeToPNG());
             }
             finally

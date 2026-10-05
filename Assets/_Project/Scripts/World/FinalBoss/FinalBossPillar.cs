@@ -37,6 +37,17 @@ namespace Necrocis
         public Sprite IntactSprite => intactSprite;
         public Sprite BrokenSprite => brokenSprite;
         public Sprite CurrentSprite => pillarRenderer != null ? pillarRenderer.sprite : null;
+        public bool RemnantVisible => destroyed && pillarRenderer != null && pillarRenderer.enabled
+            && pillarRenderer.gameObject.activeInHierarchy;
+
+        public void HideBrokenRemnant()
+        {
+            if (!destroyed) return;
+            if (pillarRenderer != null) pillarRenderer.enabled = false;
+            linkVisibility = 0f;
+            if (neuralLink != null) neuralLink.enabled = false;
+            healthBar?.Hide();
+        }
 
         public void Configure(BiomeType value, RectInt area, SpriteRenderer renderer)
         {

@@ -1,0 +1,1 @@
+PASS: broken pillars visible in phase one and hidden in phases two/three; preserved-health 40% detachment; animated mobile artwork, pursuit and eight hitboxes; final Death_03 corpse survives combat-root cleanup. Isolated test saves used.

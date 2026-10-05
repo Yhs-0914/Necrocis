@@ -15,7 +15,14 @@ namespace NecrocisEditor
     /// <summary>Exercises the real Hub entry, persistent player, arena movement and locked final-boss room.</summary>
     public static class FinalBossSmokeRunner
     {
-        private const string Output = "Exports/FinalBossConcepts/2026-09-28/TilemapImplementation";
+        private static bool spriteAnimationSmoke;
+        private static bool victorySmoke;
+        private static float victoryRealtime, dismissedRealtime;
+        private static string Output => victorySmoke
+            ? "Exports/FinalBossConcepts/2026-10-05-victory"
+            : spriteAnimationSmoke
+            ? "Exports/FinalBossConcepts/2026-10-05-animations/PlayMode"
+            : "Exports/FinalBossConcepts/2026-09-28/TilemapImplementation";
         private static readonly Vector2 Footprint = new Vector2(.68f, .48f);
         private static SceneSetup[] sceneSetup;
         private static bool previousOptionsEnabled;
@@ -89,7 +96,17 @@ namespace NecrocisEditor
             Begin(true);
         }
 
-        private static void Begin(bool direct)
+        [MenuItem("Tools/Necrocis/Final Boss/Run Sprite Animation Smoke Test")]
+        public static void RunAnimations()
+        {
+            FinalBossPhaseThreeChecks.Validate();
+            Begin(true, true);
+        }
+
+        [MenuItem("Tools/Necrocis/Final Boss/Run Collapse and Victory Smoke Test")]
+        public static void RunVictory() => Begin(true, true, true);
+
+        private static void Begin(bool direct, bool animations = false, bool victory = false)
         {
             if (running || EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Stop Play Mode before running the test.");
@@ -97,6 +114,8 @@ namespace NecrocisEditor
                 if (SceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save open scene edits before running the test.");
 
+            spriteAnimationSmoke = animations;
+            victorySmoke = victory;
             sceneSetup = EditorSceneManager.GetSceneManagerSetup();
             Directory.CreateDirectory(Output);
             SaveService.UseStorageRootForTests(Path.GetFullPath("Library/FinalBossSmokeSave-" + Guid.NewGuid().ToString("N")));
@@ -143,6 +162,12 @@ namespace NecrocisEditor
             }
             if (!playModeEntered || !EditorApplication.isPlaying || Time.timeSinceLevelLoad < 1.3f) return;
             if (failure != null) { Finish(failure); return; }
+            if (victorySmoke && stage >= 16)
+            {
+                try { TickVictoryPrompt(); }
+                catch (Exception e) { Finish(e.ToString()); }
+                return;
+            }
             if (Time.time < nextAction) return;
             nextAction = Time.time + .08f;
             try
@@ -168,6 +193,11 @@ namespace NecrocisEditor
                 {
                     Require(player.transform.position.z > startPosition.z + .8f, "Direct preview did not move");
                     Capture(Camera.main, "gameplay-direct-preview.png");
+                    if (spriteAnimationSmoke)
+                    {
+                        stage = 4;
+                        return;
+                    }
                     Finish(null);
                     return;
                 }
@@ -289,6 +319,7 @@ namespace NecrocisEditor
                         "Destroying one pillar changed the dormant boss phase unexpectedly");
                     Require(firstPillar.BrokenSprite != null && firstPillar.CurrentSprite == firstPillar.BrokenSprite,
                         "Destroyed pillar did not switch to its authored broken sprite");
+                    Require(firstPillar.RemnantVisible, "Broken pillar disappeared before phase two");
                     Require(!phase.IsBiomeSpawning(firstPillar.Biome),
                         "Destroyed pillar biome kept its continuous spawn channel enabled");
                     EnemyController weakenedBoss = UnityEngine.Object
@@ -308,6 +339,8 @@ namespace NecrocisEditor
                     phase.DestroyAllPillarsForTest();
                     Require(phase.DestroyedPillarCount == 4 && phase.CurrentPhase == 2 && phase.BossVisible,
                         "Destroying four pillars did not unlock phase two");
+                    Require(phase.Pillars.All(pillar => pillar != null && !pillar.RemnantVisible),
+                        "Broken pillar remnants remained visible in phase two");
                     FinalBossPhaseTwoController phaseTwo = phase.GetComponent<FinalBossPhaseTwoController>();
                     Require(phaseTwo != null && phaseTwo.IsActive && phaseTwo.BossDamageTarget != null
                         && phaseTwo.Health > 0f,
@@ -315,6 +348,8 @@ namespace NecrocisEditor
                     Require(UnityEngine.Object.FindObjectsByType<FinalBossScreenHealthBar>(
                             FindObjectsSortMode.None).Length == 1,
                         "Phase two did not create its bottom-center screen health bar");
+                    if (spriteAnimationSmoke)
+                        CaptureOverview(FinalBossArena.Instance, "arena-overview-phase-two.png");
                     stage = 9;
                     return;
                 }
@@ -345,7 +380,6 @@ namespace NecrocisEditor
                 }
                 if (stage == 12)
                 {
-                    if (Time.time < nextAction) return;
                     FinalBossPhaseThreeController phaseThree = FinalBossArena.Instance
                         .GetComponent<FinalBossPhaseThreeController>();
                     Require(phaseThree != null && phaseThree.IsActive && !phaseThree.IsDetaching
@@ -355,9 +389,11 @@ namespace NecrocisEditor
                             .BossDamageTarget.GetComponentsInChildren<BoxCollider>().Length == 8,
                         "Phase-two cleanup removed phase-three hitboxes");
                     SpriteRenderer mobileBoss = GameObject.Find("DormantCerebrum")?.GetComponent<SpriteRenderer>();
-                    Require(mobileBoss != null && mobileBoss.sprite
-                        == Resources.Load<Sprite>("FinalBoss/PhaseThree/MobileCerebrum"),
-                        "Phase three did not transform into the dedicated cerebrum-boss artwork");
+                    FinalBossSpriteAnimator animation = mobileBoss != null
+                        ? mobileBoss.GetComponent<FinalBossSpriteAnimator>() : null;
+                    Require(animation != null && animation.HasFrames && mobileBoss.sprite != null
+                        && mobileBoss.sprite.name.StartsWith(animation.CurrentPose.ToString(), StringComparison.Ordinal),
+                        "Phase three did not animate the dedicated cerebrum-boss artwork");
                     startPosition = phaseThree.Position;
                     player.SpawnAt(FinalBossArena.Instance.UVToWorld(new Vector2(.25f, .38f)));
                     Physics.SyncTransforms();
@@ -367,7 +403,6 @@ namespace NecrocisEditor
                 }
                 if (stage == 13)
                 {
-                    if (Time.time < nextAction) return;
                     FinalBossPhaseTwoController encounter = FinalBossArena.Instance
                         .GetComponent<FinalBossPhaseTwoController>();
                     Vector3 position = encounter.PhaseThree.Position;
@@ -381,11 +416,146 @@ namespace NecrocisEditor
                     Require(bodyDelta.sqrMagnitude < .01f,
                         "Phase-three damage target did not follow the visible body");
                     Capture(Camera.main, "gameplay-phase-three-pursuit.png");
+                    if (spriteAnimationSmoke)
+                    {
+                        CaptureOverview(FinalBossArena.Instance, "arena-overview-phase-three-pursuit.png");
+                        if (encounter.IsReflecting) return;
+                        if (victorySmoke)
+                        {
+                            encounter.BossDamageTarget.TakeDamage(encounter.Health - encounter.MaxHealth * .05f);
+                            stage = 15;
+                            nextAction = Time.time + .3f;
+                            return;
+                        }
+                        encounter.BossDamageTarget.TakeDamage(encounter.MaxHealth * 2f);
+                        nextAction = Time.time + 1.8f;
+                        stage = 14;
+                        return;
+                    }
                     Finish(null);
+                    return;
+                }
+                if (stage == 14)
+                {
+                    SpriteRenderer corpse = GameObject.Find("DormantCerebrum")?.GetComponent<SpriteRenderer>();
+                    Require(corpse != null && corpse.gameObject.activeInHierarchy
+                        && corpse.sprite != null && corpse.sprite.name == "Death_03",
+                        "Terminal death artwork did not survive combat-root cleanup");
+                    Require(corpse.GetComponent<FinalBossSpriteAnimator>().CurrentPose == FinalBossSpriteAnimator.Pose.Death,
+                        "Death animation was replaced by a living pose");
+                    Require(FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>()
+                        .Pillars.All(pillar => !pillar.RemnantVisible), "Pillar remnants reappeared in phase three");
+                    Capture(Camera.main, "gameplay-phase-three-death.png");
+                    CaptureOverview(FinalBossArena.Instance, "arena-overview-phase-three-death.png");
+                    if (victorySmoke)
+                    {
+                        Require(!FinalBossArena.Instance.GetComponent<FinalBossVictoryPrompt>().IsOpen,
+                            "Victory prompt appeared before five seconds");
+                        stage = 16;
+                        return;
+                    }
+                    Finish(null);
+                    return;
+                }
+                if (stage == 15)
+                {
+                    FinalBossPhaseTwoController encounter = FinalBossArena.Instance.GetComponent<FinalBossPhaseTwoController>();
+                    FinalBossPhaseThreeController phase = encounter.PhaseThree;
+                    Require(phase.IsTimeAttack, "Low health did not start terminal collapse");
+                    const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                    typeof(FinalBossPhaseThreeController).GetField("collapseElapsed", flags).SetValue(phase, 25f);
+                    typeof(FinalBossPhaseThreeController).GetMethod("UpdateCollapse", flags).Invoke(phase, null);
+                    var neuralEdge = (FinalBossNeuralVfx)typeof(FinalBossPhaseThreeController).GetField("neuralBoundary", flags).GetValue(phase);
+                    neuralEdge.RenderAt(25f);
+                    var overlays = (FinalBossTelegraph[])typeof(FinalBossPhaseThreeController).GetField("collapsedFloor", flags).GetValue(phase);
+                    Require(overlays.Length == 4 && overlays.All(overlay => overlay != null
+                        && overlay.GetComponentsInChildren<LineRenderer>(true).Length == 0),
+                        "Collapsed floor still creates dark warning outlines");
+                    CaptureOverview(FinalBossArena.Instance, "arena-shrinking-without-seams.png");
+                    if (encounter.IsReflecting) return;
+                    encounter.BossDamageTarget.TakeDamage(encounter.MaxHealth * 2f);
+                    victoryRealtime = Time.realtimeSinceStartup;
+                    stage = 14;
+                    nextAction = Time.time + 1.8f;
                     return;
                 }
             }
             catch (Exception e) { Finish(e.ToString()); }
+        }
+
+        private static void TickVictoryPrompt()
+        {
+            if (stage == 16)
+            {
+                FinalBossVictoryPrompt prompt = FinalBossArena.Instance.GetComponent<FinalBossVictoryPrompt>();
+                float sinceVictory = Time.realtimeSinceStartup - victoryRealtime;
+                if (sinceVictory < 4.9f)
+                {
+                    Require(!prompt.IsOpen, "Prompt opened before its five-second delay");
+                    return;
+                }
+                if (!prompt.IsOpen) return;
+                Require(sinceVictory >= 5f && sinceVictory < 6.5f, "Incorrect victory-prompt delay: " + sinceVictory);
+                Require(Time.timeScale == 0f && !PlayerController.Instance.enabled, "Victory prompt did not block gameplay input");
+                Require(prompt.YesButton.interactable && prompt.NoButton.interactable, "Victory choices are not usable");
+                CapturePrompt(prompt);
+                prompt.NoButton.onClick.Invoke();
+                Require(!prompt.IsOpen && Time.timeScale == 1f && PlayerController.Instance.enabled
+                    && SceneManager.GetActiveScene().name == SceneLoader.SCENE_FINAL_BOSS,
+                    "No did not restore gameplay in the completed arena");
+                prompt.Schedule();
+                dismissedRealtime = Time.realtimeSinceStartup;
+                stage = 17;
+                return;
+            }
+            if (stage == 17)
+            {
+                if (Time.realtimeSinceStartup - dismissedRealtime < 5.3f) return;
+                Require(!FinalBossArena.Instance.GetComponent<FinalBossVictoryPrompt>().IsOpen,
+                    "Declined victory prompt appeared again");
+                // Exercise the other button on a separate fixture after verifying No.
+                FinalBossVictoryPrompt yesFixture = new GameObject("VictoryYesBranchFixture").AddComponent<FinalBossVictoryPrompt>();
+                typeof(FinalBossVictoryPrompt).GetMethod("Show", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(yesFixture, null);
+                yesFixture.YesButton.onClick.Invoke();
+                stage = 18;
+                return;
+            }
+            if (stage == 18)
+            {
+                if (SceneManager.GetActiveScene().name != SceneLoader.SCENE_MAIN_MENU) return;
+                Require(PlayerController.Instance == null && GameManager.Instance == null && Time.timeScale == 1f,
+                    "Yes did not clean up the gameplay session");
+                Require(SaveService.Profile.normalCampaignCompleted && SaveService.Profile.hardUnlocked
+                    && SaveService.Profile.normalClearCount == 1, "Victory completion/progress changed on return to menu");
+                Finish(null);
+            }
+        }
+
+        private static void CapturePrompt(FinalBossVictoryPrompt prompt)
+        {
+            Canvas canvas = prompt.PromptCanvas;
+            RenderMode previousMode = canvas.renderMode;
+            Camera previousCamera = canvas.worldCamera;
+            float previousDistance = canvas.planeDistance;
+            int previousOrder = canvas.sortingOrder;
+            try
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = Camera.main;
+                canvas.planeDistance = 1f;
+                // Screen-space overlay draws after world sprites. Match that order when
+                // temporarily rendering the UI through the game camera for the capture.
+                canvas.sortingOrder = short.MaxValue;
+                Canvas.ForceUpdateCanvases();
+                Capture(Camera.main, "victory-confirmation.png");
+            }
+            finally
+            {
+                canvas.renderMode = previousMode;
+                canvas.worldCamera = previousCamera;
+                canvas.planeDistance = previousDistance;
+                canvas.sortingOrder = previousOrder;
+            }
         }
 
         private static float SpawnDistance(PlayerController player, FinalBossArena arena)
@@ -642,9 +812,15 @@ namespace NecrocisEditor
             string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; walk-out return portal absent; visible but untargetable dormant boss, four shared minions, two-by-two biome-exclusive groups, four isolated transparent pillar sprites, hit/health behavior, authored broken-state swaps, weakened mid-boss at doubled room size and 33% combat stats, and phase-two damage target plus floor-warning attack activation verified; spawn, connected floor, pillar/wall collision and actual player movement verified.";
             if (directPreview && failure == null)
                 result = "PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, no walk-out return portal, and no boss-progress unlock verified.";
+            if (spriteAnimationSmoke && failure == null)
+                result = "PASS: broken pillars visible in phase one and hidden in phases two/three; preserved-health 40% detachment; animated mobile artwork, pursuit and eight hitboxes; final Death_03 corpse survives combat-root cleanup. Isolated test saves used.";
+            if (victorySmoke && failure == null)
+                result = "PASS: four shrinking-floor overlays have no dark outline renderers; victory dialog appears after five real seconds; No restores input and stays in the arena without reopening; Yes loads MainMenu and cleans up gameplay; saved completion and Hard unlock preserved. Isolated test saves used.";
             File.WriteAllText(Output + (directPreview ? "/direct-smoke-result.txt" : "/smoke-result.txt"), result);
             File.WriteAllText("Library/FinalBossSmoke.result", result);
             Debug.Log("[FinalBossSmoke] " + result);
+            if (spriteAnimationSmoke && Application.isBatchMode)
+                EditorApplication.delayCall += () => EditorApplication.Exit(failure == null ? 0 : 1);
         }
 
         private static void Require(bool condition, string message)

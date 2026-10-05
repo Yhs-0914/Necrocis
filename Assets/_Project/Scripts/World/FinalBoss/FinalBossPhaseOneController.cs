@@ -387,6 +387,9 @@ namespace Necrocis
         private void BeginPhaseTwo()
         {
             CurrentPhase = 2;
+            if (pillars != null)
+                foreach (FinalBossPillar pillar in pillars)
+                    pillar?.HideBrokenRemnant();
             if (sealGauge != null)
             {
                 sealGauge.Hide();

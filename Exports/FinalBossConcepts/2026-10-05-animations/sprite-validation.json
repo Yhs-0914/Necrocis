@@ -1,0 +1,386 @@
+[
+  {
+    "pose": "Idle",
+    "frame": 0,
+    "source_bounds": [
+      15,
+      29,
+      253,
+      256
+    ],
+    "bounds": [
+      58,
+      72,
+      476,
+      471
+    ]
+  },
+  {
+    "pose": "Idle",
+    "frame": 1,
+    "source_bounds": [
+      11,
+      29,
+      247,
+      256
+    ],
+    "bounds": [
+      51,
+      74,
+      464,
+      471
+    ]
+  },
+  {
+    "pose": "Idle",
+    "frame": 2,
+    "source_bounds": [
+      4,
+      29,
+      246,
+      256
+    ],
+    "bounds": [
+      37,
+      74,
+      462,
+      471
+    ]
+  },
+  {
+    "pose": "Idle",
+    "frame": 3,
+    "source_bounds": [
+      1,
+      29,
+      240,
+      256
+    ],
+    "bounds": [
+      34,
+      74,
+      452,
+      471
+    ]
+  },
+  {
+    "pose": "Move",
+    "frame": 0,
+    "source_bounds": [
+      14,
+      0,
+      250,
+      254
+    ],
+    "bounds": [
+      55,
+      27,
+      469,
+      471
+    ]
+  },
+  {
+    "pose": "Move",
+    "frame": 1,
+    "source_bounds": [
+      11,
+      0,
+      246,
+      254
+    ],
+    "bounds": [
+      50,
+      27,
+      462,
+      471
+    ]
+  },
+  {
+    "pose": "Move",
+    "frame": 2,
+    "source_bounds": [
+      6,
+      0,
+      239,
+      255
+    ],
+    "bounds": [
+      43,
+      25,
+      450,
+      471
+    ]
+  },
+  {
+    "pose": "Move",
+    "frame": 3,
+    "source_bounds": [
+      1,
+      0,
+      242,
+      255
+    ],
+    "bounds": [
+      34,
+      25,
+      455,
+      471
+    ]
+  },
+  {
+    "pose": "Melee",
+    "frame": 0,
+    "source_bounds": [
+      24,
+      23,
+      242,
+      249
+    ],
+    "bounds": [
+      74,
+      75,
+      455,
+      471
+    ]
+  },
+  {
+    "pose": "Melee",
+    "frame": 1,
+    "source_bounds": [
+      11,
+      22,
+      245,
+      249
+    ],
+    "bounds": [
+      51,
+      72,
+      461,
+      471
+    ]
+  },
+  {
+    "pose": "Melee",
+    "frame": 2,
+    "source_bounds": [
+      1,
+      24,
+      256,
+      246
+    ],
+    "bounds": [
+      32,
+      83,
+      480,
+      471
+    ]
+  },
+  {
+    "pose": "Melee",
+    "frame": 3,
+    "source_bounds": [
+      0,
+      23,
+      237,
+      249
+    ],
+    "bounds": [
+      32,
+      75,
+      447,
+      471
+    ]
+  },
+  {
+    "pose": "Cast",
+    "frame": 0,
+    "source_bounds": [
+      14,
+      14,
+      248,
+      248
+    ],
+    "bounds": [
+      57,
+      60,
+      466,
+      471
+    ]
+  },
+  {
+    "pose": "Cast",
+    "frame": 1,
+    "source_bounds": [
+      12,
+      19,
+      246,
+      248
+    ],
+    "bounds": [
+      53,
+      70,
+      462,
+      471
+    ]
+  },
+  {
+    "pose": "Cast",
+    "frame": 2,
+    "source_bounds": [
+      10,
+      6,
+      242,
+      248
+    ],
+    "bounds": [
+      50,
+      46,
+      455,
+      471
+    ]
+  },
+  {
+    "pose": "Cast",
+    "frame": 3,
+    "source_bounds": [
+      9,
+      20,
+      239,
+      248
+    ],
+    "bounds": [
+      48,
+      70,
+      452,
+      471
+    ]
+  },
+  {
+    "pose": "Reflection",
+    "frame": 0,
+    "source_bounds": [
+      14,
+      16,
+      245,
+      249
+    ],
+    "bounds": [
+      55,
+      63,
+      461,
+      471
+    ]
+  },
+  {
+    "pose": "Reflection",
+    "frame": 1,
+    "source_bounds": [
+      11,
+      19,
+      246,
+      249
+    ],
+    "bounds": [
+      51,
+      67,
+      462,
+      471
+    ]
+  },
+  {
+    "pose": "Reflection",
+    "frame": 2,
+    "source_bounds": [
+      17,
+      18,
+      243,
+      249
+    ],
+    "bounds": [
+      62,
+      67,
+      459,
+      471
+    ]
+  },
+  {
+    "pose": "Reflection",
+    "frame": 3,
+    "source_bounds": [
+      22,
+      21,
+      235,
+      249
+    ],
+    "bounds": [
+      70,
+      70,
+      443,
+      471
+    ]
+  },
+  {
+    "pose": "Death",
+    "frame": 0,
+    "source_bounds": [
+      12,
+      11,
+      246,
+      240
+    ],
+    "bounds": [
+      51,
+      69,
+      462,
+      471
+    ]
+  },
+  {
+    "pose": "Death",
+    "frame": 1,
+    "source_bounds": [
+      6,
+      40,
+      249,
+      237
+    ],
+    "bounds": [
+      43,
+      124,
+      468,
+      471
+    ]
+  },
+  {
+    "pose": "Death",
+    "frame": 2,
+    "source_bounds": [
+      2,
+      72,
+      248,
+      234
+    ],
+    "bounds": [
+      36,
+      187,
+      466,
+      471
+    ]
+  },
+  {
+    "pose": "Death",
+    "frame": 3,
+    "source_bounds": [
+      2,
+      115,
+      245,
+      233
+    ],
+    "bounds": [
+      36,
+      263,
+      461,
+      471
+    ]
+  }
+]

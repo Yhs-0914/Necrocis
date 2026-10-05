@@ -172,6 +172,7 @@ namespace Necrocis
             FinalBossTentacleVisual claw = FinalBossTentacleVisual.Create(EffectRoot);
             yield return PrepareTentacle(claw, origin, direction, 2.1f, 1.3f);
             warning.Dismiss();
+            PlayMeleeAnimation(.65f);
             bool attempted = false;
             for (float t = 0f; t < .3f; t += Time.deltaTime)
             {
@@ -189,6 +190,7 @@ namespace Necrocis
             if (grabbedPlayer != null)
             {
                 Announce("CAUGHT", "THE CLAW IS THROWING YOU BACK");
+                PlayMeleeAnimation(.95f);
                 Vector3 start = grabSafePosition;
                 for (float t = 0f; t < .3f && grabbedPlayer != null && !grabbedPlayer.IsDead; t += Time.deltaTime)
                 {
@@ -282,6 +284,7 @@ namespace Necrocis
             FinalBossTentacleVisual sweep = FinalBossTentacleVisual.Create(EffectRoot);
             yield return PrepareTentacle(sweep, origin, Vector3.right, 1.8f, 1.2f);
             circle.Dismiss();
+            PlayMeleeAnimation(.85f);
             var wake = FinalBossNeuralVfx.Create(EffectRoot, Floor(origin), FinalBossNeuralVfx.Shape.Sweep,
                 7.5f, new Color(.22f, .8f, 1f, .8f));
             bool hit = false;
@@ -319,6 +322,7 @@ namespace Necrocis
             FinalBossTentacleVisual prepared = null)
         {
             FinalBossTentacleVisual sprite = prepared != null ? prepared : FinalBossTentacleVisual.Create(EffectRoot);
+            PlayMeleeAnimation(.62f);
             bool hit = false;
             for (float t = 0f; t < .62f; t += Time.deltaTime)
             {
@@ -513,8 +517,8 @@ namespace Necrocis
                 boundaryVisual.startColor = boundaryVisual.endColor = new Color(.3f, 1f, .92f);
                 for (int i = 0; i < 4; i++)
                 {
-                    collapsedFloor[i] = FinalBossTelegraph.CreateRectangle(boundaryVisual.transform, Floor(Position),
-                        Vector2.one, 3600f, new Color(.06f, .01f, .13f, .86f), true);
+                    collapsedFloor[i] = FinalBossTelegraph.CreateFloorOverlay(boundaryVisual.transform, Floor(Position),
+                        Vector2.one, new Color(.06f, .01f, .13f, .86f));
                 }
                 neuralBoundary = FinalBossNeuralVfx.Create(boundaryVisual.transform, Vector3.zero,
                     FinalBossNeuralVfx.Shape.Boundary, 1f, ImpactColor);

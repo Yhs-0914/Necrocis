@@ -43,7 +43,59 @@ namespace NecrocisEditor
             Vector3 step = (Vector3)pursuit.Invoke(null, new object[] { Vector3.zero, Vector3.right * 4f, 3.1f, 3.2f, 1f });
             Require(Mathf.Abs(step.x - .8f) < .0001f, "Pursuit overshot stopping distance");
             ValidateMobileHitboxes();
-            Debug.Log("[FinalBoss] PASS: 5 phase-three sprites, 9 geometry checks and mobile-hitbox creation/reuse/recreation. Play-mode choreography still needs visual QA.");
+            ValidateAnimations();
+            Debug.Log("[FinalBoss] PASS: phase-three assets, geometry, hitboxes and six four-frame animations.");
+        }
+
+        [MenuItem("Tools/Necrocis/Final Boss/Validate Phase Three Animations")]
+        public static void ValidateAnimations()
+        {
+            GameObject fixture = new GameObject("PhaseThreeAnimationRegression", typeof(SpriteRenderer));
+            fixture.SetActive(false);
+            try
+            {
+                SpriteRenderer renderer = fixture.GetComponent<SpriteRenderer>();
+                renderer.sprite = Resources.Load<Sprite>("FinalBoss/PhaseThree/MobileCerebrum");
+                Sprite original = renderer.sprite;
+                FinalBossSpriteAnimator animator = fixture.AddComponent<FinalBossSpriteAnimator>();
+                Require(animator.Initialize(), "Missing animation resources");
+                animator.Advance(.3f);
+                Require(renderer.sprite == original, "Animation replaced the map artwork before detachment");
+                foreach (FinalBossSpriteAnimator.Pose pose in Enum.GetValues(typeof(FinalBossSpriteAnimator.Pose)))
+                {
+                    Sprite[] frames = Resources.LoadAll<Sprite>("FinalBoss/PhaseThree/Animations/" + pose);
+                    Require(frames.Length == 4, "Incorrect frame count: " + pose);
+                    foreach (Sprite frame in frames)
+                    {
+                        Require(frame.rect.size == new Vector2(512f, 512f)
+                            && frame.pivot == new Vector2(256f, 40.96f), "Frame size/pivot drift: " + frame.name);
+                        TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(frame)) as TextureImporter;
+                        Require(importer != null && importer.alphaIsTransparency && !importer.mipmapEnabled
+                            && importer.filterMode == FilterMode.Point, "Incorrect animation import: " + frame.name);
+                    }
+                    animator.Play(pose, restart: true);
+                    Require(renderer.sprite.name == pose + "_00", "Incorrect first frame: " + pose);
+                    animator.Advance(.25f);
+                    Require(renderer.sprite.name.StartsWith(pose + "_", StringComparison.Ordinal), "Lost animation state");
+                }
+                animator.Play(FinalBossSpriteAnimator.Pose.Melee, .62f, restart: true);
+                Require(animator.IsOneShotPlaying, "Melee animation was interrupted immediately");
+                animator.Advance(.4f);
+                Require(renderer.sprite.name == "Melee_02", "Melee strike missed its impact frame");
+                animator.Advance(.3f);
+                Require(!animator.IsOneShotPlaying && renderer.sprite.name == "Melee_03", "Melee did not recover");
+                animator.Play(FinalBossSpriteAnimator.Pose.Death, 1.6f);
+                animator.Advance(20f);
+                Require(renderer.sprite.name == "Death_03", "Death animation wrapped back to life");
+                animator.Play(FinalBossSpriteAnimator.Pose.Move);
+                Require(animator.CurrentPose == FinalBossSpriteAnimator.Pose.Death, "Movement interrupted death");
+                Require(FinalBossSpriteAnimator.FrameIndex(FinalBossSpriteAnimator.Pose.Idle, .8f, 0f, 4) == 0,
+                    "Idle loop did not wrap");
+                Require(FinalBossSpriteAnimator.FrameIndex(FinalBossSpriteAnimator.Pose.Move, 1f / 9f, 0f, 4) == 1,
+                    "Move animation cadence changed");
+                Debug.Log("[FinalBoss] PASS: 24 imported animation frames, delayed artwork swap, melee impact/recovery, loops and terminal death pose.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(fixture); }
         }
 
         [MenuItem("Tools/Necrocis/Final Boss/Validate Phase Three Hitboxes")]

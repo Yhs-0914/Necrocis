@@ -829,6 +829,7 @@ namespace Necrocis
                 // Preserve the detached artwork when the runtime combat root is cleaned up.
                 bossVisual.SetParent(transform, true);
                 bossBaseScale = bossVisual.localScale;
+                phaseThree?.PlayDeathAnimation();
             }
             if (bossVisual != null) bossVisual.localScale = bossBaseScale;
             if (healthBar != null)
@@ -849,23 +850,31 @@ namespace Necrocis
             DontStarveCamera.Instance?.AddCombatImpulse(.32f, .4f);
             AudioManager.Instance?.PlaySFX("BossDeath", .85f);
             StartCoroutine(DefeatPresentation());
+            FinalBossVictoryPrompt victoryPrompt = GetComponent<FinalBossVictoryPrompt>();
+            if (victoryPrompt == null) victoryPrompt = gameObject.AddComponent<FinalBossVictoryPrompt>();
+            victoryPrompt.Schedule();
             Debug.Log("[FinalBoss] Final cerebrum defeated.");
         }
 
         private IEnumerator DefeatPresentation()
         {
             const float duration = 1.6f;
+            bool animatedCorpse = phaseThreeStarted && bossVisual != null
+                && bossVisual.GetComponent<FinalBossSpriteAnimator>() is FinalBossSpriteAnimator animation
+                && animation.HasFrames;
+            Color corpseColor = animatedCorpse ? new Color(.7f, .65f, .72f, bossBaseColor.a)
+                : new Color(.24f, .18f, .28f, bossBaseColor.a);
             for (float elapsed = 0f; elapsed < duration; elapsed += Time.deltaTime)
             {
                 float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
                 if (bossRenderer != null)
                     bossRenderer.color = Color.Lerp(bossBaseColor,
-                        new Color(.24f, .18f, .28f, bossBaseColor.a), t);
-                if (bossVisual != null)
+                        corpseColor, t);
+                if (bossVisual != null && !animatedCorpse)
                     bossVisual.localScale = Vector3.Scale(bossBaseScale, new Vector3(1f - t * .04f, 1f - t * .12f, 1f));
                 yield return null;
             }
-            if (bossRenderer != null) bossRenderer.color = new Color(.24f, .18f, .28f, bossBaseColor.a);
+            if (bossRenderer != null) bossRenderer.color = corpseColor;
             yield return new WaitForSeconds(1.4f);
             if (healthBar != null) Destroy(healthBar.gameObject);
         }
