@@ -88,7 +88,13 @@ namespace Necrocis
 
         public void ApplyDamageOverTime(float duration, float tickInterval, float tickDamage)
         {
-            if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)
+            ApplyDamageOverTime(duration, tickInterval, new EnemyDamageRequest(
+                Mathf.Max(0f, tickDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)), null));
+        }
+
+        public void ApplyDamageOverTime(float duration, float tickInterval, EnemyDamageRequest tickDamage)
+        {
+            if (duration <= 0f || tickInterval <= 0f || tickDamage.Amount <= 0f)
             {
                 return;
             }
@@ -152,7 +158,7 @@ namespace Necrocis
             statusRoutine = null;
         }
 
-        private IEnumerator DamageOverTimeRoutine(float duration, float tickInterval, float tickDamage, System.Action onComplete)
+        private IEnumerator DamageOverTimeRoutine(float duration, float tickInterval, EnemyDamageRequest tickDamage, System.Action onComplete)
         {
             PlayerController player = GetComponent<PlayerController>();
             float elapsed = 0f;

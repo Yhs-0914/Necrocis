@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3976859272d584d819b6ca3bca9b2d5b, type: 3}
+  m_Name: PollenInvader_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PollenInvaderPresentation
+  directionalPresentation: {fileID: 11400000, guid: bd9a931c5d4354de590ab0eca7b33090, type: 2}
+  idleFrames:
+  - {fileID: 643661147, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  - {fileID: -1946729462, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  moveFrames:
+  - {fileID: -909238526, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  - {fileID: 1297340257, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  preparationFrames:
+  - {fileID: 1751126969, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  - {fileID: 899305464, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  - {fileID: 877640471, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  deathFrames:
+  - {fileID: -1119665307, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  - {fileID: 1732210543, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  - {fileID: 197415923, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  - {fileID: -885827777, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  - {fileID: 1669978454, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  - {fileID: -271410368, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+  pelletFrames:
+  - {fileID: -1607242889, guid: 6721c4af7df594e45b62e77a7ce1c0bf, type: 3}
+  - {fileID: -1727691389, guid: 6721c4af7df594e45b62e77a7ce1c0bf, type: 3}
+  rotationFrames:
+  - {fileID: 1226323195, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+  - {fileID: -1950821534, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+  - {fileID: -578218846, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+  release: {fileID: -1359024641, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  recovery: {fileID: 1082300980, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  hit: {fileID: -1854700926, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+  groundDisc: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  idleFrameSeconds: 0.35
+  moveFrameSeconds: 0.22
+  releaseFrameSeconds: 0.12
+  deathFrameSeconds: 0.14
+  pelletFrameSeconds: 0.12
+  groundShadowSize: {x: 1.1, y: 0.6}
+  groundShadowColor: {r: 0.16, g: 0.1, b: 0.04, a: 0.25}

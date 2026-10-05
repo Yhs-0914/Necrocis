@@ -17,6 +17,7 @@ namespace Necrocis
         private readonly List<BiomeObjectRuleConfig> runtimeRules = new List<BiomeObjectRuleConfig>();
         private readonly List<EnemySpawnRuleConfig> runtimeEnemyRules = new List<EnemySpawnRuleConfig>();
         private MidBossArenaController midBossArenaController;
+        private BiomeExteriorBackdrop exteriorBackdrop;
 
         /// <summary>
         /// 현재 바이옴 설정 반환 (엘리트 몹 분열 시 적 설정 검색용)
@@ -57,7 +58,9 @@ namespace Necrocis
         protected override void Start()
         {
             base.Start();
+            exteriorBackdrop = BiomeExteriorBackdrop.Create(transform, config.exteriorBackdrop);
             TryCreateMidBossArena();
+            BiomeEliteField.Create(this, config);
             PlayBiomeBgm();
 
             if (biomeType == BiomeType.Lung)

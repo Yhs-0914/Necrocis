@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a8fcc1d122f342868f0e6a7ec70ae22, type: 3}
+  m_Name: GasSac_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.GasSacPresentation
+  idle: {fileID: -1817208486, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  inflationFrames:
+  - {fileID: -1817208486, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 1239959777, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 1714589731, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 1040861865, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 827631476, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 1434664869, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  - {fileID: 2007720481, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  deflated: {fileID: -1108146575, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+  directionalPresentation: {fileID: 11400000, guid: 5c481eeaf5bfb42d88d6fe17b41ffaa5, type: 2}
+  deathFrames:
+  - {fileID: -1495736533, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  - {fileID: -134786007, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  - {fileID: -1318342792, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  - {fileID: -2140722629, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  - {fileID: -740706562, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  - {fileID: 1318040244, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+  deathFrameSeconds: 0.14
+  gasPuff: {fileID: 21300000, guid: aee1d35bb59774019aea367e5345f251, type: 3}
+  filledCircle: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  warningColor: {r: 1, g: 0.2, b: 0.16, a: 0.95}
+  dangerFillColor: {r: 1, g: 0.04, b: 0.03, a: 0.42}
+  burstColor: {r: 0.92, g: 0.3, b: 0.2, a: 1}
+  gasColor: {r: 0.78, g: 0.87, b: 0.56, a: 0.8}
+  groundShadowSize: {x: 1.3, y: 0.8}
+  groundShadowColor: {r: 0.12, g: 0.055, b: 0.16, a: 0.32}

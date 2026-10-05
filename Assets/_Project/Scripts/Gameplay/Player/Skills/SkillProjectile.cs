@@ -42,11 +42,13 @@ namespace Necrocis
         private SkillProjectileDebuff debuff;
         private float despawnTime;
         private bool initialized;
+        private Collider hitCollider;
         private bool hasImpacted;
         private int visualSortingOrder = 5200;
         private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
         private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
         private Action<EnemyController, Vector3> onEnemyHit;
+        private int propAttackToken;
 
         public void Launch(
             Vector3 direction,
@@ -68,6 +70,8 @@ namespace Necrocis
             disableOnHit = shouldDisableOnHit;
             this.debuff = debuff;
             this.onEnemyHit = onEnemyHit;
+            hitCollider = GetComponent<Collider>();
+            propAttackToken = ResidueRubble.NextAttackToken();
             despawnTime = Time.time + lifeTime;
             initialized = true;
             hasImpacted = false;
@@ -103,6 +107,7 @@ namespace Necrocis
                 nextPosition.y = flightHeight;
             }
 
+            ResidueRubble.HitAlongSegment(transform.position, nextPosition, hitCheckRadius, damage, targetMask, propAttackToken);
             transform.position = nextPosition;
             TryDetectHitByOverlap();
 
@@ -129,7 +134,7 @@ namespace Necrocis
                 return;
             }
 
-            float radius = Mathf.Max(0.05f, hitCheckRadius);
+            float radius = Mathf.Max(.05f, Mathf.Max(hitCheckRadius, PlayerAttackGeometry.ColliderRadius(hitCollider))) + PlayerAttackGeometry.Padding;
             Vector3 hitCenter = transform.position;
             hitCenter.y += hitCheckHeightOffset;
             float halfHeight = Mathf.Max(0.05f, hitCheckVerticalHalfHeight);
@@ -171,6 +176,8 @@ namespace Necrocis
                 return false;
             }
 
+            if (other.TryGetComponent(out ResidueRubble rubble))
+                return rubble.ApplyPlayerHit(damage, propAttackToken); // Remains in flight after breaking the prop.
             EnemyController enemy = other.GetComponent<EnemyController>();
             if (enemy == null)
             {

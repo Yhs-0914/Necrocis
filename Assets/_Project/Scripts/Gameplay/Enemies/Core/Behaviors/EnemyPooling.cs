@@ -32,10 +32,24 @@ namespace Necrocis
             return controller;
         }
 
-        public void Configure(EnemySpawner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition)
+        public void Configure(IEnemySpawnOwner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition)
         {
+            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>()) pattern.EndSpawn();
+            ResetPatternDirections();
+            SetPatternPositionLocked(false);
+            if (config.monsterDefinition != null && config.additionalBaseStats != null)
+                foreach (CharacterStatValue value in config.additionalBaseStats)
+                    if (value.statType == CharacterStatType.MaxHealth || value.statType == CharacterStatType.AttackPower
+                        || value.statType == CharacterStatType.MoveSpeed)
+                        throw new System.InvalidOperationException(config.name + ": 핵심 스탯은 MonsterDefinition에서만 조절하세요: " + value.statType);
+            config = config.CreateRuntimeCopy();
             this.owner = owner;
             this.config = config;
+            SpawnGeneration++;
+            experienceGranted = false;
+            PatternOwnsContact = false;
+            SuppressExperienceReward = false;
+            Balance = config.monsterDefinition != null ? MonsterBalanceRuntime.Capture(config.monsterDefinition) : null;
             poolArchetypeId = GetPoolArchetypeId(config);
             this.anchorPosition = anchorPosition;
             playerTransform = null;
@@ -71,11 +85,7 @@ namespace Necrocis
             gameObject.tag = "Enemy";
             ConfigureStats();
             ApplyPhysicsSetup();
-            contactDamage.Configure(
-                this,
-                config.enableContactDamage,
-                config.contactDamage,
-                config.contactKnockbackDistance);
+            ConfigureContactBalance();
             ApplyVisualSetup();
             SetIdleAnimation();
             SyncHeight();
@@ -97,24 +107,36 @@ namespace Necrocis
             // FSM 시작 → Idle
             currentState = null;
             ChangeState(EnemyIdleState.Instance);
+            config.monsterDefinition?.pattern?.Attach(this);
         }
 
         public void ReleaseToPool()
         {
             if (gameObject == null || !gameObject.activeSelf) return;
 
+            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>()) pattern.EndSpawn();
+
             // FSM Exit
             currentState?.Exit(this);
             currentState = null;
 
+            GetComponent<EnemyPatternLifetime>()?.Cancel();
+            EnemyProjectile.ReturnProjectilesOwnedBy(this);
+            StopAllCoroutines();
             PrepareForPool();
+            ResetPatternDirections();
+            SetPatternPositionLocked(false);
             statusEffectController?.ResetEffects();
             EnsurePoolRoot();
             gameObject.SetActive(false);
             transform.SetParent(poolRoot, false);
 
             owner = null;
+            Defeated = null;
+            DamageTaken = null;
             config = null;
+            Balance = null;
+            SpawnGeneration++;
             playerTransform = null;
             destination = Vector3.zero;
             idleTimer = 0f;
@@ -163,8 +185,9 @@ namespace Necrocis
         private void NotifyOwnerReleased()
         {
             if (notifiedOwner || owner == null) return;
-            owner.NotifyEnemyReleased(this);
             notifiedOwner = true;
+            if (owner is UnityEngine.Object value && value == null) return;
+            owner.NotifyEnemyReleased(this);
         }
 
 

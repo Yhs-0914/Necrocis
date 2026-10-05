@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a3af44a1e184454090d4cbb202ba408, type: 3}
+  m_Name: DustClump_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.DustClumpPresentation
+  idleFrames:
+  - {fileID: 915609829, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  - {fileID: -913181815, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  moveFrames:
+  - {fileID: 2059299490, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  - {fileID: 1392730332, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  preparationFrames:
+  - {fileID: -1667340950, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  - {fileID: 447105609, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  - {fileID: 1685475494, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  coreFrames:
+  - {fileID: -1987782069, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  - {fileID: -1617479142, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  deathFrames:
+  - {fileID: -195969481, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  - {fileID: -1423113680, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  - {fileID: -1789587028, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  - {fileID: -1636434971, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  - {fileID: -1863775796, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  - {fileID: 323229964, guid: 3593fbf8227224902a5a260d3983e574, type: 3}
+  coreDeathFrames:
+  - {fileID: 5490430, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  - {fileID: -1384457798, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  - {fileID: 1996436513, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  - {fileID: 1078373022, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  - {fileID: -1003229731, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  - {fileID: -124153897, guid: 4d8df1ab36ca84f24b95a796f2d83bf6, type: 3}
+  cloudFrames:
+  - {fileID: -959991285, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  - {fileID: 1124071132, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  - {fileID: 2033609501, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  - {fileID: -1422150265, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  dissolveFrames:
+  - {fileID: 194521656, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  - {fileID: 1291063001, guid: 70eb6660c1ad748239d1884493b64b2e, type: 3}
+  release: {fileID: -687636534, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  recovery: {fileID: -2045979016, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  hit: {fileID: -408160233, guid: 3b2754203905d4147aef3218e4af1501, type: 3}
+  groundDisc: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  idleFrameSeconds: 0.3
+  moveFrameSeconds: 0.22
+  coreFrameSeconds: 0.25
+  cloudFrameSeconds: 0.15
+  dissolveFrameSeconds: 0.12
+  deathFrameSeconds: 0.14
+  cloudOpacity: 0.85
+  playerOverlapOpacity: 0.35
+  dangerFillColor: {r: 0.92, g: 0.04, b: 0.04, a: 0.3}
+  coreColliderSize: {x: 0.55, y: 0.85, z: 0.55}
+  coreColliderCenter: {x: 0, y: 0.6, z: 0}
+  groundShadowSize: {x: 1.5, y: 0.8}
+  coreShadowSize: {x: 0.7, y: 0.45}
+  groundShadowColor: {r: 0.12, g: 0.1, b: 0.15, a: 0.25}

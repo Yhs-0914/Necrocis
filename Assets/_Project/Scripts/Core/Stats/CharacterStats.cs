@@ -362,7 +362,7 @@ namespace Necrocis
             return Mathf.Clamp(ToHealthUnits(value), 0f, MaxHealth);
         }
 
-        private static float ToHealthUnits(float value)
+        public static float ToHealthUnits(float value)
         {
             if (value <= 0f)
             {
@@ -372,7 +372,7 @@ namespace Necrocis
             return Mathf.Floor(value + 0.5f + HealthUnitEpsilon);
         }
 
-        private static float ToHealthDeltaUnits(float value)
+        public static float ToHealthDeltaUnits(float value)
         {
             if (value <= 0f)
             {

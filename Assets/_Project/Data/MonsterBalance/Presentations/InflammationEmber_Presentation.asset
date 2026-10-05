@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0fe14ef584c14a1f8b1ef2e2f683331, type: 3}
+  m_Name: InflammationEmber_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.InflammationEmberPresentation
+  directionalPresentation: {fileID: 11400000, guid: 8ab5a20d8231642c3b5c192ae15178bf, type: 2}
+  idleFrames:
+  - {fileID: -1500595801, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  - {fileID: 874034049, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  moveFrames:
+  - {fileID: -1505312198, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  - {fileID: 239126409, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  preparationFrames:
+  - {fileID: -247969920, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  - {fileID: 764677677, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  - {fileID: 1575717097, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  deathFrames:
+  - {fileID: 265269648, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  - {fileID: 1664974923, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  - {fileID: -1959534, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  - {fileID: 141063225, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  - {fileID: 356931589, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  - {fileID: -199499721, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+  thornFrames:
+  - {fileID: -2027142878, guid: 034d765ff0feb441c99b462e2893ef57, type: 3}
+  - {fileID: -587275425, guid: 034d765ff0feb441c99b462e2893ef57, type: 3}
+  release: {fileID: -504184858, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  recovery: {fileID: -665638041, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  hit: {fileID: 506524841, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+  groundDisc: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  idleFrameSeconds: 0.35
+  moveFrameSeconds: 0.22
+  releaseFrameSeconds: 0.12
+  deathFrameSeconds: 0.14
+  thornFrameSeconds: 0.12
+  groundShadowSize: {x: 1.4, y: 0.7}
+  groundShadowColor: {r: 0.14, g: 0.065, b: 0.12, a: 0.28}

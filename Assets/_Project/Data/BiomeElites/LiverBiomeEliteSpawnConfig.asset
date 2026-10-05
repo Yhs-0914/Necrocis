@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a09dca9bfc6d04e759b473e39d5f420b, type: 3}
+  m_Name: LiverBiomeEliteSpawnConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.BiomeEliteSpawnConfig
+  enabled: 1
+  monsters:
+  - monsterDefinition: {fileID: 11400000, guid: d6df2b4e6bd5a4c21838d0e2934d6b06, type: 2}
+    name: H-02 Inflammation Ember
+    density: 0.0025
+    minDistance: 8
+    poissonSalt: 400
+    allowedRegions: 
+    maxAlive: 1
+    activationRadius: 20
+    respawnCooldown: 8
+    spawnRadius: 1.5
+    moveSpeed: 1.5
+    stoppingDistance: 0.2
+    wanderRadius: 0
+    chaseRadius: 7
+    leashRadius: 16
+    idleDelayRange: {x: 0.5, y: 1.5}
+    maxHealth: 30
+    attackDamage: 1
+    attackRange: 1.5
+    attackCooldown: 1
+    expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.1
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.15
+    addCollider: 1
+    isTrigger: 1
+    colliderSize: {x: 1.2, y: 1.2, z: 0.95}
+    colliderCenter: {x: 0, y: 0.55, z: 0}
+    idleSprites: []
+    idleSpritesUp: []
+    idleSpritesDown: []
+    moveSprites: []
+    moveSpritesUp: []
+    moveSpritesDown: []
+    attackSprites: []
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.12
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.55, z: 0}
+    deathSprites: []
+    deathAnimationSpeed: 0.15
+    isElite: 1
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    killTriggerEnemyName: 
+    killTriggerCount: 10
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  - monsterDefinition: {fileID: 11400000, guid: 41d268ef4aa33425ea41d7e7c1585d70, type: 2}
+    name: H-03 Hangover Remnant
+    density: 0.0025
+    minDistance: 8
+    poissonSalt: 400
+    allowedRegions: 
+    maxAlive: 1
+    activationRadius: 20
+    respawnCooldown: 8
+    spawnRadius: 1.5
+    moveSpeed: 1.5
+    stoppingDistance: 0.2
+    wanderRadius: 0
+    chaseRadius: 7
+    leashRadius: 16
+    idleDelayRange: {x: 0.5, y: 1.5}
+    maxHealth: 30
+    attackDamage: 1
+    attackRange: 1.5
+    attackCooldown: 1
+    expReward: 10
+    enableContactDamage: 1
+    contactDamage: 1
+    contactKnockbackDistance: 0.45
+    additionalBaseStats: []
+    separationDistance: 1.1
+    separationStrength: 1
+    heightOffset: 0
+    scale: {x: 1, y: 1, z: 1}
+    sortingOrder: 1000
+    useBillboard: 1
+    useYSort: 1
+    animationSpeed: 0.15
+    addCollider: 1
+    isTrigger: 1
+    colliderSize: {x: 1.25, y: 1.1, z: 0.95}
+    colliderCenter: {x: 0, y: 0.5, z: 0}
+    idleSprites: []
+    idleSpritesUp: []
+    idleSpritesDown: []
+    moveSprites: []
+    moveSpritesUp: []
+    moveSpritesDown: []
+    attackSprites: []
+    attackSpritesUp: []
+    attackSpritesDown: []
+    attackAnimationSpeed: 0.12
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
+    expandColliderOnAttack: 0
+    attackColliderSize: {x: 2, y: 2, z: 2}
+    attackColliderCenter: {x: 0, y: 0.55, z: 0}
+    deathSprites: []
+    deathAnimationSpeed: 0.15
+    isElite: 1
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    killTriggerEnemyName: 
+    killTriggerCount: 10
+    splitsOnDeath: 0
+    splitCount: 2
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
+    chargesAtPlayer: 0
+    chargeSpeed: 6
+    chargeAccelTime: 0.3
+    leavesDebrisOnDeath: 0
+    debrisDuration: 5
+    debrisAggroRadius: 8
+    debrisVfxSprites: []
+    debrisVfxScale: 15
+    debrisVfxSpeed: 0.12
+  minimumCount: 2
+  maximumCount: 2
+  minimumPerType: 1
+  minimumSpacing: 64
+  entranceExclusionRadius: 18
+  portalExclusionRadius: 10
+  bossExclusionPadding: 8
+  clearanceCells: 5
+  activationDistance: 48
+  releaseDistance: 72
+  leashDistance: 16

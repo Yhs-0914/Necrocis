@@ -6,7 +6,7 @@ namespace Necrocis
     /// <summary>
     /// 플레이어 근처에서만 적을 활성화하고 리스폰을 관리하는 스포너.
     /// </summary>
-    public class EnemySpawner : MonoBehaviour
+    public class EnemySpawner : MonoBehaviour, IEnemySpawnOwner
     {
         private const int SpawnPositionAttempts = 10;       // 스폰 위치 탐색 최대 시도 횟수
         private const float MinSpawnSpacing = 0.75f;       // 적 간 최소 거리 (겹침 방지)

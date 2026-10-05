@@ -72,6 +72,7 @@ namespace Necrocis
             if (!damageActive
                 || damage <= 0f
                 || sourceEnemy == null
+                || sourceEnemy.PatternOwnsContact
                 || sourceEnemy.IsDead
                 || player == null
                 || player.IsDead
@@ -86,8 +87,13 @@ namespace Necrocis
                 return false;
             }
 
+            // An expanded attack collider must not turn the whole weapon volume into body contact.
+            var collider = sourceEnemy.GetComponent<Collider>();
+            float skin = (collider != null ? collider.contactOffset : 0) + (player.HitCollider != null ? player.HitCollider.contactOffset : 0);
+            if (!CombatHitGeometry.BoundsTouchCollider(CombatHitGeometry.EnemyBodyBounds(sourceEnemy), player.HitCollider, skin)) return false;
+
             float healthBefore = health.CurrentHealth;
-            health.TakeDamage(damage, sourceEnemy);
+            health.TakeDamage(sourceEnemy.CreateContactDamage(damage));
             bool hitApplied = health.CurrentHealth < healthBefore || health.IsInvincible;
             if (!hitApplied)
             {

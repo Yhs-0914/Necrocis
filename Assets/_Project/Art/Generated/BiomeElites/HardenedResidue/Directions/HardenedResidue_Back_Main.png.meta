@@ -1,0 +1,370 @@
+fileFormatVersion: 2
+guid: b4c7388f287264ec69c7dac2a94db4b9
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 143
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_00
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 735
+        width: 283
+        height: 193
+      alignment: 9
+      pivot: {x: 0.49823323, y: 0.015544041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ad741a676f8845c297bf3b4bdc23de6
+      internalID: -580594138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_01
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 735
+        width: 283
+        height: 193
+      alignment: 9
+      pivot: {x: 0.5017668, y: 0.015544041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b8b0c210ef6f4399857fc5ff802448b
+      internalID: 1386936673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_02
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 735
+        width: 282
+        height: 194
+      alignment: 9
+      pivot: {x: 0.5035461, y: 0.0154639175}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 721f79c9600954f349802c91f4d3e01e
+      internalID: 1967996966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1140
+        y: 735
+        width: 282
+        height: 193
+      alignment: 9
+      pivot: {x: 0.5070922, y: 0.015544041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d7c86803f4534434852201a13e74463
+      internalID: 1724852540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_04
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 375
+        width: 283
+        height: 187
+      alignment: 9
+      pivot: {x: 0.49823323, y: 0.01604278}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4459707d61b44939a47bec9d9bc0ff3
+      internalID: 147148259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_05
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 375
+        width: 283
+        height: 251
+      alignment: 9
+      pivot: {x: 0.5017668, y: 0.011952192}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee454c7483a4f4eae91cb5a3403c7b96
+      internalID: 1461728812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_06
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 375
+        width: 282
+        height: 274
+      alignment: 9
+      pivot: {x: 0.5035461, y: 0.010948905}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b6c0b7606e464433ac95de10a82d9ce
+      internalID: 1815257069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_07
+      rect:
+        serializedVersion: 2
+        x: 1140
+        y: 375
+        width: 282
+        height: 306
+      alignment: 9
+      pivot: {x: 0.5070922, y: 0.009803922}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8716f89a3c55745b3be0c974bdd35db8
+      internalID: -1430419737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_08
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 63
+        width: 283
+        height: 189
+      alignment: 9
+      pivot: {x: 0.49823323, y: 0.015873017}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad788432a5f134a37a8b568007d59ea7
+      internalID: -729925325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_09
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 64
+        width: 283
+        height: 188
+      alignment: 9
+      pivot: {x: 0.5017668, y: 0.015957447}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 408f6f5778e574ddeb6c25b4d3bf9b01
+      internalID: 1844399528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HardenedResidue_Back_Main_10
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 64
+        width: 282
+        height: 162
+      alignment: 9
+      pivot: {x: 0.5035461, y: 0.018518519}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb5387dcc943b4af583d16963d0cd12f
+      internalID: -1207307774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 3be46d0a6876c43bfbf8c5db7466a62b
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HardenedResidue_Back_Main_00: -580594138
+      HardenedResidue_Back_Main_01: 1386936673
+      HardenedResidue_Back_Main_02: 1967996966
+      HardenedResidue_Back_Main_03: 1724852540
+      HardenedResidue_Back_Main_04: 147148259
+      HardenedResidue_Back_Main_05: 1461728812
+      HardenedResidue_Back_Main_06: 1815257069
+      HardenedResidue_Back_Main_07: -1430419737
+      HardenedResidue_Back_Main_08: -729925325
+      HardenedResidue_Back_Main_09: 1844399528
+      HardenedResidue_Back_Main_10: -1207307774
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

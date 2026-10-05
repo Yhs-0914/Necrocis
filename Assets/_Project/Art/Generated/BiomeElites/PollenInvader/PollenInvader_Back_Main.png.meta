@@ -1,0 +1,347 @@
+fileFormatVersion: 2
+guid: a5e8678526db0425799661882a69b77b
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 144
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_00
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 436
+        width: 281
+        height: 274
+      alignment: 9
+      pivot: {x: 0.48754448, y: 0.032846715}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49bc6e779eb4e44b58770963d1923afc
+      internalID: -705502975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_01
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 436
+        width: 283
+        height: 274
+      alignment: 9
+      pivot: {x: 0.48056537, y: 0.032846715}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef8e83654a0c5438ca110f83e0a73da7
+      internalID: 426958192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_02
+      rect:
+        serializedVersion: 2
+        x: 856
+        y: 429
+        width: 282
+        height: 248
+      alignment: 9
+      pivot: {x: 0.4787234, y: 0.03629032}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2736e363c4384e5ab6ff8722f5c5866
+      internalID: -1288789764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1242
+        y: 442
+        width: 283
+        height: 279
+      alignment: 9
+      pivot: {x: 0.48409894, y: 0.032258064}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a0ed8406812b40e29461821e52f5246
+      internalID: 1042948625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_04
+      rect:
+        serializedVersion: 2
+        x: 1629
+        y: 435
+        width: 283
+        height: 284
+      alignment: 9
+      pivot: {x: 0.48409894, y: 0.03169014}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e2bb8ff8f1a1241e484c92a93094e42f
+      internalID: 1565122174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_05
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 67
+        width: 283
+        height: 284
+      alignment: 9
+      pivot: {x: 0.48409894, y: 0.03169014}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fb375eac0e07d47d49af776f74b743be
+      internalID: -437987456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_06
+      rect:
+        serializedVersion: 2
+        x: 459
+        y: 67
+        width: 283
+        height: 297
+      alignment: 9
+      pivot: {x: 0.4876325, y: 0.030303031}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7885c91807904aba958ee198b99d965
+      internalID: -833933394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_07
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 67
+        width: 286
+        height: 284
+      alignment: 9
+      pivot: {x: 0.4965035, y: 0.03169014}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c2fa67ec6a394f8698aff52ab6d530c
+      internalID: 1448112453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_08
+      rect:
+        serializedVersion: 2
+        x: 1242
+        y: 67
+        width: 283
+        height: 277
+      alignment: 9
+      pivot: {x: 0.48056537, y: 0.032490976}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dad320ea5ed1c4b6c9b4ffaa89904a7c
+      internalID: -611594440
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Back_Main_09
+      rect:
+        serializedVersion: 2
+        x: 1636
+        y: 66
+        width: 301
+        height: 275
+      alignment: 9
+      pivot: {x: 0.44850498, y: 0.03272727}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3c660a2e242f449ba12f4a93d71b25e
+      internalID: 2126739636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: b74737b3e6fb1440c84884bb16b395a7
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      PollenInvader_Back_Main_00: -705502975
+      PollenInvader_Back_Main_01: 426958192
+      PollenInvader_Back_Main_02: -1288789764
+      PollenInvader_Back_Main_03: 1042948625
+      PollenInvader_Back_Main_04: 1565122174
+      PollenInvader_Back_Main_05: -437987456
+      PollenInvader_Back_Main_06: -833933394
+      PollenInvader_Back_Main_07: 1448112453
+      PollenInvader_Back_Main_08: -611594440
+      PollenInvader_Back_Main_09: 2126739636
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

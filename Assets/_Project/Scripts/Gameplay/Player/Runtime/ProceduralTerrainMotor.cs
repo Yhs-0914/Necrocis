@@ -51,6 +51,7 @@ namespace Necrocis
 
         public bool CanMove(Vector3 current, Vector3 target)
         {
+            if (!ResidueRubble.CanTraverse(current, target, terrainHalfExtents)) return false;
             if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(current, target, terrainHalfExtents))
             {
                 return false;
@@ -109,6 +110,7 @@ namespace Necrocis
 
         private void StartTraversal(Vector3 destination, bool lavaJump)
         {
+            if (!ResidueRubble.CanTraverse(transform.position, destination, terrainHalfExtents)) { ResetHold(); return; }
             if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(
                     transform.position,
                     destination,

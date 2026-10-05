@@ -50,15 +50,18 @@ MonoBehaviour:
       accentColor: {r: 0.82, g: 0.48, b: 0.16, a: 1}
       lockedColor: {r: 0.92, g: 0.12, b: 0.08, a: 1}
       clearedColor: {r: 0.34, g: 0.32, b: 0.3, a: 1}
+    returnPortalSprite: {fileID: 0}
+    returnPortalScale: {x: 1, y: 1, z: 1}
     boss:
       displayName: LungBoss
       useCustomBossRule: 1
       bossRule:
+        monsterDefinition: {fileID: 11400000, guid: ef3ce2ce13fe04147ae8c692cecec940, type: 2}
         name: LungBoss
         density: 0
         minDistance: 7
         poissonSalt: 7304
-        allowedRegions:
+        allowedRegions: 
         maxAlive: 2
         activationRadius: 0
         respawnCooldown: 0
@@ -95,11 +98,15 @@ MonoBehaviour:
         - {fileID: 110100002, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
         - {fileID: 110100003, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
         - {fileID: 110100004, guid: bc4c6a442be3e41c9ba0365368428a29, type: 3}
+        idleSpritesUp: []
+        idleSpritesDown: []
         moveSprites:
         - {fileID: 110200001, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
         - {fileID: 110200002, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
         - {fileID: 110200003, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
         - {fileID: 110200004, guid: b9872e4ed138c4dd9bbc12db7e50cc03, type: 3}
+        moveSpritesUp: []
+        moveSpritesDown: []
         attackSprites:
         - {fileID: 110300001, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
         - {fileID: 110300002, guid: a0b1e6abfa69841d2a4367d31964b169, type: 3}
@@ -130,11 +137,11 @@ MonoBehaviour:
         deathAnimationSpeed: 0.15
         isElite: 0
         tintColor: {r: 1, g: 1, b: 1, a: 1}
-        killTriggerEnemyName:
+        killTriggerEnemyName: 
         killTriggerCount: 0
         splitsOnDeath: 0
         splitCount: 0
-        splitEnemyName:
+        splitEnemyName: 
         splitVfxSprites: []
         splitVfxScale: 3
         splitVfxSpeed: 0.08
@@ -147,6 +154,7 @@ MonoBehaviour:
         debrisAggroRadius: 8
         debrisVfxSprites: []
         debrisVfxScale: 15
+        debrisVfxSpeed: 0.12
       useEnemyRuleFallback: 1
       fallbackEnemyRuleIndex: 0
       patternType: 5
@@ -177,6 +185,7 @@ MonoBehaviour:
         parasiteMaxCount: 3
         parasiteSpawnDelay: 0.45
         parasiteSpawnRadius: 1.1
+        parasiteDefinition: {fileID: 0}
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
@@ -195,11 +204,87 @@ MonoBehaviour:
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1
+      liverPattern:
+        phase2HealthRatio: 0.5
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        phase2AttackDamage: 2
+        phase2MoveSpeed: 1.5
+        bloodBombRange: 7
+        bloodBombExplosionRadius: 2.5
+        bloodBombFuseTime: 1
+        bloodBombCooldown: 4
+        attackPowerDebuffRatio: 0.15
+        attackPowerDebuffDuration: 5
+        bloodBombArcHeight: 1.4
+        bloodBombProjectileScale: 1.15
+        bloodBombSprite: {fileID: 0}
+        healingPosePreDelay: 1
+        healingPoseCooldown: 15
+        healingPoseDuration: 5
+        damageHealRatio: 0.7
+        healingPoseLowerSprites: []
+        healingPoseLowerSpritesDown: []
+        healingPoseRaiseSprites: []
+        healingPoseRaiseSpritesDown: []
+        healingPoseAnimationSpeed: 0.12
+        phase1PreferredDistanceRatio: 0.72
+        phase2PreferredDistance: 2.6
+        roamRadius: 9
+        bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
+        explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      stomachPattern:
+        phase2HealthRatio: 0.65
+        phase1AttackDamage: 3
+        phase1MoveSpeed: 0.5
+        phase2AttackDamage: 3
+        phase2MoveSpeed: 1
+        phase1MeleeRange: 1.6
+        phase1MeleeCooldown: 1.7
+        chargeSpeed: 4
+        chargeCooldown: 5
+        chargeDamage: 4
+        chargeKnockbackDistance: 2
+        chargeWindup: 0.35
+        chargeDuration: 1.2
+        chargeHitRadius: 1.25
+        phase2PatternInterval: 3
+        phase2PreferredDistance: 4
+        roamRadius: 9
+        acidRange: 9
+        acidDamage: 2
+        acidDebuffDuration: 5
+        acidTickInterval: 1
+        acidTickDamage: 1
+        acidProjectileTravelTime: 0.55
+        acidArcHeight: 0.8
+        acidProjectileScale: 0.9
+        acidHitRadius: 1.15
+        suctionRange: 4.2
+        suctionDuration: 0.4
+        suctionStopDistance: 1
+        spitDelay: 0.35
+        spitReturnDuration: 0.18
+        shortRangeDamage: 5
+        shortRangeRadius: 2.2
+        suctionAttackSprites: []
+        suctionAttackAnimationSpeed: 0.08
+        acidColor: {r: 0.55, g: 0.95, b: 0.15, a: 0.95}
+        acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
+        suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
+        leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
       lungPattern:
         phase1BrotherHealth: 40
         phase1AttackDamage: 2
         phase1MoveSpeed: 1
         windGustMoveSpeed: 3
+        windGustSpeedMultiplier: 3
         windGustInterval: 5
         windGustDuration: 1.25
         brotherSpacing: 3.2

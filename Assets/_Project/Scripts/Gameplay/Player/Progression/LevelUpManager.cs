@@ -63,14 +63,15 @@ namespace Necrocis
         // 적별 보상값과 난이도별 경험치 배율을 함께 적용합니다.
         public static void AddEnemyKillExp(int amount, float rewardMultiplier)
         {
-            EnsureExpRequirementInitialized();
-            if (currentLevel >= Config.MaxLevel) return;
-            if (IsWaitingForJobSelection()) return;
+            AddResolvedEnemyKillExp(Mathf.Max(0, Mathf.RoundToInt(Mathf.Max(0, amount) * Mathf.Max(0f, rewardMultiplier))));
+        }
 
-            int enemyKillExp = Mathf.Max(
-                0,
-                Mathf.RoundToInt(Mathf.Max(0, amount) * Mathf.Max(0f, rewardMultiplier)));
-            if (enemyKillExp == 0) return;
+        // Already rounded by MonsterBalanceResolver; never apply the player's level gain multiplier.
+        public static void AddResolvedEnemyKillExp(int enemyKillExp)
+        {
+            EnsureExpRequirementInitialized();
+            if (currentLevel >= Config.MaxLevel || IsWaitingForJobSelection()) return;
+            if (enemyKillExp <= 0) return;
 
             currentExp += enemyKillExp;
             OnExpGained?.Invoke(enemyKillExp);

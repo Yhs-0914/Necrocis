@@ -11,10 +11,10 @@ namespace Necrocis
         [Range(0.1f, 0.9f)] public float phase2HealthRatio = 0.5f;
 
         [Header("Stats")]
-        public float phase1AttackDamage = 2f;
-        public float phase1MoveSpeed = 1f;
-        public float phase2AttackDamage = 2f;
-        public float phase2MoveSpeed = 1.5f;
+        [HideInInspector] public float phase1AttackDamage = 2f;
+        [HideInInspector] public float phase1MoveSpeed = 1f;
+        [HideInInspector] public float phase2AttackDamage = 2f;
+        [HideInInspector] public float phase2MoveSpeed = 1.5f;
 
         [Header("Blood Bomb")]
         public float bloodBombRange = 7f;
@@ -68,10 +68,10 @@ namespace Necrocis
         [SerializeField, Range(0.1f, 0.9f)] private float phase2HealthRatio = 0.5f;
 
         [Header("Stats")]
-        [SerializeField] private float phase1AttackDamage = 2f;
-        [SerializeField] private float phase1MoveSpeed = 1f;
-        [SerializeField] private float phase2AttackDamage = 2f;
-        [SerializeField] private float phase2MoveSpeed = 1.5f;
+        [SerializeField, HideInInspector] private float phase1AttackDamage = 2f;
+        [SerializeField, HideInInspector] private float phase1MoveSpeed = 1f;
+        [SerializeField, HideInInspector] private float phase2AttackDamage = 2f;
+        [SerializeField, HideInInspector] private float phase2MoveSpeed = 1.5f;
 
         [Header("Blood Bomb")]
         [SerializeField] private float bloodBombRange = 7f;
@@ -388,6 +388,7 @@ namespace Necrocis
                 : transform.position + GetDirectionToPlayer() * bloodBombRange;
             target.y = GetGroundHeight(target) + 0.05f;
 
+            EnemyDamageRequest damage = boss.CreatePatternDamage("blood-bomb", phase1AttackDamage);
             AudioManager.Instance?.PlaySFX("LiverBloodThrow");
             GameObject projectile = CreateTempSpriteObject(
                 "LiverBoss_BloodBomb",
@@ -417,7 +418,7 @@ namespace Necrocis
                 ReleaseTempSprite(projectile);
             }
 
-            ExplodeBloodBomb(target);
+            ExplodeBloodBomb(target, damage);
             actionRunning = false;
         }
 
@@ -521,7 +522,7 @@ namespace Necrocis
             return frames != null && frames.Length > 0;
         }
 
-        private void ExplodeBloodBomb(Vector3 center)
+        private void ExplodeBloodBomb(Vector3 center, EnemyDamageRequest damage)
         {
             AudioManager.Instance?.PlaySFX("LiverBloodBurst");
             center.y = GetGroundHeight(center) + 0.08f;
@@ -547,7 +548,7 @@ namespace Necrocis
                 return;
             }
 
-            player.TakeDamage(phase1AttackDamage);
+            player.TakeDamage(damage);
             ApplyPlayerAttackPowerReduction(player, attackPowerDebuffRatio, attackPowerDebuffDuration);
         }
 
@@ -592,6 +593,11 @@ namespace Necrocis
 
         private void ApplyPhaseStats()
         {
+            if (boss != null && boss.Balance != null)
+            {
+                boss.ApplyBalancePhase(phase == BossPhase.Phase2 ? "Phase2" : "Default");
+                return;
+            }
             if (stats == null)
             {
                 return;
@@ -686,16 +692,16 @@ namespace Necrocis
 
         private float GetBloodBombCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, bloodBombCooldown);
+                : Mathf.Max(0f, bloodBombCooldown));
         }
 
         private float GetHealingPoseCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, healingPoseCooldown);
+                : Mathf.Max(0f, healingPoseCooldown));
         }
 
         private Vector3 GetDirectionToPlayer()

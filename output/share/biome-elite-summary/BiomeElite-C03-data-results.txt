@@ -1,0 +1,3 @@
+PASS deterministic whole-map count, both types, reachability, entrance/boss exclusion, shared spacing, shortage and zero count
+PASS placement/kill disk persistence, duplicate guard, visit freeze/continue/reentry, Normal retention, Hard isolation and old-run callback rejection
+PASS schema v1 without new collections loads safely and does not invent kill IDs

@@ -1,0 +1,727 @@
+{
+  "pass": 448,
+  "fail": 0,
+  "maps": 40,
+  "runs": [
+    {
+      "biome": "Intestine",
+      "seed": 0,
+      "count": 2,
+      "distance": 257.126434,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 77,
+          "y": 290
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 110,
+          "y": 35
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 1,
+      "count": 2,
+      "distance": 138.884842,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 41,
+          "y": 101
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 1,
+          "y": 234
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 17,
+      "count": 2,
+      "distance": 167.107742,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 42,
+          "y": 282
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 48,
+          "y": 115
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 521,
+      "count": 2,
+      "distance": 195.489136,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 107,
+          "y": 298
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 253,
+          "y": 168
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 7919,
+      "count": 2,
+      "distance": 204.0,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 49,
+          "y": 155
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 229,
+          "y": 59
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 118692,
+      "count": 2,
+      "distance": 274.43396,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 286,
+          "y": 272
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 141,
+          "y": 39
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 20261005,
+      "count": 2,
+      "distance": 183.174774,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 17,
+          "y": 65
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 200,
+          "y": 57
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 999999,
+      "count": 2,
+      "distance": 136.795471,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 257,
+          "y": 245
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 124,
+          "y": 213
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 42941,
+      "count": 2,
+      "distance": 113.15918,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 252,
+          "y": 117
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 258,
+          "y": 230
+        }
+      ]
+    },
+    {
+      "biome": "Intestine",
+      "seed": 73313,
+      "count": 2,
+      "distance": 212.200378,
+      "placements": [
+        {
+          "monsterId": "elite.i-01",
+          "x": 199,
+          "y": 178
+        },
+        {
+          "monsterId": "elite.i-02",
+          "x": 29,
+          "y": 51
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 0,
+      "count": 2,
+      "distance": 152.0,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 182,
+          "y": 204
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 182,
+          "y": 52
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 1,
+      "count": 2,
+      "distance": 182.258057,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 235,
+          "y": 286
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 68,
+          "y": 213
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 17,
+      "count": 2,
+      "distance": 111.758667,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 204,
+          "y": 230
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 281,
+          "y": 149
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 521,
+      "count": 2,
+      "distance": 171.8284,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 130,
+          "y": 109
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 252,
+          "y": 230
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 7919,
+      "count": 2,
+      "distance": 220.581055,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 241,
+          "y": 180
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 21,
+          "y": 164
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 118692,
+      "count": 2,
+      "distance": 199.010056,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 278,
+          "y": 223
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 189,
+          "y": 45
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 20261005,
+      "count": 2,
+      "distance": 191.541122,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 105,
+          "y": 184
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 13,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 999999,
+      "count": 2,
+      "distance": 111.946419,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 150,
+          "y": 231
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 234,
+          "y": 157
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 42941,
+      "count": 2,
+      "distance": 248.901581,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 229,
+          "y": 260
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 53,
+          "y": 84
+        }
+      ]
+    },
+    {
+      "biome": "Liver",
+      "seed": 73313,
+      "count": 2,
+      "distance": 286.735077,
+      "placements": [
+        {
+          "monsterId": "elite.h-02",
+          "x": 55,
+          "y": 292
+        },
+        {
+          "monsterId": "elite.h-03",
+          "x": 234,
+          "y": 68
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 0,
+      "count": 2,
+      "distance": 145.962326,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 102,
+          "y": 16
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 25,
+          "y": 140
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 1,
+      "count": 2,
+      "distance": 316.425354,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 234,
+          "y": 60
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 21,
+          "y": 294
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 17,
+      "count": 2,
+      "distance": 140.929062,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 288,
+          "y": 138
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 183,
+          "y": 232
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 521,
+      "count": 2,
+      "distance": 269.742462,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 276,
+          "y": 72
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 7,
+          "y": 52
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 7919,
+      "count": 2,
+      "distance": 255.515167,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 216,
+          "y": 16
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 134,
+          "y": 258
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 118692,
+      "count": 2,
+      "distance": 233.623627,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 248,
+          "y": 130
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 30,
+          "y": 46
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 20261005,
+      "count": 2,
+      "distance": 123.975807,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 102,
+          "y": 97
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 171,
+          "y": 200
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 999999,
+      "count": 2,
+      "distance": 123.0,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 106,
+          "y": 151
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 79,
+          "y": 31
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 42941,
+      "count": 2,
+      "distance": 114.337219,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 233,
+          "y": 259
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 121,
+          "y": 236
+        }
+      ]
+    },
+    {
+      "biome": "Lung",
+      "seed": 73313,
+      "count": 2,
+      "distance": 149.696365,
+      "placements": [
+        {
+          "monsterId": "elite.p-01",
+          "x": 246,
+          "y": 67
+        },
+        {
+          "monsterId": "elite.p-03",
+          "x": 193,
+          "y": 207
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 0,
+      "count": 2,
+      "distance": 226.002213,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 55,
+          "y": 159
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 281,
+          "y": 160
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 1,
+      "count": 2,
+      "distance": 100.44899,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 252,
+          "y": 164
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 269,
+          "y": 263
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 17,
+      "count": 2,
+      "distance": 196.114761,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 247,
+          "y": 224
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 141,
+          "y": 59
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 521,
+      "count": 2,
+      "distance": 166.979034,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 52,
+          "y": 215
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 211,
+          "y": 266
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 7919,
+      "count": 2,
+      "distance": 146.112976,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 266,
+          "y": 79
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 236,
+          "y": 222
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 118692,
+      "count": 2,
+      "distance": 186.62529,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 47,
+          "y": 88
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 217,
+          "y": 11
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 20261005,
+      "count": 2,
+      "distance": 140.0,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 279,
+          "y": 160
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 195,
+          "y": 272
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 999999,
+      "count": 2,
+      "distance": 175.635986,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 19,
+          "y": 157
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 171,
+          "y": 245
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 42941,
+      "count": 2,
+      "distance": 236.1292,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 186,
+          "y": 65
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 7,
+          "y": 219
+        }
+      ]
+    },
+    {
+      "biome": "Stomach",
+      "seed": 73313,
+      "count": 2,
+      "distance": 211.426117,
+      "placements": [
+        {
+          "monsterId": "elite.s-01",
+          "x": 207,
+          "y": 18
+        },
+        {
+          "monsterId": "elite.s-03",
+          "x": 58,
+          "y": 168
+        }
+      ]
+    }
+  ]
+}

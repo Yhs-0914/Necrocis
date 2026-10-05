@@ -22,6 +22,7 @@
 *.csproj
 *.unityproj
 *.sln
+*.slnx
 *.suo
 *.tmp
 *.user
@@ -73,3 +74,21 @@ Thumbs.db
 
 # Unity recovery backups
 Assets/_Recovery/
+Assets/_Recovery.meta
+
+# Local development tools
+.claude/
+.codex/
+.playwright-mcp/
+ProjectSettings/VARCOSoundEditorState.asset
+*.wlt
+*.wlt.meta
+
+# Local preview exports
+Exports/
+
+# Generated art previews; keep the compact team summary and verification results
+output/*
+!output/share/
+output/share/*
+!output/share/biome-elite-summary/

@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 054336223fa82498eae30de3eb2e2078, type: 3}
+  m_Name: HangoverRemnant_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.HangoverRemnantPresentation
+  idleFrames:
+  - {fileID: 1974511402, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  - {fileID: 447575710, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  moveFrames:
+  - {fileID: -1104810462, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  - {fileID: -120771146, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  preparationFrames:
+  - {fileID: -2131443584, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  - {fileID: 1189458009, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  - {fileID: -110239556, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  retreatFrames:
+  - {fileID: -1938983592, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  - {fileID: -1237552049, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  deathFrames:
+  - {fileID: -927220562, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  - {fileID: -1992270788, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  - {fileID: 1462395041, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  - {fileID: 363302084, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  - {fileID: 1063202849, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  - {fileID: -1089862696, guid: faa286976bc35446e996a731c8970dd3, type: 3}
+  remnantFrames:
+  - {fileID: 981281460, guid: 6c21aea053f0f44e791c883d19c74b6b, type: 3}
+  - {fileID: -1810483751, guid: 6c21aea053f0f44e791c883d19c74b6b, type: 3}
+  burstFrames:
+  - {fileID: -1927316742, guid: 0a2ae2f57511e495283f54b812739d0b, type: 3}
+  - {fileID: -519618962, guid: 0a2ae2f57511e495283f54b812739d0b, type: 3}
+  - {fileID: -733189406, guid: 0a2ae2f57511e495283f54b812739d0b, type: 3}
+  - {fileID: 1434786242, guid: 0a2ae2f57511e495283f54b812739d0b, type: 3}
+  release: {fileID: -1574290990, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  recovery: {fileID: 1271095928, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  hit: {fileID: -1285768803, guid: 6d25e5f0d1b21445e8fa807cf49cb833, type: 3}
+  groundDisc: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  idleFrameSeconds: 0.35
+  moveFrameSeconds: 0.22
+  releaseFrameSeconds: 0.1
+  retreatFrameSeconds: 0.2
+  deathFrameSeconds: 0.14
+  remnantFrameSeconds: 0.18
+  burstFrameSeconds: 0.1
+  dangerFillColor: {r: 0.92, g: 0.04, b: 0.04, a: 0.3}
+  groundShadowSize: {x: 1.45, y: 0.8}
+  groundShadowColor: {r: 0.14, g: 0.065, b: 0.12, a: 0.28}

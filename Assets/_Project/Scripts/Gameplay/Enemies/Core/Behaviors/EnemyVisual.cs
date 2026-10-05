@@ -5,6 +5,35 @@ namespace Necrocis
 {
     public partial class EnemyController
     {
+        public void AlignPatternFeetToGround()
+        {
+            if (billboard != null && config.useBillboard)
+                billboard.ResetBaseLocalPosition(Vector3.down * billboard.YOffset);
+            else if (visualRoot != null) visualRoot.localPosition = Vector3.zero;
+        }
+
+        public void SetPatternFrame(Sprite frame)
+        {
+            if (spriteRenderer == null || frame == null || deathAnimPlaying || IsDead) return;
+            Sprite resolved = patternDirections != null ? patternDirections.Resolve(frame, patternFacing) : frame;
+            animatedSprite.Stop();
+            animatedSprite.enabled = false;
+            currentLoopFrames = null;
+            usingMoveAnimation = true;
+            patternSourceFrame = frame;
+            spriteRenderer.sprite = resolved;
+        }
+
+        public void SetPatternFacing(Vector3 direction, bool authoredFacingLeft = true)
+        {
+            if (spriteRenderer == null || patternFacingLocked || deathAnimPlaying || IsDead) return;
+            if (ApplyPatternDirection(direction)) return;
+            direction.y = 0;
+            Camera camera = DontStarveCamera.GetActiveCamera();
+            float horizontal = camera != null ? Vector3.Dot(direction, camera.transform.right) : direction.x;
+            if (Mathf.Abs(horizontal) <= .01f) return; // Keep the last side when the target is directly above/below.
+            spriteRenderer.flipX = authoredFacingLeft ? horizontal > 0 : horizontal < 0;
+        }
 
         public void UpdateFacingDirection()
         {
@@ -20,7 +49,7 @@ namespace Necrocis
 
         public void PlayDeathAnimation(System.Action onComplete)
         {
-            Sprite[] deathFrames = config != null ? config.deathSprites : null;
+            Sprite[] deathFrames = ResolvePatternDeathFrames(config != null ? config.deathSprites : null);
             if (deathFrames == null || deathFrames.Length == 0)
             {
                 onComplete?.Invoke();
@@ -275,17 +304,19 @@ namespace Necrocis
             statConfigurationBuffer.Clear();
             statConfigurationBuffer.Add(new CharacterStatValue(
                 CharacterStatType.MoveSpeed,
-                config.moveSpeed * Mathf.Max(0.01f, balance.moveSpeed)));
+                Balance != null ? Balance.Current.MoveSpeed : config.moveSpeed * Mathf.Max(0.01f, balance.moveSpeed)));
             statConfigurationBuffer.Add(new CharacterStatValue(
                 CharacterStatType.MaxHealth,
-                config.maxHealth * Mathf.Max(0.01f, balance.maxHealth)));
-            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, config.attackDamage));
+                Balance != null ? Mathf.Max(1f, Balance.Current.MaxHealth) : config.maxHealth * Mathf.Max(0.01f, balance.maxHealth)));
+            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, Balance != null ? Balance.Current.AttackPower : config.attackDamage));
 
             List<CharacterStatValue> additionalStats = config.additionalBaseStats;
             if (additionalStats != null)
             {
                 for (int i = 0; i < additionalStats.Count; i++)
                 {
+                    CharacterStatType type = additionalStats[i].statType;
+                    if (Balance != null && (type == CharacterStatType.MaxHealth || type == CharacterStatType.AttackPower || type == CharacterStatType.MoveSpeed)) continue;
                     statConfigurationBuffer.Add(additionalStats[i]);
                 }
             }

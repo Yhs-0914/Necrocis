@@ -22,6 +22,9 @@ namespace Necrocis
         [Header("Normal Enemies")]
         public EnemyDifficultyBalance enemies = new EnemyDifficultyBalance();
 
+        [Header("Elite Enemies")]
+        public EnemyDifficultyBalance elites = new EnemyDifficultyBalance();
+
         [Header("Bosses")]
         public EnemyDifficultyBalance bosses = new EnemyDifficultyBalance();
 

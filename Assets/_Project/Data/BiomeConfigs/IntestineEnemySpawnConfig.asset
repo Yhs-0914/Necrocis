@@ -14,11 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   normalKillsPerElite: 10
   enemySpawnRules:
-  - name: Macrophage
+  - monsterDefinition: {fileID: 11400000, guid: 650bae08b30304f06acc8eb4119faeac, type: 2}
+    name: Macrophage
     density: 0.05
     minDistance: 6
     poissonSalt: 501
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 5
@@ -59,6 +60,8 @@ MonoBehaviour:
     - {fileID: 1225240302, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
     - {fileID: -468804449, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
     - {fileID: -1337087085, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 1979966403, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 1534210158, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
@@ -69,6 +72,8 @@ MonoBehaviour:
     - {fileID: -686505990, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 109867631, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 373557875, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: -219287335, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
     - {fileID: -971799592, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
@@ -79,6 +84,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.12
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 1
     attackColliderSize: {x: 2.2, y: 2, z: 2.2}
     attackColliderCenter: {x: 0, y: 0.55, z: 0}
@@ -91,19 +102,17 @@ MonoBehaviour:
     - {fileID: 1018222662, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
     - {fileID: 72321375, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
     deathAnimationSpeed: 0.15
-    isRanged: 0
-    projectileSpeed: 8
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
-    projectileSpawnOffset: 0.5
     isElite: 0
-    killTriggerEnemyName:
-    killTriggerCount: 5
     tintColor: {r: 1, g: 1, b: 1, a: 1}
+    killTriggerEnemyName: 
+    killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -113,11 +122,12 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: NKCell
+  - monsterDefinition: {fileID: 11400000, guid: b025256d6048b45cba4d3e38214b1bac, type: 2}
+    name: NKCell
     density: 0.07
     minDistance: 5
     poissonSalt: 502
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 3
     activationRadius: 58
     respawnCooldown: 4
@@ -150,6 +160,8 @@ MonoBehaviour:
     colliderSize: {x: 0.65, y: 0.95, z: 0.65}
     colliderCenter: {x: 0, y: 0.48, z: 0}
     idleSprites: []
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: -1544605449, guid: 039cc8b607c89c64490f75aa76a051f0, type: 3}
     - {fileID: 2027095881, guid: 039cc8b607c89c64490f75aa76a051f0, type: 3}
@@ -157,6 +169,8 @@ MonoBehaviour:
     - {fileID: 1391394553, guid: 039cc8b607c89c64490f75aa76a051f0, type: 3}
     - {fileID: 337536432, guid: 039cc8b607c89c64490f75aa76a051f0, type: 3}
     - {fileID: -1652513432, guid: 039cc8b607c89c64490f75aa76a051f0, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 825505137, guid: 9d123d7e0d9bbf34a96cbf1b388f8094, type: 3}
     - {fileID: 571128862, guid: 9d123d7e0d9bbf34a96cbf1b388f8094, type: 3}
@@ -185,6 +199,12 @@ MonoBehaviour:
     - {fileID: -637370052, guid: f8aed745ee603ff4096407dde1eb3602, type: 3}
     - {fileID: 692280130, guid: f8aed745ee603ff4096407dde1eb3602, type: 3}
     attackAnimationSpeed: 0.1
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
     attackColliderCenter: {x: 0, y: 0.48, z: 0}
@@ -197,19 +217,17 @@ MonoBehaviour:
     - {fileID: 1290875614, guid: 7b7be8f1b3de1064895771ab3d76843f, type: 3}
     - {fileID: 291855256, guid: 7b7be8f1b3de1064895771ab3d76843f, type: 3}
     deathAnimationSpeed: 0.12
-    isRanged: 0
-    projectileSpeed: 8
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
-    projectileSpawnOffset: 0.5
     isElite: 0
-    killTriggerEnemyName:
-    killTriggerCount: 5
     tintColor: {r: 1, g: 1, b: 1, a: 1}
+    killTriggerEnemyName: 
+    killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -219,11 +237,12 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: BCell
+  - monsterDefinition: {fileID: 11400000, guid: 38da51144b79d46af83b7d0260844d36, type: 2}
+    name: BCell
     density: 0.04
     minDistance: 7
     poissonSalt: 503
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -264,6 +283,8 @@ MonoBehaviour:
     - {fileID: 1126141625, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -1527034294, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -1740408080, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 355525813, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -777785260, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
@@ -273,6 +294,8 @@ MonoBehaviour:
     - {fileID: 1126141625, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -1527034294, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
     - {fileID: -1740408080, guid: 04bdec1d73eb40c4ea4a39881ac00ea8, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: -993250770, guid: 2318814a73e859b48afb23381a76291a, type: 3}
     - {fileID: -972252379, guid: 2318814a73e859b48afb23381a76291a, type: 3}
@@ -285,6 +308,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.12
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.45, z: 0}
@@ -298,19 +327,17 @@ MonoBehaviour:
     - {fileID: -2116991119, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
     - {fileID: -1125953015, guid: 733bbb0dbbcce0b48ad8aadd1c2c762f, type: 3}
     deathAnimationSpeed: 0.15
-    isRanged: 1
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
-    killTriggerEnemyName:
-    killTriggerCount: 5
     tintColor: {r: 1, g: 1, b: 1, a: 1}
+    killTriggerEnemyName: 
+    killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -320,11 +347,12 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: Granuloma
+  - monsterDefinition: {fileID: 11400000, guid: 7ac5acdc9d7ad4d9f8c020f3491bb0e2, type: 2}
+    name: Granuloma
     density: 0.01
     minDistance: 15
     poissonSalt: 510
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 1
     activationRadius: 60
     respawnCooldown: 30
@@ -367,6 +395,8 @@ MonoBehaviour:
     - {fileID: 1225240302, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
     - {fileID: -468804449, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
     - {fileID: -1337087085, guid: 3e2e5d8192011494b9e071e033ae9adf, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 1979966403, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 1534210158, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
@@ -377,6 +407,8 @@ MonoBehaviour:
     - {fileID: -686505990, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 109867631, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
     - {fileID: 373557875, guid: f5c11e5ec545d5a48ad7039b9dd3cff5, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: -219287335, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
     - {fileID: -971799592, guid: 4dafe0200454bca46bf8bd010a4b7b3d, type: 3}
@@ -387,6 +419,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.12
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 1
     attackColliderSize: {x: 6, y: 4, z: 6}
     attackColliderCenter: {x: 0, y: 1.5, z: 0}
@@ -399,19 +437,17 @@ MonoBehaviour:
     - {fileID: 1018222662, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
     - {fileID: 72321375, guid: e71d8a9447a17c24a9f8687a83d15b05, type: 3}
     deathAnimationSpeed: 0.15
-    isRanged: 0
-    projectileSpeed: 8
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
-    projectileSpawnOffset: 0.5
     isElite: 1
+    tintColor: {r: 0.8, g: 0.4, b: 0.9, a: 1}
     killTriggerEnemyName: Macrophage
     killTriggerCount: 5
-    tintColor: {r: 0.8, g: 0.4, b: 0.9, a: 1}
     splitsOnDeath: 1
     splitCount: 2
     splitEnemyName: Macrophage
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -421,11 +457,12 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: Antibody
+  - monsterDefinition: {fileID: 11400000, guid: 9e12b36d011fb490ba7505d3e3219228, type: 2}
+    name: Antibody
     density: 0.01
     minDistance: 15
     poissonSalt: 520
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 1
     activationRadius: 60
     respawnCooldown: 30
@@ -468,6 +505,8 @@ MonoBehaviour:
     - {fileID: -2834552850196481573, guid: 6fc66c021eec74942b4e71a3fde4dc04, type: 3}
     - {fileID: 3278449094680734212, guid: 6fc66c021eec74942b4e71a3fde4dc04, type: 3}
     - {fileID: 3384493420599841878, guid: 6fc66c021eec74942b4e71a3fde4dc04, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 3743957659742367504, guid: a48b0037be4645c4c913e26853a053cf, type: 3}
     - {fileID: 8405476814967859603, guid: a48b0037be4645c4c913e26853a053cf, type: 3}
@@ -477,6 +516,8 @@ MonoBehaviour:
     - {fileID: 8831429847189535439, guid: a48b0037be4645c4c913e26853a053cf, type: 3}
     - {fileID: 2035570627030528938, guid: a48b0037be4645c4c913e26853a053cf, type: 3}
     - {fileID: 2303739067743378419, guid: a48b0037be4645c4c913e26853a053cf, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: -7008412969330441016, guid: d6b8c791d8089b44a9a8c5a7423bd180, type: 3}
     - {fileID: -7763475090823894447, guid: d6b8c791d8089b44a9a8c5a7423bd180, type: 3}
@@ -489,6 +530,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.1
+    isRanged: 0
+    projectileSpeed: 8
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.6, z: 0}
@@ -499,19 +546,17 @@ MonoBehaviour:
     - {fileID: 1400002288684528572, guid: 9d1b202d2fb768a45a36389da710721f, type: 3}
     - {fileID: -1891625820773287384, guid: 9d1b202d2fb768a45a36389da710721f, type: 3}
     deathAnimationSpeed: 0.15
-    isRanged: 0
-    projectileSpeed: 8
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.4, y: 0.4, z: 0.4}
-    projectileSpawnOffset: 0.5
     isElite: 1
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName: NKCell
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 1
     chargeSpeed: 6
     chargeAccelTime: 0.3

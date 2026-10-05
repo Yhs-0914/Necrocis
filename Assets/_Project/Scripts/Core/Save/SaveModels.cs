@@ -125,6 +125,9 @@ namespace Necrocis
     [Serializable]
     public sealed class WorldRunSaveData
     {
+        public MonsterVisitSaveData monsterVisit;
+        public List<BiomeElitePlan> biomeElitePlans = new List<BiomeElitePlan>();
+        public List<string> defeatedBiomeEliteIds = new List<string>();
         public int intestineSeed;
         public int liverSeed;
         public int stomachSeed;

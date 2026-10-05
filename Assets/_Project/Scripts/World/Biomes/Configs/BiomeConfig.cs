@@ -23,6 +23,9 @@ namespace Necrocis
         [Header("Tile Defaults")]
         public List<TileTypeMapping> tileMappings = new List<TileTypeMapping>();
 
+        [Header("Exterior Backdrop")]
+        public BiomeExteriorBackdropConfig exteriorBackdrop = new BiomeExteriorBackdropConfig();
+
         [Header("Object Spawn Area Padding")]
         public int marginLeft;
         public int marginRight;
@@ -34,6 +37,9 @@ namespace Necrocis
 
         [Header("Enemy Config")]
         public EnemySpawnConfig enemySpawnConfig;
+
+        [Header("Biome Elite Map Placement")]
+        public BiomeEliteSpawnConfig biomeEliteSpawnConfig;
 
         [SerializeField, HideInInspector]
         private List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();
@@ -122,6 +128,27 @@ namespace Necrocis
     }
 
     [System.Serializable]
+    public class BiomeExteriorBackdropConfig
+    {
+        public bool enabled;
+        public Sprite sprite;
+        public Color tint = Color.white;
+        [Range(0f, 1f)] public float opacity = 0.82f;
+        [Tooltip("배경 이미지 뒤에 남는 카메라 바탕색")]
+        public Color cameraClearColor = new Color(0.035f, 0.015f, 0.018f, 1f);
+        [Tooltip("플레이 공간보다 충분히 뒤에 배치할 카메라 기준 거리")]
+        [Min(1f)] public float cameraDistance = 50f;
+        [Tooltip("줌이나 화면비 변화 때 이미지 가장자리가 드러나지 않도록 추가로 키우는 배율")]
+        [Range(1f, 2f)] public float overscan = 1.2f;
+        [Tooltip("정적인 벽지처럼 보이지 않게 하는 아주 느린 화면 드리프트 크기")]
+        [Range(0f, 0.1f)] public float driftAmount = 0.015f;
+        [Min(0f)] public float driftSpeed = 0.08f;
+        public int sortingOrder = -32000;
+
+        public bool IsUsable => enabled && sprite != null;
+    }
+
+    [System.Serializable]
     public class BiomeObjectRuleConfig
     {
         public string name = "Object";
@@ -180,6 +207,10 @@ namespace Necrocis
     [System.Serializable]
     public class EnemySpawnRuleConfig
     {
+        public EnemySpawnRuleConfig CreateRuntimeCopy() => (EnemySpawnRuleConfig)MemberwiseClone();
+
+        [Tooltip("체력·공격력·이동속도·경험치·접촉 피해의 원본입니다. 배치/AI 값은 이 스폰 규칙에 둡니다.")]
+        public MonsterDefinition monsterDefinition;
         public string name = "Enemy";
 
         [Header("Poisson")]

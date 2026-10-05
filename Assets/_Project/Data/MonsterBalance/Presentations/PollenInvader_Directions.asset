@@ -1,0 +1,156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64f03e833dffa4bc2b1517bfac670f21, type: 3}
+  m_Name: PollenInvader_Directions
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.EnemyDirectionalPresentation
+  mode: 0
+  authoredFacingLeft: 0
+  boundaryHysteresisDegrees: 8
+  sideOrigin: {x: 0.52, y: 0.88}
+  frontOrigin: {x: 0, y: 0.85}
+  backOrigin: {x: 0, y: 1.42}
+  frontDiagonalOrigin: {x: 0, y: 0}
+  backDiagonalOrigin: {x: 0, y: 0}
+  frames:
+  - motion: 0
+    label: "\uB300\uAE30 1"
+    source: {fileID: 643661147, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: -935749099, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: -705502975, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 0
+    label: "\uB300\uAE30 2"
+    source: {fileID: -1946729462, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: 60405948, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: 426958192, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 5
+    label: "\uC774\uB3D9 1"
+    source: {fileID: -909238526, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: 1014557359, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: -1288789764, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 5
+    label: "\uC774\uB3D9 2"
+    source: {fileID: 1297340257, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: 1440949205, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: 1042948625, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uBC8C\uB9BC 1"
+    source: {fileID: 1751126969, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: 1774590826, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: 1565122174, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uBC8C\uB9BC 2"
+    source: {fileID: 899305464, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: -166900207, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: -437987456, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uBC8C\uB9BC 3"
+    source: {fileID: 877640471, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: -561993477, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: -833933394, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 6
+    label: "\uBC1C\uC0AC"
+    source: {fileID: -1359024641, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: 200493863, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: 1448112453, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 2
+    label: "\uB2EB\uD798"
+    source: {fileID: 1082300980, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: -2061705726, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: -611594440, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 3
+    label: "\uD53C\uACA9"
+    source: {fileID: -1854700926, guid: e90caccf679864b4eb647f40c05a384d, type: 3}
+    front: {fileID: -121494371, guid: 8dff81aa607ea48f8b66a35b4f895e65, type: 3}
+    back: {fileID: 2126739636, guid: a5e8678526db0425799661882a69b77b, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 0
+    source: {fileID: -1119665307, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: 2058314949, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: -173177778, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 1
+    source: {fileID: 1732210543, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: 364536714, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: -1669447247, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 2
+    source: {fileID: 197415923, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: 146526219, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: 1013075289, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 3
+    source: {fileID: -885827777, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: -1154601115, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: 831481563, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 4
+    source: {fileID: 1669978454, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: -872577790, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: -1023004345, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: Death 5
+    source: {fileID: -271410368, guid: 1c359765c7a6746aab9f242cb1bba7e5, type: 3}
+    front: {fileID: -112193924, guid: 89ae28b59217048c18b5e148feb9d8ee, type: 3}
+    back: {fileID: 247989410, guid: 6c57093468faf4b3e8105db0e6130e11, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "B \uD68C\uC804 \uC608\uACE0 1"
+    source: {fileID: 1226323195, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    front: {fileID: 2042652799, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    back: {fileID: -1479304399, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "B \uD68C\uC804 \uC608\uACE0 2"
+    source: {fileID: -1950821534, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    front: {fileID: -1564555907, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    back: {fileID: -1376581809, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "B \uD68C\uC804 \uC608\uACE0 3"
+    source: {fileID: -578218846, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    front: {fileID: 2020316752, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    back: {fileID: 707940816, guid: cd983ed3d777e43da9660550ed52bd96, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}

@@ -7,13 +7,7 @@ namespace Necrocis
     {
         [SerializeField] private bool logDamageToConsole;
 
-        private float DifficultyAttackCooldown =>
-            config != null
-                ? config.attackCooldown
-                  * Mathf.Max(
-                      0.01f,
-                      DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown)
-                : 0f;
+        private float DifficultyAttackCooldown => config != null ? GetRearmCooldown(config.attackCooldown) : 0f;
 
         public bool TryPerformAttack(float deltaTime)
         {
@@ -164,57 +158,20 @@ namespace Necrocis
             {
                 AudioManager.Instance?.PlaySFX("EnemyAttack");
             }
-            playerHealth.TakeDamage(damage, this);
+            player.TakeDamage(CreateAttackDamage(damage));
         }
 
 
         private bool CanMeleeDamagePlayer(PlayerController player)
         {
-            if (player == null || config == null)
-            {
-                return false;
-            }
-
-            if (!IsPlayerInAttackRange())
-            {
-                return false;
-            }
-
-            if (TryGetPlayerDamageBounds(player, out Bounds playerBounds)
-                && TryGetMeleeAttackBounds(out Bounds attackBounds))
-            {
-                if (BoundsOverlapPlanar(attackBounds, playerBounds))
-                {
-                    return true;
-                }
-            }
-
-            float fallbackRange = GetEffectiveMeleeAttackRange(player);
-            Vector3 toPlayer = player.transform.position - GetCurrentPosition();
-            toPlayer.y = 0f;
-            return toPlayer.sqrMagnitude <= fallbackRange * fallbackRange;
-        }
-
-
-        private bool TryGetPlayerDamageBounds(PlayerController player, out Bounds bounds)
-        {
-            bounds = default;
-            if (player == null)
-            {
-                return false;
-            }
-
-            Collider playerCollider = player.HitCollider;
-
-            if (playerCollider == null || !playerCollider.enabled)
-            {
-                return false;
-            }
-
-            bounds = playerCollider.bounds;
+            if (player == null || config == null) return false;
+            Vector3 delta = player.transform.position - GetCurrentPosition(); delta.y = 0;
+            float range = GetEffectiveMeleeAttackRange(player);
+            if (delta.sqrMagnitude > range * range) return false;
+            if (player.HitCollider != null && TryGetMeleeAttackBounds(out Bounds attackBounds))
+                return CombatHitGeometry.BoundsTouchCollider(attackBounds, player.HitCollider, MeleeContactSkin(player));
             return true;
         }
-
 
         private bool TryGetMeleeAttackBounds(out Bounds bounds)
         {
@@ -233,17 +190,7 @@ namespace Necrocis
 
             Vector3 scaledSize = Vector3.Scale(localSize, Abs(transform.lossyScale));
             bounds = new Bounds(transform.TransformPoint(localCenter), scaledSize);
-            bounds.Expand(new Vector3(0.2f, 0f, 0.2f));
             return true;
-        }
-
-
-        private static bool BoundsOverlapPlanar(Bounds a, Bounds b)
-        {
-            return a.min.x <= b.max.x
-                && a.max.x >= b.min.x
-                && a.min.z <= b.max.z
-                && a.max.z >= b.min.z;
         }
 
 
@@ -331,14 +278,17 @@ namespace Necrocis
 
         public void GrantExp()
         {
-            if (config == null) return;
+            if (config == null || experienceGranted) return;
+            experienceGranted = true;
+            if (SuppressExperienceReward) return;
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
-            LevelUpManager.AddEnemyKillExp(config.expReward, multiplier);
+            if (Balance != null) LevelUpManager.AddResolvedEnemyKillExp(Balance.Current.Experience);
+            else LevelUpManager.AddEnemyKillExp(config.expReward, multiplier);
 
             // 엘리트 스포너에 킬 알림
-            if (EliteSpawner.Instance != null && !config.isElite)
+            if (EliteSpawner.Instance != null && !IsElite && !IsBossEncounter)
             {
                 EliteSpawner.Instance.NotifyEnemyKilled(config.name);
             }

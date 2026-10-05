@@ -119,12 +119,17 @@ namespace Necrocis
         // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
         public void TakeDamage(float damageAmount, EnemyController sourceEnemy = null)
         {
+            TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damageAmount * DifficultyBalanceService.GetIncomingDamageMultiplier(sourceEnemy)), sourceEnemy));
+        }
+
+        public void TakeDamage(EnemyDamageRequest request)
+        {
+            float damageAmount = request.Amount;
+            EnemyController sourceEnemy = request.Source;
             if (isInvincible || IsDead || damageAmount <= 0f) return;
             if (Stats == null) return;
 
-            float actualDamage = Mathf.Max(
-                0f,
-                damageAmount * DifficultyBalanceService.GetIncomingDamageMultiplier(sourceEnemy));
+            float actualDamage = damageAmount;
             PlayerItemCombatEffects effects = ResolveItemEffects();
             if (effects != null)
             {

@@ -1,0 +1,669 @@
+fileFormatVersion: 2
+guid: cd99158670ee648f08044a111d363563
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OilFilm_Side_00
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 1340
+        width: 224
+        height: 87
+      alignment: 9
+      pivot: {x: 0.14732143, y: 0.29885057}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 436ad2677f35d422cba754af932717a1
+      internalID: -1801905610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_01
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 1340
+        width: 225
+        height: 85
+      alignment: 9
+      pivot: {x: 0.14222223, y: 0.29411766}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4756474eef29b459cb6f2c0a3b5d7cee
+      internalID: 1026679973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_02
+      rect:
+        serializedVersion: 2
+        x: 532
+        y: 1342
+        width: 216
+        height: 84
+      alignment: 9
+      pivot: {x: 0.15277778, y: 0.27380952}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 720be516b28bc4da093611e754e7f0aa
+      internalID: -1982778427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_03
+      rect:
+        serializedVersion: 2
+        x: 784
+        y: 1340
+        width: 222
+        height: 87
+      alignment: 9
+      pivot: {x: 0.14864865, y: 0.28735632}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: effe75dbe0a5d48c8ab855a60d46d661
+      internalID: -921579984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_04
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 1093
+        width: 220
+        height: 92
+      alignment: 9
+      pivot: {x: 0.15, y: 0.25}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60874b305583c4562be00f0cfd64cd7b
+      internalID: -723497002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_05
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 1087
+        width: 167
+        height: 90
+      alignment: 9
+      pivot: {x: 0.19760479, y: 0.32222223}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8967c705b7f914fb3a9caf378ccb11d5
+      internalID: -1036129220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_06
+      rect:
+        serializedVersion: 2
+        x: 550
+        y: 1087
+        width: 156
+        height: 91
+      alignment: 9
+      pivot: {x: 0.20512821, y: 0.35164836}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91fabc6b590de4152a0f2f9dbd4c3dc8
+      internalID: -395602479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_07
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 1086
+        width: 138
+        height: 93
+      alignment: 9
+      pivot: {x: 0.23913044, y: 0.34408602}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7b637f0ef71a462db92bafab5dc3cf6
+      internalID: 1560662416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_08
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 857
+        width: 140
+        height: 77
+      alignment: 9
+      pivot: {x: 0.23571429, y: 0.20779221}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b87837c0ef661487a9ec491c70e186a4
+      internalID: 290293244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_09
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 839
+        width: 215
+        height: 113
+      alignment: 9
+      pivot: {x: 0.15348837, y: 0.30973452}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7f6d92b20e854d4597024e6eb0574d5
+      internalID: -792528970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_10
+      rect:
+        serializedVersion: 2
+        x: 533
+        y: 822
+        width: 236
+        height: 146
+      alignment: 9
+      pivot: {x: 0.1440678, y: 0.36301368}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8022436c48c4a4a36946c654a85f6a38
+      internalID: -864270616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_11
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 844
+        width: 225
+        height: 121
+      alignment: 9
+      pivot: {x: 0.15111111, y: 0.25619835}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83c10f7409b264060b2666bee29a034e
+      internalID: 486881814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_12
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 603
+        width: 231
+        height: 97
+      alignment: 9
+      pivot: {x: 0.14285715, y: 0.24742268}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db25f9c5529214b268eb71a86c61c591
+      internalID: -92663356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_13
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 599
+        width: 216
+        height: 89
+      alignment: 9
+      pivot: {x: 0.15277778, y: 0.31460676}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23fad44131cf848dc89ebb13a9b160a8
+      internalID: 2037238831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_14
+      rect:
+        serializedVersion: 2
+        x: 532
+        y: 603
+        width: 222
+        height: 85
+      alignment: 9
+      pivot: {x: 0.15315315, y: 0.28235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd7f0d698630a4a88a5891c0fae19ff3
+      internalID: 2035550494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_15
+      rect:
+        serializedVersion: 2
+        x: 785
+        y: 601
+        width: 225
+        height: 86
+      alignment: 9
+      pivot: {x: 0.14666666, y: 0.30232558}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79300541010964e1c88d402d7644bc64
+      internalID: 555527344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_16
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 348
+        width: 221
+        height: 82
+      alignment: 9
+      pivot: {x: 0.14932127, y: 0.25609756}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22300832c0b7846b5b0f631a044bbce2
+      internalID: 1024110031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_17
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 347
+        width: 224
+        height: 83
+      alignment: 9
+      pivot: {x: 0.14732143, y: 0.26506025}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a638c48706e0745b2b08b9201ec746e9
+      internalID: 183321705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_18
+      rect:
+        serializedVersion: 2
+        x: 535
+        y: 350
+        width: 216
+        height: 81
+      alignment: 9
+      pivot: {x: 0.5, y: 0.30864197}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 742f0c55a14b64664a412c1f3a0e48ba
+      internalID: 553210934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_19
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 355
+        width: 219
+        height: 73
+      alignment: 9
+      pivot: {x: 0.5022831, y: 0.34246576}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d7188cf4be8324d3790f7804acede686
+      internalID: 490042675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_20
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 111
+        width: 213
+        height: 67
+      alignment: 9
+      pivot: {x: 0.4976526, y: 0.37313432}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9b9e1654ab5146489ad95b5e360bbee
+      internalID: 759190032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_21
+      rect:
+        serializedVersion: 2
+        x: 298
+        y: 116
+        width: 196
+        height: 56
+      alignment: 9
+      pivot: {x: 0.5, y: 0.44642857}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 88321b893f402426dad3ccb2fb23d7eb
+      internalID: 1268183413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_22
+      rect:
+        serializedVersion: 2
+        x: 570
+        y: 118
+        width: 173
+        height: 47
+      alignment: 9
+      pivot: {x: 0.49710983, y: 0.5319149}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 918838bb543324da19278d4a22695ee6
+      internalID: -1769114241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OilFilm_Side_23
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 125
+        width: 80
+        height: 37
+      alignment: 9
+      pivot: {x: 0.5, y: 0.6756757}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5bf70fbcbd6c749cbaae5da086def7cd
+      internalID: 1648959453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ce719b4320d9c4aaf90b940e50c867fe
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      OilFilm_Side_00: -1801905610
+      OilFilm_Side_01: 1026679973
+      OilFilm_Side_02: -1982778427
+      OilFilm_Side_03: -921579984
+      OilFilm_Side_04: -723497002
+      OilFilm_Side_05: -1036129220
+      OilFilm_Side_06: -395602479
+      OilFilm_Side_07: 1560662416
+      OilFilm_Side_08: 290293244
+      OilFilm_Side_09: -792528970
+      OilFilm_Side_10: -864270616
+      OilFilm_Side_11: 486881814
+      OilFilm_Side_12: -92663356
+      OilFilm_Side_13: 2037238831
+      OilFilm_Side_14: 2035550494
+      OilFilm_Side_15: 555527344
+      OilFilm_Side_16: 1024110031
+      OilFilm_Side_17: 183321705
+      OilFilm_Side_18: 553210934
+      OilFilm_Side_19: 490042675
+      OilFilm_Side_20: 759190032
+      OilFilm_Side_21: 1268183413
+      OilFilm_Side_22: -1769114241
+      OilFilm_Side_23: 1648959453
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

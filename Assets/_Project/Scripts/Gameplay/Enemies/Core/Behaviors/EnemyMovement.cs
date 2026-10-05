@@ -35,9 +35,8 @@ namespace Necrocis
             {
                 return false;
             }
-            float effectiveAttackRange = config.isRanged
-                ? config.attackRange
-                : GetEffectiveMeleeAttackRange(PlayerController.Instance);
+            if (!config.isRanged) return CanMeleeDamagePlayer(PlayerController.Instance);
+            float effectiveAttackRange = config.attackRange;
             return effectiveAttackRange >= 0f
                 && GetPlanarDistanceSqr(GetCurrentPosition(), playerTransform.position)
                     <= effectiveAttackRange * effectiveAttackRange;
@@ -151,9 +150,12 @@ namespace Necrocis
             return true; // 아직 이동 중
         }
 
+        public bool IsPatternPositionLocked { get; private set; }
+        public void SetPatternPositionLocked(bool value) => IsPatternPositionLocked = value;
+
         public void ApplyKnockback(Vector3 worldDirection, float distance)
         {
-            if (IsDead || distance <= 0f) return;
+            if (IsDead || IsPatternPositionLocked || distance <= 0f) return;
 
             Vector3 planarDirection = new Vector3(worldDirection.x, 0f, worldDirection.z);
             if (planarDirection.sqrMagnitude <= 0.0001f) return;
@@ -295,7 +297,7 @@ namespace Necrocis
         {
             isCharging = false;
             chargeCurrentSpeed = 0f;
-            chargeCooldownTimer = 3f;
+            chargeCooldownTimer = GetRearmCooldown(3f);
         }
 
         public void ApplyAggroBoost(float percentBoost)
@@ -382,14 +384,18 @@ namespace Necrocis
         private bool TryMove(Vector3 currentPosition, Vector3 step)
         {
             BiomeManager biome = BiomeManager.Active;
+            Vector2 half = boxCollider != null ? new Vector2(boxCollider.bounds.extents.x, boxCollider.bounds.extents.z) : Vector2.one * .4f;
+            bool Clear(Vector3 target) => ResidueRubble.CanTraverse(currentPosition, target, half)
+                && (biome == null || biome.CanMove(currentPosition, target));
             if (biome == null)
             {
+                if (!Clear(currentPosition + step)) return false;
                 MoveToPosition(currentPosition + step);
                 return true;
             }
 
             Vector3 targetPosition = currentPosition + step;
-            if (biome.CanMove(currentPosition, targetPosition))
+            if (Clear(targetPosition))
             {
                 MoveToPosition(targetPosition);
                 return true;
@@ -400,12 +406,12 @@ namespace Necrocis
 
             if (Mathf.Abs(step.x) >= Mathf.Abs(step.z))
             {
-                if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveX))
+                if (moveX.sqrMagnitude > 0f && Clear(currentPosition + moveX))
                 {
                     MoveToPosition(currentPosition + moveX);
                     return true;
                 }
-                if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveZ))
+                if (moveZ.sqrMagnitude > 0f && Clear(currentPosition + moveZ))
                 {
                     MoveToPosition(currentPosition + moveZ);
                     return true;
@@ -413,12 +419,12 @@ namespace Necrocis
             }
             else
             {
-                if (moveZ.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveZ))
+                if (moveZ.sqrMagnitude > 0f && Clear(currentPosition + moveZ))
                 {
                     MoveToPosition(currentPosition + moveZ);
                     return true;
                 }
-                if (moveX.sqrMagnitude > 0f && biome.CanMove(currentPosition, currentPosition + moveX))
+                if (moveX.sqrMagnitude > 0f && Clear(currentPosition + moveX))
                 {
                     MoveToPosition(currentPosition + moveX);
                     return true;
@@ -595,9 +601,15 @@ namespace Necrocis
             Vector3 scaledSize = Vector3.Scale(localSize, Abs(transform.lossyScale));
             float enemyReach = Mathf.Max(scaledSize.x, scaledSize.z) * 0.5f;
             float playerRadius = GetPlayerPlanarRadius(player);
-            return enemyReach + playerRadius + 0.2f;
+            return enemyReach + playerRadius + MeleeContactSkin(player);
         }
 
+
+        private float MeleeContactSkin(PlayerController player)
+        {
+            float skin = (boxCollider != null ? boxCollider.contactOffset : 0) + (player != null && player.HitCollider != null ? player.HitCollider.contactOffset : 0);
+            return Mathf.Min(.02f, Mathf.Max(0, skin)); // Only PhysX skin tolerance, not the former 0.2m reach bonus.
+        }
 
         private static float GetPlayerPlanarRadius(PlayerController player)
         {

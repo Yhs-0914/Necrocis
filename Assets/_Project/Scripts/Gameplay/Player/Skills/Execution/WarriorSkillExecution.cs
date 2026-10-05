@@ -23,7 +23,7 @@ namespace Necrocis
                     enemy.TakeDamage(damage);
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
                     status?.ApplyBleed(warriorSkill1.bleedDuration, warriorSkill1.bleedTickInterval, bleedTickDamage);
-                });
+                }, damage);
 
             GameObject effect = SpawnSkillEffect(
                 warriorSkill1.hitEffectPrefab,
@@ -77,6 +77,8 @@ namespace Necrocis
 
             // 도착 후 범위 내 적에게 데미지 + 구속
             Vector3 hitCenter = GetSkillCenter(0f);
+            ResidueRubble.HitArea(hitCenter, warriorSkill1.range + 1f, Vector3.forward, 180,
+                PlayerCombatCalculator.GetSkillDamage(warriorSkill2.damage, CurrentPlayerStats), enemyMask, ResidueRubble.NextAttackToken());
             if (TryFindNearestEnemyInRadius(hitCenter, warriorSkill1.range + 1f, out EnemyController hitTarget))
             {
                 float damage = PlayerCombatCalculator.GetSkillDamage(warriorSkill2.damage, CurrentPlayerStats);

@@ -51,10 +51,13 @@ MonoBehaviour:
       accentColor: {r: 0.82, g: 0.48, b: 0.16, a: 1}
       lockedColor: {r: 0.92, g: 0.12, b: 0.08, a: 1}
       clearedColor: {r: 0.34, g: 0.32, b: 0.3, a: 1}
+    returnPortalSprite: {fileID: 0}
+    returnPortalScale: {x: 1, y: 1, z: 1}
     boss:
       displayName: IntestineBoss
       useCustomBossRule: 1
       bossRule:
+        monsterDefinition: {fileID: 11400000, guid: 5bf40da1cb8f84b5aa7f9c28458981ba, type: 2}
         name: IntestineBoss
         density: 0
         minDistance: 8
@@ -106,6 +109,8 @@ MonoBehaviour:
         - {fileID: 122110005, guid: 877e76132ac624d419bcfdb550a4dca1, type: 3}
         - {fileID: 122110006, guid: 877e76132ac624d419bcfdb550a4dca1, type: 3}
         - {fileID: 122110007, guid: 877e76132ac624d419bcfdb550a4dca1, type: 3}
+        idleSpritesUp: []
+        idleSpritesDown: []
         moveSprites:
         - {fileID: 122200001, guid: b5d90c75bb27149528e493cf75718d52, type: 3}
         - {fileID: 122200002, guid: b5d90c75bb27149528e493cf75718d52, type: 3}
@@ -113,6 +118,8 @@ MonoBehaviour:
         - {fileID: 122200004, guid: b5d90c75bb27149528e493cf75718d52, type: 3}
         - {fileID: 122200005, guid: b5d90c75bb27149528e493cf75718d52, type: 3}
         - {fileID: 122200006, guid: b5d90c75bb27149528e493cf75718d52, type: 3}
+        moveSpritesUp: []
+        moveSpritesDown: []
         attackSprites:
         - {fileID: 122300001, guid: b883598911257438896fe48069146ee7, type: 3}
         - {fileID: 122300002, guid: b883598911257438896fe48069146ee7, type: 3}
@@ -193,6 +200,7 @@ MonoBehaviour:
         parasiteMaxCount: 3
         parasiteSpawnDelay: 0.45
         parasiteSpawnRadius: 1.1
+        parasiteDefinition: {fileID: 11400000, guid: 37557a1dd447346a5abed8830605e96c, type: 2}
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
@@ -208,6 +216,124 @@ MonoBehaviour:
         dungColor: {r: 0.34, g: 0.18, b: 0.08, a: 0.95}
         parasiteColor: {r: 0.62, g: 0.88, b: 0.36, a: 1}
         shockwaveColor: {r: 0.65, g: 0.38, b: 0.18, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      liverPattern:
+        phase2HealthRatio: 0.5
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        phase2AttackDamage: 2
+        phase2MoveSpeed: 1.5
+        bloodBombRange: 7
+        bloodBombExplosionRadius: 2.5
+        bloodBombFuseTime: 1
+        bloodBombCooldown: 4
+        attackPowerDebuffRatio: 0.15
+        attackPowerDebuffDuration: 5
+        bloodBombArcHeight: 1.4
+        bloodBombProjectileScale: 1.15
+        bloodBombSprite: {fileID: 0}
+        healingPosePreDelay: 1
+        healingPoseCooldown: 15
+        healingPoseDuration: 5
+        damageHealRatio: 0.7
+        healingPoseLowerSprites: []
+        healingPoseLowerSpritesDown: []
+        healingPoseRaiseSprites: []
+        healingPoseRaiseSpritesDown: []
+        healingPoseAnimationSpeed: 0.12
+        phase1PreferredDistanceRatio: 0.72
+        phase2PreferredDistance: 2.6
+        roamRadius: 9
+        bloodBombColor: {r: 0.7, g: 0, b: 0.04, a: 0.96}
+        explosionColor: {r: 0.9, g: 0.05, b: 0.08, a: 0.45}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      stomachPattern:
+        phase2HealthRatio: 0.65
+        phase1AttackDamage: 3
+        phase1MoveSpeed: 0.5
+        phase2AttackDamage: 3
+        phase2MoveSpeed: 1
+        phase1MeleeRange: 1.6
+        phase1MeleeCooldown: 1.7
+        chargeSpeed: 4
+        chargeCooldown: 5
+        chargeDamage: 4
+        chargeKnockbackDistance: 2
+        chargeWindup: 0.35
+        chargeDuration: 1.2
+        chargeHitRadius: 1.25
+        phase2PatternInterval: 3
+        phase2PreferredDistance: 4
+        roamRadius: 9
+        acidRange: 9
+        acidDamage: 2
+        acidDebuffDuration: 5
+        acidTickInterval: 1
+        acidTickDamage: 1
+        acidProjectileTravelTime: 0.55
+        acidArcHeight: 0.8
+        acidProjectileScale: 0.9
+        acidHitRadius: 1.15
+        suctionRange: 4.2
+        suctionDuration: 0.4
+        suctionStopDistance: 1
+        spitDelay: 0.35
+        spitReturnDuration: 0.18
+        shortRangeDamage: 5
+        shortRangeRadius: 2.2
+        suctionAttackSprites: []
+        suctionAttackAnimationSpeed: 0.08
+        acidColor: {r: 0.55, g: 0.95, b: 0.15, a: 0.95}
+        acidSplashColor: {r: 0.5, g: 0.9, b: 0.12, a: 0.42}
+        suctionColor: {r: 0.75, g: 0.95, b: 0.45, a: 0.42}
+        leakColor: {r: 0.38, g: 0.85, b: 0.18, a: 0.38}
+        startInPhase2ForDebug: 0
+        useFastPatternCooldownsForDebug: 0
+        fastPatternCooldown: 1
+      lungPattern:
+        phase1BrotherHealth: 40
+        phase1AttackDamage: 2
+        phase1MoveSpeed: 1
+        windGustMoveSpeed: 3
+        windGustSpeedMultiplier: 3
+        windGustInterval: 5
+        windGustDuration: 1.25
+        brotherSpacing: 3.2
+        phase1GasRange: 7
+        phase1GasCooldown: 3.5
+        phase1GasKnockback: 1
+        phase2MaxHealth: 100
+        phase2AttackDamage: 4
+        phase2MoveSpeed: 1.5
+        phase2GasRange: 10
+        phase2GasCooldown: 4
+        phase2GasKnockback: 1.2
+        diveCooldown: 8
+        diveWindup: 0.55
+        diveTravelTime: 0.65
+        diveArcHeight: 4
+        diveLandingRadius: 1.45
+        diveLandingDamage: 3
+        diveKnockback: 1.4
+        gasProjectileSpeed: 8
+        gasProjectileRadius: 0.7
+        gasProjectileScale: 1
+        gasWindup: 0.25
+        gasProjectileHeightOffset: 2
+        phase1ContactDamage: 1
+        phase2ContactDamage: 2
+        contactRadius: 1.05
+        contactCooldown: 1.1
+        phase1PreferredDistance: 5.2
+        phase2PreferredDistance: 4.2
+        roamRadius: 10
+        gasColor: {r: 0.72, g: 0.95, b: 0.9, a: 0.72}
+        windColor: {r: 0.78, g: 0.9, b: 1, a: 0.34}
+        diveColor: {r: 0.5, g: 0.85, b: 1, a: 0.42}
         startInPhase2ForDebug: 0
         useFastPatternCooldownsForDebug: 0
         fastPatternCooldown: 1

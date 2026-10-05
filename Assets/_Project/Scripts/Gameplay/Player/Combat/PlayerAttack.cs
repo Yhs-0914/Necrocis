@@ -209,9 +209,10 @@ namespace Necrocis
 
             EnsureMeleeOverlapBuffer();
             meleeHitEnemies.Clear();
+            int propAttackToken = ResidueRubble.NextAttackToken();
             int hitCount = Physics.OverlapBoxNonAlloc(
                 boxCenter,
-                tallBoxSize / 2f,
+                tallBoxSize / 2f + new Vector3(PlayerAttackGeometry.Padding, 0, PlayerAttackGeometry.Padding),
                 meleeOverlapResults,
                 rotation,
                 meleeTargetMask,
@@ -225,8 +226,10 @@ namespace Necrocis
                     continue;
                 }
 
+                if (hitCollider.TryGetComponent(out ResidueRubble rubble))
+                { rubble.ApplyPlayerHit(finalDamage, propAttackToken); continue; }
                 EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
-                if (enemy == null || enemy.IsDead || !meleeHitEnemies.Add(enemy))
+                if (enemy == null || enemy.IsDead || !PlayerAttackGeometry.InBox(boxCenter, tallBoxSize / 2f, rotation, enemy) || !meleeHitEnemies.Add(enemy))
                 {
                     continue;
                 }
@@ -608,6 +611,7 @@ namespace Necrocis
             float radius = itemEffects != null ? itemEffects.BeamRadius : 0.8f;
             float halfHeight = Mathf.Max(0.05f, beamVerticalHalfHeight);
             SpawnBeamVisual(origin, end, radius);
+            ResidueRubble.HitAlongSegment(origin, end, radius, damage, rangedTargetMask, ResidueRubble.NextAttackToken());
 
             int hitCount = Physics.OverlapCapsuleNonAlloc(
                 origin + Vector3.up * halfHeight,

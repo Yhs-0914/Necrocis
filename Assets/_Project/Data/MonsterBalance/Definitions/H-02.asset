@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: H-02
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.h-02
+  displayName: "H-02 \uC5FC\uC99D \uBD88\uC528"
+  tier: 1
+  designNote: "H-02-A: \uC720\uD6A8 \uD53C\uACA9 \uC2DC \uBC29\uD5A5 \uACE0\uC815
+    \u2192 \uD575 \uC810\uB4F1 \u2192 \uAC00\uC2DC\uD0C4 1\uBC1C \u2192 \uD68C\uBCF5.
+    \uC5F0\uD0C0\uB294 \uC608\uC57D/\uD0C0\uC774\uBA38\uB97C \uB298\uB9AC\uC9C0 \uC54A\uC74C.
+    \uBCC4\uB3C4 \uC0AC\uB9DD 6\uD504\uB808\uC784. H-MAP \uBCF8\uB9F5 \uB4F1\uB85D\uC740
+    \uBCC4\uB3C4 \uC2B9\uC778."
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: d4e2a97a3aae14ca1a1a8a8708af454f, type: 2}
+  patternDamage:
+  - id: ember-counter
+    coefficient: 1.5

@@ -124,6 +124,7 @@ namespace Necrocis
             itemSpawner.SpawnItemsNow();
 
             CreateBossArena();
+            BiomeEliteField.Create(this, config);
             PlayBiomeBgm();
         }
 

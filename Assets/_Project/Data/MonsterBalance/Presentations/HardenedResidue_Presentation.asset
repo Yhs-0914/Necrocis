@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57c0d281af350475a9bf95d689c2ba98, type: 3}
+  m_Name: HardenedResidue_Presentation
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.HardenedResiduePresentation
+  directionalPresentation: {fileID: 11400000, guid: 249eef2b5be4a4114bb1da530052a906, type: 2}
+  airborneChip: {fileID: 850564284, guid: eff966759f2b847b3b194aa2bc80b12b, type: 3}
+  idleFrames:
+  - {fileID: 949362894, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  - {fileID: 1530921880, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  moveFrames:
+  - {fileID: 1463471079, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  - {fileID: -1383344389, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  liftFrames:
+  - {fileID: 1088298432, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  - {fileID: -605475522, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  - {fileID: 768811704, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  - {fileID: 1265326522, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  release: {fileID: 1908693175, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  recovery: {fileID: 92582916, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  hit: {fileID: -1354665369, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  rubble: {fileID: -351990113, guid: 46f031b72f9ed46afa88e3f68aa2b5e4, type: 3}
+  verticalRubble: {fileID: 1264137762, guid: 14fb198652f2a4ecaac146ae0e8eb79e, type: 3}
+  verticalRubbleGroundDepthFraction: 0.78
+  deathFrames:
+  - {fileID: -126687931, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  - {fileID: 408218861, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  - {fileID: 1635950337, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  - {fileID: -5612912, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  - {fileID: 1958646736, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  - {fileID: -714469361, guid: 09466f5ff61e54ff3b7b5ca2c1374fc2, type: 3}
+  idleFrameSeconds: 0.35
+  moveFrameSeconds: 0.22
+  deathFrameSeconds: 0.14
+  groundDisc: {fileID: 21300000, guid: a525f648853d24399980281cddf8f445, type: 3}
+  crackColor: {r: 1, g: 0.2, b: 0.16, a: 0.95}
+  dangerFillColor: {r: 1, g: 0.04, b: 0.03, a: 0.42}
+  groundShadowColor: {r: 0.14, g: 0.065, b: 0.12, a: 0.28}
+  groundShadowSize: {x: 1.65, y: 0.75}

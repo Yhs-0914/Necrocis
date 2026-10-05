@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64f03e833dffa4bc2b1517bfac670f21, type: 3}
+  m_Name: InflammationEmber_Directions
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.EnemyDirectionalPresentation
+  mode: 0
+  authoredFacingLeft: 0
+  boundaryHysteresisDegrees: 8
+  sideOrigin: {x: 0, y: 0}
+  frontOrigin: {x: 0, y: 0.18}
+  backOrigin: {x: 0, y: 0}
+  frontDiagonalOrigin: {x: 0, y: 0}
+  backDiagonalOrigin: {x: 0, y: 0}
+  frames:
+  - motion: 0
+    label: "\uB300\uAE30 1"
+    source: {fileID: -1500595801, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -2089995289, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: 634152253, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 0
+    label: "\uB300\uAE30 2"
+    source: {fileID: 874034049, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: 35732602, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: -1725398293, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 5
+    label: "\uC774\uB3D9 1"
+    source: {fileID: -1505312198, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: 5697718, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: -2001024956, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 5
+    label: "\uC774\uB3D9 2"
+    source: {fileID: 239126409, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -2115127473, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: 307688985, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uC900\uBE44 1"
+    source: {fileID: -247969920, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -231910805, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: 563197757, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uC900\uBE44 2"
+    source: {fileID: 764677677, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -512908315, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: -1343160148, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uC900\uBE44 3"
+    source: {fileID: 1575717097, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: 1913540780, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: 60928546, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 6
+    label: "\uBC1C\uC0AC"
+    source: {fileID: -504184858, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -1596235035, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: -1721668009, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 2
+    label: "\uD68C\uBCF5"
+    source: {fileID: -665638041, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: 1173223591, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: 1676745031, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 3
+    label: "\uD53C\uACA9"
+    source: {fileID: 506524841, guid: 8197e343f26d144dcbec8fce980907bc, type: 3}
+    front: {fileID: -1537296305, guid: ce24271ce03bc4aefb9b4f76e2a4c2e6, type: 3}
+    back: {fileID: -526249647, guid: 979d35e54a2c74328bf545c4c63b40e9, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 1"
+    source: {fileID: 265269648, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: -1556020420, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: 1480234159, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 2"
+    source: {fileID: 1664974923, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: 826524111, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: -2020516278, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 3"
+    source: {fileID: -1959534, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: -172578063, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: -1667455951, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 4"
+    source: {fileID: 141063225, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: -1641589995, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: 900674607, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 5"
+    source: {fileID: 356931589, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: 2036467255, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: -1511510458, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 6"
+    source: {fileID: -199499721, guid: 9d2beb71fb1294c6fad6ee39e7ee8a5e, type: 3}
+    front: {fileID: 934346091, guid: 37a34e335eabb4ceebe364c5c7a3e587, type: 3}
+    back: {fileID: -208518116, guid: 97156c28255a6420bbf4ecb58617d651, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}

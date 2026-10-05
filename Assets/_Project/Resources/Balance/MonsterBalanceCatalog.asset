@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3143d5b16fa3c41578206809393442bf, type: 3}
+  m_Name: MonsterBalanceCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterBalanceCatalog
+  difficultyCatalog: {fileID: 11400000, guid: 86c1087c7b1646a9ab1b7155c3b9d611, type: 2}
+  progression: {fileID: 11400000, guid: d9493964a6e88459da41ac326520adaa, type: 2}
+  biomeEliteSpawns:
+  - {fileID: 11400000, guid: bcf5eb7ed200346ef9e80766a99d434b, type: 2}
+  - {fileID: 11400000, guid: d717064dbf9f84c7ba2ffa089d53d1d4, type: 2}
+  - {fileID: 11400000, guid: b552e3f7fd4bb46cba55fa399fa8e2ea, type: 2}
+  - {fileID: 11400000, guid: 87e915bbf2edc486e81fdece0808036b, type: 2}
+  monsters:
+  - {fileID: 11400000, guid: c30ad02f9edec4b8e9166b2eeea4ce85, type: 2}
+  - {fileID: 11400000, guid: 528841926549649778261e9115162e30, type: 2}
+  - {fileID: 11400000, guid: d6df2b4e6bd5a4c21838d0e2934d6b06, type: 2}
+  - {fileID: 11400000, guid: 41d268ef4aa33425ea41d7e7c1585d70, type: 2}
+  - {fileID: 11400000, guid: 84269ffb6bc924237a2eb0a9b0b69e36, type: 2}
+  - {fileID: 11400000, guid: c4d1d7182f0e648f9b4b50d6d91f26da, type: 2}
+  - {fileID: 11400000, guid: b37cc3e78ec8a415a85f8b1316b78c2b, type: 2}
+  - {fileID: 11400000, guid: 7ee838cb9898b43c89ae21d91271b46b, type: 2}
+  - {fileID: 11400000, guid: 650bae08b30304f06acc8eb4119faeac, type: 2}
+  - {fileID: 11400000, guid: b025256d6048b45cba4d3e38214b1bac, type: 2}
+  - {fileID: 11400000, guid: 38da51144b79d46af83b7d0260844d36, type: 2}
+  - {fileID: 11400000, guid: 7ac5acdc9d7ad4d9f8c020f3491bb0e2, type: 2}
+  - {fileID: 11400000, guid: 9e12b36d011fb490ba7505d3e3219228, type: 2}
+  - {fileID: 11400000, guid: 5bf40da1cb8f84b5aa7f9c28458981ba, type: 2}
+  - {fileID: 11400000, guid: 37557a1dd447346a5abed8830605e96c, type: 2}
+  - {fileID: 11400000, guid: 847841a3fded34a95b1389ef9d84b3b9, type: 2}
+  - {fileID: 11400000, guid: ef3ce2ce13fe04147ae8c692cecec940, type: 2}
+  - {fileID: 11400000, guid: a3cc0c00447f347f2b324b82b8e9dc41, type: 2}

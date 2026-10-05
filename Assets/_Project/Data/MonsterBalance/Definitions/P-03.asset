@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: P-03
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.p-03
+  displayName: "P-03 \uAF43\uAC00\uB8E8 \uCE68\uC785\uC790"
+  tier: 1
+  designNote: 'P-03 A/B: original three-pellet fan or shell-turn follow-up. Shared
+    one-hit budget per cycle; selected recovery/rearm once. P-MAP registration requires
+    separate approval.'
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: 507419c7cb0474f6ea4cdf9211b0dbb3, type: 2}
+  patternDamage:
+  - id: pollen-volley
+    coefficient: 1.5
+  - id: pollen-followup
+    coefficient: 1.5

@@ -11,10 +11,11 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 22ed4564501043c995d93dc4d0e81404, type: 3}
   m_Name: NormalDifficultyBalance
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   difficulty: 0
   displayName: Normal
-  description: "\uAE30\uBCF8 \uCEA0\uD398\uC778. \uC131\uC7A5\uACFC \uC9C4\uD589\uC744 \uC800\uC7A5\uD55C\uB2E4."
+  description: "\uAE30\uBCF8 \uCEA0\uD398\uC778. \uC131\uC7A5\uACFC \uC9C4\uD589\uC744
+    \uC800\uC7A5\uD55C\uB2E4."
   progression: {fileID: 11400000, guid: 2fa02adf21e34da0be20e35bde8f1569, type: 2}
   player:
     maxHealth: 1
@@ -30,6 +31,12 @@ MonoBehaviour:
     skillDamage: 1
     skillCooldown: 1
   enemies:
+    maxHealth: 1
+    moveSpeed: 1
+    outgoingDamage: 1
+    attackCooldown: 1
+    experienceReward: 1
+  elites:
     maxHealth: 1
     moveSpeed: 1
     outgoingDamage: 1
