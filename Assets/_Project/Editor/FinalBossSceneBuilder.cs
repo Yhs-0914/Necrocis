@@ -169,17 +169,8 @@ namespace NecrocisEditor
                 Transform bossTransform = MakeProp(props, "DormantCerebrum", boss,
                     new Vector3(.4915f * 48f, -2f, .749f * 38f + 2f), CerebrumOutline);
 
-                GameObject exit = new GameObject("ReturnToHub_Entrance");
-                exit.transform.SetParent(mapObject.transform, false);
-                exit.transform.position = new Vector3(24.5f, -2f, 4.5f);
-                BoxCollider trigger = exit.AddComponent<BoxCollider>();
-                trigger.isTrigger = true;
-                trigger.center = Vector3.up;
-                trigger.size = new Vector3(4f, 6f, 1.5f);
-                exit.AddComponent<ReturnPortal>().SetActive(true);
                 FinalBossArena arenaComponent = mapObject.AddComponent<FinalBossArena>();
                 var arena = new SerializedObject(arenaComponent);
-                arena.FindProperty("returnEntrance").objectReferenceValue = exit.transform;
                 var pillars = arena.FindProperty("pillars");
                 pillars.arraySize = 4;
                 for (int i = 0; i < 4; i++) pillars.GetArrayElementAtIndex(i).objectReferenceValue = pillarTransforms[i];

@@ -62,7 +62,9 @@ namespace Necrocis
             public GameObject areaEffectPrefab;
             public float areaEffectLifetime = 1f;
             public float fallbackEffectScale = 10f;
-            public float effectReferenceRadius = 5f;
+            // Mage_1skill is 21.12 world units wide at scale 1 and the prefab uses
+            // scale 0.5, so its authored outer radius is 5.28 world units.
+            public float effectReferenceRadius = 5.28f;
         }
 
         [System.Serializable]
@@ -343,7 +345,7 @@ namespace Necrocis
                 return false;
             }
 
-            if (playerController == null || playerController.IsDead)
+            if (playerController == null || playerController.IsDead || playerController.IsBossDisplaced)
             {
                 return false;
             }
@@ -399,21 +401,6 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
-                    Vector3 warriorSkill1Center = GetSkillCenter(0f);
-                    if (!TryFindNearestEnemyInForwardArc(
-                            warriorSkill1Center,
-                            warriorSkill1.range,
-                            warriorSkill1.forwardAngle,
-                            out _))
-                    {
-                        if (enableDebugLogs)
-                        {
-                            Debug.Log("Warrior Skill E failed: no enemy in range.");
-                        }
-
-                        return;
-                    }
-
                     if (!TryStartCooldown(ref nextSkill1ReadyTime, warriorSkill1.cooldown, "Warrior Skill E", SkillSlot.Skill1))
                     {
                         return;

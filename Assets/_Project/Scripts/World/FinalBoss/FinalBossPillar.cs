@@ -24,8 +24,12 @@ namespace Necrocis
         private Vector3 intactPosition;
         private Coroutine hitReaction;
         private bool destroyed;
+        private static Material linkMaterial;
+        private LineRenderer neuralLink;
+        private float linkVisibility = 1f;
 
         public BiomeType Biome => biome;
+        public Color AccentColor => GetBiomeColor();
         public bool IsDestroyed => destroyed;
         public float Health => damageTarget != null && damageTarget.Stats != null ? damageTarget.Stats.CurrentHealth : 0f;
         public float MaxHealth => damageTarget != null && damageTarget.Stats != null ? damageTarget.Stats.MaxHealth : maxHealth;
@@ -33,6 +37,17 @@ namespace Necrocis
         public Sprite IntactSprite => intactSprite;
         public Sprite BrokenSprite => brokenSprite;
         public Sprite CurrentSprite => pillarRenderer != null ? pillarRenderer.sprite : null;
+        public bool RemnantVisible => destroyed && pillarRenderer != null && pillarRenderer.enabled
+            && pillarRenderer.gameObject.activeInHierarchy;
+
+        public void HideBrokenRemnant()
+        {
+            if (!destroyed) return;
+            if (pillarRenderer != null) pillarRenderer.enabled = false;
+            linkVisibility = 0f;
+            if (neuralLink != null) neuralLink.enabled = false;
+            healthBar?.Hide();
+        }
 
         public void Configure(BiomeType value, RectInt area, SpriteRenderer renderer)
         {
@@ -85,6 +100,50 @@ namespace Necrocis
 
             healthBar = FinalBossWorldHealthBar.Create(damageTarget.transform, GetHealthBarHeight(), GetBiomeColor());
             healthBar.SetValue(1f);
+            CreateNeuralLink();
+        }
+
+        private void CreateNeuralLink()
+        {
+            if (linkMaterial == null)
+                linkMaterial = new Material(Shader.Find("Sprites/Default"))
+                {
+                    name = "FinalBossSealConnection",
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+            GameObject link = new GameObject("SealNeuralConnection");
+            link.transform.SetParent(transform, false);
+            neuralLink = link.AddComponent<LineRenderer>();
+            neuralLink.sharedMaterial = linkMaterial;
+            neuralLink.positionCount = 20;
+            neuralLink.useWorldSpace = true;
+            neuralLink.widthMultiplier = .065f;
+            neuralLink.sortingOrder = 4050;
+            neuralLink.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            neuralLink.receiveShadows = false;
+        }
+
+        private void LateUpdate()
+        {
+            if (neuralLink == null || owner == null) return;
+            linkVisibility = Mathf.MoveTowards(linkVisibility,
+                destroyed || owner.CurrentPhase != 1 ? 0f : 1f, Time.deltaTime * 2.5f);
+            neuralLink.enabled = linkVisibility > .001f;
+            if (!neuralLink.enabled) return;
+            Vector3 from = transform.position;
+            Vector3 to = owner.BossGroundPosition;
+            from.y = to.y;
+            Vector3 bend = Vector3.Cross((to - from).normalized, Vector3.up) * 1.2f;
+            for (int i = 0; i < neuralLink.positionCount; i++)
+            {
+                float t = i / (float)(neuralLink.positionCount - 1);
+                neuralLink.SetPosition(i, Vector3.Lerp(from, to, t) + bend * Mathf.Sin(t * Mathf.PI));
+            }
+            Color color = AccentColor;
+            color.a = (.19f + .09f * Mathf.Sin(Time.time * 2.4f + (int)biome)) * linkVisibility;
+            neuralLink.startColor = color;
+            color.a *= .4f;
+            neuralLink.endColor = color;
         }
 
         private void LoadIsolatedSprites()
@@ -136,7 +195,7 @@ namespace Necrocis
             Vector3 basePosition = intactPosition;
             Vector3 baseScale = intactScale;
             const float duration = .14f;
-            for (float elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
+            for (float elapsed = 0f; elapsed < duration; elapsed += Time.deltaTime)
             {
                 float strength = 1f - elapsed / duration;
                 transform.localPosition = basePosition + new Vector3(Mathf.Sin(elapsed * 95f) * .11f * strength, 0f, 0f);
@@ -155,6 +214,7 @@ namespace Necrocis
             defeated.DamageTaken -= HandleDamageTaken;
             defeated.Defeated -= HandleDefeated;
             if (hitReaction != null) StopCoroutine(hitReaction);
+            if (hitFlash != null) hitFlash.enabled = false;
             healthBar?.Hide();
             map?.SetAuthoredAreaBlocked(blockedArea, false);
             ShowBrokenRemnant();
@@ -168,6 +228,13 @@ namespace Necrocis
             if (pillarRenderer == null) return;
             if (brokenSprite != null) pillarRenderer.sprite = brokenSprite;
             pillarRenderer.color = Color.white;
+        }
+
+        private void OnDestroy()
+        {
+            if (damageTarget == null) return;
+            damageTarget.DamageTaken -= HandleDamageTaken;
+            damageTarget.Defeated -= HandleDefeated;
         }
 
 #if UNITY_EDITOR
