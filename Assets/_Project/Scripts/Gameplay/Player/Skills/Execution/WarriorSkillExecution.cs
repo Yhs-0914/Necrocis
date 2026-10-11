@@ -32,7 +32,9 @@ namespace Necrocis
                 warriorSkill1.fallbackEffectScale,
                 new Color(0.85f, 0.1f, 0.1f, 0.6f));
             OrientSkillEffectToward(effect, center, facingDirection);
-            StartCoroutine(AnimateWarriorSkillEffect(effect, warriorSkill1.hitEffectLifetime, 0.72f, 1.08f));
+            // The prefab is authored at exactly the skill diameter (4.125 * 2).
+            // Keep that size fixed so the visual edge stays aligned with the hit arc.
+            StartCoroutine(AnimateWarriorSkillEffect(effect, warriorSkill1.hitEffectLifetime, 1f, 1f));
 
             if (enableDebugLogs)
             {

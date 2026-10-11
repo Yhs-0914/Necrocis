@@ -10,6 +10,7 @@ namespace Necrocis
         public const string CatalogResourcePath = "Balance/MonsterBalanceCatalog";
         private readonly Dictionary<string, MonsterBalanceSnapshot> phases = new Dictionary<string, MonsterBalanceSnapshot>();
         private readonly Dictionary<string, float> coefficients = new Dictionary<string, float>();
+        private bool encounterMultipliersApplied;
         public MonsterBalanceSnapshot Current { get; private set; }
         public bool ContactEnabled { get; }
         public float ContactCoefficient { get; }
@@ -52,6 +53,15 @@ namespace Necrocis
             if (!phases.TryGetValue(id, out MonsterBalanceSnapshot snapshot))
                 throw new InvalidOperationException("등록되지 않은 페이즈: " + id);
             Current = snapshot;
+        }
+
+        internal void ApplyEncounterMultipliers(float health, float damage, float speed, float experience, float cooldown)
+        {
+            if (encounterMultipliersApplied) throw new InvalidOperationException("전투별 배율은 생성 시 한 번만 적용합니다.");
+            foreach (string id in new List<string>(phases.Keys))
+                phases[id] = phases[id].ForEncounter(health, damage, speed, experience, cooldown);
+            SelectPhase(Current.StatSetId);
+            encounterMultipliersApplied = true;
         }
 
         public float GetCoefficient(string id)

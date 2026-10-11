@@ -1,0 +1,1 @@
+PASS: four shrinking-floor overlays have no dark outline renderers; victory dialog appears after five real seconds; No restores input and stays in the arena without reopening; Yes loads MainMenu and cleans up gameplay; saved completion and Hard unlock preserved. Isolated test saves used.

@@ -24,7 +24,7 @@ namespace NecrocisEditor
         private static PlayerController player;
         private static BiomeEliteSpawnConfig config;
         private static BiomeEliteSpawnConfig productionField;
-        private static bool productionWasEnabled;
+        private static readonly Dictionary<BiomeEliteSpawnConfig, bool> productionStates = new Dictionary<BiomeEliteSpawnConfig, bool>();
         private static readonly List<Object> temporary = new List<Object>();
         private static readonly List<string> report = new List<string>();
 
@@ -39,7 +39,14 @@ namespace NecrocisEditor
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Edit Mode에서 실행하세요.");
             preview = previewOnly; started = passed = false; report.Clear(); temporary.Clear();
             productionField = AssetDatabase.LoadAssetAtPath<BiomeEliteSpawnConfig>(IntestineEliteMapSetup.ConfigPath);
-            productionWasEnabled = productionField.enabled; productionField.enabled = false;
+            productionStates.Clear();
+            foreach (string name in new[] { "Intestine", "Liver", "Stomach", "Lung" })
+            {
+                var production = AssetDatabase.LoadAssetAtPath<BiomeEliteSpawnConfig>(BiomeEliteSetup.Root + "/" + name + "BiomeEliteSpawnConfig.asset");
+                if (production == null) continue;
+                productionStates.Add(production, production.enabled);
+                production.enabled = false;
+            }
             storage = Path.Combine(Path.GetTempPath(), "necrocis-c03-play-" + Guid.NewGuid().ToString("N"));
             SaveService.UseStorageRootForTests(storage);
             Require(SaveService.TryBeginNewGame(GameDifficulty.Normal, out string error), error);
@@ -63,7 +70,8 @@ namespace NecrocisEditor
             EditorApplication.update -= Tick;
             EditorApplication.playModeStateChanged -= OnPlayMode;
             EditorSettings.enterPlayModeOptionsEnabled = oldOptionsEnabled;
-            productionField.enabled = productionWasEnabled;
+            foreach (var productionState in productionStates) productionState.Key.enabled = productionState.Value;
+            productionStates.Clear();
             EditorSettings.enterPlayModeOptions = oldOptions;
             Time.timeScale = oldTimeScale;
             Application.runInBackground = oldBackground;
@@ -244,7 +252,12 @@ namespace NecrocisEditor
             yield return SceneManager.LoadSceneAsync(SceneLoader.SCENE_LIVER);
             yield return null;
             biome = Object.FindFirstObjectByType<ProceduralBiomeBridge>();
-            Require(biome.GetBiomeConfig().GetEnemySpawnRules().Count == 0, "Liver normal spawn list remains empty");
+            // Empty-normal coverage uses a temporary config, not the shipped Liver roster.
+            BiomeConfig emptyBiome = Object.Instantiate(biome.GetBiomeConfig()); temporary.Add(emptyBiome);
+            EnemySpawnConfig emptyNormals = ScriptableObject.CreateInstance<EnemySpawnConfig>(); temporary.Add(emptyNormals);
+            emptyBiome.enemySpawnConfig = emptyNormals;
+            typeof(ProceduralBiomeBridge).GetField("config", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(biome, emptyBiome);
+            Require(biome.GetBiomeConfig().GetEnemySpawnRules().Count == 0, "isolated empty normal spawn fixture");
             field = biome.GetComponent<BiomeEliteField>(); field.Configure(biome, config, biome.GetBiomeConfig().GetMidBossArenaConfig(), biome.GetBiomeConfig().GetReturnPortalConfig());
             Require(field.Plan.placements.Count == 6, "biome elite placement independent of normal list");
             var liverPoint = field.Plan.placements[0]; MoveTo(biome, liverPoint.x, liverPoint.y); field.Refresh(player.transform.position);

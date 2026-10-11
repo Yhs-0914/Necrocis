@@ -1,0 +1,12 @@
+# Liver toxic rain prototype
+
+Generated using the built-in image_gen tool. The returned PNG already contained transparency, so its original alpha was preserved when cropping and downscaling with nearest-neighbor sampling.
+
+Assets: `Assets/_Project/Art/Generated/LiverToxicRain/toxic_rain_drop.png` and `toxic_rain_splash.png`.
+
+Scene: `Assets/_Project/Scenes/Liver.unity`, Map Generator > Liver Toxic Rain.
+Defaults: first shower after 5 scaled seconds, subsequent starts every 12 seconds, 3-second showers, approximately 2 drops/second. Drops are 2.4 world units tall (3x the original size), with 1.3-unit splashes. Each fixed landing point shows a ground ring for 0.6 seconds before the 0.9-second fall; the ring remains visible until impact. Landing points stay at least 1.6 units apart while active. A 0.45-unit impact radius checks the player's horizontal collider footprint and calls the existing TakeDamage API for 1 damage once on landing, respecting dash/health invulnerability and a shared 0.8-second hit cooldown. Splashes do not repeatedly damage. Boss arena reservations are excluded and rain clears during locked arena combat. Timing, density, size and damage are adjustable in the Inspector. Pausing freezes the effect; disabling the component clears the sprites.
+
+## Generation prompt
+
+Create a production game VFX sprite sheet for Necrocis, a 2.5D pixel-art organic body dungeon with purple liver terrain and dark burgundy-outlined cute grotesque monsters. Square 1024x1024 canvas, perfectly flat uniform #ff00ff magenta chroma key background. Exactly TWO isolated sprites, each centered in its own equal half of the canvas: LEFT half one elongated vertical falling toxic rain droplet (pointed thin tail upward, heavy small bulb at bottom, total narrow width about 100px and height 600px); RIGHT half one small ground impact splash of that same bile liquid (low wide irregular crown splash and tiny detached droplets, width 350px height 200px, centered at x768 y512). Hand-crafted retro pixel art with visibly hard square pixel clusters, limited palette, very dark plum contour, muted olive/chartreuse green body, mustard amber shadows, small pale yellow-green specular pixel highlights. Sickly bile, readable at small size. Neither fluorescent neon nor realistic, no glow no blur no smooth gradients. Crisp separated silhouettes with generous magenta padding. No text, no grid, no labels, no characters, no scenery, no shadows. Magenta must never be used inside either sprite.

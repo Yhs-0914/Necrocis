@@ -43,6 +43,24 @@ namespace Necrocis
             return AttackPower * coefficient;
         }
 
+        internal MonsterBalanceSnapshot ForEncounter(float health, float damage, float speed, float experience, float cooldown)
+            => new MonsterBalanceSnapshot(this, health, damage, speed, experience, cooldown);
+
+        private MonsterBalanceSnapshot(MonsterBalanceSnapshot source, float health, float damage, float speed, float experience, float cooldown)
+        {
+            this = source;
+            MaxHealth = source.MaxHealth * health;
+            AttackPower = source.AttackPower * damage;
+            MoveSpeed = source.MoveSpeed * speed;
+            Experience = checked((int)Math.Round(source.Experience * (double)experience, MidpointRounding.ToEven));
+            ContactDamage = source.ContactDamage * damage;
+            CooldownMultiplier = source.CooldownMultiplier * cooldown;
+            if (!MonsterBalanceNumbers.Positive(MaxHealth) || !MonsterBalanceNumbers.NonNegative(AttackPower)
+                || !MonsterBalanceNumbers.NonNegative(MoveSpeed) || !MonsterBalanceNumbers.NonNegative(ContactDamage)
+                || !MonsterBalanceNumbers.Positive(CooldownMultiplier) || Experience < 0)
+                throw new ArgumentOutOfRangeException(nameof(health), "최종 보스 소환 수치를 확인하세요.");
+        }
+
         public float GetRearmCooldown(float baseSeconds)
         {
             if (!MonsterBalanceNumbers.NonNegative(baseSeconds)

@@ -131,6 +131,7 @@ namespace Necrocis
 
         // ?대룞 諛?臾쇰━
         private Vector3 movement;                  // ?대룞 踰≫꽣
+        private float movementControlsReversedUntil = float.NegativeInfinity;
         private Rigidbody rb;                      // 臾쇰━ 而댄룷?뚰듃 (?덉쑝硫??ъ슜)
         private CharacterController characterController; // CharacterController (?덉쑝硫??곗꽑 ?ъ슜)
         private ProceduralTerrainMotor proceduralTerrainMotor;
@@ -157,6 +158,7 @@ namespace Necrocis
         public bool IsDead => playerStats != null && playerStats.IsDead;
         public bool IsMoving => isMoving;
         public bool IsDashInvincible => isDashing && invincibleDuringDash;
+        public bool AreMovementControlsReversed => Time.time < movementControlsReversedUntil;
         public Sprite CurrentVisualSprite => spriteRenderer != null ? spriteRenderer.sprite : null;
         public Collider HitCollider
         {
@@ -360,6 +362,10 @@ namespace Necrocis
             var input = InputManager.Instance;
 
             Vector2 moveInput = input.MoveAction.ReadValue<Vector2>();
+            if (AreMovementControlsReversed)
+            {
+                moveInput = -moveInput;
+            }
             movement = new Vector3(moveInput.x, 0, moveInput.y).normalized;
             isMoving = movement.sqrMagnitude > 0.01f;
             if (isMoving)
@@ -540,9 +546,12 @@ namespace Necrocis
         // ?媛곸꽑 ?대룞??遺덇??섎㈃ X/Z 異?媛쒕퀎濡??쒕룄 (踰??щ씪?대뵫 ?④낵)
         private bool TryMoveWithHeight(Vector3 moveVector)
         {
+
             if (proceduralTerrainMotor != null && proceduralTerrainMotor.HasActiveMap)
             {
-                Vector3 proceduralCurrentPos = transform.position;
+                // MovePosition can advance rb.position before Transform is synchronized. Use
+                // the same position as ApplyMove when several dash/knockback steps run together.
+                Vector3 proceduralCurrentPos = characterController == null && rb != null ? rb.position : transform.position;
                 Vector3 proceduralTargetPos = proceduralCurrentPos + moveVector;
                 if (proceduralTerrainMotor.CanMove(proceduralCurrentPos, proceduralTargetPos))
                 {
@@ -591,7 +600,7 @@ namespace Necrocis
                 return true;
             }
 
-            Vector3 currentPos = transform.position;
+            Vector3 currentPos = characterController == null && rb != null ? rb.position : transform.position;
             Vector3 targetPos = currentPos + moveVector;
             if (CanMoveInBiome(biome, currentPos, targetPos))
             {
@@ -644,6 +653,7 @@ namespace Necrocis
 
         public bool TryMoveByWorld(Vector3 displacement)
         {
+            if (IsBossDisplaced) return false;
             displacement.y = 0f;
             float distance = displacement.magnitude;
             if (distance <= 0.000001f)
@@ -690,9 +700,37 @@ namespace Necrocis
             }
         }
 
+        public bool IsBossDisplaced { get; private set; }
+
+        public bool BeginBossDisplacement()
+        {
+            Health health = GetComponent<Health>();
+            if (IsDead || IsDashInvincible || IsBossDisplaced
+                || (health != null && health.IsInvincible)
+                || (proceduralTerrainMotor != null && proceduralTerrainMotor.IsTraversing)) return false;
+            IsBossDisplaced = true;
+            isDashing = false;
+            StopMotion();
+            return true;
+        }
+
+        public void SetBossDisplacementPosition(Vector3 position)
+        {
+            if (!IsBossDisplaced) return;
+            transform.position = position;
+            if (rb != null) rb.position = position;
+        }
+
+        public void EndBossDisplacement()
+        {
+            IsBossDisplaced = false;
+            StopMotion();
+            ApplyLockedY();
+        }
+
         private bool IsControlBlocked()
         {
-            return deathHandled
+            return IsBossDisplaced || deathHandled
                 || IsDead
                 || Time.timeScale <= Mathf.Epsilon
                 || (proceduralTerrainMotor != null && proceduralTerrainMotor.IsTraversing);
@@ -742,6 +780,18 @@ namespace Necrocis
             ApplyLockedRotation();
         }
 
+        /// <summary>
+        /// Temporarily reverses directional movement input. Reapplying the effect extends it
+        /// without shortening a longer reversal that is already active.
+        /// </summary>
+        public void ApplyMovementControlReversal(float duration)
+        {
+            if (duration <= 0f) return;
+            movementControlsReversedUntil = Mathf.Max(
+                movementControlsReversedUntil,
+                Time.time + duration);
+        }
+
         public void ReviveForRespawn()
         {
             ResetRuntimeAfterDeath();
@@ -763,6 +813,7 @@ namespace Necrocis
 
         private void ResetRuntimeAfterDeath()
         {
+            IsBossDisplaced = false;
             deathHandled = false;
             movement = Vector3.zero;
             isMoving = false;
@@ -779,6 +830,7 @@ namespace Necrocis
 
         private void RestoreRuntimeControls()
         {
+            movementControlsReversedUntil = float.NegativeInfinity;
             PlayerAttack attack = GetComponent<PlayerAttack>();
             if (attack != null)
                 attack.enabled = true;
@@ -811,7 +863,7 @@ namespace Necrocis
 
         private void ApplyLockedY()
         {
-            if (!lockYPosition) return;
+            if (!lockYPosition || IsBossDisplaced) return;
 
             float desiredY = lockedY;
             BiomeManager biome = BiomeManager.Active;
@@ -1109,12 +1161,15 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            if (IsBossDisplaced) EndBossDisplacement();
             LevelUpManager.OnJobChanged -= HandleJobChanged;
             LevelUpManager.OnLevelUp -= HandleLevelUpVfx;
         }
 
         private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            if (IsBossDisplaced) EndBossDisplacement();
+            movementControlsReversedUntil = float.NegativeInfinity;
             if (!deathHandled) return;
 
             deathHandled = false;

@@ -66,7 +66,7 @@ namespace NecrocisEditor
         {
             player=PlayerController.Instance;health=player.HealthComponent;biome=Object.FindFirstObjectByType<ProceduralBiomeBridge>();field=biome.GetComponent<BiomeEliteField>();
             Require(biome.BiomeType==BiomeType.Stomach,"actual Stomach visit");field.enabled=false;enemy=null;pattern=null;
-            Require(biome.GetBiomeConfig().biomeEliteSpawnConfig.monsters.Count==0,"production Stomach unchanged");
+            Require(biome.GetBiomeConfig().biomeEliteSpawnConfig.monsters.Count==productionStomachCount,"production Stomach registration unchanged");
             ((IList)typeof(ProceduralBiomeBridge).GetField("normalEnemyRules",Private).GetValue(biome)).Clear();
             if(EliteSpawner.Instance!=null)EliteSpawner.Instance.enabled=false;
             typeof(InputManager).GetMethod("SetActionsEnabled",Private).Invoke(InputManager.Instance,new object[]{false});

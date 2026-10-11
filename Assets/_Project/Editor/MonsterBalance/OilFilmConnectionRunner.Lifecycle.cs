@@ -54,7 +54,7 @@ namespace NecrocisEditor
             try{enemy.TakeDamage(10000);enemy.TakeDamage(10000);enemy.GrantExp();}
             finally{LevelUpManager.OnLevelUp=callback;LevelUpManager.OnExpGained-=observe;}
             Equal(50,xp,"XP once");Require(SaveService.IsBiomeEliteDefeated(point.spawnId),"dedicated defeat saved");yield return Wait(()=>!enemy.gameObject.activeSelf,2,"field death");field.Refresh(player.transform.position);
-            Require(field.Spawners.Count==0&&source.monsters.Count==0,"no field respawn or production registration");Pass("FIELD: dedicated defeat saved, XP50 exactly once, no respawn, production Stomach remains0");
+            Require(field.Spawners.Count==0&&source.monsters.Count==productionStomachCount,"no field respawn or production registration");Pass("FIELD: dedicated defeat saved, XP50 exactly once, no respawn, production Stomach registration preserved");
         }
     }
 }

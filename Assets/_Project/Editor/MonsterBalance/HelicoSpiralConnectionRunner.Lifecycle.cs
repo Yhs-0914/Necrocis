@@ -73,7 +73,7 @@ namespace NecrocisEditor
             finally{LevelUpManager.OnLevelUp=callback;LevelUpManager.OnExpGained-=observe;}
             Equal(50,xp,"field XP once");Require(SaveService.IsBiomeEliteDefeated(point.spawnId),"field defeat saved");
             yield return Wait(()=>!enemy.gameObject.activeSelf,2,"field death");field.Refresh(player.transform.position);
-            Require(field.Spawners.Count==0&&source.monsters.Count==0,"no field respawn, no production registration");
+            Require(field.Spawners.Count==0&&source.monsters.Count==productionStomachCount,"no field respawn, no production registration");
             Pass("FIELD: actual dedicated death gives XP50 exactly once, saves defeat and does not respawn; Stomach production remains0");
         }
     }

@@ -255,7 +255,7 @@ namespace Necrocis
                 new PlayerItemEntry("beam_organ", "광선 기관", "80% 피해의 관통 광선 공격 (다중핵·후방 발사·세포 증식 적용)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("split_tissue", "분열 조직", "적 명중 시 양옆으로 각각 50% 피해의 추가 투사체 생성", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("explosive_blood_cell", "폭발 혈구", "원거리 피해가 50% 감소하고 범위 폭발 공격으로 변경", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("acidic_rupture", "산성 파열", "적중 위치에 4초간 1초마다 0.5 피해를 주는 산성 장판 생성", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("acidic_rupture", "산성 파열", "적중 위치에 4초간 1초마다 0.5 피해를 주는 산성 장판 생성 (동시에 최대 2개)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("cell_proliferation", "세포 증식", "일정 확률로 공격이 한 번 더 발동", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("pulse_bullet", "맥동 탄환", "투사체가 이동하며 크기와 실제 충돌 범위가 증가하거나 감소", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("vascular_reflection", "혈관 반사", "벽에 튕기는 반사 투사체", PlayerItemCategory.BasicProjectile),
@@ -275,7 +275,7 @@ namespace Necrocis
                 new PlayerItemEntry("overclock_nerve", "과속 신경", "체력 -2, 이동속도 +2 증가", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("blood_contract", "피의 계약", "적 20명 처치 시 체력 +1 (최대 +5), 받는 피해 1.3배", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("hyperplasia_heart", "과증식 심장", "잃은 체력에 비례해 공격력 증가 (최대 +2)", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("decay_organ", "부패 장기", "3분마다 공격력 +1 (최대 +4)", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("decay_organ", "부패 장기", "3분마다 공격력 +1 (최대 +2)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("rupture_muscle", "파열 근육", "공격 2회마다 공격력 +0.5·이동속도 -0.25 (최대 3중첩)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("imperfect_regeneration", "불완전 재생", "체력 -2, 피격 2초 후 체력 +1 회복 (10초 쿨타임)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("severance_reflex", "절단 반사", "피격 후 2초간 공격력 +2", PlayerItemCategory.BasicProjectile),
@@ -297,9 +297,9 @@ namespace Necrocis
                 new PlayerItemEntry("gluttonous_organ", "폭식 장기", "적 처치 시 3초 동안 이동속도 증가 (최대 4스택)", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("heart_sniper", "심장 저격", "체력 60% 이상인 적에게 직접 공격 피해 35% 증가", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("bloodflow_acceleration", "혈류 가속", "보스·엘리트 근처에서 공격속도 35% 증가", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("focused_nerve", "집중 신경", "주변 적 1명 이하일 때 공격력 +1.5, 2~3명일 때 +0.5", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("focused_nerve", "집중 신경", "주변 적 1명 이하일 때 공격력 +0.75, 2~3명일 때 +0.5", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("execution_instinct", "처형 본능", "체력 20% 미만 적을 20% 확률로 처형 (보스·엘리트는 추가 피해 50%)", PlayerItemCategory.BasicProjectile),
-                new PlayerItemEntry("berserk_cell", "광폭 세포", "보스전 진입 시 15초간 공격력 +1.5, 이동속도 +0.5, 공격속도 +50%", PlayerItemCategory.BasicProjectile),
+                new PlayerItemEntry("berserk_cell", "광폭 세포", "보스전 진입 시 15초간 공격력 +0.75, 이동속도 +0.5, 공격속도 +30%", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("unstable_cell", "불안정 세포", "투사체 속도 50~150%, 80% 이하의 느린 탄은 피해 150%", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("grotesque_growth", "기괴 성장", "10초마다 소형화·이동속도 +1 또는 대형화·공격력 +1·이동속도 -0.5", PlayerItemCategory.BasicProjectile),
                 new PlayerItemEntry("mutation_rampage", "돌연변이 폭주", "15초마다 7초간 무작위 스탯 버프 또는 디버프", PlayerItemCategory.BasicProjectile),
@@ -629,7 +629,7 @@ namespace Necrocis
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.AcidicRuptureId, StringComparison.OrdinalIgnoreCase))
             {
-                entry.SetDescription("적중 위치에 4초간 1초마다 0.5 피해를 주는 산성 장판 생성");
+                entry.SetDescription("적중 위치에 4초간 1초마다 0.5 피해를 주는 산성 장판 생성 (동시에 최대 2개)");
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.OverheatedOrganId, StringComparison.OrdinalIgnoreCase))
             {
@@ -709,7 +709,7 @@ namespace Necrocis
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.DecayOrganId, StringComparison.OrdinalIgnoreCase))
             {
-                entry.SetDescription("3분마다 공격력 +1 (최대 +4)");
+                entry.SetDescription("3분마다 공격력 +1 (최대 +2)");
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.RuptureMuscleId, StringComparison.OrdinalIgnoreCase))
             {
@@ -785,7 +785,7 @@ namespace Necrocis
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.FocusedNerveId, StringComparison.OrdinalIgnoreCase))
             {
-                entry.SetDescription("주변 적 1명 이하일 때 공격력 +1.5, 2~3명일 때 +0.5");
+                entry.SetDescription("주변 적 1명 이하일 때 공격력 +0.75, 2~3명일 때 +0.5");
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.ExecutionInstinctId, StringComparison.OrdinalIgnoreCase))
             {
@@ -793,7 +793,7 @@ namespace Necrocis
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.BerserkCellId, StringComparison.OrdinalIgnoreCase))
             {
-                entry.SetDescription("보스전 진입 시 15초간 공격력 +1.5, 이동속도 +0.5, 공격속도 +50%");
+                entry.SetDescription("보스전 진입 시 15초간 공격력 +0.75, 이동속도 +0.5, 공격속도 +30%");
             }
             else if (string.Equals(entry.ItemId, PlayerItemCombatEffects.UnstableCellId, StringComparison.OrdinalIgnoreCase))
             {

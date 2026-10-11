@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2f9d67852e384516b6e3c8840ebd829, type: 3}
+  m_Name: FinalBossBalanceConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossBalanceConfig
+  phaseOne:
+    spawnInterval: 3.5
+    commonMinionsPerWave: 4
+    exclusiveTypesPerBiome: 2
+    exclusiveCopiesPerType: 2
+    weakenedMidBossStatRatio: 0.33
+    weakenedMidBossScaleRatio: 1
+    pillarMaxHealth: 65
+  phaseTwo:
+    bossMaxHealth: 520
+    phaseStartDelay: 1.4
+    patternCooldown: 1.8
+    electricWarningDuration: 1.35
+    electricLineCount: 3
+    electricLineWidth: 1.45
+    electricDamage: 2
+    reversedControlDuration: 1
+    missileWarningDuration: 1.15
+    missileCount: 12
+    missileInterval: 0.11
+    missileSpeed: 7.8
+    missileDamage: 1
+    missileTurnSpeed: 115
+    bombWarningDuration: 1.45
+    bombCount: 6
+    bombRadius: 2.35
+    bombDamage: 2
+    sweepWarningDuration: 1.55
+    sweepDamage: 2
+    reflectionWarningDuration: 1.1
+    reflectionActiveDuration: 3.2
+    reflectedDamageRatio: 0.55
+    barrageWarningDuration: 1.2
+    barrageCellsPerWave: 24
+    barrageWaveCount: 3
+    barrageWaveInterval: 0.65
+    barrageCellSpeed: 6.4
+    barrageCellDamage: 1
+    phaseThreeHealthRatio: 0.4
+  phaseThree:
+    detachDuration: 1.8
+    pursuitSpeed: 3.1
+    stoppingDistance: 3.2
+    collapseDuration: 45
+    patternRecovery: 1.8
+    dashDamage: 2
+    grabDamage: 2
+    tentacleDamage: 2
+    fallingCellDamage: 1
+    fallingBombDamage: 2
+    boundaryDamage: 1
+    overtimeDamage: 2
+    collapseHealthRatio: 0.1
+  normal:
+    health: 1
+    damage: 1
+    summonMoveSpeed: 1
+    summonCooldown: 1
+    summonExperience: 1
+  hard:
+    health: 1
+    damage: 1
+    summonMoveSpeed: 1
+    summonCooldown: 1
+    summonExperience: 1

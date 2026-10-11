@@ -34,6 +34,12 @@ namespace Necrocis
 
         public void Configure(IEnemySpawnOwner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition)
         {
+            Configure(owner, config, anchorPosition, spawnPosition, null);
+        }
+
+        public void Configure(IEnemySpawnOwner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition,
+            MonsterBalanceRuntime encounterBalance)
+        {
             foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>()) pattern.EndSpawn();
             ResetPatternDirections();
             SetPatternPositionLocked(false);
@@ -49,7 +55,7 @@ namespace Necrocis
             experienceGranted = false;
             PatternOwnsContact = false;
             SuppressExperienceReward = false;
-            Balance = config.monsterDefinition != null ? MonsterBalanceRuntime.Capture(config.monsterDefinition) : null;
+            Balance = encounterBalance ?? (config.monsterDefinition != null ? MonsterBalanceRuntime.Capture(config.monsterDefinition) : null);
             poolArchetypeId = GetPoolArchetypeId(config);
             this.anchorPosition = anchorPosition;
             playerTransform = null;

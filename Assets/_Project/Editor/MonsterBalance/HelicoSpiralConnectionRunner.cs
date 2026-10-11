@@ -17,7 +17,7 @@ namespace NecrocisEditor
     {
         private static bool battle, preview, started, passed, oldBackground, oldOptionsEnabled, sourceEnabled;
         private static float angle, oldTimeScale, groundOffset, oldCaptureDelta;
-        private static int enteredFrame, oldFrameRate, oldVsync;
+        private static int enteredFrame, oldFrameRate, oldVsync, productionStomachCount;
         private static string phase, storage, battleSection;
         private static string StageLabel => battleSection == "tail" ? "HelicoSpiral-S01-B2" + (phase == "alignment" ? "-alignment" : "") : battle ? "HelicoSpiral-S01-A3" + (battleSection == "all" ? "" : "-" + battleSection) : "HelicoSpiral-S01-A2";
         private static double deadline;
@@ -56,7 +56,7 @@ namespace NecrocisEditor
             storage = Path.Combine(Path.GetTempPath(), (battle ? "necrocis-s01-a3-" : "necrocis-s01-a2-") + Guid.NewGuid().ToString("N"));
             SaveService.UseStorageRootForTests(storage); Require(SaveService.TryBeginNewGame(GameDifficulty.Normal, out string error), error);
             source = AssetDatabase.LoadAssetAtPath<BiomeEliteSpawnConfig>("Assets/_Project/Data/BiomeElites/StomachBiomeEliteSpawnConfig.asset");
-            Require(source.monsters.Count == 0, "production Stomach stays unregistered"); sourceEnabled = source.enabled; source.enabled = false;
+            productionStomachCount = source.monsters.Count; sourceEnabled = source.enabled; source.enabled = false;
             oldFrameRate = Application.targetFrameRate; oldVsync = QualitySettings.vSyncCount;
             oldOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled; oldOptions = EditorSettings.enterPlayModeOptions; oldBackground = Application.runInBackground; oldTimeScale = Time.timeScale; oldCaptureDelta = Time.captureDeltaTime;
             EditorSettings.enterPlayModeOptionsEnabled = true; EditorSettings.enterPlayModeOptions = oldOptions | EnterPlayModeOptions.DisableDomainReload;

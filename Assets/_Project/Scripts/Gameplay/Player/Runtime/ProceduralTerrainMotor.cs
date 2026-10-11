@@ -44,6 +44,7 @@ namespace Necrocis
         private void Update()
         {
             BindMapIfNeeded();
+            if (player != null && player.IsBossDisplaced) { ResetHold(); return; }
             if (!HasActiveMap) { ResetHold(); return; }
             if (isTraversing) { UpdateTraversal(); return; }
             HandleTraversalInput();
@@ -52,6 +53,9 @@ namespace Necrocis
         public bool CanMove(Vector3 current, Vector3 target)
         {
             if (!ResidueRubble.CanTraverse(current, target, terrainHalfExtents)) return false;
+            FinalBossPhaseThreeController boss = FinalBossArena.Instance != null
+                ? FinalBossArena.Instance.GetComponent<FinalBossPhaseThreeController>() : null;
+            if (boss != null && !boss.CanCrossBoundary(current, target, terrainHalfExtents)) return false;
             if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(current, target, terrainHalfExtents))
             {
                 return false;
@@ -62,6 +66,8 @@ namespace Necrocis
 
         private void BindMapIfNeeded()
         {
+            // Do not let a pending checkpoint restore overwrite the map's spawn on the next frame.
+            if (SaveService.IsRestorePending) return;
             if (!map) map = FindFirstObjectByType<MapGenerator>();
             if (!map || !map.IsReady || boundMap == map) return;
 

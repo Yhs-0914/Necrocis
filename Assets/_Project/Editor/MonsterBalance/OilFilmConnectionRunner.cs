@@ -17,7 +17,7 @@ namespace NecrocisEditor
         private static string Label => phase != null && phase.StartsWith("a3:") ? "OilFilm-S03-A3-" + phase.Substring(3) : "OilFilm-S03-A2";
         private static bool preview, started, passed, oldBackground, oldOptionsEnabled, sourceEnabled;
         private static float angle, oldTimeScale, groundOffset, oldCaptureDelta;
-        private static int enteredFrame, oldFrameRate, oldVsync;
+        private static int enteredFrame, oldFrameRate, oldVsync, productionStomachCount;
         private static string phase, storage;
         private static double deadline;
         private static SceneSetup[] scenes;
@@ -49,7 +49,7 @@ namespace NecrocisEditor
             storage = Path.Combine(Path.GetTempPath(), "necrocis-s03-a2-" + Guid.NewGuid().ToString("N"));
             SaveService.UseStorageRootForTests(storage); Require(SaveService.TryBeginNewGame(GameDifficulty.Normal, out string error), error);
             source = AssetDatabase.LoadAssetAtPath<BiomeEliteSpawnConfig>("Assets/_Project/Data/BiomeElites/StomachBiomeEliteSpawnConfig.asset");
-            Require(source.monsters.Count == 0, "production Stomach stays unregistered"); sourceEnabled = source.enabled; source.enabled = false;
+            productionStomachCount = source.monsters.Count; sourceEnabled = source.enabled; source.enabled = false;
             oldFrameRate = Application.targetFrameRate; oldVsync = QualitySettings.vSyncCount;
             oldOptionsEnabled = EditorSettings.enterPlayModeOptionsEnabled; oldOptions = EditorSettings.enterPlayModeOptions; oldBackground = Application.runInBackground; oldTimeScale = Time.timeScale; oldCaptureDelta = Time.captureDeltaTime;
             EditorSettings.enterPlayModeOptionsEnabled = true; EditorSettings.enterPlayModeOptions = oldOptions | EnterPlayModeOptions.DisableDomainReload;

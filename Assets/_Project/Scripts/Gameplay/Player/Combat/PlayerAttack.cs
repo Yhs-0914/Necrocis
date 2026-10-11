@@ -118,7 +118,7 @@ namespace Necrocis
                 return;
             }
 
-            if (playerController == null || playerController.IsDead)
+            if (playerController == null || playerController.IsDead || playerController.IsBossDisplaced)
             {
                 return;
             }

@@ -1,0 +1,1 @@
+PASS: production tentacle meshes, energy shader, shield, burst and native-aspect sprites rendered at 1920x1080.
