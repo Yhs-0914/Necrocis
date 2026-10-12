@@ -23,6 +23,40 @@ namespace Necrocis
         /// </summary>
         public BiomeConfig GetBiomeConfig() => config;
 
+        public bool IsWorldPositionUsingRegionTile(Vector3 worldPosition, string regionName)
+        {
+            if (string.IsNullOrWhiteSpace(regionName))
+            {
+                return false;
+            }
+
+            Vector2Int gridPosition = WorldToGrid(worldPosition);
+            if (!IsValidPosition(gridPosition.x, gridPosition.y))
+            {
+                return false;
+            }
+
+            BiomeRegionDefinition targetRegion = null;
+            for (int i = 0; i < config.regions.Count; i++)
+            {
+                BiomeRegionDefinition candidate = config.regions[i];
+                if (candidate != null
+                    && string.Equals(candidate.name, regionName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    targetRegion = candidate;
+                    break;
+                }
+            }
+
+            if (targetRegion == null || targetRegion.primaryTile == null)
+            {
+                return false;
+            }
+
+            TileSample currentTile = SampleBaseTile(gridPosition.x, gridPosition.y);
+            return currentTile.tile == targetRegion.primaryTile;
+        }
+
         protected override void Awake()
         {
             if (config != null)
@@ -62,6 +96,12 @@ namespace Necrocis
 
             if (biomeType == BiomeType.Lung)
             {
+                LungBiomeHazardController hazardController = GetComponent<LungBiomeHazardController>();
+                if (hazardController == null)
+                {
+                    hazardController = gameObject.AddComponent<LungBiomeHazardController>();
+                }
+                hazardController.Initialize(this);
                 StartCoroutine(PlayLungAmbientImpacts());
             }
         }
