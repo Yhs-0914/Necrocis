@@ -625,6 +625,18 @@ namespace ProceduralMap
             return new Vector2Int(cell.x, cell.y);
         }
 
+        // The lung scene uses sand as its base tile. Covered or raised cells
+        // must not trigger the sandstorm merely because sand lies underneath.
+        public bool IsExposedLungSand(Vector3 worldPosition)
+        {
+            if (gridData == null || !baseTilemap) return false;
+            Vector2Int position = WorldToCell(worldPosition);
+            if (!gridData.IsInside(position.x, position.y) || position.y <= bottomEmptyRows) return false;
+            MapCell cell = gridData.GetCell(position.x, position.y);
+            return !cell.IsVoid && !cell.HasCliff && cell.HeightLevel == 0
+                && !cell.HasGrass && !cell.HasRoad && !cell.HasLava && !cell.HasStomachRock;
+        }
+
         private Vector3 GetCellCenterWorld(Vector2Int cell)
         {
             return baseTilemap.GetCellCenterWorld(new Vector3Int(cell.x, cell.y, 0));

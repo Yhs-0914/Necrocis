@@ -128,6 +128,12 @@ namespace Necrocis
 
             CreateBossArena();
             PlayBiomeBgm();
+            if (biomeType == BiomeType.Lung)
+            {
+                var hazards = GetComponent<LungBiomeHazardController>();
+                if (hazards == null) hazards = gameObject.AddComponent<LungBiomeHazardController>();
+                hazards.Initialize(mapGenerator);
+            }
             if (biomeType == BiomeType.Stomach)
             {
                 StomachAcidCycle existingCycle = null;

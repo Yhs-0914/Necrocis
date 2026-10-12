@@ -47,6 +47,7 @@ namespace Necrocis
 
         private readonly System.Collections.Generic.List<LineRenderer> windStreaks = new System.Collections.Generic.List<LineRenderer>();
         private ConfigurableBiomeManager biome;
+        private ProceduralMap.MapGenerator proceduralMap;
         private PlayerController player;
         private WindState windState;
         private Vector3 mapCenter;
@@ -63,6 +64,18 @@ namespace Necrocis
         {
             biome = owner;
             mapCenter = biome.GridToWorld(biome.MapWidth / 2, biome.MapHeight / 2);
+            StartHazards();
+        }
+
+        public void Initialize(ProceduralMap.MapGenerator owner)
+        {
+            proceduralMap = owner;
+            mapCenter = owner.GetCellCenterWorld(owner.MapWidth / 2, owner.MapHeight / 2);
+            StartHazards();
+        }
+
+        private void StartHazards()
+        {
             BuildWindVisuals();
             BuildVisionMask();
 
@@ -150,6 +163,8 @@ namespace Necrocis
 
         private bool IsPlayerInSandstorm()
         {
+            if (proceduralMap != null && player != null)
+                return proceduralMap.IsExposedLungSand(player.transform.position);
             return biome != null
                 && player != null
                 && biome.IsWorldPositionUsingRegionTile(player.transform.position, sandstormRegionName);
