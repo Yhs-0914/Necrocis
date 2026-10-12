@@ -152,6 +152,81 @@ namespace ProceduralMap
         public int RandomSeed => randomSeed;
         public AuthoredMapLayout AuthoredLayout => authoredLayout;
 
+        private Tilemap acidFloodTilemap;
+
+        // A visual layer only: flooding must not turn the entire escape route into
+        // impassable HasLava cells. The permanent terrain remains unchanged.
+        public void SetAcidFloodLevel(float level)
+        {
+            if (gridData == null || !lavaTilemap || !lavaRuntimeTiles[4]) return;
+            level = Mathf.Clamp01(level);
+            if (!acidFloodTilemap)
+            {
+                if (level <= 0f) return;
+                GameObject layer = new GameObject("Stomach Acid Flood", typeof(Tilemap), typeof(TilemapRenderer));
+                layer.transform.SetParent(lavaTilemap.transform.parent, false);
+                layer.transform.localPosition = lavaTilemap.transform.localPosition;
+                layer.transform.localRotation = lavaTilemap.transform.localRotation;
+                layer.transform.localScale = lavaTilemap.transform.localScale;
+                layer.layer = lavaTilemap.gameObject.layer;
+                acidFloodTilemap = layer.GetComponent<Tilemap>();
+                acidFloodTilemap.tileAnchor = lavaTilemap.tileAnchor;
+                acidFloodTilemap.orientation = lavaTilemap.orientation;
+                acidFloodTilemap.orientationMatrix = lavaTilemap.orientationMatrix;
+                TilemapRenderer source = lavaTilemap.GetComponent<TilemapRenderer>();
+                TilemapRenderer renderer = layer.GetComponent<TilemapRenderer>();
+                renderer.sharedMaterial = source.sharedMaterial;
+                renderer.sortingLayerID = source.sortingLayerID;
+                renderer.sortingOrder = 4;
+                foreach (Vector2Int chunk in activeChunks) RenderAcidFloodChunk(chunk);
+            }
+            acidFloodTilemap.color = new Color(1f, 1f, 1f, level);
+            acidFloodTilemap.gameObject.SetActive(level > 0f);
+        }
+
+        private bool IsAcidFloodCell(int x, int y)
+        {
+            if (gridData == null || !gridData.IsInside(x, y) || y <= bottomEmptyRows) return false;
+            MapCell cell = gridData.GetCell(x, y);
+            return !cell.IsVoid && !cell.HasCliff && cell.HeightLevel == 0;
+        }
+
+        public bool IsPlayerInAcid(Vector3 worldPosition, bool floodActive)
+        {
+            if (gridData == null || !baseTilemap) return false;
+            Vector2Int position = WorldToCell(worldPosition);
+            if (!IsAcidFloodCell(position.x, position.y)) return false;
+            MapCell cell = gridData.GetCell(position.x, position.y);
+            // Rocks protect against permanent lava, but are submerged in a flood.
+            return floodActive || (cell.HasLava && !cell.HasStomachRock);
+        }
+
+        private void RenderAcidFloodChunk(Vector2Int chunk)
+        {
+            if (!acidFloodTilemap) return;
+            int startX = chunk.x * chunkSize;
+            int startY = chunk.y * chunkSize;
+            int width = Mathf.Min(chunkSize, mapWidth - startX);
+            int height = Mathf.Min(chunkSize, mapHeight - startY);
+            TileBase[] tiles = new TileBase[width * height];
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                int gx = startX + x;
+                int gy = startY + y;
+                if (!IsAcidFloodCell(gx, gy)) continue;
+                bool up = IsAcidFloodCell(gx, gy + 1);
+                bool down = IsAcidFloodCell(gx, gy - 1);
+                bool left = IsAcidFloodCell(gx - 1, gy);
+                bool right = IsAcidFloodCell(gx + 1, gy);
+                int tile = !up && !left ? 0 : !up && !right ? 2 :
+                    !down && !left ? 6 : !down && !right ? 8 :
+                    !up ? 1 : !left ? 3 : !right ? 5 : !down ? 7 : 4;
+                tiles[y * width + x] = lavaRuntimeTiles[tile];
+            }
+            acidFloodTilemap.SetTilesBlock(new BoundsInt(startX, startY, 0, width, height, 1), tiles);
+        }
+
         public void ConfigureRandomSeed(int seed)
         {
             randomSeed = seed;
@@ -492,6 +567,34 @@ namespace ProceduralMap
             return true;
         }
 
+        // Landing needs the same footprint clearance as normal movement.
+        public bool TryGetClearTraversalLanding(Vector3 destination, Vector3 facing,
+            Vector2 halfExtents, out Vector3 safeLanding)
+        {
+            safeLanding = destination;
+            if (gridData == null) return false;
+            int level = GetHeightLevelAtWorld(destination);
+            Vector3 forward = CellDirectionToWorld(WorldFacingToCellDirection(facing));
+            Vector3 secondAxis = useXZWorld ? Vector3.forward : Vector3.up;
+            Vector3 side = useXZWorld ? new Vector3(-forward.z, 0f, forward.x)
+                : new Vector3(-forward.y, forward.x, 0f);
+            // Search slightly inside the target floor, including corner clearance.
+            for (int depth = 0; depth <= 10; depth++)
+            {
+                Vector3 center = destination + forward * (depth * 0.1f);
+                if (!IsValidPlayerWorldSample(center, level)) break;
+                for (int lateral = 0; lateral <= 8; lateral++)
+                {
+                    float offset = ((lateral + 1) / 2) * 0.1f * (lateral % 2 == 0 ? -1f : 1f);
+                    Vector3 candidate = center + side * offset;
+                    if (CountInvalidWorldSamples(candidate, halfExtents + Vector2.one * 0.02f,
+                        level, secondAxis) != 0) continue;
+                    safeLanding = candidate;
+                    return true;
+                }
+            }
+            return false;
+        }
         private bool TryValidateLavaJump(
             Vector2Int current, Vector2Int gapPosition, Vector2Int landingPosition)
         {
@@ -608,6 +711,13 @@ namespace ProceduralMap
         [ContextMenu("Clear Map")]
         public void ClearMap()
         {
+            if (acidFloodTilemap)
+            {
+                acidFloodTilemap.ClearAllTiles();
+                if (Application.isPlaying) Destroy(acidFloodTilemap.gameObject);
+                else DestroyImmediate(acidFloodTilemap.gameObject);
+                acidFloodTilemap = null;
+            }
             ClearTilemap(baseTilemap);
             ClearTilemap(grassTilemap);
             ClearTilemap(secondFloorTilemap);
@@ -1195,6 +1305,7 @@ namespace ProceduralMap
             }
 
             LoadChunkObstacles(coordinate);
+            RenderAcidFloodChunk(coordinate);
             activeChunks.Add(coordinate);
         }
 
@@ -1219,6 +1330,7 @@ namespace ProceduralMap
                 if (roadTilemap) roadTilemap.SetTile(position, null);
                 if (lavaTilemap) lavaTilemap.SetTile(position, null);
                 if (stomachRockTilemap) stomachRockTilemap.SetTile(position, null);
+                if (acidFloodTilemap) acidFloodTilemap.SetTile(position, null);
             }
 
             if (chunkObstacleInstances.TryGetValue(coordinate, out List<GameObject> instances))

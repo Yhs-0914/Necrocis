@@ -34,6 +34,9 @@ namespace Necrocis
 
         public void Configure(EnemySpawner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition)
         {
+            hitByPlayer = false;
+            suppressKillCredit = false;
+            pendingFloodDamage = 0f;
             this.owner = owner;
             this.config = config;
             poolArchetypeId = GetPoolArchetypeId(config);

@@ -6,6 +6,21 @@ namespace Necrocis
     public partial class EnemyController
     {
         [SerializeField] private bool logDamageToConsole;
+        private bool hitByPlayer;
+        private bool suppressKillCredit;
+        private float pendingFloodDamage;
+
+        public void TakeFloodDamage(float damage)
+        {
+            if (IsDead || IsBossEncounter || stats == null || damage <= 0f) return;
+            // Health uses whole units and rounds every positive hit up to at least 1.
+            // Accumulate fractions so low-health enemies do not die every frame.
+            pendingFloodDamage += damage;
+            float wholeDamage = Mathf.Floor(pendingFloodDamage + 0.00001f);
+            if (wholeDamage < 1f) return;
+            pendingFloodDamage = Mathf.Max(0f, pendingFloodDamage - wholeDamage);
+            ApplyIncomingDamage(wholeDamage, false);
+        }
 
         private float DifficultyAttackCooldown =>
             config != null
@@ -282,13 +297,20 @@ namespace Necrocis
 
         public void TakeDamage(float damage)
         {
+            ApplyIncomingDamage(damage, true);
+        }
+
+        private void ApplyIncomingDamage(float damage, bool fromPlayer)
+        {
             if (IsDead) return;
             if (stats == null)
             {
                 return;
             }
 
-            float finalDamage = EnemyCombatCalculator.GetIncomingDamage(damage, statusEffectController);
+            float finalDamage = fromPlayer
+                ? EnemyCombatCalculator.GetIncomingDamage(damage, statusEffectController)
+                : damage;
             if (finalDamage <= 0f)
             {
                 return;
@@ -297,11 +319,15 @@ namespace Necrocis
             float appliedDamage = stats.ApplyDamage(finalDamage);
             if (appliedDamage > 0f)
             {
-                DamageTaken?.Invoke(this, appliedDamage);
+                if (fromPlayer)
+                {
+                    hitByPlayer = true;
+                    DamageTaken?.Invoke(this, appliedDamage);
+                }
                 CombatVfx.PlayEnemyHit(this, appliedDamage, stats.IsDead);
             }
 
-            if (logDamageToConsole && config != null && !config.isElite)
+            if (fromPlayer && logDamageToConsole && config != null && !config.isElite)
             {
                 string enemyName = string.IsNullOrWhiteSpace(config.name) ? gameObject.name : config.name;
                 Debug.Log($"[DamageLog] Player -> {enemyName} : {appliedDamage:0.##} (HP {stats.CurrentHealth:0.##}/{stats.MaxHealth:0.##})");
@@ -309,12 +335,13 @@ namespace Necrocis
 
             if (stats.IsDead)
             {
+                suppressKillCredit = !fromPlayer && !hitByPlayer;
                 if (!ignoreMidBossArenaRestriction)
                 {
                     AudioManager.Instance?.PlaySFX("EnemyDeath");
                 }
 
-                if (PlayerController.Instance != null)
+                if (!suppressKillCredit && PlayerController.Instance != null)
                 {
                     PlayerItemCombatEffects itemEffects = PlayerController.Instance.GetComponent<PlayerItemCombatEffects>();
                     itemEffects?.NotifyEnemyDefeatedByPlayer(this);
@@ -331,7 +358,7 @@ namespace Necrocis
 
         public void GrantExp()
         {
-            if (config == null) return;
+            if (config == null || suppressKillCredit) return;
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;

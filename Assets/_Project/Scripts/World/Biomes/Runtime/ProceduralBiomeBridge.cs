@@ -128,6 +128,19 @@ namespace Necrocis
 
             CreateBossArena();
             PlayBiomeBgm();
+            if (biomeType == BiomeType.Stomach)
+            {
+                StomachAcidCycle existingCycle = null;
+                foreach (var cycle in FindObjectsByType<StomachAcidCycle>(FindObjectsSortMode.None))
+                {
+                    if (cycle.gameObject.scene == gameObject.scene)
+                    {
+                        existingCycle = cycle;
+                        break;
+                    }
+                }
+                if (existingCycle == null) gameObject.AddComponent<StomachAcidCycle>();
+            }
         }
 
         private void BuildEnemyRules()

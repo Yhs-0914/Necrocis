@@ -97,7 +97,8 @@ namespace Necrocis
                     transform.position, facing, out destination);
                 lavaJump = found;
             }
-            if (!found) { ResetHold(); return; }
+            if (!found || !map.TryGetClearTraversalLanding(destination, facing,
+                terrainHalfExtents, out destination)) { ResetHold(); return; }
 
             if (!hasPendingDestination || pendingLavaJump != lavaJump ||
                 (pendingDestination - destination).sqrMagnitude > 0.001f)
@@ -142,10 +143,10 @@ namespace Necrocis
             float smooth = t * t * (3f - 2f * t);
             Vector3 position = Vector3.Lerp(traversalStart, traversalDestination, smooth);
             if (pendingLavaJump) position.y += Mathf.Sin(t * Mathf.PI) * lavaJumpHeight;
-            transform.position = position;
+            player.SpawnAt(position);
 
             if (t < 1f) return;
-            transform.position = traversalDestination;
+            player.SpawnAt(traversalDestination);
             isTraversing = false;
             pendingLavaJump = false;
         }
