@@ -22,7 +22,7 @@ namespace Necrocis
 
         private Vector3 moveDirection;
         private float speed;
-        private float damage;
+        private EnemyDamageRequest damage;
         private float lifeTime;
         private float elapsed;
         private bool launched;
@@ -104,7 +104,8 @@ namespace Necrocis
         public void Launch(Vector3 direction, float damage, float speed, float lifeTime, EnemyController sourceEnemy = null)
         {
             moveDirection = direction.normalized;
-            this.damage = damage;
+            this.damage = sourceEnemy != null ? sourceEnemy.CreateAttackDamage(damage)
+                : new EnemyDamageRequest(damage * DifficultyBalanceService.GetIncomingDamageMultiplier(null), null);
             this.speed = speed;
             this.lifeTime = lifeTime;
             elapsed = 0f;
@@ -171,7 +172,7 @@ namespace Necrocis
             {
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
-                    playerHealth.TakeDamage(damage, ownerEnemy);
+                    player.TakeDamage(damage);
                 }
                 CombatVfx.PlayHostileProjectileImpact(transform.position, moveDirection);
                 ReturnToPool();
@@ -216,97 +217,13 @@ namespace Necrocis
         }
 
         private bool IsTouchingPlayer(PlayerController player, Collider playerCollider, Vector3 previousPosition, Vector3 currentPosition)
-        {
-            if (player == null)
-            {
-                return false;
-            }
-
-            float hitRadius = GetCurrentHitRadius();
-            if (playerCollider != null && playerCollider.enabled)
-            {
-                Bounds playerBounds = playerCollider.bounds;
-                return SegmentIntersectsExpandedBoundsPlanar(previousPosition, currentPosition, playerBounds, hitRadius);
-            }
-
-            float fallbackRadius = hitRadius + 0.35f;
-            return SegmentDistanceSqrPlanar(previousPosition, currentPosition, player.transform.position) <= fallbackRadius * fallbackRadius;
-        }
+            => CombatHitGeometry.SweepTouchesPlayer(previousPosition, currentPosition, GetCurrentHitRadius(), player);
 
         private float GetCurrentHitRadius()
         {
             Vector3 scale = transform.lossyScale;
             float visualRadius = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z)) * 0.5f;
             return Mathf.Max(MinHitRadius, visualRadius);
-        }
-
-        private static bool SegmentIntersectsExpandedBoundsPlanar(Vector3 start, Vector3 end, Bounds bounds, float expansion)
-        {
-            float minX = bounds.min.x - expansion;
-            float maxX = bounds.max.x + expansion;
-            float minZ = bounds.min.z - expansion;
-            float maxZ = bounds.max.z + expansion;
-
-            if (PointInsideBoundsPlanar(start, minX, maxX, minZ, maxZ)
-                || PointInsideBoundsPlanar(end, minX, maxX, minZ, maxZ))
-            {
-                return true;
-            }
-
-            Vector3 delta = end - start;
-            float tMin = 0f;
-            float tMax = 1f;
-            if (!ClipSegmentAxis(start.x, delta.x, minX, maxX, ref tMin, ref tMax))
-            {
-                return false;
-            }
-
-            return ClipSegmentAxis(start.z, delta.z, minZ, maxZ, ref tMin, ref tMax);
-        }
-
-        private static bool PointInsideBoundsPlanar(Vector3 point, float minX, float maxX, float minZ, float maxZ)
-        {
-            return point.x >= minX && point.x <= maxX
-                && point.z >= minZ && point.z <= maxZ;
-        }
-
-        private static bool ClipSegmentAxis(float start, float delta, float min, float max, ref float tMin, ref float tMax)
-        {
-            if (Mathf.Abs(delta) < 0.00001f)
-            {
-                return start >= min && start <= max;
-            }
-
-            float inv = 1f / delta;
-            float t1 = (min - start) * inv;
-            float t2 = (max - start) * inv;
-            if (t1 > t2)
-            {
-                float tmp = t1;
-                t1 = t2;
-                t2 = tmp;
-            }
-
-            tMin = Mathf.Max(tMin, t1);
-            tMax = Mathf.Min(tMax, t2);
-            return tMin <= tMax;
-        }
-
-        private static float SegmentDistanceSqrPlanar(Vector3 start, Vector3 end, Vector3 point)
-        {
-            Vector2 a = new Vector2(start.x, start.z);
-            Vector2 b = new Vector2(end.x, end.z);
-            Vector2 p = new Vector2(point.x, point.z);
-            Vector2 ab = b - a;
-            float abSqr = ab.sqrMagnitude;
-            if (abSqr <= 0.00001f)
-            {
-                return (p - a).sqrMagnitude;
-            }
-
-            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / abSqr);
-            Vector2 closest = a + ab * t;
-            return (p - closest).sqrMagnitude;
         }
 
         private void OnDisable()

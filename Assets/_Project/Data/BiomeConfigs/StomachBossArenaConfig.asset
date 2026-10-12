@@ -57,11 +57,12 @@ MonoBehaviour:
       displayName: StomachBoss
       useCustomBossRule: 1
       bossRule:
+        monsterDefinition: {fileID: 11400000, guid: a3cc0c00447f347f2b324b82b8e9dc41, type: 2}
         name: StomachBoss
         density: 0
         minDistance: 8
         poissonSalt: 7203
-        allowedRegions:
+        allowedRegions: 
         maxAlive: 1
         activationRadius: 0
         respawnCooldown: 0
@@ -154,11 +155,11 @@ MonoBehaviour:
         deathAnimationSpeed: 0.15
         isElite: 0
         tintColor: {r: 1, g: 1, b: 1, a: 1}
-        killTriggerEnemyName:
+        killTriggerEnemyName: 
         killTriggerCount: 0
         splitsOnDeath: 0
         splitCount: 0
-        splitEnemyName:
+        splitEnemyName: 
         splitVfxSprites: []
         splitVfxScale: 3
         splitVfxSpeed: 0.08
@@ -202,6 +203,7 @@ MonoBehaviour:
         parasiteMaxCount: 3
         parasiteSpawnDelay: 0.45
         parasiteSpawnRadius: 1.1
+        parasiteDefinition: {fileID: 0}
         parasiteMaxHealth: 6
         parasiteMoveSpeed: 2.3
         parasiteAttackDamage: 1
@@ -239,6 +241,11 @@ MonoBehaviour:
         healingPoseCooldown: 15
         healingPoseDuration: 5
         damageHealRatio: 0.7
+        healingPoseLowerSprites: []
+        healingPoseLowerSpritesDown: []
+        healingPoseRaiseSprites: []
+        healingPoseRaiseSpritesDown: []
+        healingPoseAnimationSpeed: 0.12
         phase1PreferredDistanceRatio: 0.72
         phase2PreferredDistance: 2.6
         roamRadius: 9
@@ -307,6 +314,7 @@ MonoBehaviour:
         phase1AttackDamage: 2
         phase1MoveSpeed: 1
         windGustMoveSpeed: 3
+        windGustSpeedMultiplier: 3
         windGustInterval: 5
         windGustDuration: 1.25
         brotherSpacing: 3.2
@@ -330,6 +338,7 @@ MonoBehaviour:
         gasProjectileRadius: 0.7
         gasProjectileScale: 1
         gasWindup: 0.25
+        gasProjectileHeightOffset: 2
         phase1ContactDamage: 1
         phase2ContactDamage: 2
         contactRadius: 1.05

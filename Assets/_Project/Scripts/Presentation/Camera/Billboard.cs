@@ -37,6 +37,7 @@ namespace Necrocis
         private Vector3 baseLocalPosition;
         private bool hasUpdated;
         private bool hasBaseLocalPosition;
+        public float YOffset => yOffset;
 
         private void Start()
         {

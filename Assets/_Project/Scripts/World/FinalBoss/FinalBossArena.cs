@@ -12,6 +12,51 @@ namespace Necrocis
         public static FinalBossArena Instance { get; private set; }
         [SerializeField] private Transform[] pillars;
         private MapGenerator map;
+        private FinalBossBalanceConfig runtimeBalance;
+        private DifficultyBalanceProfile summonDifficulty;
+        private MonsterProgressionProfile summonProgression;
+        public FinalBossBalanceConfig Balance
+        {
+            get
+            {
+                if (runtimeBalance == null)
+                {
+                    FinalBossBalanceConfig source = Resources.Load<FinalBossBalanceConfig>(FinalBossBalanceConfig.ResourcePath);
+                    if (source == null) throw new System.InvalidOperationException("최종 보스 전용 밸런스 설정이 없습니다.");
+                    string error = source.GetValidationError();
+                    if (error != null) throw new System.InvalidOperationException(error);
+                    runtimeBalance = Instantiate(source);
+                    runtimeBalance.hideFlags = HideFlags.HideAndDontSave;
+                }
+                return runtimeBalance;
+            }
+        }
+
+        public static EnemyDamageRequest CreateDamage(float amount)
+        {
+            float multiplier = Instance != null ? Instance.Balance.GetDifficulty(SaveService.ActiveDifficulty).damage : 1f;
+            return new EnemyDamageRequest(Mathf.Max(0f, amount * multiplier), null);
+        }
+
+        public MonsterBalanceRuntime CaptureSummonBalance(MonsterDefinition definition, bool weakened)
+        {
+            if (definition == null) throw new System.InvalidOperationException("최종 보스 소환 몬스터의 정의가 없습니다.");
+            if (summonDifficulty == null)
+            {
+                summonDifficulty = ScriptableObject.CreateInstance<DifficultyBalanceProfile>();
+                summonDifficulty.difficulty = SaveService.ActiveDifficulty;
+                summonDifficulty.hideFlags = HideFlags.HideAndDontSave;
+                summonProgression = ScriptableObject.CreateInstance<MonsterProgressionProfile>();
+                summonProgression.hideFlags = HideFlags.HideAndDontSave;
+            }
+            // This encounter has its own multipliers and no biome visit progression.
+            var result = new MonsterBalanceRuntime(definition, summonDifficulty, summonProgression, 0);
+            FinalBossDifficultyBalance difficulty = Balance.GetDifficulty(summonDifficulty.difficulty);
+            float ratio = weakened ? Balance.phaseOne.weakenedMidBossStatRatio : 1f;
+            result.ApplyEncounterMultipliers(difficulty.health * ratio, difficulty.damage * ratio,
+                difficulty.summonMoveSpeed, weakened ? 0f : difficulty.summonExperience, difficulty.summonCooldown);
+            return result;
+        }
 
         public Vector2 WorldSize => new Vector2(map.MapWidth, map.MapHeight);
         public Vector3 SpawnPosition => map.GetPlayerSpawnWorldPosition();
@@ -67,6 +112,9 @@ namespace Necrocis
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (runtimeBalance != null) Destroy(runtimeBalance);
+            if (summonDifficulty != null) Destroy(summonDifficulty);
+            if (summonProgression != null) Destroy(summonProgression);
         }
 
         public Vector3 UVToWorld(Vector2 uv) => new Vector3(uv.x * map.MapWidth, 0f, uv.y * map.MapHeight);

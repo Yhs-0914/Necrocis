@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9652be4e21f7448ca494d590d4f7a2f, type: 3}
+  m_Name: MonsterProgressionProfile
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterProgressionProfile
+  stages:
+  - stage: 0
+    maxHealth: 1
+    attackPower: 1
+    experience: 1
+  - stage: 1
+    maxHealth: 1.15
+    attackPower: 1.08
+    experience: 1.1
+  - stage: 2
+    maxHealth: 1.35
+    attackPower: 1.2
+    experience: 1.25
+  - stage: 3
+    maxHealth: 1.6
+    attackPower: 1.35
+    experience: 1.4
+  - stage: 4
+    maxHealth: 1.85
+    attackPower: 1.5
+    experience: 1.6

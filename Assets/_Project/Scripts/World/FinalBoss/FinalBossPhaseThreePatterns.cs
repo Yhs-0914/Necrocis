@@ -7,8 +7,8 @@ namespace Necrocis
     public sealed partial class FinalBossPhaseThreeController
     {
         public enum MobilePattern { None, DashRain, GrabThrow, TentacleCombo, HomingSwarm, Reflection, CellBombs }
-        [SerializeField, Min(10f)] private float collapseDuration = 45f;
-        [SerializeField, Min(.5f)] private float patternRecovery = 1.8f;
+        private float collapseDuration;
+        private float patternRecovery;
         private bool attacking;
         private bool reflectingAppearance;
         private float chargeEnd, chargeDuration;
@@ -145,7 +145,7 @@ namespace Necrocis
                 if (t >= nextEcho) { StartCoroutine(DashEcho()); nextEcho = t + .075f; }
                 PlayerController player = PlayerController.Instance;
                 if (!hit && player != null && SegmentDistance(player.transform.position, before, Position) < 1.8f)
-                { player.TakeDamage(2f); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.dashDamage)); hit = true; }
                 yield return null;
             }
             bodyLean = 0f;
@@ -224,7 +224,7 @@ namespace Necrocis
                     landing.y = GroundHeight(landing);
                     grabbedPlayer.SetBossDisplacementPosition(landing);
                     grabSafePosition = landing;
-                    grabbedPlayer.TakeDamage(2f);
+                    grabbedPlayer.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.grabDamage));
                     Impact(landing, 1.5f);
                 }
                 ReleaseGrab();
@@ -295,7 +295,7 @@ namespace Necrocis
                 wake.SetSweep(-360f * t / .85f, 70f);
                 PlayerController player = PlayerController.Instance;
                 if (!hit && player != null && InLane(player.transform.position, origin, dir, 7.5f, .9f))
-                { player.TakeDamage(2f); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage)); hit = true; }
                 yield return null;
             }
             Destroy(wake.gameObject);
@@ -333,7 +333,7 @@ namespace Necrocis
                     extension, Mathf.Min(1f, (.62f - t) * 8f));
                 PlayerController player = PlayerController.Instance;
                 if (!hit && t < .28f && player != null && InLane(player.transform.position, origin, direction, reach, width * .5f))
-                { player.TakeDamage(2f); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage)); hit = true; }
                 yield return null;
             }
             if (sprite != null) Destroy(sprite.gameObject);
@@ -427,7 +427,7 @@ namespace Necrocis
             }
             if (sprite != null) Destroy(sprite.gameObject);
             PlayerController player = PlayerController.Instance;
-            if (player != null && Flat(player.transform.position - point).magnitude <= radius) player.TakeDamage(bomb ? 2f : 1f);
+            if (player != null && Flat(player.transform.position - point).magnitude <= radius) player.TakeDamage(FinalBossArena.CreateDamage(bomb ? arena.Balance.phaseThree.fallingBombDamage : arena.Balance.phaseThree.fallingCellDamage));
             Impact(point, radius);
         }
 
@@ -502,7 +502,7 @@ namespace Necrocis
 
         private void UpdateCollapse()
         {
-            if (!collapseStarted && damageTarget.Stats.HealthNormalized <= .1f)
+            if (!collapseStarted && damageTarget.Stats.HealthNormalized <= arena.Balance.phaseThree.collapseHealthRatio)
             {
                 collapseStarted = true; collapseElapsed = 0f;
                 AudioManager.Instance?.PlaySFX("BossPhaseChange", .8f);
@@ -550,7 +550,7 @@ namespace Necrocis
             PlayerController player = PlayerController.Instance;
             if (player != null && Time.time >= nextBoundaryHit
                 && (TimeRemaining <= 0f || !safeArea.Contains(new Vector2(player.transform.position.x, player.transform.position.z))))
-            { nextBoundaryHit = Time.time + 1f; player.TakeDamage(TimeRemaining <= 0f ? 2f : 1f); }
+            { nextBoundaryHit = Time.time + 1f; player.TakeDamage(FinalBossArena.CreateDamage(TimeRemaining <= 0f ? arena.Balance.phaseThree.overtimeDamage : arena.Balance.phaseThree.boundaryDamage)); }
             // The shrinking edge may overtake the boss too; gently move it into the playable interior.
             Vector3 target = Position;
             target.x = Mathf.Clamp(target.x, safeArea.xMin + footprint.x, safeArea.xMax - footprint.x);

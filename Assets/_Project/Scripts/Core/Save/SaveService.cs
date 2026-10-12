@@ -5,9 +5,9 @@ using UnityEngine.SceneManagement;
 
 namespace Necrocis
 {
-    public static class SaveService
+    public static partial class SaveService
     {
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         private const string ProfileFileName = "profile.json";
         private const string NormalFileName = "normal.json";
@@ -303,6 +303,7 @@ namespace Necrocis
 
             hard = cleared;
             activeRun = null;
+            ResetLoadedVisit();
             restorePending = false;
             return SaveProfile(out error);
         }
@@ -345,6 +346,7 @@ namespace Necrocis
         public static void ClearActiveSessionReference()
         {
             activeRun = null;
+            ResetLoadedVisit();
             restorePending = false;
         }
 
@@ -383,6 +385,7 @@ namespace Necrocis
             normal = LoadRun(NormalFileName, GameDifficulty.Normal);
             hard = LoadRun(HardFileName, GameDifficulty.Hard);
             activeRun = null;
+            ResetLoadedVisit();
             restorePending = false;
             initialized = true;
             MigrateLegacyBossDiscoveries();
@@ -395,6 +398,7 @@ namespace Necrocis
             normal = null;
             hard = null;
             activeRun = null;
+            ResetLoadedVisit();
             initialized = false;
             restorePending = false;
         }
@@ -403,6 +407,7 @@ namespace Necrocis
         private static void ActivateRun(RunSaveData run)
         {
             activeRun = run;
+            ResetLoadedVisit(true);
             restorePending = true;
         }
 
@@ -492,6 +497,14 @@ namespace Necrocis
             run.bosses ??= new BossProgressSaveData();
             run.checkpoint ??= new ResumeCheckpointSaveData();
             run.world ??= new WorldRunSaveData();
+            run.world.biomeElitePlans ??= new List<BiomeElitePlan>();
+            run.world.defeatedBiomeEliteIds ??= new List<string>();
+            run.world.biomeElitePlans.RemoveAll(p => p == null);
+            foreach (BiomeElitePlan plan in run.world.biomeElitePlans)
+            {
+                plan.placements ??= new List<BiomeElitePlacement>();
+                plan.placements.RemoveAll(e => e == null || string.IsNullOrEmpty(e.spawnId) || string.IsNullOrEmpty(e.monsterId));
+            }
         }
 
         private static bool ValidateProfile(ProfileSaveData value)

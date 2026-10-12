@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace Necrocis
 {
-    public class PlayerController : MonoBehaviour
+    public partial class PlayerController : MonoBehaviour
     {
         public static event System.Action OnPlayerDied;
 
@@ -296,6 +296,7 @@ namespace Necrocis
             Vector3 pos = transform.position;
             pos.y = 0f;
             transform.position = pos;
+            InitializeCombatHitbox();
             ApplyJobVisual(LevelUpManager.GetCurrentJob());
 
             // 珥덇린 ?좊땲硫붿씠??(?湲?
@@ -320,6 +321,7 @@ namespace Necrocis
 
         private void FixedUpdate()
         {
+            RefreshCombatHitbox();
             SyncDeathState();
             Move();
             ApplyLockedY();
@@ -939,6 +941,12 @@ namespace Necrocis
             playerStatsConfigured = true;
         }
         // TakeDamage: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
+
+        public void TakeDamage(EnemyDamageRequest damage)
+        {
+            if (deathHandled || (isDashing && invincibleDuringDash)) return;
+            HealthComponent?.TakeDamage(damage);
+        }
 
         public void TakeDamage(float damage)
         {

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   normalKillsPerElite: 10
   enemySpawnRules:
-  - name: StomachGulp
+  - monsterDefinition: {fileID: 11400000, guid: ed14b06444759459aa397748f15059de, type: 2}
+    name: StomachGulp
     density: 0.05
     minDistance: 6
     poissonSalt: 1601
@@ -55,11 +56,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: b5eacb39c1ee4c5fb04a14290fd55673, type: 3}
     - {fileID: 21300000, guid: 759ef037f92c489aaccdf74b424f5839, type: 3}
     - {fileID: 21300000, guid: 2a3fe19565bd4182b95057e2d079590e, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: 480ba6f597284f0ba537eee6f98e62d4, type: 3}
     - {fileID: 21300000, guid: 8f7896b770b947948df26337006bea83, type: 3}
     - {fileID: 21300000, guid: f8ffc66c972a47b9ba7760e3cce265cf, type: 3}
     - {fileID: 21300000, guid: 27cc38fa5aee4d0585e4d72d4bda8a3c, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: 3104ef8f98f04656b93f98d16529b7f6, type: 3}
     - {fileID: 21300000, guid: 468b3e6e3a97408d819174c4653318bf, type: 3}
@@ -68,6 +73,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.45, z: 0}
@@ -77,19 +88,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 2fc9cae72ddf46dc8265b8b59de96764, type: 3}
     - {fileID: 21300000, guid: 72b66e23917e4d96a1675ff2a921f601, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 1
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -99,7 +108,8 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: StomachMucusSnail
+  - monsterDefinition: {fileID: 11400000, guid: 5776acaa48a8544d2b6221fe5ca01aab, type: 2}
+    name: StomachMucusSnail
     density: 0.05
     minDistance: 6
     poissonSalt: 1602
@@ -140,11 +150,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 2918ac1db2954045859d033579f95e16, type: 3}
     - {fileID: 21300000, guid: 81cd95cfb99641cbaba8220bfd118f7c, type: 3}
     - {fileID: 21300000, guid: cca964bf3e9e432ebb693e5b28f73e73, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: ed1f155d553d4862af64d638b7062f0b, type: 3}
     - {fileID: 21300000, guid: 61d10846c2354aa8b8dfa538efb5fd81, type: 3}
     - {fileID: 21300000, guid: c8d7e0d394d64aa697fbeec03162ace1, type: 3}
     - {fileID: 21300000, guid: d493a266b7564fe3b6df0bccf84cdbbd, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: 52f8f0f1460e40fbadccfa9a904d962d, type: 3}
     - {fileID: 21300000, guid: c703f179168c4678aa93c562b2544997, type: 3}
@@ -153,6 +167,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
     attackColliderCenter: {x: 0, y: 0.48, z: 0}
@@ -162,19 +182,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 107aa6d741e248feb0ed0842b5d71e6a, type: 3}
     - {fileID: 21300000, guid: b850b8b13e1548c6ac3f60046456ff26, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 0
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -184,7 +202,8 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: StomachOverfedSac
+  - monsterDefinition: {fileID: 11400000, guid: 83507b86eb762412da73736941f79ecf, type: 2}
+    name: StomachOverfedSac
     density: 0.05
     minDistance: 6
     poissonSalt: 1603
@@ -225,11 +244,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 0565b99a69bb425089752fbfd03dd4ac, type: 3}
     - {fileID: 21300000, guid: d21b3725b6f0486da3eab6e6c532f23d, type: 3}
     - {fileID: 21300000, guid: 5b464c1366db494893d1fe9c121f271b, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: 2d2a2c748b8f4dbf873493e171ca7949, type: 3}
     - {fileID: 21300000, guid: 274375968fec48828b6003366a12028f, type: 3}
     - {fileID: 21300000, guid: 478e4826cf2d4e44a5628a54bb08adc8, type: 3}
     - {fileID: 21300000, guid: 5a1e8ca4ae7447a89977a799d9f1d42a, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: 52e63841a27a42c48391fe04308f5f8c, type: 3}
     - {fileID: 21300000, guid: d2a2e264481543fbbb90ecc5457cd39e, type: 3}
@@ -238,6 +261,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.45, z: 0}
@@ -247,19 +276,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: eab05fdddb394e0186c9be0353e3479d, type: 3}
     - {fileID: 21300000, guid: c695c4e36b5f4af7a3cf775e1e9ae42a, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 1
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3

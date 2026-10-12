@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   normalKillsPerElite: 10
   enemySpawnRules:
-  - name: LungBreathBubble
+  - monsterDefinition: {fileID: 11400000, guid: 499aed563f6cc4da79eaad32bd62751b, type: 2}
+    name: LungBreathBubble
     density: 0.05
     minDistance: 6
     poissonSalt: 1610
@@ -55,11 +56,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 746ff059623b441facaae2c2b5672036, type: 3}
     - {fileID: 21300000, guid: 912a868470b843e1aba8aa4219867540, type: 3}
     - {fileID: 21300000, guid: 47ac75f96c794c1094eb235d8e09dd88, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: 3d2ffc55e10f448eab94446a06474b96, type: 3}
     - {fileID: 21300000, guid: 37ee51bbb92f47edaf5fc2f09ee44024, type: 3}
     - {fileID: 21300000, guid: d4774d5196844347afe99e061fb343d0, type: 3}
     - {fileID: 21300000, guid: 0ef0bd5b3f7f43b8877e2635bbfb76cb, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: e46b13708cc4423192239e48ad943886, type: 3}
     - {fileID: 21300000, guid: 6015f8d077324f2d89c00522f464981c, type: 3}
@@ -68,6 +73,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.45, z: 0}
@@ -77,19 +88,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: a2b04e4e68a44c15b6ef8fe5f8898880, type: 3}
     - {fileID: 21300000, guid: 33ae27ea7c8e44b1a6a48d7da5d087b1, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 1
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -99,7 +108,8 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: LungCiliaBrush
+  - monsterDefinition: {fileID: 11400000, guid: 09c64a797ef7441ad977d9749ce1b1ab, type: 2}
+    name: LungCiliaBrush
     density: 0.05
     minDistance: 6
     poissonSalt: 1611
@@ -140,11 +150,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: d8a2d8064fe44d3b8e2aff682fb1eb20, type: 3}
     - {fileID: 21300000, guid: f3d6a7c6121e478b8a09c6ae0bd1180b, type: 3}
     - {fileID: 21300000, guid: e9780887e2134ab2893cac5e94ed5bda, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: babb767c76b14c358d6c6446b332bcb5, type: 3}
     - {fileID: 21300000, guid: 0a470bcffd36426b899b61f0d1429571, type: 3}
     - {fileID: 21300000, guid: cbb0051da4fc46b282d64be98bf21123, type: 3}
     - {fileID: 21300000, guid: f26b6c76bfc04067818d2ba92c74112b, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: 3ae9f0930ba240c98d64db50925f93c3, type: 3}
     - {fileID: 21300000, guid: 97fefdbf076e4a08b7137812bc05b8c4, type: 3}
@@ -153,6 +167,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 0
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 0.65, y: 0.95, z: 0.65}
     attackColliderCenter: {x: 0, y: 0.48, z: 0}
@@ -162,19 +182,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: a7bd64de012943efbdb2e47b0f6fab16, type: 3}
     - {fileID: 21300000, guid: 9210d3b6c65e4e33826b6a80c1664cf1, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 0
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3
@@ -184,7 +202,8 @@ MonoBehaviour:
     debrisVfxSprites: []
     debrisVfxScale: 15
     debrisVfxSpeed: 0.12
-  - name: LungOverinflatedAlveoli
+  - monsterDefinition: {fileID: 11400000, guid: 643bd1d9f29654393b97f17d249d2599, type: 2}
+    name: LungOverinflatedAlveoli
     density: 0.05
     minDistance: 6
     poissonSalt: 1612
@@ -225,11 +244,15 @@ MonoBehaviour:
     - {fileID: 21300000, guid: cb97170f6ba947aba255166ee74a28ea, type: 3}
     - {fileID: 21300000, guid: 61096a8c6f0847a08ba3c481d929b570, type: 3}
     - {fileID: 21300000, guid: 90cf554a45c5493b9dd674834cd91f2e, type: 3}
+    idleSpritesUp: []
+    idleSpritesDown: []
     moveSprites:
     - {fileID: 21300000, guid: ad50e3587e4a47228099c82bce486d61, type: 3}
     - {fileID: 21300000, guid: 181a8b72393a48e29de8e18325f044fb, type: 3}
     - {fileID: 21300000, guid: 1358ff3cf9584ff4bf700c56b7021ca7, type: 3}
     - {fileID: 21300000, guid: 89053310ced74ea5a9c6390b6310613d, type: 3}
+    moveSpritesUp: []
+    moveSpritesDown: []
     attackSprites:
     - {fileID: 21300000, guid: 28dc1e48fb324a2287cb19a4c150dfc9, type: 3}
     - {fileID: 21300000, guid: fa315be6323442c1a5c7e4def93ba202, type: 3}
@@ -238,6 +261,12 @@ MonoBehaviour:
     attackSpritesUp: []
     attackSpritesDown: []
     attackAnimationSpeed: 0.14
+    isRanged: 1
+    projectileSpeed: 6
+    projectileLifeTime: 3
+    projectileSprite: {fileID: 0}
+    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
+    projectileSpawnOffset: 0.5
     expandColliderOnAttack: 0
     attackColliderSize: {x: 2, y: 2, z: 2}
     attackColliderCenter: {x: 0, y: 0.45, z: 0}
@@ -247,19 +276,17 @@ MonoBehaviour:
     - {fileID: 21300000, guid: f676a99ab9624fbb81202e9a69268d7b, type: 3}
     - {fileID: 21300000, guid: 5c40afe89d7c45d58efef0b9283a1918, type: 3}
     deathAnimationSpeed: 0.16
-    isRanged: 1
-    projectileSpeed: 6
-    projectileLifeTime: 3
-    projectileSprite: {fileID: 0}
-    projectileScale: {x: 0.3, y: 0.3, z: 0.3}
-    projectileSpawnOffset: 0.5
     isElite: 0
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
     killTriggerEnemyName:
     killTriggerCount: 5
-    tintColor: {r: 1, g: 1, b: 1, a: 1}
     splitsOnDeath: 0
     splitCount: 2
     splitEnemyName:
+    splitVfxSprites: []
+    splitVfxScale: 3
+    splitVfxSpeed: 0.08
+    splitVfxDuration: 0.6
     chargesAtPlayer: 0
     chargeSpeed: 6
     chargeAccelTime: 0.3

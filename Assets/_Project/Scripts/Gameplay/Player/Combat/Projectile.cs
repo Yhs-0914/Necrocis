@@ -29,6 +29,7 @@ namespace Necrocis
         private float currentSpeed;
         private float deactivateTime;
         private bool hasImpacted;
+        private Collider hitCollider;
         private float traveledDistance;
         private bool returning;
         private int maxHitCount = 1;
@@ -49,6 +50,7 @@ namespace Necrocis
         private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
         private readonly RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
         private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
+        private int propAttackToken;
 
         private Vector3 defaultLocalScale = Vector3.one;
         private bool defaultScaleCached;
@@ -70,6 +72,7 @@ namespace Necrocis
 
         public void Launch(Vector3 direction, float damage, LayerMask mask, float range, PlayerItemCombatEffects effects, SpawnKind kind = SpawnKind.Normal)
         {
+            propAttackToken = ResidueRubble.NextAttackToken();
             direction.y = 0f;
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             this.damage = damage;
@@ -181,6 +184,7 @@ namespace Necrocis
 
             Vector3 nextPosition = transform.position + step;
             nextPosition.y = flightHeight;
+            ResidueRubble.HitAlongSegment(transform.position, nextPosition, GetScaledHitCheckRadius(), damage, targetMask, propAttackToken);
             transform.position = nextPosition;
             traveledDistance += reflected ? step.magnitude : stepDistance;
 
@@ -235,6 +239,8 @@ namespace Necrocis
                 return;
             }
 
+            if (other.TryGetComponent(out ResidueRubble rubble))
+            { rubble.ApplyPlayerHit(damage, propAttackToken); return; } // Prop hits do not consume or redirect the projectile.
             if (!TryGetEnemyController(other, out EnemyController enemy) || enemy.IsDead)
             {
                 return;
@@ -621,7 +627,7 @@ namespace Necrocis
                 Mathf.Abs(transform.localScale.x),
                 Mathf.Max(Mathf.Abs(transform.localScale.y), Mathf.Abs(transform.localScale.z)));
             float scaleRatio = Mathf.Max(0.05f, currentSize / defaultSize);
-            return Mathf.Max(0.05f, hitCheckRadius * scaleRatio);
+            return Mathf.Max(.05f, Mathf.Max(hitCheckRadius * scaleRatio, PlayerAttackGeometry.ColliderRadius(hitCollider))) + PlayerAttackGeometry.Padding;
         }
 
         private void ApplyExplosionDamage(EnemyController primaryEnemy, float sourceDamage)
@@ -635,6 +641,7 @@ namespace Necrocis
                 QueryTriggerInteraction.Collide);
 
             float explosionDamage = Mathf.Max(0f, sourceDamage * itemEffects.GetExplosionDamageMultiplier());
+            ResidueRubble.HitArea(transform.position, radius, Vector3.forward, 180, explosionDamage, targetMask, propAttackToken);
             SpawnExplosionVisual(transform.position, radius);
             for (int i = 0; i < hitCount; i++)
             {
@@ -700,6 +707,7 @@ namespace Necrocis
 
         private void CacheDefaultScale()
         {
+            if (hitCollider == null) hitCollider = GetComponent<Collider>();
             if (defaultScaleCached)
             {
                 return;

@@ -91,6 +91,9 @@ namespace Necrocis
             }
 
             Chunk chunk = chunks[chunkX, chunkY];
+            // A teleport/reentry can reload this chunk before the deferred unload check runs.
+            // Its current objects then belong to a new load, not to the previous cleanup.
+            if (chunk == null || chunk.isLoaded) yield break;
             if (HasResidualChunkObjects(chunk))
             {
                 ReportResidualChunkObjects("Residual chunk objects after unload", chunk);

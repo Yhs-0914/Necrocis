@@ -20,7 +20,7 @@ namespace Necrocis
         private static Sprite[] cachedVoidShieldSprites;
 
         // 소유자/설정
-        private EnemySpawner owner;              // 이 적을 생성한 스포너 (사망 통보용)
+        private IEnemySpawnOwner owner;              // 이 적을 생성한 스포너 (사망 통보용)
         private EnemySpawnRuleConfig config;      // 적 설정 데이터 (속도, 체력, 감지범위 등)
         private int poolArchetypeId;              // 풀 분류 ID (같은 타입끼리 재사용)
 
@@ -87,7 +87,8 @@ namespace Necrocis
         public bool IsAttackAnimPlaying => attackAnimPlaying;
         public bool IsDeathAnimPlaying => deathAnimPlaying;
         public bool IsStationary => config != null && config.isRanged;
-        public bool IsElite => config != null && config.isElite;
+        public bool IsAiSuppressed => aiSuppressed;
+        public bool IsElite => Balance != null ? Balance.Current.Tier == MonsterTier.Elite : config != null && config.isElite;
         public bool IsCharger => config != null && config.chargesAtPlayer;
         public bool IsCharging => isCharging;
         public bool CanCharge => IsCharger && chargeCooldownTimer <= 0f;

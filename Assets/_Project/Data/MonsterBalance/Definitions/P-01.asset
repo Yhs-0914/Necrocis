@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: P-01
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.p-01
+  displayName: "P-01 \uBD84\uC9C4 \uBB49\uCE58"
+  tier: 1
+  designNote: 'P-01-A: fixed vulnerable core, one committed moving dust area, one
+    hit per cloud, separate cluster/core deaths. P-MAP registration requires its
+    own approval.'
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: 8b235f8c64ffa495bb97c4d980246a1f, type: 2}
+  patternDamage:
+  - id: dust-cloud
+    coefficient: 1.5

@@ -8,10 +8,11 @@ namespace Necrocis
     public class LungBossPatternSettings
     {
         [Header("Phase 1")]
-        public float phase1BrotherHealth = 40f;
-        public float phase1AttackDamage = 2f;
-        public float phase1MoveSpeed = 1f;
-        public float windGustMoveSpeed = 3f;
+        [HideInInspector] public float phase1BrotherHealth = 40f;
+        [HideInInspector] public float phase1AttackDamage = 2f;
+        [HideInInspector] public float phase1MoveSpeed = 1f;
+        [HideInInspector] public float windGustMoveSpeed = 3f;
+        [Min(0f)] public float windGustSpeedMultiplier = 3f;
         public float windGustInterval = 5f;
         public float windGustDuration = 1.25f;
         public float brotherSpacing = 3.2f;
@@ -22,9 +23,9 @@ namespace Necrocis
         public float phase1GasKnockback = 1f;
 
         [Header("Phase 2")]
-        public float phase2MaxHealth = 100f;
-        public float phase2AttackDamage = 4f;
-        public float phase2MoveSpeed = 1.5f;
+        [HideInInspector] public float phase2MaxHealth = 100f;
+        [HideInInspector] public float phase2AttackDamage = 4f;
+        [HideInInspector] public float phase2MoveSpeed = 1.5f;
         public float phase2GasRange = 10f;
         public float phase2GasCooldown = 4f;
         public float phase2GasKnockback = 1.2f;
@@ -35,7 +36,7 @@ namespace Necrocis
         public float diveTravelTime = 0.65f;
         public float diveArcHeight = 4f;
         public float diveLandingRadius = 1.45f;
-        public float diveLandingDamage = 3f;
+        [HideInInspector] public float diveLandingDamage = 3f;
         public float diveKnockback = 1.4f;
 
         [Header("Gas Projectile")]
@@ -46,8 +47,8 @@ namespace Necrocis
         public float gasProjectileHeightOffset = 2f;
 
         [Header("Contact")]
-        public float phase1ContactDamage = 1f;
-        public float phase2ContactDamage = 2f;
+        [HideInInspector] public float phase1ContactDamage = 1f;
+        [HideInInspector] public float phase2ContactDamage = 2f;
         public float contactRadius = 1.05f;
         public float contactCooldown = 1.1f;
 
@@ -79,10 +80,10 @@ namespace Necrocis
         }
 
         [Header("Phase 1")]
-        [SerializeField] private float phase1BrotherHealth = 40f;
-        [SerializeField] private float phase1AttackDamage = 2f;
-        [SerializeField] private float phase1MoveSpeed = 1f;
-        [SerializeField] private float windGustMoveSpeed = 3f;
+        [SerializeField, HideInInspector] private float phase1BrotherHealth = 40f;
+        [SerializeField, HideInInspector] private float phase1AttackDamage = 2f;
+        [SerializeField, HideInInspector] private float phase1MoveSpeed = 1f;
+        [SerializeField, HideInInspector] private float windGustMoveSpeed = 3f;
         [SerializeField] private float windGustInterval = 5f;
         [SerializeField] private float windGustDuration = 1.25f;
         [SerializeField] private float brotherSpacing = 3.2f;
@@ -93,9 +94,9 @@ namespace Necrocis
         [SerializeField] private float phase1GasKnockback = 1f;
 
         [Header("Phase 2")]
-        [SerializeField] private float phase2MaxHealth = 100f;
-        [SerializeField] private float phase2AttackDamage = 4f;
-        [SerializeField] private float phase2MoveSpeed = 1.5f;
+        [SerializeField, HideInInspector] private float phase2MaxHealth = 100f;
+        [SerializeField, HideInInspector] private float phase2AttackDamage = 4f;
+        [SerializeField, HideInInspector] private float phase2MoveSpeed = 1.5f;
         [SerializeField] private float phase2GasRange = 10f;
         [SerializeField] private float phase2GasCooldown = 4f;
         [SerializeField] private float phase2GasKnockback = 1.2f;
@@ -106,7 +107,7 @@ namespace Necrocis
         [SerializeField] private float diveTravelTime = 0.65f;
         [SerializeField] private float diveArcHeight = 4f;
         [SerializeField] private float diveLandingRadius = 1.45f;
-        [SerializeField] private float diveLandingDamage = 3f;
+        [SerializeField, HideInInspector] private float diveLandingDamage = 3f;
         [SerializeField] private float diveKnockback = 1.4f;
 
         [Header("Gas Projectile")]
@@ -117,8 +118,8 @@ namespace Necrocis
         [SerializeField] private float gasProjectileHeightOffset = 2f;
 
         [Header("Contact")]
-        [SerializeField] private float phase1ContactDamage = 1f;
-        [SerializeField] private float phase2ContactDamage = 2f;
+        [SerializeField, HideInInspector] private float phase1ContactDamage = 1f;
+        [SerializeField, HideInInspector] private float phase2ContactDamage = 2f;
         [SerializeField] private float contactRadius = 1.05f;
         [SerializeField] private float contactCooldown = 1.1f;
 
@@ -152,6 +153,7 @@ namespace Necrocis
         private Vector3 baseScale = Vector3.one;
         private BossPhase phase;
         private EnemyController survivor;
+        private float windGustSpeedMultiplier = 3f;
         private float nextWindGustTime;
         private float windGustEndTime;
         private float nextPhase2GasTime;
@@ -214,6 +216,7 @@ namespace Necrocis
             phase1AttackDamage = settings.phase1AttackDamage;
             phase1MoveSpeed = settings.phase1MoveSpeed;
             windGustMoveSpeed = settings.windGustMoveSpeed;
+            windGustSpeedMultiplier = settings.windGustSpeedMultiplier;
             windGustInterval = settings.windGustInterval;
             windGustDuration = settings.windGustDuration;
             brotherSpacing = settings.brotherSpacing;
@@ -290,13 +293,16 @@ namespace Necrocis
                 return;
             }
 
+            brother.PatternOwnsContact = true;
+            brother.SuppressExperienceReward = brother.Balance != null;
             brother.SetAiSuppressed(true);
             brother.SetIgnoreMidBossArenaRestriction(true);
             brother.Defeated -= HandleBrotherDefeated;
             brother.Defeated += HandleBrotherDefeated;
 
             brotherStats[index] = brother.Stats;
-            if (brotherStats[index] != null)
+            if (brother.Balance != null) brother.ApplyBalancePhase("Default", true);
+            else if (brotherStats[index] != null)
             {
                 brotherStats[index].SetBaseStat(CharacterStatType.MaxHealth, phase1BrotherHealth, true);
                 brotherStats[index].SetBaseStat(CharacterStatType.AttackPower, phase1AttackDamage);
@@ -499,6 +505,8 @@ namespace Necrocis
 
         private void EnterPhase2(EnemyController newSurvivor)
         {
+            // The two bodies form one boss encounter. Only the final survivor grants its reward.
+            if (newSurvivor != null) newSurvivor.SuppressExperienceReward = false;
             StopAllCoroutines();
             CleanupPatternObjects();
             for (int i = 0; i < gasRunning.Length; i++)
@@ -514,7 +522,8 @@ namespace Necrocis
             nextDiveTime = Time.time + 2.5f;
 
             int survivorIndex = GetBrotherIndex(survivor);
-            if (survivorIndex >= 0 && brotherStats[survivorIndex] != null)
+            if (survivor != null && survivor.Balance != null) survivor.ApplyBalancePhase("Phase2", true);
+            else if (survivorIndex >= 0 && brotherStats[survivorIndex] != null)
             {
                 brotherStats[survivorIndex].SetBaseStat(CharacterStatType.MaxHealth, phase2MaxHealth, true);
                 brotherStats[survivorIndex].SetBaseStat(CharacterStatType.AttackPower, phase2AttackDamage);
@@ -565,7 +574,7 @@ namespace Necrocis
             }
 
             windGustEndTime = Time.time + Mathf.Max(0.1f, windGustDuration);
-            nextWindGustTime = Time.time + Mathf.Max(0.2f, windGustInterval);
+            nextWindGustTime = Time.time + GetEncounterRearmCooldown(Mathf.Max(0.2f, windGustInterval));
             AudioManager.Instance?.PlaySFX("LungHighSpeed");
             Vector3 center = anchorPosition;
             center.y = GetGroundHeight(center) + 0.08f;
@@ -634,7 +643,7 @@ namespace Necrocis
             PlayerController player = PlayerController.Instance;
             if (IsPlayerWithinRange(landing, diveLandingRadius))
             {
-                player.TakeDamage(diveLandingDamage);
+                player.TakeDamage(actor.CreatePatternDamage("dive", diveLandingDamage));
                 ApplyPlayerKnockback(player, landing, diveKnockback);
             }
 
@@ -658,7 +667,7 @@ namespace Necrocis
                 shooter.transform.position,
                 forward,
                 phase2GasRange,
-                phase2AttackDamage,
+                shooter.CreatePatternDamage("gas", phase2AttackDamage),
                 phase2GasKnockback);
 
             phase2ActionRunning = false;
@@ -674,7 +683,7 @@ namespace Necrocis
         {
             yield return GasWindup(shooter);
             GameObject projectile = CreateGasProjectile(shooter.transform.position, direction);
-            yield return MoveGasProjectiles(projectile, null, shooter.transform.position, direction, range, damage, knockback);
+            yield return MoveGasProjectiles(projectile, null, shooter.transform.position, direction, range, shooter.CreatePatternDamage("gas", damage), knockback);
             onComplete?.Invoke();
         }
 
@@ -706,7 +715,7 @@ namespace Necrocis
             Vector3 origin,
             Vector3 direction,
             float range,
-            float damage,
+            EnemyDamageRequest damage,
             float knockback)
         {
             float distance = 0f;
@@ -755,7 +764,9 @@ namespace Necrocis
                 return;
             }
 
-            float speed = IsWindGustActive() ? windGustMoveSpeed : phase1MoveSpeed;
+            float speed = brother.Balance != null
+                ? brother.Stats.MoveSpeed * (IsWindGustActive() ? windGustSpeedMultiplier : 1f)
+                : (IsWindGustActive() ? windGustMoveSpeed : phase1MoveSpeed);
             brother.MoveByExternalPattern(direction.normalized * Mathf.Max(0f, speed) * Time.deltaTime);
         }
 
@@ -767,7 +778,7 @@ namespace Necrocis
                 return;
             }
 
-            actor.MoveByExternalPattern(direction.normalized * Mathf.Max(0f, phase2MoveSpeed) * Time.deltaTime);
+            actor.MoveByExternalPattern(direction.normalized * Mathf.Max(0f, actor.Balance != null ? actor.Stats.MoveSpeed : phase2MoveSpeed) * Time.deltaTime);
         }
 
         private Vector3 GetPhase1MoveDirection(int index, Vector3 position)
@@ -851,8 +862,8 @@ namespace Necrocis
                 return;
             }
 
-            nextContactTime[index] = Time.time + Mathf.Max(0.1f, contactCooldown);
-            player.TakeDamage(damage);
+            nextContactTime[index] = Time.time + actor.GetRearmCooldown(Mathf.Max(0.1f, contactCooldown));
+            player.TakeDamage(actor.CreateContactDamage(damage));
         }
 
         private GameObject CreateGasProjectile(Vector3 shooterPosition, Vector3 direction)
@@ -919,25 +930,31 @@ namespace Necrocis
             return Time.time < windGustEndTime;
         }
 
+        private float GetEncounterRearmCooldown(float seconds)
+        {
+            EnemyController actor = survivor != null ? survivor : GetBrother(0);
+            return actor != null ? actor.GetRearmCooldown(seconds) : seconds;
+        }
+
         private float GetPhase1GasCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return GetEncounterRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0.05f, phase1GasCooldown);
+                : Mathf.Max(0.05f, phase1GasCooldown));
         }
 
         private float GetPhase2GasCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return GetEncounterRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0.05f, phase2GasCooldown);
+                : Mathf.Max(0.05f, phase2GasCooldown));
         }
 
         private float GetDiveCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return GetEncounterRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0.05f, diveCooldown);
+                : Mathf.Max(0.05f, diveCooldown));
         }
 
         private EnemyController GetBrother(int index)

@@ -91,6 +91,8 @@ namespace Necrocis
 
             damageTarget = EnemyController.Acquire(owner.transform, rule.name, EnemyController.GetPoolArchetypeId(rule));
             damageTarget.Configure(null, rule, transform.position, transform.position);
+            maxHealth = owner.Balance.phaseOne.pillarMaxHealth * owner.Balance.GetDifficulty(SaveService.ActiveDifficulty).health;
+            damageTarget.Stats.SetBaseStat(CharacterStatType.MaxHealth, maxHealth, true);
             damageTarget.SetAiSuppressed(true);
             damageTarget.DamageTaken += HandleDamageTaken;
             damageTarget.Defeated += HandleDefeated;

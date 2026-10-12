@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e10ed7b87804b49d9a5cc47ba312e029, type: 3}
+  m_Name: HelicoSpiral_A
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.HelicoSpiralPatternSettings
+  triggerDistance: 4.5
+  approachStopDistance: 2.5
+  spawnGraceSeconds: 0.75
+  windupSeconds: 0.7
+  dashDistance: 3.5
+  dashSeconds: 0.25
+  bodyWidth: 0.8
+  bodyHalfLength: 0.35
+  recoverySeconds: 0.9
+  rearmSeconds: 2.5
+  tailSweepEnabled: 0
+  tailWindupSeconds: 0.9
+  tailSweepSeconds: 0.18
+  tailReach: 1.1
+  tailArcDegrees: 120
+  tailWidth: 0.09
+  tailRecoverySeconds: 1.25
+  tailRearmSeconds: 2.5
+  presentation: {fileID: 11400000, guid: 4128ba587c29a4856a52952a7b132024, type: 2}

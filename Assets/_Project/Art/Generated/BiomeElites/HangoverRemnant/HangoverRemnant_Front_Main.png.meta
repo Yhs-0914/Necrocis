@@ -1,0 +1,393 @@
+fileFormatVersion: 2
+guid: 6d25e5f0d1b21445e8fa807cf49cb833
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 142
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_00
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 698
+        width: 238
+        height: 224
+      alignment: 9
+      pivot: {x: 0.49579832, y: 0.03125}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1cb8d2a18715b4489a166dc029ca105c
+      internalID: 1974511402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_01
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 698
+        width: 237
+        height: 232
+      alignment: 9
+      pivot: {x: 0.4978903, y: 0.030172413}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7208afb55dd9b4431a87d4b1514681c6
+      internalID: 447575710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_02
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 699
+        width: 273
+        height: 191
+      alignment: 9
+      pivot: {x: 0.4981685, y: 0.036649216}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac35d618bb4eb4463a0e220dce314028
+      internalID: -1104810462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1151
+        y: 699
+        width: 238
+        height: 216
+      alignment: 9
+      pivot: {x: 0.5, y: 0.032407407}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 204aae123c5654a06ad11c761fcf7836
+      internalID: -120771146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_04
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 372
+        width: 237
+        height: 212
+      alignment: 9
+      pivot: {x: 0.4978903, y: 0.03301887}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9530cb727aeb40a9ac41cb63ec60ec7
+      internalID: -2131443584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_05
+      rect:
+        serializedVersion: 2
+        x: 430
+        y: 372
+        width: 237
+        height: 238
+      alignment: 9
+      pivot: {x: 0.4978903, y: 0.029411765}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73d5fea9d1eb04461975298aa5bc6fd9
+      internalID: 1189458009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_06
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 373
+        width: 239
+        height: 247
+      alignment: 9
+      pivot: {x: 0.49790794, y: 0.02834008}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 897e7e284de0c49599a7953fd94591e9
+      internalID: -110239556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_07
+      rect:
+        serializedVersion: 2
+        x: 1151
+        y: 373
+        width: 235
+        height: 247
+      alignment: 9
+      pivot: {x: 0.49787235, y: 0.02834008}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 557f25c4577b14711a3493f6322214fb
+      internalID: -1574290990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_08
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 71
+        width: 238
+        height: 204
+      alignment: 9
+      pivot: {x: 0.49579832, y: 0.034313727}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 052497d0a11ba4c5c9337861ed62c959
+      internalID: -1938983592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_09
+      rect:
+        serializedVersion: 2
+        x: 433
+        y: 71
+        width: 234
+        height: 180
+      alignment: 9
+      pivot: {x: 0.5, y: 0.03888889}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d878aef1da7f341c7a2cbebe8b9ed5b7
+      internalID: -1237552049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_10
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 71
+        width: 239
+        height: 217
+      alignment: 9
+      pivot: {x: 0.49790794, y: 0.032258064}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5969f03a6757b4b09bf2f89c26108bef
+      internalID: 1271095928
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HangoverRemnant_Front_Main_11
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 71
+        width: 237
+        height: 193
+      alignment: 9
+      pivot: {x: 0.4978903, y: 0.03626943}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 88337d3d2530b477a82c944f509f75bb
+      internalID: -1285768803
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 4784006f366bb43d281947a6fea6a672
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HangoverRemnant_Front_Main_00: 1974511402
+      HangoverRemnant_Front_Main_01: 447575710
+      HangoverRemnant_Front_Main_02: -1104810462
+      HangoverRemnant_Front_Main_03: -120771146
+      HangoverRemnant_Front_Main_04: -2131443584
+      HangoverRemnant_Front_Main_05: 1189458009
+      HangoverRemnant_Front_Main_06: -110239556
+      HangoverRemnant_Front_Main_07: -1574290990
+      HangoverRemnant_Front_Main_08: -1938983592
+      HangoverRemnant_Front_Main_09: -1237552049
+      HangoverRemnant_Front_Main_10: 1271095928
+      HangoverRemnant_Front_Main_11: -1285768803
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -127,6 +127,7 @@ namespace Necrocis
             }
 
             CreateBossArena();
+            BiomeEliteField.Create(this, config);
             PlayBiomeBgm();
             if (biomeType == BiomeType.Lung)
             {

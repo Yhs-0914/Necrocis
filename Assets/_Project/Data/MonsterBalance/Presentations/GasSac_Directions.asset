@@ -1,0 +1,121 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64f03e833dffa4bc2b1517bfac670f21, type: 3}
+  m_Name: GasSac_Directions
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.EnemyDirectionalPresentation
+  mode: 0
+  authoredFacingLeft: 1
+  boundaryHysteresisDegrees: 8
+  sideOrigin: {x: 0, y: 0}
+  frontOrigin: {x: 0, y: 0}
+  backOrigin: {x: 0, y: 0}
+  frontDiagonalOrigin: {x: 0, y: 0}
+  backDiagonalOrigin: {x: 0, y: 0}
+  frames:
+  - motion: 0
+    label: "\uB300\uAE30 \xB7 \uD33D\uCC3D \uC2DC\uC791"
+    source: {fileID: -1817208486, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: -764966275, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: 154985826, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 2"
+    source: {fileID: 1239959777, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: 1646082844, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: -1143910632, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 3"
+    source: {fileID: 1714589731, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: 1719093615, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: -174050344, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 4"
+    source: {fileID: 1040861865, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: -1110879301, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: -1449262624, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 5"
+    source: {fileID: 827631476, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: -911820029, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: 1418583401, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 6"
+    source: {fileID: 1434664869, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: 446767936, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: 516922516, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 1
+    label: "\uD33D\uCC3D 7"
+    source: {fileID: 2007720481, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: 5585268, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: -24483572, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 2
+    label: "\uC218\uCD95 \xB7 \uD68C\uBCF5"
+    source: {fileID: -1108146575, guid: 27dca5da72a1245948c6e8c8db7b1ee0, type: 3}
+    front: {fileID: 575419437, guid: 1053179ffe6b544d5a0a5e6a6087b733, type: 3}
+    back: {fileID: 29238476, guid: 81d31963939df42a99dc3420bc49e834, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 1"
+    source: {fileID: -1495736533, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: 135279126, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: 2076712914, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 2"
+    source: {fileID: -134786007, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: 590908957, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: 415014923, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 3"
+    source: {fileID: -1318342792, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: 1517524915, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: 1130456612, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 4"
+    source: {fileID: -2140722629, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: -801480979, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: -2107866898, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 5"
+    source: {fileID: -740706562, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: -1215643612, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: -1204490788, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}
+  - motion: 4
+    label: "\uC0AC\uB9DD 6"
+    source: {fileID: 1318040244, guid: fc3e6647f3ed4490f8ef3bf85bbeb8ca, type: 3}
+    front: {fileID: -2031757066, guid: 5886a678eacbf48dc8276a7b12b37a7a, type: 3}
+    back: {fileID: -1128782971, guid: 4d045ec4c6f5547d988458d33d4568ac, type: 3}
+    frontDiagonal: {fileID: 0}
+    backDiagonal: {fileID: 0}

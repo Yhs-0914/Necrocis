@@ -168,7 +168,7 @@ namespace Necrocis
             if (elapsed >= lifeTime - .45f
                 || RelativeSegmentDistanceSquared(relativeStart, relativeEnd) > .62f * .62f) return;
 
-            player.TakeDamage(damage);
+            player.TakeDamage(FinalBossArena.CreateDamage(damage));
             Destroy(gameObject);
         }
 

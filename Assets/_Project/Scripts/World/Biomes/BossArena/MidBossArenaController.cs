@@ -1539,6 +1539,7 @@ namespace Necrocis
             EnemySpawnRuleConfig boss = new EnemySpawnRuleConfig
             {
                 name = string.IsNullOrWhiteSpace(bossDefinition?.displayName) ? source.name : bossDefinition.displayName,
+                monsterDefinition = source.monsterDefinition,
                 density = source.density,
                 minDistance = source.minDistance,
                 poissonSalt = source.poissonSalt,
@@ -1614,7 +1615,7 @@ namespace Necrocis
                 debrisVfxSpeed = source.debrisVfxSpeed
             };
 
-            if (bossDefinition != null && bossDefinition.overrideStats)
+            if (boss.monsterDefinition == null && bossDefinition != null && bossDefinition.overrideStats)
             {
                 boss.maxHealth *= Mathf.Max(0.01f, bossDefinition.maxHealthMultiplier);
                 boss.attackDamage *= Mathf.Max(0.01f, bossDefinition.attackDamageMultiplier);
@@ -1628,7 +1629,8 @@ namespace Necrocis
                 ApplyBossScaleToCollision(boss, scaleMultiplier);
             }
 
-            boss.maxHealth = Mathf.Max(boss.maxHealth, GetConfiguredMinimumBossMaxHealth(bossDefinition));
+            if (boss.monsterDefinition == null)
+                boss.maxHealth = Mathf.Max(boss.maxHealth, GetConfiguredMinimumBossMaxHealth(bossDefinition));
 
             return boss;
         }

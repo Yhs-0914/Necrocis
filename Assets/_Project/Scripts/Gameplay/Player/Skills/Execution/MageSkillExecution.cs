@@ -29,7 +29,7 @@ namespace Necrocis
                     enemy.TakeDamage(totalDamage);
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
                     status?.ApplyStun(mageSkill1.stunDuration);
-                });
+                }, PlayerCombatCalculator.GetSkillDamage(baseDamage + bonusMax, CurrentPlayerStats));
 
             SpawnSkillEffect(
                 mageSkill1.areaEffectPrefab,

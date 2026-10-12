@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: I-01
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.i-01
+  displayName: "I-01 \uAC00\uC2A4\uB0AD"
+  tier: 1
+  designNote: "I-01 A/B: \uADFC\uAC70\uB9AC \uB2E8\uBC1C \uD3ED\uBC1C, \uC6D0\uAC70\uB9AC
+    \uACE0\uC815 \uC870\uC900 \uAC00\uC2A4\uD0C4 1\uBC1C. \uD68C\uBCF5/\uB300\uAE30\uB294
+    \uC120\uD0DD\uD55C \uD328\uD134\uB9CC \uC801\uC6A9. I-MAP \uB4F1\uB85D \uC804
+    \uAC1C\uBCC4 \uAC80\uD1A0 \uB2E8\uACC4."
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: eb3bfeb7f81d74452bca371176d4ab23, type: 2}
+  patternDamage:
+  - id: gas-burst
+    coefficient: 1.5
+  - id: gas-orb
+    coefficient: 1.25

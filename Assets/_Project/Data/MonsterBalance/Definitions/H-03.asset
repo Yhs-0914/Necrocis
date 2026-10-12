@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: H-03
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.h-03
+  displayName: "H-03 \uC219\uCDE8 \uC794\uC7AC"
+  tier: 1
+  designNote: "H-03-A: \uC815\uBA74 \uACE0\uC815, \uC790\uAE30 \uC9C0\uBA74\uC5D0
+    0.65\uCD08 \uC608\uACE0 \u2192 \uC794\uC5EC\uBB3C 1\uAC1C \u2192 \uB300\uC0C1
+    \uBC18\uB300 \uD6C4\uD1F4 \u2192 \uC0DD\uC131 1.1\uCD08 \uD6C4 \uB2E8\uBC1C \uD3ED\uBC1C.
+    \uC804\uC6A9 \uC815\uBA74 \uC0AC\uB9DD 6\uC7A5. H-MAP \uB4F1\uB85D \uBCC4\uB3C4
+    \uC2B9\uC778."
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: dce7f7b014dd94caf844a1e09ff47ae5, type: 2}
+  patternDamage:
+  - id: hangover-burst
+    coefficient: 1.5

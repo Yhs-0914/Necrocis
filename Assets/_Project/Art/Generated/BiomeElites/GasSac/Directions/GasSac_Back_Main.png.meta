@@ -1,0 +1,301 @@
+fileFormatVersion: 2
+guid: 81d31963939df42a99dc3420bc49e834
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 200
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: GasSac_Back_Main_00
+      rect:
+        serializedVersion: 2
+        x: 126
+        y: 471
+        width: 213
+        height: 279
+      alignment: 9
+      pivot: {x: 0.5070422, y: 0.010752688}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f20b00eee0814025ad186fbfd6eb040
+      internalID: 154985826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_01
+      rect:
+        serializedVersion: 2
+        x: 543
+        y: 471
+        width: 249
+        height: 302
+      alignment: 9
+      pivot: {x: 0.48995984, y: 0.009933775}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81d80073a87184ab8b6c8faa2182aa15
+      internalID: -1143910632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_02
+      rect:
+        serializedVersion: 2
+        x: 951
+        y: 469
+        width: 280
+        height: 320
+      alignment: 9
+      pivot: {x: 0.49285713, y: 0.009375}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc8cca4fa825c48b58eeed30c6ec9b8b
+      internalID: -174050344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1382
+        y: 469
+        width: 312
+        height: 338
+      alignment: 9
+      pivot: {x: 0.49358973, y: 0.00887574}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b45c4bcdf6a341c999229cfb98d7558
+      internalID: -1449262624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_04
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 52
+        width: 347
+        height: 366
+      alignment: 9
+      pivot: {x: 0.50144094, y: 0.008196721}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 943871860ac9e480491f3a9582d6a3c8
+      internalID: 1418583401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_05
+      rect:
+        serializedVersion: 2
+        x: 475
+        y: 52
+        width: 380
+        height: 384
+      alignment: 9
+      pivot: {x: 0.49473685, y: 0.0078125}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05eaaf2d285524ade95162a20fe92e9b
+      internalID: 516922516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_06
+      rect:
+        serializedVersion: 2
+        x: 892
+        y: 53
+        width: 407
+        height: 390
+      alignment: 9
+      pivot: {x: 0.4889435, y: 0.0076923077}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 760006a87d5c04984ba39235424bcc8b
+      internalID: -24483572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GasSac_Back_Main_07
+      rect:
+        serializedVersion: 2
+        x: 1380
+        y: 45
+        width: 332
+        height: 172
+      alignment: 9
+      pivot: {x: 0.48795182, y: 0.017441861}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 520175be84a9549b2bee9a767b01938e
+      internalID: 29238476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ea25c2fdb17a04531bd50db07b25f673
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      GasSac_Back_Main_00: 154985826
+      GasSac_Back_Main_01: -1143910632
+      GasSac_Back_Main_02: -174050344
+      GasSac_Back_Main_03: -1449262624
+      GasSac_Back_Main_04: 1418583401
+      GasSac_Back_Main_05: 516922516
+      GasSac_Back_Main_06: -24483572
+      GasSac_Back_Main_07: 29238476
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

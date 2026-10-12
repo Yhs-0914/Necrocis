@@ -1,0 +1,324 @@
+fileFormatVersion: 2
+guid: cd983ed3d777e43da9660550ed52bd96
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 163
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_00
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 674
+        width: 324
+        height: 305
+      alignment: 9
+      pivot: {x: 0.4814815, y: 0.022950819}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a9b2a6f9cb1e46c1b39f49f5d646822
+      internalID: 1226323195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_01
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 673
+        width: 325
+        height: 306
+      alignment: 9
+      pivot: {x: 0.48, y: 0.022875817}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7f7aa5ba2b375416abbd5b5813865bd2
+      internalID: -1950821534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_02
+      rect:
+        serializedVersion: 2
+        x: 1073
+        y: 674
+        width: 327
+        height: 306
+      alignment: 9
+      pivot: {x: 0.47706422, y: 0.022875817}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3206e0b28e1b541dfbc7798ee87480d4
+      internalID: -578218846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_03
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 353
+        width: 321
+        height: 298
+      alignment: 9
+      pivot: {x: 0.49532712, y: 0.023489933}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa7d146eaca1348c185e1674acbbbed7
+      internalID: 2042652799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_04
+      rect:
+        serializedVersion: 2
+        x: 604
+        y: 354
+        width: 325
+        height: 297
+      alignment: 9
+      pivot: {x: 0.4953846, y: 0.023569023}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 322a814ab58df4eda8cb6ce03d268056
+      internalID: -1564555907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_05
+      rect:
+        serializedVersion: 2
+        x: 1084
+        y: 353
+        width: 321
+        height: 297
+      alignment: 9
+      pivot: {x: 0.50155765, y: 0.023569023}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92cf4cbe659fd46f2836b872174df21d
+      internalID: 2020316752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_06
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 40
+        width: 320
+        height: 305
+      alignment: 9
+      pivot: {x: 0.490625, y: 0.022950819}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c30828735ec79428bbf2102872d45e19
+      internalID: -1479304399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_07
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 40
+        width: 326
+        height: 306
+      alignment: 9
+      pivot: {x: 0.49079755, y: 0.022875817}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 518bf884e92e443139353763fd3bde69
+      internalID: -1376581809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: PollenInvader_Rotation_08
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 41
+        width: 329
+        height: 305
+      alignment: 9
+      pivot: {x: 0.49848023, y: 0.022950819}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c0d186a7d254434eb90b0dfbf06fa2c
+      internalID: 707940816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 96062ac9d32204d9faf00fefc3aa08f1
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      PollenInvader_Rotation_00: 1226323195
+      PollenInvader_Rotation_01: -1950821534
+      PollenInvader_Rotation_02: -578218846
+      PollenInvader_Rotation_03: 2042652799
+      PollenInvader_Rotation_04: -1564555907
+      PollenInvader_Rotation_05: 2020316752
+      PollenInvader_Rotation_06: -1479304399
+      PollenInvader_Rotation_07: -1376581809
+      PollenInvader_Rotation_08: 707940816
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

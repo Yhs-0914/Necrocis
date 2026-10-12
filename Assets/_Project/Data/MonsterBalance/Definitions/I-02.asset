@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470c6838388fc4d399da8a2d1767016b, type: 3}
+  m_Name: I-02
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.MonsterDefinition
+  monsterId: elite.i-02
+  displayName: "I-02 \uAD73\uC740 \uC794\uC5EC\uCCB4"
+  tier: 1
+  designNote: "I-02-A: \uC870\uAC01 \uB4E4\uAE30 \u2192 \uACE0\uC815 \uCC29\uC9C0
+    1\uD68C \uD53C\uD574 \u2192 1\uD0C0 \uD30C\uAD34 \uAC00\uB2A5\uD55C \uC774\uB3D9
+    \uBC29\uD574\uBB3C 1\uAC1C \u2192 \uD68C\uBCF5. \uC804\uC6A9 \uC0AC\uB9DD 6\uD504\uB808\uC784.
+    I-MAP \uBCF8\uB9F5 \uB4F1\uB85D\uC740 \uBCC4\uB3C4 \uAC80\uD1A0."
+  statSets:
+  - id: Default
+    maxHealth: 30
+    attackPower: 2
+    moveSpeed: 1
+  reward:
+    baseExperience: 50
+  contact:
+    enabled: 1
+    damageCoefficient: 0.5
+    knockbackDistance: 0.45
+  pattern: {fileID: 11400000, guid: 43df375e56167444397765f7a5cb63c5, type: 2}
+  patternDamage:
+  - id: residue-landing
+    coefficient: 1.5

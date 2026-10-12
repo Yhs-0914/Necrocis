@@ -1,0 +1,393 @@
+fileFormatVersion: 2
+guid: 46f031b72f9ed46afa88e3f68aa2b5e4
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 141
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Residue_Main_00
+      rect:
+        serializedVersion: 2
+        x: 55
+        y: 738
+        width: 267
+        height: 197
+      alignment: 9
+      pivot: {x: 0.47191012, y: 0.030456852}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 421ce7e95a2944f2b9ea67ac0a8adcd8
+      internalID: 949362894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_01
+      rect:
+        serializedVersion: 2
+        x: 406
+        y: 738
+        width: 270
+        height: 197
+      alignment: 9
+      pivot: {x: 0.5074074, y: 0.030456852}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c5cc4dedecaa64f57bfc05731fca29a2
+      internalID: 1530921880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_02
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 738
+        width: 267
+        height: 199
+      alignment: 9
+      pivot: {x: 0.505618, y: 0.030150754}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 825b956006777464ca57188237652818
+      internalID: 1463471079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1127
+        y: 738
+        width: 265
+        height: 199
+      alignment: 9
+      pivot: {x: 0.5283019, y: 0.030150754}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5c4a4624c62941b28b68a2d346859d1
+      internalID: -1383344389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_04
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 385
+        width: 271
+        height: 194
+      alignment: 9
+      pivot: {x: 0.47601476, y: 0.030927835}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d448c632d63f449a59eb6b57d642f694
+      internalID: 1088298432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_05
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 385
+        width: 276
+        height: 254
+      alignment: 9
+      pivot: {x: 0.49275362, y: 0.023622047}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4758c3167a7e2402a83dd51b73ff515c
+      internalID: -605475522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_06
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 385
+        width: 272
+        height: 310
+      alignment: 9
+      pivot: {x: 0.5147059, y: 0.019354839}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1004e72f20bb340adb0d96b5ed434ef1
+      internalID: 768811704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_07
+      rect:
+        serializedVersion: 2
+        x: 1113
+        y: 385
+        width: 277
+        height: 296
+      alignment: 9
+      pivot: {x: 0.55595666, y: 0.02027027}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 53ffab4cb5cfb406581cea6d187d7f9d
+      internalID: 1265326522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_08
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 74
+        width: 274
+        height: 193
+      alignment: 9
+      pivot: {x: 0.4489051, y: 0.031088082}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b974bed10eca1431fb06e3c4ba899ba9
+      internalID: 1908693175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_09
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 74
+        width: 280
+        height: 187
+      alignment: 9
+      pivot: {x: 0.5, y: 0.03208556}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83b2cf1701e5641b5bd2b5bbd7fb7f4f
+      internalID: 92582916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_10
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 74
+        width: 271
+        height: 177
+      alignment: 9
+      pivot: {x: 0.51660514, y: 0.033898305}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f5bf20a00439432d8b353894e9e4d42
+      internalID: -1354665369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Residue_Main_11
+      rect:
+        serializedVersion: 2
+        x: 1124
+        y: 74
+        width: 272
+        height: 117
+      alignment: 9
+      pivot: {x: 0.5257353, y: 0.051282052}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90b491bb4b4084e299e69aecbd28596c
+      internalID: -351990113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 1d7946609a426494a8c92b9f46f2f931
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Residue_Main_00: 949362894
+      Residue_Main_01: 1530921880
+      Residue_Main_02: 1463471079
+      Residue_Main_03: -1383344389
+      Residue_Main_04: 1088298432
+      Residue_Main_05: -605475522
+      Residue_Main_06: 768811704
+      Residue_Main_07: 1265326522
+      Residue_Main_08: 1908693175
+      Residue_Main_09: 92582916
+      Residue_Main_10: -1354665369
+      Residue_Main_11: -351990113
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

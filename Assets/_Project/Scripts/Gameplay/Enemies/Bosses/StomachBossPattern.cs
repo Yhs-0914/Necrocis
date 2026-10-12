@@ -11,10 +11,10 @@ namespace Necrocis
         [Range(0.1f, 0.9f)] public float phase2HealthRatio = 0.65f;
 
         [Header("Stats")]
-        public float phase1AttackDamage = 3f;
-        public float phase1MoveSpeed = 0.5f;
-        public float phase2AttackDamage = 3f;
-        public float phase2MoveSpeed = 1f;
+        [HideInInspector] public float phase1AttackDamage = 3f;
+        [HideInInspector] public float phase1MoveSpeed = 0.5f;
+        [HideInInspector] public float phase2AttackDamage = 3f;
+        [HideInInspector] public float phase2MoveSpeed = 1f;
 
         [Header("Phase 1 Basic")]
         public float phase1MeleeRange = 1.6f;
@@ -23,7 +23,7 @@ namespace Necrocis
         [Header("Charge")]
         public float chargeSpeed = 4f;
         public float chargeCooldown = 5f;
-        public float chargeDamage = 4f;
+        [HideInInspector] public float chargeDamage = 4f;
         public float chargeKnockbackDistance = 2f;
         public float chargeWindup = 0.35f;
         public float chargeDuration = 1.2f;
@@ -36,10 +36,10 @@ namespace Necrocis
 
         [Header("Acid Spray")]
         public float acidRange = 9f;
-        public float acidDamage = 2f;
+        [HideInInspector] public float acidDamage = 2f;
         public float acidDebuffDuration = 5f;
         public float acidTickInterval = 1f;
-        public float acidTickDamage = 1f;
+        [HideInInspector] public float acidTickDamage = 1f;
         public float acidProjectileTravelTime = 0.55f;
         public float acidArcHeight = 0.8f;
         public float acidProjectileScale = 0.9f;
@@ -51,7 +51,7 @@ namespace Necrocis
         public float suctionStopDistance = 1f;
         public float spitDelay = 0.35f;
         public float spitReturnDuration = 0.18f;
-        public float shortRangeDamage = 5f;
+        [HideInInspector] public float shortRangeDamage = 5f;
         public float shortRangeRadius = 2.2f;
         public Sprite[] suctionAttackSprites;
         public float suctionAttackAnimationSpeed = 0.08f;
@@ -92,10 +92,10 @@ namespace Necrocis
         [SerializeField, Range(0.1f, 0.9f)] private float phase2HealthRatio = 0.65f;
 
         [Header("Stats")]
-        [SerializeField] private float phase1AttackDamage = 3f;
-        [SerializeField] private float phase1MoveSpeed = 0.5f;
-        [SerializeField] private float phase2AttackDamage = 3f;
-        [SerializeField] private float phase2MoveSpeed = 1f;
+        [SerializeField, HideInInspector] private float phase1AttackDamage = 3f;
+        [SerializeField, HideInInspector] private float phase1MoveSpeed = 0.5f;
+        [SerializeField, HideInInspector] private float phase2AttackDamage = 3f;
+        [SerializeField, HideInInspector] private float phase2MoveSpeed = 1f;
 
         [Header("Phase 1 Basic")]
         [SerializeField] private float phase1MeleeRange = 1.6f;
@@ -104,7 +104,7 @@ namespace Necrocis
         [Header("Charge")]
         [SerializeField] private float chargeSpeed = 4f;
         [SerializeField] private float chargeCooldown = 5f;
-        [SerializeField] private float chargeDamage = 4f;
+        [SerializeField, HideInInspector] private float chargeDamage = 4f;
         [SerializeField] private float chargeKnockbackDistance = 2f;
         [SerializeField] private float chargeWindup = 0.35f;
         [SerializeField] private float chargeDuration = 1.2f;
@@ -117,10 +117,10 @@ namespace Necrocis
 
         [Header("Acid Spray")]
         [SerializeField] private float acidRange = 9f;
-        [SerializeField] private float acidDamage = 2f;
+        [SerializeField, HideInInspector] private float acidDamage = 2f;
         [SerializeField] private float acidDebuffDuration = 5f;
         [SerializeField] private float acidTickInterval = 1f;
-        [SerializeField] private float acidTickDamage = 1f;
+        [SerializeField, HideInInspector] private float acidTickDamage = 1f;
         [SerializeField] private float acidProjectileTravelTime = 0.55f;
         [SerializeField] private float acidArcHeight = 0.8f;
         [SerializeField] private float acidProjectileScale = 0.9f;
@@ -132,7 +132,7 @@ namespace Necrocis
         [SerializeField] private float suctionStopDistance = 1f;
         [SerializeField] private float spitDelay = 0.35f;
         [SerializeField] private float spitReturnDuration = 0.18f;
-        [SerializeField] private float shortRangeDamage = 5f;
+        [SerializeField, HideInInspector] private float shortRangeDamage = 5f;
         [SerializeField] private float shortRangeRadius = 2.2f;
         [SerializeField] private Sprite[] suctionAttackSprites;
         [SerializeField] private float suctionAttackAnimationSpeed = 0.08f;
@@ -443,7 +443,7 @@ namespace Necrocis
         private IEnumerator BasicMeleeRoutine()
         {
             actionRunning = true;
-            nextMeleeTime = Time.time + Mathf.Max(0.1f, phase1MeleeCooldown);
+            nextMeleeTime = Time.time + boss.GetRearmCooldown(Mathf.Max(0.1f, phase1MeleeCooldown));
 
             float elapsed = 0f;
             const float duration = 0.28f;
@@ -459,7 +459,7 @@ namespace Necrocis
             if (IsPlayerWithinRange(player, phase1MeleeRange))
             {
                 AudioManager.Instance?.PlaySFX("StomachImpact");
-                player.TakeDamage(phase1AttackDamage);
+                player.TakeDamage(boss.CreatePatternDamage("melee", phase1AttackDamage));
             }
 
             transform.localScale = baseScale;
@@ -498,7 +498,7 @@ namespace Necrocis
                 {
                     hitPlayer = true;
                     AudioManager.Instance?.PlaySFX("StomachHeadbutt");
-                    player.TakeDamage(chargeDamage);
+                    player.TakeDamage(boss.CreatePatternDamage("charge", chargeDamage));
                     ApplyPlayerKnockback(player, transform.position, chargeKnockbackDistance);
                 }
 
@@ -543,6 +543,8 @@ namespace Necrocis
 
         private IEnumerator AcidSprayRoutine()
         {
+            EnemyDamageRequest damage = boss.CreatePatternDamage("acid", acidDamage);
+            EnemyDamageRequest tickDamage = boss.CreatePatternDamage("acid-dot", acidTickDamage);
             boss?.PlayAttackAnimationOnly();
             AudioManager.Instance?.PlaySFX("StomachAcidReady");
 
@@ -600,7 +602,7 @@ namespace Necrocis
                 ReleaseTempSprite(projectile);
             }
 
-            SplashAcid(target);
+            SplashAcid(target, damage, tickDamage);
         }
 
         private IEnumerator SuckAndSpitRoutine()
@@ -655,7 +657,7 @@ namespace Necrocis
 
             if (IsPlayerWithinRange(player, shortRangeRadius))
             {
-                player.TakeDamage(shortRangeDamage);
+                player.TakeDamage(boss.CreatePatternDamage("short-range", shortRangeDamage));
             }
 
             yield return SpitPlayerBackToStart(player, startPosition);
@@ -694,7 +696,7 @@ namespace Necrocis
             MovePlayerBy(player, targetPosition - player.transform.position);
         }
 
-        private void SplashAcid(Vector3 center)
+        private void SplashAcid(Vector3 center, EnemyDamageRequest damage, EnemyDamageRequest tickDamage)
         {
             center.y = GetGroundHeight(center) + 0.08f;
             GameObject splash = CreateTempSpriteObject(
@@ -712,12 +714,17 @@ namespace Necrocis
                 return;
             }
 
-            player.TakeDamage(acidDamage);
-            ApplyPlayerAcidDamageOverTime(player, acidDebuffDuration, acidTickInterval, acidTickDamage);
+            player.TakeDamage(damage);
+            ApplyPlayerAcidDamageOverTime(player, acidDebuffDuration, acidTickInterval, tickDamage);
         }
 
         private void ApplyPhaseStats()
         {
+            if (boss != null && boss.Balance != null)
+            {
+                boss.ApplyBalancePhase(phase == BossPhase.Phase2 ? "Phase2" : "Default");
+                return;
+            }
             if (stats == null)
             {
                 return;
@@ -817,16 +824,16 @@ namespace Necrocis
 
         private float GetChargeCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, chargeCooldown);
+                : Mathf.Max(0f, chargeCooldown));
         }
 
         private float GetPhase2PatternInterval()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, phase2PatternInterval);
+                : Mathf.Max(0f, phase2PatternInterval));
         }
 
         private Vector3 GetDirectionToPlayer()
@@ -848,7 +855,7 @@ namespace Necrocis
             return biome != null ? biome.GetGroundHeight(position) : position.y;
         }
 
-        private static void ApplyPlayerAcidDamageOverTime(PlayerController player, float duration, float tickInterval, float tickDamage)
+        private static void ApplyPlayerAcidDamageOverTime(PlayerController player, float duration, float tickInterval, EnemyDamageRequest tickDamage)
         {
             if (player == null)
             {

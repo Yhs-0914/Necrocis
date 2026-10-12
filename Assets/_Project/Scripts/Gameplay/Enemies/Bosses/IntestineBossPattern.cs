@@ -13,15 +13,15 @@ namespace Necrocis
         [Header("Movement")]
         public float phase1FleeDistance = 7f;
         public float phase1RoamRadius = 8f;
-        public float phase1MoveMultiplier = 1f;
+        [HideInInspector] public float phase1MoveMultiplier = 1f;
         public float phase2PreferredDistance = 2.5f;
-        public float phase2MoveMultiplier = 1.15f;
+        [HideInInspector] public float phase2MoveMultiplier = 1.15f;
 
         [Header("Dung")]
         public float dungPreDelay = 0.5f;
         public float phase1DungCooldown = 8f;
         public float phase2ThrowCooldown = 5f;
-        public float dungCollisionDamage = 1f;
+        [HideInInspector] public float dungCollisionDamage = 1f;
         [Range(0f, 1f)] public float dungSlowRatio = 0.2f;
         public float dungSlowDuration = 3f;
         public float dungHazardRadius = 0.75f;
@@ -34,9 +34,10 @@ namespace Necrocis
         public int parasiteMaxCount = 3;
         public float parasiteSpawnDelay = 0.45f;
         public float parasiteSpawnRadius = 1.1f;
-        public float parasiteMaxHealth = 6f;
-        public float parasiteMoveSpeed = 2.3f;
-        public float parasiteAttackDamage = 1f;
+        public MonsterDefinition parasiteDefinition;
+        [HideInInspector] public float parasiteMaxHealth = 6f;
+        [HideInInspector] public float parasiteMoveSpeed = 2.3f;
+        [HideInInspector] public float parasiteAttackDamage = 1f;
         public float parasiteAttackRange = 1.1f;
         public float parasiteAttackCooldown = 1.3f;
         public Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
@@ -45,7 +46,7 @@ namespace Necrocis
         public float stompMinDelay = 7f;
         public float stompPreDelay = 0.55f;
         public float stompRadius = 6f;
-        public float stompDamage = 2f;
+        [HideInInspector] public float stompDamage = 2f;
         [Range(0f, 1f)] public float stompSlowRatio = 0.3f;
         public float stompSlowDuration = 3f;
 
@@ -77,15 +78,15 @@ namespace Necrocis
         [Header("Movement")]
         [SerializeField] private float phase1FleeDistance = 7f;
         [SerializeField] private float phase1RoamRadius = 8f;
-        [SerializeField] private float phase1MoveMultiplier = 1f;
+        [SerializeField, HideInInspector] private float phase1MoveMultiplier = 1f;
         [SerializeField] private float phase2PreferredDistance = 2.5f;
-        [SerializeField] private float phase2MoveMultiplier = 1.15f;
+        [SerializeField, HideInInspector] private float phase2MoveMultiplier = 1.15f;
 
         [Header("Dung")]
         [SerializeField] private float dungPreDelay = 0.5f;
         [SerializeField] private float phase1DungCooldown = 8f;
         [SerializeField] private float phase2ThrowCooldown = 5f;
-        [SerializeField] private float dungCollisionDamage = 1f;
+        [SerializeField, HideInInspector] private float dungCollisionDamage = 1f;
         [SerializeField, Range(0f, 1f)] private float dungSlowRatio = 0.2f;
         [SerializeField] private float dungSlowDuration = 3f;
         [SerializeField] private float dungHazardRadius = 0.75f;
@@ -103,7 +104,7 @@ namespace Necrocis
         [SerializeField] private float stompMinDelay = 7f;
         [SerializeField] private float stompPreDelay = 0.55f;
         [SerializeField] private float stompRadius = 6f;
-        [SerializeField] private float stompDamage = 2f;
+        [SerializeField, HideInInspector] private float stompDamage = 2f;
         [SerializeField, Range(0f, 1f)] private float stompSlowRatio = 0.3f;
         [SerializeField] private float stompSlowDuration = 3f;
 
@@ -113,9 +114,9 @@ namespace Necrocis
         [SerializeField] private Color shockwaveColor = new Color(0.65f, 0.38f, 0.18f, 0.45f);
 
         [Header("Parasite Stats")]
-        [SerializeField] private float parasiteMaxHealth = 6f;
-        [SerializeField] private float parasiteMoveSpeed = 2.3f;
-        [SerializeField] private float parasiteAttackDamage = 1f;
+        [SerializeField, HideInInspector] private float parasiteMaxHealth = 6f;
+        [SerializeField, HideInInspector] private float parasiteMoveSpeed = 2.3f;
+        [SerializeField, HideInInspector] private float parasiteAttackDamage = 1f;
         [SerializeField] private float parasiteAttackRange = 1.1f;
         [SerializeField] private float parasiteAttackCooldown = 1.3f;
         [SerializeField] private Vector3 parasiteScale = new Vector3(0.55f, 0.55f, 0.55f);
@@ -133,6 +134,7 @@ namespace Necrocis
         private CharacterStats stats;
         private Transform summonParent;
         private EnemySpawnRuleConfig runtimeParasiteRule;
+        private MonsterDefinition parasiteDefinition;
         private SpriteRenderer visualRenderer;
         private Vector3 anchorPosition;
         private Vector3 baseScale = Vector3.one;
@@ -153,6 +155,7 @@ namespace Necrocis
             summonParent = parent;
             anchorPosition = anchor;
             phase = startInPhase2ForDebug ? BossPhase.Phase2 : BossPhase.Phase1;
+            boss?.ApplyBalancePhase(phase == BossPhase.Phase2 ? "Phase2" : "Default");
             nextDungTime = Time.time + 1f;
             nextStompTime = phase == BossPhase.Phase2
                 ? Time.time + GetStompCooldown()
@@ -181,6 +184,7 @@ namespace Necrocis
                 return;
             }
 
+            parasiteDefinition = settings.parasiteDefinition;
             phase2HealthRatio = settings.phase2HealthRatio;
             phase1FleeDistance = settings.phase1FleeDistance;
             phase1RoamRadius = settings.phase1RoamRadius;
@@ -276,6 +280,7 @@ namespace Necrocis
             StopAllCoroutines();
             actionRunning = false;
             phase = BossPhase.Phase1;
+            boss?.ApplyBalancePhase("Default");
             nextDungTime = Time.time;
             nextStompTime = float.PositiveInfinity;
             transform.localScale = baseScale;
@@ -288,6 +293,7 @@ namespace Necrocis
             StopAllCoroutines();
             actionRunning = false;
             phase = BossPhase.Phase2;
+            boss?.ApplyBalancePhase("Phase2");
             nextDungTime = Time.time;
             nextStompTime = Time.time;
             transform.localScale = baseScale;
@@ -372,7 +378,7 @@ namespace Necrocis
                 return;
             }
 
-            float multiplier = phase == BossPhase.Phase1 ? phase1MoveMultiplier : phase2MoveMultiplier;
+            float multiplier = boss.Balance != null ? 1f : (phase == BossPhase.Phase1 ? phase1MoveMultiplier : phase2MoveMultiplier);
             float speed = stats != null ? stats.MoveSpeed : 1.5f;
             Vector3 step = moveDirection.normalized * Mathf.Max(0f, speed * multiplier) * Time.deltaTime;
             boss.MoveByExternalPattern(step);
@@ -380,23 +386,23 @@ namespace Necrocis
 
         private float GetPhase1DungCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, phase1DungCooldown);
+                : Mathf.Max(0f, phase1DungCooldown));
         }
 
         private float GetPhase2ThrowCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, phase2ThrowCooldown);
+                : Mathf.Max(0f, phase2ThrowCooldown));
         }
 
         private float GetStompCooldown()
         {
-            return useFastPatternCooldownsForDebug
+            return boss.GetRearmCooldown(useFastPatternCooldownsForDebug
                 ? Mathf.Max(0.05f, fastPatternCooldown)
-                : Mathf.Max(0f, stompMinDelay);
+                : Mathf.Max(0f, stompMinDelay));
         }
 
         private Vector3 GetPhase1MoveDirection()
@@ -454,6 +460,7 @@ namespace Necrocis
 
             transform.localScale = baseScale;
             phase = BossPhase.Phase2;
+            boss?.ApplyBalancePhase("Phase2");
             nextDungTime = Time.time + 1.5f;
             nextStompTime = Time.time + GetStompCooldown();
             actionRunning = false;
@@ -540,7 +547,7 @@ namespace Necrocis
                 toPlayer.y = 0f;
                 if (toPlayer.magnitude <= stompRadius)
                 {
-                    player.TakeDamage(stompDamage);
+                    player.TakeDamage(boss.CreatePatternDamage("stomp", stompDamage));
                     ApplyPlayerMoveSlow(player, stompSlowRatio, stompSlowDuration);
                 }
             }
@@ -553,7 +560,7 @@ namespace Necrocis
             position.y = GetGroundHeight(position) + 0.05f;
             GameObject obj = CreateTempSpriteObject("IntestineBoss_Dung", GetDungSprite(), dungColor, position, dungHazardRadius * 2f, 2500);
             BossDungHazard hazard = obj.AddComponent<BossDungHazard>();
-            hazard.Initialize(this, dungCollisionDamage, dungSlowRatio, dungSlowDuration, dungHazardRadius, dungLifeTime, spawnParasites, parasiteSpawnDelay);
+            hazard.Initialize(this, boss.CreatePatternDamage("dung", dungCollisionDamage), dungSlowRatio, dungSlowDuration, dungHazardRadius, dungLifeTime, spawnParasites, parasiteSpawnDelay);
         }
 
         public void SpawnParasites(Vector3 center)
@@ -734,6 +741,7 @@ namespace Necrocis
             runtimeParasiteRule = new EnemySpawnRuleConfig
             {
                 name = "IntestineParasite",
+                monsterDefinition = parasiteDefinition,
                 poissonSalt = 9917,
                 maxAlive = 1,
                 activationRadius = 0f,
@@ -861,7 +869,7 @@ namespace Necrocis
         private class BossDungHazard : MonoBehaviour
         {
             private IntestineBossPattern owner;
-            private float damage;
+            private EnemyDamageRequest damage;
             private float slowRatio;
             private float slowDuration;
             private float radius;
@@ -870,7 +878,7 @@ namespace Necrocis
             private bool spawnParasites;
             private float parasiteDelay;
 
-            public void Initialize(IntestineBossPattern owner, float damage, float slowRatio, float slowDuration, float radius, float lifeTime, bool spawnParasites, float parasiteDelay)
+            public void Initialize(IntestineBossPattern owner, EnemyDamageRequest damage, float slowRatio, float slowDuration, float radius, float lifeTime, bool spawnParasites, float parasiteDelay)
             {
                 StopAllCoroutines();
                 this.owner = owner;

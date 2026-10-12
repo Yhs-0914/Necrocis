@@ -92,6 +92,8 @@ namespace Necrocis
         private int pooledObjectCount;
         private readonly HashSet<Vector2Int> reportedResidualChunks = new HashSet<Vector2Int>();
 
+        public MonsterVisitContext MonsterVisit { get; private set; }
+        public bool IsChunkLoadedAt(int x, int y) => loadedChunks.Contains(GridToChunk(x, y));
         public int MapWidth => mapWidth;
         public int MapHeight => mapHeight;
         public int ChunkSize => chunkSize;
@@ -105,6 +107,7 @@ namespace Necrocis
         protected virtual void Awake()
         {
             Active = this;
+            MonsterVisit = SaveService.EnterLoadedBiome(biomeType, gameObject.scene.handle);
 
             // 시드 설정
             if (useRandomSeed)

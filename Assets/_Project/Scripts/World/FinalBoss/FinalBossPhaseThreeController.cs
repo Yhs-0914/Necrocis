@@ -8,9 +8,9 @@ namespace Necrocis
     [RequireComponent(typeof(FinalBossArena))]
     public sealed partial class FinalBossPhaseThreeController : MonoBehaviour
     {
-        [SerializeField, Min(.1f)] private float detachDuration = 1.8f;
-        [SerializeField, Min(.1f)] private float pursuitSpeed = 3.1f;
-        [SerializeField, Min(.1f)] private float stoppingDistance = 3.2f;
+        private float detachDuration;
+        private float pursuitSpeed;
+        private float stoppingDistance;
         [SerializeField, Range(.4f, 1f)] private float mobileScale = .65f;
 
         private FinalBossArena arena;
@@ -80,6 +80,11 @@ namespace Necrocis
                 return;
             }
             arena = GetComponent<FinalBossArena>();
+            detachDuration = arena.Balance.phaseThree.detachDuration;
+            pursuitSpeed = arena.Balance.phaseThree.pursuitSpeed;
+            stoppingDistance = arena.Balance.phaseThree.stoppingDistance;
+            collapseDuration = arena.Balance.phaseThree.collapseDuration;
+            patternRecovery = arena.Balance.phaseThree.patternRecovery;
             bossVisual = visual;
             damageTarget = target;
             bossRenderer = visual.GetComponent<SpriteRenderer>();

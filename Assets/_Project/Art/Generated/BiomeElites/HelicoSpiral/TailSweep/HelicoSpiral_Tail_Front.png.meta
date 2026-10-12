@@ -1,0 +1,301 @@
+fileFormatVersion: 2
+guid: 75d7c67f9164e4d45bd4276af3de0169
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 167
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_00
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 1151
+        width: 151
+        height: 334
+      alignment: 9
+      pivot: {x: 0.49668875, y: 0.33832335}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 338754c9c7b6845bfbadc979b8e19a9a
+      internalID: -246954597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_01
+      rect:
+        serializedVersion: 2
+        x: 643
+        y: 1152
+        width: 191
+        height: 303
+      alignment: 9
+      pivot: {x: 0.591623, y: 0.38943896}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4cedebf0b6d8548c3a5f23b9110eb9d8
+      internalID: 1637345633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_02
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 800
+        width: 205
+        height: 332
+      alignment: 9
+      pivot: {x: 0.6195122, y: 0.33734939}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b1707dd4a5f048319ace418eef43d1f
+      internalID: 1434648608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_03
+      rect:
+        serializedVersion: 2
+        x: 592
+        y: 800
+        width: 244
+        height: 297
+      alignment: 9
+      pivot: {x: 0.6803279, y: 0.3939394}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3779cb2feffa1471fa8ce8f604506318
+      internalID: 1086741810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_04
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 416
+        width: 189
+        height: 343
+      alignment: 9
+      pivot: {x: 0.41269842, y: 0.34402332}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82a0a261a0f5c4c3282000ad4fb03c07
+      internalID: 1210737740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_05
+      rect:
+        serializedVersion: 2
+        x: 682
+        y: 416
+        width: 226
+        height: 334
+      alignment: 9
+      pivot: {x: 0.33628318, y: 0.35628742}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6657365213ff7420fbd0fa2b120831ab
+      internalID: 294425501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_06
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 75
+        width: 241
+        height: 261
+      alignment: 9
+      pivot: {x: 0.33195022, y: 0.47126436}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c64777c1979174318b2c44cf8a703a2a
+      internalID: 2032096525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HelicoSpiral_Tail_Front_07
+      rect:
+        serializedVersion: 2
+        x: 678
+        y: 75
+        width: 220
+        height: 232
+      alignment: 9
+      pivot: {x: 0.4090909, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6ce7ee8fd27e4c16b07947248e0d0b1
+      internalID: -296107357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: c8fb564b4d3e242f6a5626dfb3c3cf8b
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HelicoSpiral_Tail_Front_00: -246954597
+      HelicoSpiral_Tail_Front_01: 1637345633
+      HelicoSpiral_Tail_Front_02: 1434648608
+      HelicoSpiral_Tail_Front_03: 1086741810
+      HelicoSpiral_Tail_Front_04: 1210737740
+      HelicoSpiral_Tail_Front_05: 294425501
+      HelicoSpiral_Tail_Front_06: 2032096525
+      HelicoSpiral_Tail_Front_07: -296107357
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

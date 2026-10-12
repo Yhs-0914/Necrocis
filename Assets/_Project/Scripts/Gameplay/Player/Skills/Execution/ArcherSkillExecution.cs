@@ -311,7 +311,7 @@ namespace Necrocis
             int explosionHit = ApplyAreaSkill(
                 center,
                 archerSkill2.virusExplosionRadius,
-                enemy => enemy.TakeDamage(damage));
+                enemy => enemy.TakeDamage(damage), damage);
 
             SpawnSkillEffect(
                 archerSkill2.virusExplosionEffectPrefab,

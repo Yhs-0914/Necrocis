@@ -8,242 +8,57 @@ namespace Necrocis
     public partial class PlayerClassSkillController
     {
 
-        private int ApplyAreaSkill(Vector3 center, float radius, System.Action<EnemyController> apply)
+        private int ApplyAreaSkill(Vector3 center, float radius, Action<EnemyController> apply, float propDamage = 0)
         {
-            areaSkillCandidates.Clear();
-            float safeRadius = Mathf.Max(0f, radius);
-            float radiusSqr = safeRadius * safeRadius;
-            IReadOnlyList<EnemyController> enemies = EnemyController.ActiveEnemyControllers;
-
-            if (enemies == null || enemies.Count == 0)
-            {
-                return 0;
-            }
-
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
-                Vector3 enemyPos = enemy.transform.position;
-                enemyPos.y = center.y;
-                float distanceSqr = (enemyPos - center).sqrMagnitude;
-                if (distanceSqr > radiusSqr)
-                {
-                    continue;
-                }
-
-                areaSkillCandidates.Add(new AreaSkillCandidate(enemy, distanceSqr));
-            }
-
-            areaSkillCandidates.Sort(CompareAreaSkillCandidates);
-
-            int hitLimit = Mathf.Max(1, maxAreaSkillHitTargets);
-            int hitCount = Mathf.Min(areaSkillCandidates.Count, hitLimit);
-            for (int i = 0; i < hitCount; i++)
-            {
-                apply?.Invoke(areaSkillCandidates[i].Enemy);
-            }
-
-            if (enableDebugLogs)
-            {
-                Debug.Log($"[SkillHit] Center={center}, Radius={safeRadius:0.##}, Candidates={areaSkillCandidates.Count}, Hit={hitCount}, MaxHit={hitLimit}");
-            }
-
-            return hitCount;
+            ResidueRubble.HitArea(center, Mathf.Max(0, radius), Vector3.forward, 180, propDamage, enemyMask, ResidueRubble.NextAttackToken());
+            CollectBodyTargets(center, radius, Vector3.forward, 180);
+            return ApplyBodyTargets(apply, maxAreaSkillHitTargets);
         }
 
-        private int ApplyForwardArcSkill(
-            Vector3 center,
-            float radius,
-            float forwardAngle,
-            int maxTargets,
-            System.Action<EnemyController> apply)
+        private int ApplyForwardArcSkill(Vector3 center, float radius, float forwardAngle, int maxTargets,
+            Action<EnemyController> apply, float propDamage = 0)
+        {
+            Vector3 forward = GetFacingDirection();
+            float halfAngle = Mathf.Clamp(forwardAngle * .5f, .5f, 180);
+            ResidueRubble.HitArea(center, Mathf.Max(0, radius), forward, halfAngle, propDamage, enemyMask, ResidueRubble.NextAttackToken());
+            CollectBodyTargets(center, radius, forward, halfAngle);
+            return ApplyBodyTargets(apply, Mathf.Min(maxTargets, maxAreaSkillHitTargets));
+        }
+
+        private void CollectBodyTargets(Vector3 center, float radius, Vector3 forward, float halfAngle)
         {
             areaSkillCandidates.Clear();
-            Vector3 forward = GetFacingDirection();
-            float safeRadius = Mathf.Max(0f, radius);
-            float radiusSqr = safeRadius * safeRadius;
-            float halfAngle = Mathf.Clamp(forwardAngle * 0.5f, 0.5f, 180f);
-            IReadOnlyList<EnemyController> enemies = EnemyController.ActiveEnemyControllers;
-
-            if (enemies == null || enemies.Count == 0)
-            {
-                return 0;
-            }
-
+            var enemies = EnemyController.ActiveEnemyControllers;
             for (int i = 0; i < enemies.Count; i++)
             {
-                EnemyController enemy = enemies[i];
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                float distanceSqr = toEnemy.sqrMagnitude;
-                if (distanceSqr > radiusSqr)
-                {
-                    continue;
-                }
-
-                if (distanceSqr > 0.0001f && Vector3.Angle(forward, toEnemy) > halfAngle)
-                {
-                    continue;
-                }
-
-                areaSkillCandidates.Add(new AreaSkillCandidate(enemy, distanceSqr));
+                var enemy = enemies[i];
+                if (!PlayerAttackGeometry.Eligible(enemy, enemyMask)
+                    || !PlayerAttackGeometry.InArc(center, forward, radius, halfAngle, enemy)) continue;
+                areaSkillCandidates.Add(new AreaSkillCandidate(enemy, PlayerAttackGeometry.DistanceSquared(center, enemy)));
             }
-
             areaSkillCandidates.Sort(CompareAreaSkillCandidates);
+        }
 
-            int hitLimit = Mathf.Max(1, Mathf.Min(maxTargets, maxAreaSkillHitTargets));
-            int hitCount = Mathf.Min(areaSkillCandidates.Count, hitLimit);
-            for (int i = 0; i < hitCount; i++)
-            {
-                apply?.Invoke(areaSkillCandidates[i].Enemy);
-            }
-
-            if (enableDebugLogs)
-            {
-                Debug.Log($"[SkillHit] ForwardArc Radius={safeRadius:0.##}, Angle={forwardAngle:0.#}, Candidates={areaSkillCandidates.Count}, Hit={hitCount}, MaxHit={hitLimit}");
-            }
-
-            return hitCount;
+        private int ApplyBodyTargets(Action<EnemyController> apply, int limit)
+        {
+            int count = Mathf.Min(Mathf.Max(1, limit), areaSkillCandidates.Count);
+            for (int i = 0; i < count; i++) apply?.Invoke(areaSkillCandidates[i].Enemy);
+            return count;
         }
 
         private bool TryFindNearestEnemyInForwardArc(Vector3 center, float radius, float forwardAngle, out EnemyController nearestEnemy)
         {
-            nearestEnemy = null;
-            Vector3 forward = GetFacingDirection();
-            float halfAngle = Mathf.Max(1f, forwardAngle) * 0.5f;
-            float safeRadius = Mathf.Max(0f, radius);
-            float bestDistanceSqr = float.PositiveInfinity;
-
-            EnsureOverlapBuffer();
-            Vector3 hitCenter = center;
-            hitCenter.y += skillHitHeightOffset;
-            float halfHeight = Mathf.Max(0.05f, skillHitVerticalHalfHeight);
-            Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
-            Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
-
-            int count = Physics.OverlapCapsuleNonAlloc(
-                capsuleTop, capsuleBottom, safeRadius,
-                overlapBuffer, enemyMask, QueryTriggerInteraction.Collide);
-
-            for (int i = 0; i < count; i++)
-            {
-                Collider collider = overlapBuffer[i];
-                if (collider == null || !TryGetEnemyFromCollider(collider, out EnemyController enemy)) continue;
-
-                Vector3 toEnemy = enemy.transform.position - transform.position;
-                toEnemy.y = 0f;
-                if (toEnemy.sqrMagnitude > 0.0001f && Vector3.Angle(forward, toEnemy.normalized) > halfAngle) continue;
-
-                float distanceSqr = toEnemy.sqrMagnitude;
-                if (distanceSqr > bestDistanceSqr) continue;
-
-                bestDistanceSqr = distanceSqr;
-                nearestEnemy = enemy;
-            }
-
-            if (nearestEnemy != null) return true;
-
-            // 콜라이더 탐지 실패 시 ActiveEnemyControllers 직접 순회
-            IReadOnlyList<EnemyController> allEnemies = EnemyController.ActiveEnemyControllers;
-            for (int i = 0; i < allEnemies.Count; i++)
-            {
-                EnemyController enemy = allEnemies[i];
-                if (enemy == null || enemy.IsDead) continue;
-
-                Vector3 toEnemy = enemy.transform.position - transform.position;
-                toEnemy.y = 0f;
-                float distanceSqr = toEnemy.sqrMagnitude;
-                if (distanceSqr > safeRadius * safeRadius || distanceSqr > bestDistanceSqr) continue;
-                if (toEnemy.sqrMagnitude > 0.0001f && Vector3.Angle(forward, toEnemy.normalized) > halfAngle) continue;
-
-                bestDistanceSqr = distanceSqr;
-                nearestEnemy = enemy;
-            }
-
+            CollectBodyTargets(center, radius, GetFacingDirection(), Mathf.Clamp(forwardAngle * .5f, .5f, 180));
+            nearestEnemy = areaSkillCandidates.Count > 0 ? areaSkillCandidates[0].Enemy : null;
             return nearestEnemy != null;
         }
-
 
         private bool TryFindNearestEnemyInRadius(Vector3 center, float radius, out EnemyController nearestEnemy)
         {
-            nearestEnemy = null;
-            EnsureOverlapBuffer();
-
-            float safeRadius = Mathf.Max(0f, radius);
-            Vector3 hitCenter = center;
-            hitCenter.y += skillHitHeightOffset;
-            float halfHeight = Mathf.Max(0.05f, skillHitVerticalHalfHeight);
-            Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
-            Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
-
-            int count = Physics.OverlapCapsuleNonAlloc(
-                capsuleTop,
-                capsuleBottom,
-                safeRadius,
-                overlapBuffer,
-                enemyMask,
-                QueryTriggerInteraction.Collide);
-
-            float bestDistanceSqr = float.PositiveInfinity;
-            for (int i = 0; i < count; i++)
-            {
-                Collider collider = overlapBuffer[i];
-                if (collider == null || !TryGetEnemyFromCollider(collider, out EnemyController enemy))
-                {
-                    continue;
-                }
-
-                Vector3 enemyPos = enemy.transform.position;
-                enemyPos.y = center.y;
-                float distanceSqr = (enemyPos - center).sqrMagnitude;
-                if (distanceSqr > bestDistanceSqr)
-                {
-                    continue;
-                }
-
-                bestDistanceSqr = distanceSqr;
-                nearestEnemy = enemy;
-            }
-
-            if (nearestEnemy != null)
-            {
-                return true;
-            }
-
-            IReadOnlyList<EnemyController> enemies = EnemyController.ActiveEnemyControllers;
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
-                Vector3 enemyPos = enemy.transform.position;
-                enemyPos.y = center.y;
-                float distanceSqr = (enemyPos - center).sqrMagnitude;
-                if (distanceSqr > safeRadius * safeRadius || distanceSqr > bestDistanceSqr)
-                {
-                    continue;
-                }
-
-                bestDistanceSqr = distanceSqr;
-                nearestEnemy = enemy;
-            }
-
+            CollectBodyTargets(center, radius, Vector3.forward, 180);
+            nearestEnemy = areaSkillCandidates.Count > 0 ? areaSkillCandidates[0].Enemy : null;
             return nearestEnemy != null;
         }
-
 
         private Vector3 GetTargetEffectPosition(EnemyController target)
         {

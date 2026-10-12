@@ -20,6 +20,7 @@ namespace Necrocis
         [SerializeField] private UpdateMode updateMode = UpdateMode.Once;
 
         private SpriteRenderer spriteRenderer;
+        private Rigidbody sortingAnchor;
         private float lastZ = float.NaN;
         private bool hasUpdated;
 
@@ -61,9 +62,9 @@ namespace Necrocis
                 return;
             }
 
+            float z = sortingAnchor != null ? sortingAnchor.position.z : transform.position.z;
             if (updateOnlyWhenDirty)
             {
-                float z = transform.position.z;
                 if (!float.IsNaN(lastZ) && Mathf.Abs(z - lastZ) <= positionEpsilon)
                 {
                     return;
@@ -71,7 +72,7 @@ namespace Necrocis
                 lastZ = z;
             }
 
-            float sortValue = -transform.position.z * sortingMultiplier;
+            float sortValue = -z * sortingMultiplier;
             int order = baseSortingOrder + Mathf.RoundToInt(sortValue);
             if (useMinSortingClamp)
             {
@@ -91,6 +92,16 @@ namespace Necrocis
             updateMode = mode;
             enabled = true;
             hasUpdated = false;
+            lastZ = float.NaN;
+        }
+
+        public void SetSortingAnchor(Rigidbody anchor)
+        {
+            sortingAnchor = anchor;
+            hasUpdated = false;
+            lastZ = float.NaN;
+            enabled = true;
+            UpdateSorting();
         }
 
         public void Configure(int newBaseSortingOrder, bool enableMinClamp, int newMinSortingOrder)
@@ -100,6 +111,7 @@ namespace Necrocis
             minSortingOrder = newMinSortingOrder;
             enabled = true;
             hasUpdated = false;
+            lastZ = float.NaN;
         }
     }
 }

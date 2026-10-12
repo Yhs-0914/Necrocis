@@ -16,12 +16,12 @@ namespace Necrocis
         [SerializeField] private Transform bossVisual;
         [SerializeField] private FinalBossPillar[] pillars;
         [SerializeField] private BiomeConfig[] sourceBiomes;
-        [SerializeField, Min(.25f)] private float spawnInterval = 3.5f;
-        [SerializeField, Range(1, 12)] private int commonMinionsPerWave = 4;
-        [SerializeField, Range(1, 3)] private int exclusiveTypesPerBiome = 2;
-        [SerializeField, Range(1, 4)] private int exclusiveCopiesPerType = 2;
-        [SerializeField, Range(.1f, 1f)] private float weakenedMidBossStatRatio = .33f;
-        [SerializeField, Range(.1f, 1f)] private float weakenedMidBossScaleRatio = 1f;
+        private float spawnInterval;
+        private int commonMinionsPerWave;
+        private int exclusiveTypesPerBiome;
+        private int exclusiveCopiesPerType;
+        private float weakenedMidBossStatRatio;
+        private float weakenedMidBossScaleRatio;
 
         private readonly List<EnemySpawnRuleConfig> commonRules = new List<EnemySpawnRuleConfig>();
         private readonly List<EnemyController> commonMinions = new List<EnemyController>();
@@ -65,10 +65,18 @@ namespace Necrocis
             sourceBiomes = biomes;
         }
 
+        public FinalBossBalanceConfig Balance => arena != null ? arena.Balance : GetComponent<FinalBossArena>().Balance;
+
         private IEnumerator Start()
         {
             map = GetComponent<MapGenerator>();
             arena = GetComponent<FinalBossArena>();
+            spawnInterval = arena.Balance.phaseOne.spawnInterval;
+            commonMinionsPerWave = arena.Balance.phaseOne.commonMinionsPerWave;
+            exclusiveTypesPerBiome = arena.Balance.phaseOne.exclusiveTypesPerBiome;
+            exclusiveCopiesPerType = arena.Balance.phaseOne.exclusiveCopiesPerType;
+            weakenedMidBossStatRatio = arena.Balance.phaseOne.weakenedMidBossStatRatio;
+            weakenedMidBossScaleRatio = arena.Balance.phaseOne.weakenedMidBossScaleRatio;
             SetBossPresentation(true);
             if (bossVisual != null)
             {
@@ -199,7 +207,9 @@ namespace Necrocis
             active.RemoveAll(enemy => enemy == null || !enemy.gameObject.activeInHierarchy || enemy.IsDead);
             foreach (EnemySpawnRuleConfig rule in selected)
             {
-                int livingCount = active.Count(enemy => enemy.Config == rule);
+                int livingCount = active.Count(enemy => enemy.Config != null
+                    && enemy.Config.poissonSalt == rule.poissonSalt
+                    && string.Equals(enemy.Config.name, rule.name, StringComparison.Ordinal));
                 while (livingCount < exclusiveCopiesPerType)
                 {
                     EnemyController enemy = SpawnEnemy(rule, biome,
@@ -228,7 +238,8 @@ namespace Necrocis
         {
             if (rule == null || !TryFindSpawnPosition(biome, out Vector3 position)) return null;
             EnemyController enemy = EnemyController.Acquire(transform, objectName, EnemyController.GetPoolArchetypeId(rule));
-            enemy.Configure(null, rule, position, position);
+            bool weakened = objectName.EndsWith("_WeakenedMidBoss", StringComparison.Ordinal);
+            enemy.Configure(null, rule, position, position, arena.CaptureSummonBalance(rule.monsterDefinition, weakened));
             return enemy;
         }
 
@@ -305,13 +316,19 @@ namespace Necrocis
             float originalHealth = source.maxHealth;
             float originalAttackDamage = source.attackDamage;
             float originalMoveSpeed = source.moveSpeed;
-            if (definition != null && definition.overrideStats)
+            if (source.monsterDefinition != null && source.monsterDefinition.TryGetStatSet("Default", out MonsterStatSet baseStats))
+            {
+                originalHealth = baseStats.maxHealth;
+                originalAttackDamage = baseStats.attackPower;
+                originalMoveSpeed = baseStats.moveSpeed;
+            }
+            else if (definition != null && definition.overrideStats)
             {
                 originalHealth *= Mathf.Max(.01f, definition.maxHealthMultiplier);
                 originalAttackDamage *= Mathf.Max(.01f, definition.attackDamageMultiplier);
                 originalMoveSpeed *= Mathf.Max(.01f, definition.moveSpeedMultiplier);
             }
-            if (definition != null)
+            if (source.monsterDefinition == null && definition != null)
                 originalHealth = Mathf.Max(originalHealth, definition.minimumMaxHealth);
 
             Vector3 originalScaleMultiplier = GetSafeScaleMultiplier(definition?.scaleMultiplier ?? Vector3.one);
@@ -320,6 +337,7 @@ namespace Necrocis
 
             return new EnemySpawnRuleConfig
             {
+                monsterDefinition = source.monsterDefinition,
                 name = $"Weak {(!string.IsNullOrWhiteSpace(definition?.displayName) ? definition.displayName : source.name)}",
                 poissonSalt = 9300 + (int)biome,
                 maxAlive = 1,

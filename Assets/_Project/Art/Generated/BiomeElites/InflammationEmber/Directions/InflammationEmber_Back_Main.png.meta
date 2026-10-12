@@ -1,0 +1,347 @@
+fileFormatVersion: 2
+guid: 979d35e54a2c74328bf545c4c63b40e9
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 178
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_00
+      rect:
+        serializedVersion: 2
+        x: 54
+        y: 454
+        width: 312
+        height: 271
+      alignment: 9
+      pivot: {x: 0.5, y: 0.025830258}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c126c993954c4f8f847daa660f8ae30
+      internalID: 634152253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_01
+      rect:
+        serializedVersion: 2
+        x: 438
+        y: 454
+        width: 314
+        height: 276
+      alignment: 9
+      pivot: {x: 0.4968153, y: 0.025362318}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b78f80fcca0644f0092cf9340d9a7e92
+      internalID: -1725398293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_02
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 454
+        width: 315
+        height: 265
+      alignment: 9
+      pivot: {x: 0.4984127, y: 0.026415095}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6e92f576dd54434d80fc4e7da16c9c8
+      internalID: -2001024956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 454
+        width: 311
+        height: 276
+      alignment: 9
+      pivot: {x: 0.49839228, y: 0.025362318}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 255a6007a24da41aba57d1126305a823
+      internalID: 307688985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_04
+      rect:
+        serializedVersion: 2
+        x: 1620
+        y: 454
+        width: 307
+        height: 282
+      alignment: 9
+      pivot: {x: 0.49837133, y: 0.024822695}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b52681f2ab8d948fc99634be4e7ffbc4
+      internalID: 563197757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_05
+      rect:
+        serializedVersion: 2
+        x: 54
+        y: 84
+        width: 314
+        height: 280
+      alignment: 9
+      pivot: {x: 0.4968153, y: 0.025}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c24b4f7dc712d4e8b814a88836fb3caa
+      internalID: -1343160148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_06
+      rect:
+        serializedVersion: 2
+        x: 438
+        y: 84
+        width: 316
+        height: 280
+      alignment: 9
+      pivot: {x: 0.5, y: 0.025}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 46db1fb9a1e184d758a705e253a82ca2
+      internalID: 60928546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_07
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 90
+        width: 315
+        height: 248
+      alignment: 9
+      pivot: {x: 0.4984127, y: 0.028225806}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b1110d98d357a4b7abfa35007959504b
+      internalID: -1721668009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_08
+      rect:
+        serializedVersion: 2
+        x: 1225
+        y: 84
+        width: 319
+        height: 233
+      alignment: 9
+      pivot: {x: 0.4984326, y: 0.030042918}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 033ff592d5ecf4bc7b25429712c2bcab
+      internalID: 1676745031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: InflammationEmber_Back_Main_09
+      rect:
+        serializedVersion: 2
+        x: 1628
+        y: 90
+        width: 296
+        height: 217
+      alignment: 9
+      pivot: {x: 0.5, y: 0.032258064}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5f7b186e8c03147cfb63a5b434320c0a
+      internalID: -526249647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: fd00f69dc816240a0830569d6317ce25
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      InflammationEmber_Back_Main_00: 634152253
+      InflammationEmber_Back_Main_01: -1725398293
+      InflammationEmber_Back_Main_02: -2001024956
+      InflammationEmber_Back_Main_03: 307688985
+      InflammationEmber_Back_Main_04: 563197757
+      InflammationEmber_Back_Main_05: -1343160148
+      InflammationEmber_Back_Main_06: 60928546
+      InflammationEmber_Back_Main_07: -1721668009
+      InflammationEmber_Back_Main_08: 1676745031
+      InflammationEmber_Back_Main_09: -526249647
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

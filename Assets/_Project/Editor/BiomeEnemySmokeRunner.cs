@@ -105,10 +105,18 @@ namespace NecrocisEditor
                 var rule = Rules[index];
                 if (phase == 0)
                 {
+                    // Focus these checks on one actor; world hazards and production spawns have separate coverage.
+                    foreach (var spawner in UnityEngine.Object.FindObjectsByType<EnemySpawner>(FindObjectsSortMode.None))
+                    { spawner.ReleaseSpawnedEnemies(); spawner.enabled = false; }
+                    foreach (var field in UnityEngine.Object.FindObjectsByType<BiomeEliteField>(FindObjectsSortMode.None)) field.enabled = false;
+                    foreach (var hazard in UnityEngine.Object.FindObjectsByType<IntestineTransitHazard>(FindObjectsSortMode.None)) hazard.enabled = false;
+                    foreach (var hazard in UnityEngine.Object.FindObjectsByType<LiverToxicRain>(FindObjectsSortMode.None)) hazard.enabled = false;
                     health.ResetHealth();
-                    var position = player.transform.position + Vector3.forward * (rule.isRanged ? 4f : 1.2f);
+                    var position = player.transform.position + Vector3.forward * (rule.isRanged ? 4f : .35f);
                     enemy = EnemyController.Acquire(null, rule.name, EnemyController.GetPoolArchetypeId(rule));
                     enemy.Configure(null, rule, position, position);
+                    enemy.GetComponent<Collider>().isTrigger = true;
+                    enemy.GetComponent<EnemyContactDamage>().SetDamageActive(false);
                     enemy.SetAiSuppressed(true);
                     Invoke(enemy, "EnsurePlayerTransform");
                     Require(!enemy.IsElite && enemy.StatusEffects != null && enemy.GetComponent<EnemyContactDamage>() != null, rule.name + " components");
@@ -140,8 +148,17 @@ namespace NecrocisEditor
                     Require(health.CurrentHealth < playerHealth, rule.name + " attack caused no damage");
                     if (rule.isRanged) Require(projectileSeen, rule.name + " no projectile");
                     EnemyProjectile.ReturnProjectilesOwnedBy(enemy);
+                    EnemyContactDamage contact = enemy.GetComponent<EnemyContactDamage>();
+                    contact.SetDamageActive(true);
+                    Vector3 enemyPosition = enemy.GetComponent<Rigidbody>().position;
+                    player.SpawnAt(enemyPosition + Vector3.forward * 10f);
+                    Physics.SyncTransforms();
                     health.ResetHealth();
-                    Require(enemy.GetComponent<EnemyContactDamage>().TryApplyTo(player), rule.name + " contact damage");
+                    Require(!contact.TryApplyTo(player), rule.name + " no remote contact damage");
+                    player.SpawnAt(enemyPosition);
+                    Physics.SyncTransforms();
+                    health.ResetHealth();
+                    Require(contact.TryApplyTo(player), rule.name + " actual body contact damage");
                     Require(health.CurrentHealth < health.MaxHealth, rule.name + " contact health");
                     float before = enemy.Stats.CurrentHealth;
                     enemy.TakeDamage(1);

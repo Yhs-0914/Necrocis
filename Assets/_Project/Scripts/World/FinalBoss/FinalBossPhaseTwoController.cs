@@ -26,47 +26,47 @@ namespace Necrocis
         }
 
         [Header("Boss")]
-        [SerializeField, Min(1f)] private float bossMaxHealth = 520f;
-        [SerializeField, Min(.1f)] private float phaseStartDelay = 1.4f;
-        [SerializeField, Min(.1f)] private float patternCooldown = 1.8f;
+        private float bossMaxHealth;
+        private float phaseStartDelay;
+        private float patternCooldown;
 
         [Header("Pattern 1 - Electric Lines")]
-        [SerializeField, Min(.1f)] private float electricWarningDuration = 1.35f;
-        [SerializeField, Range(1, 6)] private int electricLineCount = 3;
-        [SerializeField, Min(.2f)] private float electricLineWidth = 1.45f;
-        [SerializeField, Min(0f)] private float electricDamage = 2f;
-        [SerializeField, Min(.1f)] private float reversedControlDuration = 1f;
+        private float electricWarningDuration;
+        private int electricLineCount;
+        private float electricLineWidth;
+        private float electricDamage;
+        private float reversedControlDuration;
 
         [Header("Pattern 2 - Homing Volley")]
-        [SerializeField, Min(.1f)] private float missileWarningDuration = 1.15f;
-        [SerializeField, Range(1, 24)] private int missileCount = 12;
-        [SerializeField, Min(.01f)] private float missileInterval = .11f;
-        [SerializeField, Min(.1f)] private float missileSpeed = 7.8f;
-        [SerializeField, Min(0f)] private float missileDamage = 1f;
-        [SerializeField, Min(0f)] private float missileTurnSpeed = 115f;
+        private float missileWarningDuration;
+        private int missileCount;
+        private float missileInterval;
+        private float missileSpeed;
+        private float missileDamage;
+        private float missileTurnSpeed;
 
         [Header("Pattern 3 - Cell Bombs")]
-        [SerializeField, Min(.1f)] private float bombWarningDuration = 1.45f;
-        [SerializeField, Range(1, 12)] private int bombCount = 6;
-        [SerializeField, Min(.2f)] private float bombRadius = 2.35f;
-        [SerializeField, Min(0f)] private float bombDamage = 2f;
+        private float bombWarningDuration;
+        private int bombCount;
+        private float bombRadius;
+        private float bombDamage;
 
         [Header("Pattern 4 - Half Arena")]
-        [SerializeField, Min(.1f)] private float sweepWarningDuration = 1.55f;
-        [SerializeField, Min(0f)] private float sweepDamage = 2f;
+        private float sweepWarningDuration;
+        private float sweepDamage;
 
         [Header("Pattern 5 - Reflection")]
-        [SerializeField, Min(.1f)] private float reflectionWarningDuration = 1.1f;
-        [SerializeField, Min(.1f)] private float reflectionActiveDuration = 3.2f;
-        [SerializeField, Range(0f, 2f)] private float reflectedDamageRatio = .55f;
+        private float reflectionWarningDuration;
+        private float reflectionActiveDuration;
+        private float reflectedDamageRatio;
 
         [Header("Pattern 6 - Cell Barrage")]
-        [SerializeField, Min(.1f)] private float barrageWarningDuration = 1.2f;
-        [SerializeField, Range(12, 36)] private int barrageCellsPerWave = 24;
-        [SerializeField, Range(1, 5)] private int barrageWaveCount = 3;
-        [SerializeField, Min(.2f)] private float barrageWaveInterval = .65f;
-        [SerializeField, Min(.1f)] private float barrageCellSpeed = 6.4f;
-        [SerializeField, Min(0f)] private float barrageCellDamage = 1f;
+        private float barrageWarningDuration;
+        private int barrageCellsPerWave;
+        private int barrageWaveCount;
+        private float barrageWaveInterval;
+        private float barrageCellSpeed;
+        private float barrageCellDamage;
 
         private static readonly Color WarningColor = new Color(1f, .48f, .03f, .42f);
         private static readonly Color ElectricColor = new Color(.2f, .78f, 1f, .72f);
@@ -124,6 +124,35 @@ namespace Necrocis
         {
             if (active) return;
             arena = GetComponent<FinalBossArena>();
+            bossMaxHealth = arena.Balance.phaseTwo.bossMaxHealth;
+            phaseStartDelay = arena.Balance.phaseTwo.phaseStartDelay;
+            patternCooldown = arena.Balance.phaseTwo.patternCooldown;
+            electricWarningDuration = arena.Balance.phaseTwo.electricWarningDuration;
+            electricLineCount = arena.Balance.phaseTwo.electricLineCount;
+            electricLineWidth = arena.Balance.phaseTwo.electricLineWidth;
+            electricDamage = arena.Balance.phaseTwo.electricDamage;
+            reversedControlDuration = arena.Balance.phaseTwo.reversedControlDuration;
+            missileWarningDuration = arena.Balance.phaseTwo.missileWarningDuration;
+            missileCount = arena.Balance.phaseTwo.missileCount;
+            missileInterval = arena.Balance.phaseTwo.missileInterval;
+            missileSpeed = arena.Balance.phaseTwo.missileSpeed;
+            missileDamage = arena.Balance.phaseTwo.missileDamage;
+            missileTurnSpeed = arena.Balance.phaseTwo.missileTurnSpeed;
+            bombWarningDuration = arena.Balance.phaseTwo.bombWarningDuration;
+            bombCount = arena.Balance.phaseTwo.bombCount;
+            bombRadius = arena.Balance.phaseTwo.bombRadius;
+            bombDamage = arena.Balance.phaseTwo.bombDamage;
+            sweepWarningDuration = arena.Balance.phaseTwo.sweepWarningDuration;
+            sweepDamage = arena.Balance.phaseTwo.sweepDamage;
+            reflectionWarningDuration = arena.Balance.phaseTwo.reflectionWarningDuration;
+            reflectionActiveDuration = arena.Balance.phaseTwo.reflectionActiveDuration;
+            reflectedDamageRatio = arena.Balance.phaseTwo.reflectedDamageRatio;
+            barrageWarningDuration = arena.Balance.phaseTwo.barrageWarningDuration;
+            barrageCellsPerWave = arena.Balance.phaseTwo.barrageCellsPerWave;
+            barrageWaveCount = arena.Balance.phaseTwo.barrageWaveCount;
+            barrageWaveInterval = arena.Balance.phaseTwo.barrageWaveInterval;
+            barrageCellSpeed = arena.Balance.phaseTwo.barrageCellSpeed;
+            barrageCellDamage = arena.Balance.phaseTwo.barrageCellDamage;
             map = GetComponent<MapGenerator>();
             bossVisual = revealedBoss;
             if (bossVisual != null) bossBaseScale = bossVisual.localScale;
@@ -180,6 +209,8 @@ namespace Necrocis
             bossDamageTarget.Configure(null, rule, targetPosition, targetPosition);
             bossDamageTarget.SetAiSuppressed(true);
             bossDamageTarget.SetIgnoreMidBossArenaRestriction(true);
+            bossDamageTarget.Stats.SetBaseStat(CharacterStatType.MaxHealth,
+                bossMaxHealth * arena.Balance.GetDifficulty(SaveService.ActiveDifficulty).health, true);
             bossDamageTarget.DamageTaken += HandleBossDamageTaken;
             bossDamageTarget.Defeated += HandleBossDefeated;
 
@@ -408,7 +439,7 @@ namespace Necrocis
                 && (player.HealthComponent == null || !player.HealthComponent.IsInvincible);
             if (canReceiveHit)
             {
-                player.TakeDamage(electricDamage);
+                player.TakeDamage(FinalBossArena.CreateDamage(electricDamage));
                 player.ApplyMovementControlReversal(reversedControlDuration);
             }
             yield return new WaitForSeconds(.3f);
@@ -534,7 +565,7 @@ namespace Necrocis
             player = PlayerController.Instance;
             bool hit = player != null && positions.Exists(position =>
                 PlanarDistanceSqr(position, player.transform.position) <= bombRadius * bombRadius);
-            if (hit) player.TakeDamage(bombDamage);
+            if (hit) player.TakeDamage(FinalBossArena.CreateDamage(bombDamage));
             PlayAttackAccent("StomachImpact", .55f);
             DontStarveCamera.Instance?.AddCombatImpulse(.13f, .2f);
             foreach (Vector3 position in positions)
@@ -655,7 +686,7 @@ namespace Necrocis
                     PlayAttackAccent("IntestineBossImpact", .55f);
                     DontStarveCamera.Instance?.AddCombatImpulse(.22f, .24f);
                     PlayerController player = PlayerController.Instance;
-                    if (player != null && area.Contains(player.transform.position)) player.TakeDamage(sweepDamage);
+                    if (player != null && area.Contains(player.transform.position)) player.TakeDamage(FinalBossArena.CreateDamage(sweepDamage));
                 }
                 yield return null;
             }
@@ -733,15 +764,15 @@ namespace Necrocis
                 if (player != null && Time.time >= nextReflectionHitTime)
                 {
                     nextReflectionHitTime = Time.time + .45f;
-                    player.TakeDamage(Mathf.Clamp(damage * reflectedDamageRatio, 1f, 2f));
+                    player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(damage * reflectedDamageRatio, 1f, 2f)));
                 }
             }
             else
             {
                 // Preserve one shared health pool. Even an oversized hit must enter phase III.
-                if (!phaseThreeStarted && target.Stats.HealthNormalized <= .4f)
+                if (!phaseThreeStarted && target.Stats.HealthNormalized <= arena.Balance.phaseTwo.phaseThreeHealthRatio)
                 {
-                    if (target.Stats.IsDead) target.Stats.RestoreHealth(target.Stats.MaxHealth * .4f);
+                    if (target.Stats.IsDead) target.Stats.RestoreHealth(target.Stats.MaxHealth * arena.Balance.phaseTwo.phaseThreeHealthRatio);
                     BeginPhaseThree();
                     return;
                 }

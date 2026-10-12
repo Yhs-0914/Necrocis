@@ -18,11 +18,7 @@ namespace NecrocisEditor
         private static bool spriteAnimationSmoke;
         private static bool victorySmoke;
         private static float victoryRealtime, dismissedRealtime;
-        private static string Output => victorySmoke
-            ? "Exports/FinalBossConcepts/2026-10-05-victory"
-            : spriteAnimationSmoke
-            ? "Exports/FinalBossConcepts/2026-10-05-animations/PlayMode"
-            : "Exports/FinalBossConcepts/2026-09-28/TilemapImplementation";
+        private static string Output => "Logs/FinalBossSmoke/" + (victorySmoke ? "victory" : spriteAnimationSmoke ? "animations" : "exploration");
         private static readonly Vector2 Footprint = new Vector2(.68f, .48f);
         private static SceneSetup[] sceneSetup;
         private static bool previousOptionsEnabled;
@@ -329,9 +325,16 @@ namespace NecrocisEditor
                         "Destroying a pillar did not summon its weakened biome mid-boss");
                     Require(Mathf.Abs(weakenedBoss.Config.scale.x - 4.4f) < .01f,
                         "Stomach weakened mid-boss must be twice its previous final-boss-room size");
-                    Require(Mathf.Abs(weakenedBoss.Config.maxHealth - 3.3f) < .01f
-                        && Mathf.Abs(weakenedBoss.Config.attackDamage - .99f) < .01f,
-                        "Weakened mid-boss health/attack stats must be 33% of the original boss rule");
+                    Require(weakenedBoss.Balance != null && weakenedBoss.Config.monsterDefinition != null,
+                        "Weakened mid-boss must use its MonsterDefinition");
+                    weakenedBoss.Config.monsterDefinition.TryGetStatSet("Default", out MonsterStatSet sourceStats);
+                    FinalBossDifficultyBalance finalDifficulty = phase.Balance.GetDifficulty(SaveService.ActiveDifficulty);
+                    Require(Mathf.Abs(weakenedBoss.Balance.Current.MaxHealth - sourceStats.maxHealth
+                            * phase.Balance.phaseOne.weakenedMidBossStatRatio * finalDifficulty.health) < .01f
+                        && Mathf.Abs(weakenedBoss.Balance.Current.AttackPower - sourceStats.attackPower
+                            * phase.Balance.phaseOne.weakenedMidBossStatRatio * finalDifficulty.damage) < .01f
+                        && weakenedBoss.Balance.Current.Experience == 0,
+                        "Weakened mid-boss must use definition stats and independent encounter settings with zero reward");
                     VerifyOnlyRemainingBiomesRespawn(phase, firstPillar.Biome);
                     phase.PauseSpawningForTest();
                     CaptureOverview(FinalBossArena.Instance, "arena-overview-pillar-broken.png");
@@ -577,6 +580,7 @@ namespace NecrocisEditor
                 "Authored environment must use position-specific tiles");
             Require(BiomeManager.Active == arena.GetComponent<ProceduralBiomeBridge>(), "Shared biome bridge not active");
             Require(player.GetComponent<ProceduralTerrainMotor>().HasActiveMap, "Common terrain motor not bound");
+            MergeIntegrationChecks.VerifyGrabInput(player);
             FinalBossPhaseOneController phase = arena.GetComponent<FinalBossPhaseOneController>();
             Require(phase != null && phase.Pillars != null && phase.Pillars.Count == 4,
                 "Final boss phase-one controller or pillars missing");
@@ -819,7 +823,7 @@ namespace NecrocisEditor
             File.WriteAllText(Output + (directPreview ? "/direct-smoke-result.txt" : "/smoke-result.txt"), result);
             File.WriteAllText("Library/FinalBossSmoke.result", result);
             Debug.Log("[FinalBossSmoke] " + result);
-            if (spriteAnimationSmoke && Application.isBatchMode)
+            if (Application.isBatchMode)
                 EditorApplication.delayCall += () => EditorApplication.Exit(failure == null ? 0 : 1);
         }
 

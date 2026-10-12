@@ -1,0 +1,393 @@
+fileFormatVersion: 2
+guid: 3b2754203905d4147aef3218e4af1501
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 139
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DustClump_Main_00
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 747
+        width: 290
+        height: 249
+      alignment: 9
+      pivot: {x: 0.5103448, y: 0.02811245}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f9690ba0354a41a68a602001c712628
+      internalID: 915609829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_01
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 747
+        width: 276
+        height: 272
+      alignment: 9
+      pivot: {x: 0.5072464, y: 0.007352941}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cbb889070b76c4c58b83f17bda64f299
+      internalID: -913181815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_02
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 747
+        width: 271
+        height: 255
+      alignment: 9
+      pivot: {x: 0.4907749, y: 0.019607844}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3d06dc430c8de481d9d374b5c31890ee
+      internalID: 2059299490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_03
+      rect:
+        serializedVersion: 2
+        x: 1107
+        y: 751
+        width: 297
+        height: 236
+      alignment: 9
+      pivot: {x: 0.4814815, y: 0.004237288}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b68a737a870c7439887c2eb6b104e345
+      internalID: 1392730332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_04
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 397
+        width: 258
+        height: 254
+      alignment: 9
+      pivot: {x: 0.4728682, y: 0.04330709}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 200fb38aaf9784a5c9e613296a8b3956
+      internalID: -1667340950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_05
+      rect:
+        serializedVersion: 2
+        x: 412
+        y: 407
+        width: 274
+        height: 231
+      alignment: 9
+      pivot: {x: 0.50364965, y: 0.0043290043}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9203d7ca066847d6be1653c1763b381
+      internalID: 447105609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_06
+      rect:
+        serializedVersion: 2
+        x: 774
+        y: 407
+        width: 249
+        height: 251
+      alignment: 9
+      pivot: {x: 0.47389558, y: 0.003984064}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa4b4156f2a8b4825abba871308fbad6
+      internalID: 1685475494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_07
+      rect:
+        serializedVersion: 2
+        x: 1191
+        y: 409
+        width: 162
+        height: 175
+      alignment: 9
+      pivot: {x: 0.42592594, y: 0.0057142857}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8fb70ae1ed5a742ccb93e1fb0475c6d3
+      internalID: -687636534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_08
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 67
+        width: 181
+        height: 178
+      alignment: 9
+      pivot: {x: 0.5138122, y: 0.0056179776}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d220609c024a48ab854e150b31bcd1e
+      internalID: -1987782069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_09
+      rect:
+        serializedVersion: 2
+        x: 460
+        y: 67
+        width: 180
+        height: 176
+      alignment: 9
+      pivot: {x: 0.5, y: 0.0056818184}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f98f5135e2974fb7a8adb228b6c117b
+      internalID: -1617479142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_10
+      rect:
+        serializedVersion: 2
+        x: 774
+        y: 64
+        width: 257
+        height: 233
+      alignment: 9
+      pivot: {x: 0.46303502, y: 0.017167382}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aec499657fd1042fa827744a7a441f0d
+      internalID: -2045979016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DustClump_Main_11
+      rect:
+        serializedVersion: 2
+        x: 1116
+        y: 64
+        width: 290
+        height: 249
+      alignment: 9
+      pivot: {x: 0.47241378, y: 0.012048192}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80ffd61e159ed45caaefcc3b4115116c
+      internalID: -408160233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: bbf61f7a81afc43fc984c5eff4e21e67
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      DustClump_Main_00: 915609829
+      DustClump_Main_01: -913181815
+      DustClump_Main_02: 2059299490
+      DustClump_Main_03: 1392730332
+      DustClump_Main_04: -1667340950
+      DustClump_Main_05: 447105609
+      DustClump_Main_06: 1685475494
+      DustClump_Main_07: -687636534
+      DustClump_Main_08: -1987782069
+      DustClump_Main_09: -1617479142
+      DustClump_Main_10: -2045979016
+      DustClump_Main_11: -408160233
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
