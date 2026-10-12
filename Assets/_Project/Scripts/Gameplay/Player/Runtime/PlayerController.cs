@@ -481,8 +481,11 @@ namespace Necrocis
 
             if (frameTimer >= frameDuration)
             {
-                frameTimer -= frameDuration;
-                currentFrame = (currentFrame + 1) % currentAnimation.Length;
+                int framesElapsed = isPlayingAttackAnim ? Mathf.FloorToInt(frameTimer / frameDuration) : 1;
+                frameTimer -= framesElapsed * frameDuration;
+                currentFrame = isPlayingAttackAnim
+                    ? Mathf.Min(currentFrame + framesElapsed, currentAnimation.Length - 1)
+                    : (currentFrame + framesElapsed) % currentAnimation.Length;
 
                 if (spriteRenderer != null && currentFrame < currentAnimation.Length)
                 {
@@ -1020,12 +1023,15 @@ namespace Necrocis
             }
 
             float duration = Mathf.Max(0.05f, attackAnimDuration);
-            SetAnimation(sprites, attackFrameRate > 0f ? attackFrameRate : 12f);
+            // Fit the complete pose sequence into the existing attack window. At 12 fps,
+            // a 0.2-second attack previously stopped after only two of its 7-8 frames.
+            float frameRate = Mathf.Max(attackFrameRate > 0f ? attackFrameRate : 12f, sprites.Length / duration);
+            SetAnimation(sprites, frameRate);
             isPlayingAttackAnim = true;
             attackAnimEndTime = Time.time + duration;
             if (enableDebugLogs)
             {
-                Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={attackFrameRate}");
+                Debug.Log($"[PlayerController] 공격 애니 시작: sprites={sprites.Length} s[0]={sprites[0]?.name ?? "NULL"} duration={duration} frameRate={frameRate}");
             }
         }
 

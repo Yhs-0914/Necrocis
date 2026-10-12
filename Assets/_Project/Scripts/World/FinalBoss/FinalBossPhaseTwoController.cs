@@ -805,11 +805,11 @@ namespace Necrocis
             if (bossHitFlash != null) bossHitFlash.enabled = false;
             if (bossRenderer != null) bossRenderer.color = bossBaseColor;
             if (bossVisual != null) bossVisual.localScale = bossBaseScale;
-            map.SetAuthoredAreaBlocked(new RectInt(17, 30, 14, 5), false);
+            map.SetAuthoredAreaBlocked(arena.RoomToMapArea(new RectInt(17, 30, 14, 5)), false);
             phaseThree.Begin(bossVisual, bossDamageTarget, runtimeRoot);
             if (!phaseThree.IsActive)
             {
-                map.SetAuthoredAreaBlocked(new RectInt(17, 30, 14, 5), true);
+                map.SetAuthoredAreaBlocked(arena.RoomToMapArea(new RectInt(17, 30, 14, 5)), true);
                 if (bossHitFlash != null) bossHitFlash.enabled = true;
                 Debug.LogError("[FinalBoss] Phase three failed to start; phase two remains active.");
                 return;
@@ -1122,8 +1122,8 @@ namespace Necrocis
             ArenaMinX + CombatWidth * .5f,
             0f,
             ArenaMinZ + CombatHeight * .5f);
-        private float ArenaMinX => 5f;
-        private float ArenaMinZ => 7f;
+        private float ArenaMinX => arena.RoomOrigin.x + 5f;
+        private float ArenaMinZ => arena.RoomOrigin.y + 7f;
         private float CombatWidth => Mathf.Max(8f, arena.WorldSize.x - 10f);
         private float CombatHeight => Mathf.Max(8f, arena.WorldSize.y - 14f);
 

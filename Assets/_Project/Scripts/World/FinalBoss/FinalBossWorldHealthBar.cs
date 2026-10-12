@@ -9,6 +9,9 @@ namespace Necrocis
         private static Sprite whiteSprite;
         private Transform fill;
         private float width;
+        private SpriteRenderer artwork;
+
+        public void FollowArtwork(SpriteRenderer renderer) => artwork = renderer;
 
         public static FinalBossWorldHealthBar Create(Transform parent, float height, Color fillColor)
         {
@@ -54,6 +57,9 @@ namespace Necrocis
         {
             Camera camera = DontStarveCamera.GetActiveCamera();
             if (camera != null) transform.rotation = camera.transform.rotation;
+            if (camera != null && artwork != null && artwork.sprite != null)
+                transform.position = artwork.transform.TransformPoint(new Vector3(0f, artwork.sprite.bounds.max.y, 0f))
+                    + camera.transform.up * .5f;
         }
 
         private static Sprite GetWhiteSprite()

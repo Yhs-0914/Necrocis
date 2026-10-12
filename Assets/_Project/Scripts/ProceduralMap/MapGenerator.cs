@@ -1288,7 +1288,7 @@ namespace ProceduralMap
             {
                 Vector3Int tilePosition = new Vector3Int(x, y, 0);
                 MapCell cell = gridData.GetCell(x, y);
-                if (authoredLayout != null && authoredLayout.environmentAtlas != null)
+                if (authoredLayout != null && authoredLayout.UsesAtlas(x, y))
                     baseTilemap.SetTile(tilePosition, GetAuthoredTile(x, y));
                 else if ((!cell.IsVoid && y > bottomEmptyRows) || (authoredLayout != null && authoredLayout.ContainsFloor(x, y)))
                     baseTilemap.SetTile(tilePosition, baseRuntimeTile);
@@ -1307,7 +1307,7 @@ namespace ProceduralMap
                     secondFloorTilemap.SetTile(tilePosition, secondFloorRuntimeTile);
                 if (cell.TerrainType == TerrainType.ThirdFloor && thirdFloorTilemap)
                     thirdFloorTilemap.SetTile(tilePosition, thirdFloorRuntimeTile);
-                if (cell.HasCliff && !(authoredLayout != null && authoredLayout.environmentAtlas != null))
+                if (cell.HasCliff && !(authoredLayout != null && authoredLayout.UsesAtlas(x, y)))
                 {
                     if (cell.CliffLevel == 2 && thirdFloorCliffTilemap)
                         thirdFloorCliffTilemap.SetTile(tilePosition, thirdFloorCliffRuntimeTile);
@@ -1533,10 +1533,11 @@ namespace ProceduralMap
             var key = new Vector2Int(x, y);
             if (authoredTiles.TryGetValue(key, out var cached)) return cached;
             Texture2D texture = authoredLayout.environmentAtlas;
-            int left = Mathf.RoundToInt(x * (float)texture.width / mapWidth);
-            int right = Mathf.RoundToInt((x + 1) * (float)texture.width / mapWidth);
-            int bottom = Mathf.RoundToInt(y * (float)texture.height / mapHeight);
-            int top = Mathf.RoundToInt((y + 1) * (float)texture.height / mapHeight);
+            RectInt area = authoredLayout.AtlasArea;
+            int left = Mathf.RoundToInt((x - area.x) * (float)texture.width / area.width);
+            int right = Mathf.RoundToInt((x - area.x + 1) * (float)texture.width / area.width);
+            int bottom = Mathf.RoundToInt((y - area.y) * (float)texture.height / area.height);
+            int top = Mathf.RoundToInt((y - area.y + 1) * (float)texture.height / area.height);
             Sprite sprite = Sprite.Create(texture, new Rect(left, bottom, right - left, top - bottom),
                 new Vector2(.5f, .5f), right - left, 0, SpriteMeshType.FullRect);
             sprite.hideFlags = HideFlags.HideAndDontSave;

@@ -11,6 +11,7 @@ namespace Necrocis
         [Header("프리팹")]
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private GameObject cameraPrefab;
+        [SerializeField] private PlayerProjectilePool projectilePoolPrefab;
 
         [Header("자동 생성 여부")]
         [SerializeField] private bool autoCreatePlayer = true;
@@ -61,6 +62,14 @@ namespace Necrocis
             if (autoCreatePlayer)
             {
                 CreatePlayer();
+            }
+
+            // Standalone combat scenes need the same persistent projectile pool as the Hub.
+            if (PlayerProjectilePool.Instance == null
+                && FindFirstObjectByType<PlayerProjectilePool>() == null
+                && projectilePoolPrefab != null)
+            {
+                Instantiate(projectilePoolPrefab).name = "PlayerProjectilePool";
             }
 
             // 카메라 생성

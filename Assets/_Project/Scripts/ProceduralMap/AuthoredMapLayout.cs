@@ -12,6 +12,16 @@ namespace ProceduralMap
         public RectInt[] blockedAreas;
         [Tooltip("Optional room artwork sampled by cell through the normal chunk renderer. Does not define collision.")]
         public Texture2D environmentAtlas;
+        [Tooltip("Cells covered by the room artwork. An empty rectangle uses the entire map.")]
+        public RectInt environmentAtlasArea;
+        [Tooltip("Approach and its side walls, rendered with the normal floor/cliff tiles.")]
+        public RectInt approachArea;
+
+        public RectInt AtlasArea => environmentAtlasArea.width > 0 && environmentAtlasArea.height > 0
+            ? environmentAtlasArea : new RectInt(0, 0, size.x, size.y);
+
+        public bool UsesAtlas(int x, int y) => environmentAtlas != null
+            && AtlasArea.Contains(new Vector2Int(x, y)) && !approachArea.Contains(new Vector2Int(x, y));
 
         public bool ContainsFloor(int x, int y)
         {

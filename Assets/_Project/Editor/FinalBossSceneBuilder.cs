@@ -15,6 +15,7 @@ namespace NecrocisEditor
         public const string ScenePath = "Assets/_Project/Scenes/FinalBoss.unity";
         private const string ArtPath = "Assets/_Project/Art/Generated/FinalBoss";
         private const string LayoutPath = ArtPath + "/FinalBossLayout.asset";
+        private const int ApproachExtension = 24;
         private static readonly RectInt[] PillarBounds =
         {
             new RectInt(9, 23, 6, 3), new RectInt(33, 23, 6, 3),
@@ -74,23 +75,15 @@ namespace NecrocisEditor
                 if (openedHub) hub = EditorSceneManager.OpenScene("Assets/_Project/Scenes/Hub.unity", OpenSceneMode.Additive);
                 PlayerController sourcePlayer = FindInScene<PlayerController>(hub);
                 DontStarveCamera sourceCamera = FindInScene<DontStarveCamera>(hub);
-                if (sourcePlayer == null || sourceCamera == null)
-                    throw new InvalidOperationException("Hub player or camera not found.");
+                PlayerProjectilePool sourcePool = FindInScene<PlayerProjectilePool>(hub);
+                if (sourcePlayer == null || sourceCamera == null || sourcePool == null)
+                    throw new InvalidOperationException("Hub player, camera or projectile pool not found.");
                 GameObject playerPrefab = SaveTemplate(sourcePlayer.gameObject, "FinalBossPlayerFallback");
                 GameObject cameraPrefab = SaveTemplate(sourceCamera.gameObject, "FinalBossCameraFallback");
+                GameObject poolPrefab = SaveTemplate(sourcePool.gameObject, "FinalBossProjectilePoolFallback");
 
                 AuthoredMapLayout layout = LoadOrCreate<AuthoredMapLayout>(LayoutPath);
-                layout.size = new Vector2Int(48, 38);
-                layout.spawnCell = new Vector2Int(24, 9);
-                layout.floorPolygon = new[] {
-                    new Vector2(21, 2), new Vector2(27, 2), new Vector2(27, 7),
-                    new Vector2(35, 7), new Vector2(40, 10), new Vector2(43, 15),
-                    new Vector2(43, 24), new Vector2(41, 28), new Vector2(37, 31),
-                    new Vector2(11, 31), new Vector2(7, 28), new Vector2(5, 24),
-                    new Vector2(5, 15), new Vector2(8, 10), new Vector2(13, 7), new Vector2(21, 7)
-                };
-                layout.blockedAreas = PillarBounds.Concat(new[] { new RectInt(17, 30, 14, 5) }).ToArray();
-                layout.environmentAtlas = AssetDatabase.LoadAssetAtPath<Texture2D>(ArtPath + "/CerebrumEnvironment_v2.png");
+                ConfigureApproachLayout(layout);
                 if (layout.environmentAtlas == null) throw new InvalidOperationException("Environment atlas missing.");
                 EditorUtility.SetDirty(layout);
                 BiomeConfig config = LoadOrCreate<BiomeConfig>(ArtPath + "/FinalBossBiomeConfig.asset");
@@ -157,17 +150,20 @@ namespace NecrocisEditor
                 BiomeType[] pillarBiomes = { BiomeType.Stomach, BiomeType.Intestine, BiomeType.Liver, BiomeType.Lung };
                 for (int i = 0; i < 4; i++)
                 {
-                    Sprite sprite = SaveSprite("Pillar_" + names[i], artwork, regions[i], regions[i].width * 48f, new Vector2(.5f, 0));
+                    Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                        "Assets/_Project/Resources/FinalBoss/Pillars/Pillar_" + names[i] + "_Intact.png");
+                    if (sprite == null) throw new InvalidOperationException("Approved tower missing: " + names[i]);
                     RectInt bounds = PillarBounds[i];
                     pillarTransforms[i] = MakeProp(props, "Pillar_" + names[i], sprite,
-                        new Vector3(regions[i].center.x * 48f, -2f, regions[i].y * 38f + 2f), contours[i]);
+                        new Vector3(regions[i].center.x * 48f, -2f, regions[i].y * 38f + 2f + ApproachExtension), contours[i]);
+                    pillarTransforms[i].GetComponent<SpriteOutline>().enabled = false;
                     phasePillars[i] = pillarTransforms[i].gameObject.AddComponent<FinalBossPillar>();
-                    phasePillars[i].Configure(pillarBiomes[i], PillarBounds[i],
+                    phasePillars[i].Configure(pillarBiomes[i], ShiftRoomArea(PillarBounds[i]),
                         pillarTransforms[i].GetComponent<SpriteRenderer>());
                 }
                 Sprite boss = SaveSprite("DormantCerebrum", artwork, new Rect(.351f, .749f, .281f, .25f), .281f * 48f, new Vector2(.5f,0));
                 Transform bossTransform = MakeProp(props, "DormantCerebrum", boss,
-                    new Vector3(.4915f * 48f, -2f, .749f * 38f + 2f), CerebrumOutline);
+                    new Vector3(.4915f * 48f, -2f, .749f * 38f + 2f + ApproachExtension), CerebrumOutline);
 
                 FinalBossArena arenaComponent = mapObject.AddComponent<FinalBossArena>();
                 var arena = new SerializedObject(arenaComponent);
@@ -191,6 +187,7 @@ namespace NecrocisEditor
                 var bootstrap = new SerializedObject(initializer);
                 bootstrap.FindProperty("playerPrefab").objectReferenceValue = playerPrefab;
                 bootstrap.FindProperty("cameraPrefab").objectReferenceValue = cameraPrefab;
+                bootstrap.FindProperty("projectilePoolPrefab").objectReferenceValue = poolPrefab.GetComponent<PlayerProjectilePool>();
                 bootstrap.ApplyModifiedPropertiesWithoutUndo();
                 new GameObject("SceneLoader").AddComponent<SceneLoader>();
                 EditorSceneManager.SaveScene(arenaScene, ScenePath);
@@ -208,6 +205,86 @@ namespace NecrocisEditor
                 if (openedHub && hub.isLoaded) EditorSceneManager.CloseScene(hub, true);
                 if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
             }
+        }
+
+        private static RectInt ShiftRoomArea(RectInt area) => new RectInt(
+            area.x, area.y + ApproachExtension, area.width, area.height);
+
+        private static void ConfigureApproachLayout(AuthoredMapLayout layout)
+        {
+            layout.size = new Vector2Int(48, 38 + ApproachExtension);
+            layout.spawnCell = new Vector2Int(24, 4);
+            layout.environmentAtlasArea = new RectInt(0, ApproachExtension, 48, 38);
+            layout.approachArea = new RectInt(20, 1, 8, ApproachExtension + 6);
+            layout.floorPolygon = new[] {
+                new Vector2(21, 2), new Vector2(27, 2), new Vector2(27, 7 + ApproachExtension),
+                new Vector2(35, 7 + ApproachExtension), new Vector2(40, 10 + ApproachExtension),
+                new Vector2(43, 15 + ApproachExtension), new Vector2(43, 24 + ApproachExtension),
+                new Vector2(41, 28 + ApproachExtension), new Vector2(37, 31 + ApproachExtension),
+                new Vector2(11, 31 + ApproachExtension), new Vector2(7, 28 + ApproachExtension),
+                new Vector2(5, 24 + ApproachExtension), new Vector2(5, 15 + ApproachExtension),
+                new Vector2(8, 10 + ApproachExtension), new Vector2(13, 7 + ApproachExtension),
+                new Vector2(21, 7 + ApproachExtension)
+            };
+            layout.blockedAreas = PillarBounds.Concat(new[] { new RectInt(17, 30, 14, 5) })
+                .Select(ShiftRoomArea).ToArray();
+            layout.environmentAtlas = AssetDatabase.LoadAssetAtPath<Texture2D>(ArtPath + "/CerebrumEnvironment_v2.png");
+            EditorUtility.SetDirty(layout);
+        }
+
+        [MenuItem("Tools/Necrocis/Final Boss/Apply Approved Towers and Straight Approach")]
+        public static void ApplyApprovedTowersAndApproach()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play Mode before applying the approved towers.");
+            Scene scene = SceneManager.GetSceneByPath(ScenePath);
+            if (!scene.isLoaded) scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+            MapGenerator map = FindInScene<MapGenerator>(scene);
+            if (map == null || map.AuthoredLayout == null) throw new InvalidOperationException("Authored map missing.");
+            AuthoredMapLayout layout = map.AuthoredLayout;
+            float shift = ApproachExtension - layout.AtlasArea.y;
+            ConfigureApproachLayout(layout);
+            var generator = new SerializedObject(map);
+            generator.FindProperty("mapWidth").intValue = layout.size.x;
+            generator.FindProperty("mapHeight").intValue = layout.size.y;
+            generator.ApplyModifiedPropertiesWithoutUndo();
+            Transform props = map.transform.Find("Arena Props");
+            if (props == null) throw new InvalidOperationException("Arena props missing.");
+            foreach (Transform prop in props) prop.position += Vector3.forward * shift;
+            string[] names = { "Stomach", "Intestine", "Liver", "Lung" };
+            BiomeType[] biomes = { BiomeType.Stomach, BiomeType.Intestine, BiomeType.Liver, BiomeType.Lung };
+            var phasePillars = new FinalBossPillar[4];
+            for (int i = 0; i < names.Length; i++)
+            {
+                Transform prop = props.Find("Pillar_" + names[i]);
+                SpriteRenderer renderer = prop.GetComponent<SpriteRenderer>();
+                string path = "Assets/_Project/Resources/FinalBoss/Pillars/Pillar_" + names[i] + "_";
+                renderer.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path + "Intact.png");
+                renderer.color = Color.white;
+                if (renderer.sprite == null) throw new InvalidOperationException("Approved tower missing: " + names[i]);
+                SpriteOutline outline = prop.GetComponent<SpriteOutline>();
+                if (outline != null) outline.enabled = false;
+                FinalBossPillar pillar = prop.GetComponent<FinalBossPillar>();
+                if (pillar == null) pillar = prop.gameObject.AddComponent<FinalBossPillar>();
+                phasePillars[i] = pillar;
+                pillar.Configure(biomes[i], ShiftRoomArea(PillarBounds[i]), renderer);
+                var settings = new SerializedObject(pillar);
+                settings.FindProperty("intactSprite").objectReferenceValue = renderer.sprite;
+                settings.FindProperty("brokenSprite").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(path + "Broken.png");
+                settings.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(prop.gameObject);
+            }
+            FinalBossPhaseOneController phase = map.GetComponent<FinalBossPhaseOneController>();
+            if (phase == null) phase = map.gameObject.AddComponent<FinalBossPhaseOneController>();
+            BiomeConfig[] sourceBiomes = names.Select(name => AssetDatabase.LoadAssetAtPath<BiomeConfig>(
+                "Assets/_Project/Data/BiomeConfigs/" + name + "BiomeConfig.asset")).ToArray();
+            if (sourceBiomes.Any(config => config == null)) throw new InvalidOperationException("Source biome missing.");
+            phase.Configure(props.Find("DormantCerebrum"), phasePillars, sourceBiomes);
+            EditorUtility.SetDirty(phase);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[FinalBossBuilder] Applied approved biome towers and the southern straight approach; room artwork and local combat coordinates preserved.");
         }
 
         [MenuItem("Tools/Necrocis/Final Boss/Update Existing Prop Outlines")]
@@ -229,6 +306,16 @@ namespace NecrocisEditor
                 {
                     Transform prop = arena.transform.Find("Arena Props/" + names[i]);
                     if (prop == null) throw new InvalidOperationException("Missing prop: " + names[i]);
+                    if (i < 4)
+                    {
+                        Sprite approved = AssetDatabase.LoadAssetAtPath<Sprite>(
+                            "Assets/_Project/Resources/FinalBoss/Pillars/" + names[i] + "_Intact.png");
+                        if (approved == null) throw new InvalidOperationException("Approved tower missing: " + names[i]);
+                        SpriteOutline oldOutline = prop.GetComponent<SpriteOutline>();
+                        if (oldOutline != null) oldOutline.enabled = false;
+                        prop.GetComponent<SpriteRenderer>().sprite = approved;
+                        continue;
+                    }
                     Sprite source = AssetDatabase.LoadAssetAtPath<Sprite>(ArtPath + "/" + names[i] + ".asset");
                     if (source == null) throw new InvalidOperationException("Missing sprite: " + names[i]);
                     SpriteOutline outline = prop.GetComponent<SpriteOutline>();

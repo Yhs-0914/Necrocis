@@ -528,13 +528,15 @@ namespace Necrocis
             if (!collapseStarted) return;
             collapseElapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(collapseElapsed / collapseDuration));
-            Vector2 center = arena.WorldSize * .5f;
+            Vector2 origin = arena.RoomOrigin;
+            Vector2 limit = origin + arena.WorldSize;
+            Vector2 center = origin + arena.WorldSize * .5f;
             Vector2 half = Vector2.Lerp(new Vector2(arena.WorldSize.x * .5f - 5f, arena.WorldSize.y * .5f - 7f), new Vector2(7f, 6f), t);
             safeArea = new Rect(center - half, half * 2f);
-            SetCollapsedFloor(0, new Rect(0f, 0f, safeArea.xMin, arena.WorldSize.y));
-            SetCollapsedFloor(1, new Rect(safeArea.xMax, 0f, arena.WorldSize.x - safeArea.xMax, arena.WorldSize.y));
-            SetCollapsedFloor(2, new Rect(safeArea.xMin, 0f, safeArea.width, safeArea.yMin));
-            SetCollapsedFloor(3, new Rect(safeArea.xMin, safeArea.yMax, safeArea.width, arena.WorldSize.y - safeArea.yMax));
+            SetCollapsedFloor(0, new Rect(origin.x, origin.y, safeArea.xMin - origin.x, arena.WorldSize.y));
+            SetCollapsedFloor(1, new Rect(safeArea.xMax, origin.y, limit.x - safeArea.xMax, arena.WorldSize.y));
+            SetCollapsedFloor(2, new Rect(safeArea.xMin, origin.y, safeArea.width, safeArea.yMin - origin.y));
+            SetCollapsedFloor(3, new Rect(safeArea.xMin, safeArea.yMax, safeArea.width, limit.y - safeArea.yMax));
             if (neuralBoundary != null) neuralBoundary.SetBoundary(safeArea);
             if (boundaryVisual != null)
             {

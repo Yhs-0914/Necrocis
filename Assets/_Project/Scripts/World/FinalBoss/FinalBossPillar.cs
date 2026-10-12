@@ -23,6 +23,7 @@ namespace Necrocis
         private Vector3 intactScale;
         private Vector3 intactPosition;
         private Coroutine hitReaction;
+        private Sprite[] destructionFrames;
         private bool destroyed;
         private static Material linkMaterial;
         private LineRenderer neuralLink;
@@ -31,6 +32,9 @@ namespace Necrocis
         public BiomeType Biome => biome;
         public Color AccentColor => GetBiomeColor();
         public bool IsDestroyed => destroyed;
+        public bool IsBreaking { get; private set; }
+        public int DestructionFrameIndex { get; private set; } = -1;
+        public int DestructionFrameCount => destructionFrames != null ? destructionFrames.Length : 0;
         public float Health => damageTarget != null && damageTarget.Stats != null ? damageTarget.Stats.CurrentHealth : 0f;
         public float MaxHealth => damageTarget != null && damageTarget.Stats != null ? damageTarget.Stats.MaxHealth : maxHealth;
         public EnemyController DamageTarget => damageTarget;
@@ -101,6 +105,7 @@ namespace Necrocis
                     ?? pillarRenderer.gameObject.AddComponent<CombatHitFlash>();
 
             healthBar = FinalBossWorldHealthBar.Create(damageTarget.transform, GetHealthBarHeight(), GetBiomeColor());
+            healthBar.FollowArtwork(pillarRenderer);
             healthBar.SetValue(1f);
             CreateNeuralLink();
         }
@@ -153,6 +158,8 @@ namespace Necrocis
             string resourceBase = $"FinalBoss/Pillars/Pillar_{biome}_";
             if (intactSprite == null) intactSprite = Resources.Load<Sprite>(resourceBase + "Intact");
             if (brokenSprite == null) brokenSprite = Resources.Load<Sprite>(resourceBase + "Broken");
+            destructionFrames = Resources.LoadAll<Sprite>("FinalBoss/Pillars/Animations/" + biome);
+            System.Array.Sort(destructionFrames, (a, b) => string.CompareOrdinal(a.name, b.name));
             if (pillarRenderer == null || intactSprite == null) return;
 
             // The old sprite was a rectangular crop of the arena artwork. The new sprite owns
@@ -173,10 +180,10 @@ namespace Necrocis
         {
             return biome switch
             {
-                BiomeType.Intestine => new Color(.83f, .46f, .79f),
-                BiomeType.Liver => new Color(.72f, .16f, .25f),
+                BiomeType.Intestine => new Color(.35f, .82f, .58f),
+                BiomeType.Liver => new Color(.76f, .37f, .75f),
                 BiomeType.Stomach => new Color(.92f, .55f, .18f),
-                BiomeType.Lung => new Color(.35f, .82f, .92f),
+                BiomeType.Lung => new Color(.94f, .78f, .51f),
                 _ => new Color(.9f, .2f, .3f)
             };
         }
@@ -219,8 +226,39 @@ namespace Necrocis
             if (hitFlash != null) hitFlash.enabled = false;
             healthBar?.Hide();
             map?.SetAuthoredAreaBlocked(blockedArea, false);
-            ShowBrokenRemnant();
+            if (destructionFrames != null && destructionFrames.Length == 5)
+                StartCoroutine(PlayDestruction());
+            else ShowBrokenRemnant();
             owner?.NotifyPillarDestroyed(this);
+        }
+
+        private IEnumerator PlayDestruction()
+        {
+            IsBreaking = true;
+            transform.localPosition = intactPosition;
+            transform.localScale = intactScale;
+            pillarRenderer.color = Color.white;
+            for (int i = 0; i < destructionFrames.Length; i++)
+            {
+                DestructionFrameIndex = i;
+                pillarRenderer.sprite = destructionFrames[i];
+                if (i < destructionFrames.Length - 1)
+                    yield return new WaitForSeconds(GetDestructionFrameDuration(i));
+            }
+            ShowBrokenRemnant();
+            IsBreaking = false;
+        }
+
+        private float GetDestructionFrameDuration(int index)
+        {
+            // The approved preview's timing: wet slump, canopy topple, timber split, deflation.
+            return biome switch
+            {
+                BiomeType.Stomach => index switch { 0 => .12f, 1 => .14f, 2 => .20f, _ => .26f },
+                BiomeType.Intestine => index switch { 0 => .16f, 1 => .22f, 2 => .30f, _ => .36f },
+                BiomeType.Liver => index switch { 0 => .14f, 1 => .22f, 2 => .24f, _ => .32f },
+                _ => index switch { 0 => .24f, 1 => .30f, 2 => .24f, _ => .32f }
+            };
         }
 
         private void ShowBrokenRemnant()

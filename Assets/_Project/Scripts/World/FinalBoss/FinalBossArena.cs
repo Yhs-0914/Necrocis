@@ -58,7 +58,13 @@ namespace Necrocis
             return result;
         }
 
-        public Vector2 WorldSize => new Vector2(map.MapWidth, map.MapHeight);
+        public RectInt RoomArea => map.AuthoredLayout != null ? map.AuthoredLayout.AtlasArea
+            : new RectInt(0, 0, map.MapWidth, map.MapHeight);
+        public Vector2 WorldSize => new Vector2(RoomArea.width, RoomArea.height);
+        public Vector2 RoomOrigin => RoomArea.position;
+        public bool HasEnteredEncounter { get; private set; }
+        public RectInt RoomToMapArea(RectInt area) => new RectInt(
+            area.x + RoomArea.x, area.y + RoomArea.y, area.width, area.height);
         public Vector3 SpawnPosition => map.GetPlayerSpawnWorldPosition();
         public int PillarCount => pillars != null ? pillars.Length : 0;
 
@@ -81,6 +87,7 @@ namespace Necrocis
                 new RectInt(9, 23, 6, 3), new RectInt(33, 23, 6, 3),
                 new RectInt(9, 9, 6, 3), new RectInt(33, 9, 6, 3)
             };
+            for (int i = 0; i < areas.Length; i++) areas[i] = RoomToMapArea(areas[i]);
             var phasePillars = new FinalBossPillar[4];
             for (int i = 0; i < names.Length; i++)
             {
@@ -117,7 +124,18 @@ namespace Necrocis
             if (summonProgression != null) Destroy(summonProgression);
         }
 
-        public Vector3 UVToWorld(Vector2 uv) => new Vector3(uv.x * map.MapWidth, 0f, uv.y * map.MapHeight);
+        private void Update()
+        {
+            if (HasEnteredEncounter || map == null || !map.IsReady || SaveService.IsRestorePending
+                || PlayerController.Instance == null || PlayerController.Instance.IsDead) return;
+            Vector3 position = PlayerController.Instance.transform.position;
+            float entrance = RoomArea.y + 7f;
+            if (position.z >= entrance && IsWalkable(position, new Vector2(.55f, .42f)))
+                HasEnteredEncounter = true;
+        }
+
+        public Vector3 UVToWorld(Vector2 uv) => new Vector3(
+            RoomArea.x + uv.x * RoomArea.width, 0f, RoomArea.y + uv.y * RoomArea.height);
         public Vector3 GetPillarPosition(int index) => pillars[index].position;
 
         // Editor checks query the shared grid, never a second collision model.

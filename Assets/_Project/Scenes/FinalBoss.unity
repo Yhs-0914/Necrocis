@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 46271478}
   - component: {fileID: 46271477}
   - component: {fileID: 46271476}
+  - component: {fileID: 46271480}
   m_Layer: 0
   m_Name: Pillar_Liver
   m_TagString: Untagged
@@ -148,7 +149,7 @@ Transform:
   m_GameObject: {fileID: 46271474}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 12.407999, y: -2, z: 10.245999}
+  m_LocalPosition: {x: 12.407999, y: -2, z: 34.246}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -164,7 +165,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b4e6ab387b154d4a9fe87a221210e45, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteYSort
   baseSortingOrder: 5000
   sortingMultiplier: 10
@@ -183,7 +184,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d0345c50bc19a140834f23b3b33dc95, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Billboard
   mode: 0
   yOffset: 0
@@ -196,10 +197,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 46271474}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d5c6d199df5acb4c9978da0655efaa6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteOutline
   sourceSprite: {fileID: 21300000, guid: ea65995a76163a34d8b077dba02d2d33, type: 2}
   normalizedOutline:
@@ -265,7 +266,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 05eeb628201609541a49c9c3111b8f55, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -275,6 +276,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &46271480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46271474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6389b3eb536ae143bb96239c3e0d86c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossPillar
+  biome: 2
+  blockedArea:
+    x: 9
+    y: 33
+    width: 6
+    height: 3
+  maxHealth: 65
+  pillarRenderer: {fileID: 46271479}
+  intactSprite: {fileID: 21300000, guid: 05eeb628201609541a49c9c3111b8f55, type: 3}
+  brokenSprite: {fileID: 21300000, guid: 0de60c662b41fd04e9ddecb10cc0cb06, type: 3}
 --- !u!1 &299838703
 GameObject:
   m_ObjectHideFlags: 0
@@ -668,6 +691,7 @@ GameObject:
   - component: {fileID: 846806086}
   - component: {fileID: 846806085}
   - component: {fileID: 846806084}
+  - component: {fileID: 846806088}
   m_Layer: 0
   m_Name: Map Generator
   m_TagString: Untagged
@@ -685,7 +709,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dab49c6583cf5e9448a424fbea53c442, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossArena
   pillars:
   - {fileID: 1866689287}
@@ -702,7 +726,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 18c7a9b2d5e64f71a3c8b9d0246e5f10, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ProceduralBiomeBridge
   mapWidth: 0
   mapHeight: 0
@@ -751,7 +775,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ef845541e92bf0349a7a806686c12162, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralMap.MapGenerator
   baseTilemap: {fileID: 437030783}
   grassTilemap: {fileID: 411685326}
@@ -819,7 +843,7 @@ MonoBehaviour:
   authoredLayout: {fileID: 11400000, guid: a04994c94163cd743b0031da8cc5f174, type: 2}
   useXZWorld: 1
   mapWidth: 48
-  mapHeight: 38
+  mapHeight: 62
   bottomEmptyRows: 0
   generateGrass: 0
   grassAreaCount: 30
@@ -881,6 +905,29 @@ Transform:
   - {fileID: 1742675551}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &846806088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 846806083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9eab0394fb4c6124ea2463da2fb90c0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossPhaseOneController
+  bossVisual: {fileID: 1176931567}
+  pillars:
+  - {fileID: 1866689292}
+  - {fileID: 1886500542}
+  - {fileID: 46271480}
+  - {fileID: 2040703911}
+  sourceBiomes:
+  - {fileID: 11400000, guid: ec818977ff60b4efc8b65e18c1044c1a, type: 2}
+  - {fileID: 11400000, guid: 52a5dbb38fd747e782c6aa1a8bb22b37, type: 2}
+  - {fileID: 11400000, guid: bff445e73af0d49d5ad293ec1504d9a0, type: 2}
+  - {fileID: 11400000, guid: fd3065cddbe4f4ccaa32e3103c046e92, type: 2}
 --- !u!1 &867547854
 GameObject:
   m_ObjectHideFlags: 0
@@ -908,10 +955,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f1840385078b0c4185a039630da0835, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.GameInitializer
   playerPrefab: {fileID: 7965212509900270173, guid: 654efe3779ef34e4791e5c8972ce4d73, type: 3}
   cameraPrefab: {fileID: 7404410989326555611, guid: 5743d3f4a6fae514cb9c145157a1d993, type: 3}
+  projectilePoolPrefab: {fileID: 3643888843464134390, guid: b875702b222884540951065060eb5c36, type: 3}
   autoCreatePlayer: 1
   autoCreateCamera: 1
   player: {fileID: 0}
@@ -961,7 +1009,7 @@ Transform:
   m_GameObject: {fileID: 1176931566}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 23.592, y: -2, z: 30.462}
+  m_LocalPosition: {x: 23.592, y: -2, z: 54.461998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -977,7 +1025,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b4e6ab387b154d4a9fe87a221210e45, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteYSort
   baseSortingOrder: 5000
   sortingMultiplier: 10
@@ -996,7 +1044,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d0345c50bc19a140834f23b3b33dc95, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Billboard
   mode: 0
   yOffset: 0
@@ -1012,7 +1060,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d5c6d199df5acb4c9978da0655efaa6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteOutline
   sourceSprite: {fileID: 21300000, guid: cd30d7ec449eab7498c524bfa674e3d9, type: 2}
   normalizedOutline:
@@ -1074,7 +1122,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: cd30d7ec449eab7498c524bfa674e3d9, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1147,7 +1195,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a7b07d5840ae984799aa45f3b4bf965, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SceneLoader
 --- !u!4 &1791582760
 Transform:
@@ -1304,6 +1352,7 @@ GameObject:
   - component: {fileID: 1866689290}
   - component: {fileID: 1866689289}
   - component: {fileID: 1866689288}
+  - component: {fileID: 1866689292}
   m_Layer: 0
   m_Name: Pillar_Stomach
   m_TagString: Untagged
@@ -1320,7 +1369,7 @@ Transform:
   m_GameObject: {fileID: 1866689286}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 11.616, y: -2, z: 24.268002}
+  m_LocalPosition: {x: 11.616, y: -2, z: 48.268}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1336,7 +1385,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b4e6ab387b154d4a9fe87a221210e45, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteYSort
   baseSortingOrder: 5000
   sortingMultiplier: 10
@@ -1355,7 +1404,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d0345c50bc19a140834f23b3b33dc95, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Billboard
   mode: 0
   yOffset: 0
@@ -1368,10 +1417,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1866689286}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d5c6d199df5acb4c9978da0655efaa6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteOutline
   sourceSprite: {fileID: 21300000, guid: 341d976bf6697a04a85cc76c1b270bc5, type: 2}
   normalizedOutline:
@@ -1437,7 +1486,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: cfbe7710a4a2023428e0476b3f46fb6d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1447,6 +1496,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1866689292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866689286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6389b3eb536ae143bb96239c3e0d86c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossPillar
+  biome: 3
+  blockedArea:
+    x: 9
+    y: 47
+    width: 6
+    height: 3
+  maxHealth: 65
+  pillarRenderer: {fileID: 1866689291}
+  intactSprite: {fileID: 21300000, guid: cfbe7710a4a2023428e0476b3f46fb6d, type: 3}
+  brokenSprite: {fileID: 21300000, guid: fc3ec1f262352ba49b8a7acc69de12a9, type: 3}
 --- !u!1 &1886500536
 GameObject:
   m_ObjectHideFlags: 0
@@ -1460,6 +1531,7 @@ GameObject:
   - component: {fileID: 1886500540}
   - component: {fileID: 1886500539}
   - component: {fileID: 1886500538}
+  - component: {fileID: 1886500542}
   m_Layer: 0
   m_Name: Pillar_Intestine
   m_TagString: Untagged
@@ -1476,7 +1548,7 @@ Transform:
   m_GameObject: {fileID: 1886500536}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 36.288, y: -2, z: 24.001999}
+  m_LocalPosition: {x: 36.288, y: -2, z: 48.002}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1492,7 +1564,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b4e6ab387b154d4a9fe87a221210e45, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteYSort
   baseSortingOrder: 5000
   sortingMultiplier: 10
@@ -1511,7 +1583,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d0345c50bc19a140834f23b3b33dc95, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Billboard
   mode: 0
   yOffset: 0
@@ -1524,10 +1596,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1886500536}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d5c6d199df5acb4c9978da0655efaa6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteOutline
   sourceSprite: {fileID: 21300000, guid: 99ce6535b5f467e4695d9352a805f986, type: 2}
   normalizedOutline:
@@ -1589,7 +1661,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 204a31a807c949d4186aebf6ff4a6ec4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1599,6 +1671,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1886500542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1886500536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6389b3eb536ae143bb96239c3e0d86c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossPillar
+  biome: 1
+  blockedArea:
+    x: 33
+    y: 47
+    width: 6
+    height: 3
+  maxHealth: 65
+  pillarRenderer: {fileID: 1886500541}
+  intactSprite: {fileID: 21300000, guid: 204a31a807c949d4186aebf6ff4a6ec4, type: 3}
+  brokenSprite: {fileID: 21300000, guid: f9bb22e1bd800b947ac06b9840100f42, type: 3}
 --- !u!1 &1918656646
 GameObject:
   m_ObjectHideFlags: 0
@@ -1660,6 +1754,7 @@ GameObject:
   - component: {fileID: 2040703909}
   - component: {fileID: 2040703908}
   - component: {fileID: 2040703907}
+  - component: {fileID: 2040703911}
   m_Layer: 0
   m_Name: Pillar_Lung
   m_TagString: Untagged
@@ -1676,7 +1771,7 @@ Transform:
   m_GameObject: {fileID: 2040703905}
   serializedVersion: 2
   m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
-  m_LocalPosition: {x: 36.264, y: -2, z: 10.283999}
+  m_LocalPosition: {x: 36.264, y: -2, z: 34.284}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1692,7 +1787,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b4e6ab387b154d4a9fe87a221210e45, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteYSort
   baseSortingOrder: 5000
   sortingMultiplier: 10
@@ -1711,7 +1806,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d0345c50bc19a140834f23b3b33dc95, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Billboard
   mode: 0
   yOffset: 0
@@ -1724,10 +1819,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2040703905}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d5c6d199df5acb4c9978da0655efaa6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.SpriteOutline
   sourceSprite: {fileID: 21300000, guid: d47c7d5458aa99440967fe79f0a72c12, type: 2}
   normalizedOutline:
@@ -1791,7 +1886,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: b69e7a55ca97c7b489fc5c8e6c65c261, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1801,6 +1896,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2040703911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2040703905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6389b3eb536ae143bb96239c3e0d86c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.FinalBossPillar
+  biome: 4
+  blockedArea:
+    x: 33
+    y: 33
+    width: 6
+    height: 3
+  maxHealth: 65
+  pillarRenderer: {fileID: 2040703910}
+  intactSprite: {fileID: 21300000, guid: b69e7a55ca97c7b489fc5c8e6c65c261, type: 3}
+  brokenSprite: {fileID: 21300000, guid: a907a4d41bada5d49a51c9fce3bd9bab, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

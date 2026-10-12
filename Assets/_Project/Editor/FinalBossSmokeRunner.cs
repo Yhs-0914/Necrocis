@@ -27,12 +27,16 @@ namespace NecrocisEditor
         private static double deadline;
         private static float nextAction;
         private static Vector3 startPosition;
+        private static Projectile directProjectile;
+        private static Vector3 directProjectileOrigin;
         private static string failure;
         private static int movementSteps;
         private static bool running;
         private static bool directPreview;
         private static bool previousRunInBackground;
         private static bool playModeEntered;
+        private static float finalSealTime;
+        private static readonly Dictionary<BiomeType, HashSet<int>> seenBreakFrames = new Dictionary<BiomeType, HashSet<int>>();
 
         [MenuItem("Tools/Necrocis/Final Boss/Verify Existing Organ Maps")]
         public static void VerifyExistingOrganMaps()
@@ -128,6 +132,7 @@ namespace NecrocisEditor
             stage = direct ? 10 : 0;
             nextAction = 0f;
             movementSteps = 0;
+            seenBreakFrames.Clear();
             running = true;
             playModeEntered = false;
             deadline = EditorApplication.timeSinceStartup + 120;
@@ -157,8 +162,18 @@ namespace NecrocisEditor
                 return;
             }
             if (!playModeEntered || !EditorApplication.isPlaying || Time.timeSinceLevelLoad < 1.3f) return;
+            FinalBossPhaseOneController trackedPhase = FinalBossArena.Instance != null
+                ? FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>() : null;
+            if (trackedPhase != null && trackedPhase.Pillars != null)
+                foreach (FinalBossPillar pillar in trackedPhase.Pillars)
+                    if (pillar != null && pillar.IsDestroyed && pillar.DestructionFrameIndex >= 0)
+                    {
+                        if (!seenBreakFrames.TryGetValue(pillar.Biome, out HashSet<int> frames))
+                            seenBreakFrames[pillar.Biome] = frames = new HashSet<int>();
+                        frames.Add(pillar.DestructionFrameIndex);
+                    }
             if (failure != null) { Finish(failure); return; }
-            if (victorySmoke && stage >= 16)
+            if (victorySmoke && stage >= 16 && stage <= 18)
             {
                 try { TickVictoryPrompt(); }
                 catch (Exception e) { Finish(e.ToString()); }
@@ -178,8 +193,17 @@ namespace NecrocisEditor
                     Require(!game.HasAllRelics, "Direct preview modified boss progress");
                     Require(game.CurrentState == GameState.InFinalBoss, "Direct preview state incorrect");
                     Require(SpawnDistance(player, arena) < .1f, "Direct preview spawn incorrect");
-                    VerifySharedPipeline(arena, player);
+                    VerifyApproach(arena, player);
                     Require(player.CurrentVisualSprite != null, "Direct preview player invisible");
+                    player.FaceDirection(PlayerController.Direction.Right);
+                    typeof(PlayerAttack).GetMethod("RangedAttack", BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Invoke(player.GetComponent<PlayerAttack>(), null);
+                    directProjectile = UnityEngine.Object.FindFirstObjectByType<Projectile>();
+                    Require(directProjectile != null, "Direct preview ranged attack did not spawn a projectile");
+                    SpriteRenderer projectileVisual = directProjectile.GetComponentInChildren<SpriteRenderer>();
+                    Require(projectileVisual != null && projectileVisual.enabled && projectileVisual.sprite != null,
+                        "Direct preview projectile is invisible");
+                    directProjectileOrigin = directProjectile.transform.position;
                     startPosition = player.transform.position;
                     Require(player.TryMoveByWorld(Vector3.forward), "Direct preview movement blocked");
                     stage = 11;
@@ -187,14 +211,12 @@ namespace NecrocisEditor
                 }
                 if (stage == 11)
                 {
+                    Require(directProjectile != null
+                        && directProjectile.transform.position.x > directProjectileOrigin.x + .2f,
+                        "Direct preview ranged projectile did not fly forward");
                     Require(player.transform.position.z > startPosition.z + .8f, "Direct preview did not move");
                     Capture(Camera.main, "gameplay-direct-preview.png");
-                    if (spriteAnimationSmoke)
-                    {
-                        stage = 4;
-                        return;
-                    }
-                    Finish(null);
+                    stage = 19;
                     return;
                 }
                 if (stage == 0)
@@ -235,14 +257,45 @@ namespace NecrocisEditor
                     FinalBossArena arena = FinalBossArena.Instance;
                     Require(arena != null && arena.PillarCount == 4, "Arena/pillars missing");
                     Require(SpawnDistance(player, arena) < .1f, "Incorrect spawn");
-                    VerifySharedPipeline(arena, player);
+                    VerifyApproach(arena, player);
                     Require(game.CurrentState == GameState.InFinalBoss, "Incorrect game state");
                     VerifyGeometry(arena);
-                    Require(UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length == 4,
-                        "Phase one should start with four pillar damage targets only");
                     Capture(Camera.main, "gameplay-entry.png");
                     startPosition = player.transform.position;
-                    stage = 2;
+                    CaptureOverview(arena, "arena-with-straight-approach.png", true);
+                    stage = 19;
+                    return;
+                }
+                if (stage == 19)
+                {
+                    FinalBossArena arena = FinalBossArena.Instance;
+                    if (player.transform.position.z >= arena.RoomArea.y + 7.5f)
+                    {
+                        stage = 20;
+                        return;
+                    }
+                    if (player.transform.position.z < arena.RoomArea.y + 7f)
+                        Require(!arena.HasEnteredEncounter && !arena.GetComponent<FinalBossPhaseOneController>().IsEncounterStarted,
+                            "Encounter began before the player reached the boss-room threshold");
+                    Require(player.TryMoveByWorld(Vector3.forward * .75f), "Straight approach movement blocked");
+                    return;
+                }
+                if (stage == 20)
+                {
+                    FinalBossArena arena = FinalBossArena.Instance;
+                    if (!arena.GetComponent<FinalBossPhaseOneController>().IsEncounterStarted) return;
+                    Require(arena.HasEnteredEncounter, "Boss room did not activate after walking through the approach");
+                    VerifySharedPipeline(arena, player);
+                    CaptureOverview(arena, "arena-with-straight-approach.png", true);
+                    Capture(Camera.main, "gameplay-approach-to-room.png");
+                    startPosition = player.transform.position;
+                    if (directPreview && !spriteAnimationSmoke) { Finish(null); return; }
+                    if (directPreview)
+                    {
+                        player.SpawnAt(arena.UVToWorld(new Vector2(.5f, .7f)));
+                        stage = 4;
+                    }
+                    else stage = 2;
                     return;
                 }
                 if (stage == 2)
@@ -313,8 +366,12 @@ namespace NecrocisEditor
                     firstPillar.DestroyForTest();
                     Require(phase.CurrentPhase == 1 && phase.BossVisible && phase.DestroyedPillarCount == 1,
                         "Destroying one pillar changed the dormant boss phase unexpectedly");
-                    Require(firstPillar.BrokenSprite != null && firstPillar.CurrentSprite == firstPillar.BrokenSprite,
-                        "Destroyed pillar did not switch to its authored broken sprite");
+                    Require(firstPillar.IsBreaking && firstPillar.DestructionFrameCount == 5
+                        && firstPillar.DestructionFrameIndex == 0,
+                        "Destroyed pillar did not start its approved destruction sequence");
+                    seenBreakFrames[firstPillar.Biome] = new HashSet<int> { 0 };
+                    Require(FinalBossArena.Instance.IsWalkable(firstPillar.transform.position, Footprint),
+                        "Destroyed tower still blocks movement during its collapse animation");
                     Require(firstPillar.RemnantVisible, "Broken pillar disappeared before phase two");
                     Require(!phase.IsBiomeSpawning(firstPillar.Biome),
                         "Destroyed pillar biome kept its continuous spawn channel enabled");
@@ -337,9 +394,37 @@ namespace NecrocisEditor
                         "Weakened mid-boss must use definition stats and independent encounter settings with zero reward");
                     VerifyOnlyRemainingBiomesRespawn(phase, firstPillar.Biome);
                     phase.PauseSpawningForTest();
+                    stage = 21;
+                    return;
+                }
+                if (stage == 21)
+                {
+                    FinalBossPhaseOneController phase = FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>();
+                    FinalBossPillar firstPillar = phase.Pillars[0];
+                    if (firstPillar.IsBreaking) return;
+                    Require(firstPillar.CurrentSprite == firstPillar.BrokenSprite && firstPillar.RemnantVisible,
+                        "First tower did not settle into its grounded remnant");
+                    Require(seenBreakFrames[firstPillar.Biome].Count == 5, "First tower skipped a destruction pose");
                     CaptureOverview(FinalBossArena.Instance, "arena-overview-pillar-broken.png");
-
                     phase.DestroyAllPillarsForTest();
+                    foreach (FinalBossPillar pillar in phase.Pillars)
+                        if (pillar != firstPillar) seenBreakFrames[pillar.Biome] = new HashSet<int> { 0 };
+                    Require(phase.DestroyedPillarCount == 4 && phase.CurrentPhase == 1
+                        && phase.Pillars.Any(pillar => pillar.IsBreaking),
+                        "Phase two hid the final destruction animations prematurely");
+                    finalSealTime = Time.time;
+                    stage = 22;
+                    return;
+                }
+                if (stage == 22)
+                {
+                    FinalBossPhaseOneController phase = FinalBossArena.Instance.GetComponent<FinalBossPhaseOneController>();
+                    if (phase.CurrentPhase == 1) return;
+                    Require(Time.time - finalSealTime >= 1.15f, "Final tower's deflation/collapse was cut short");
+                    foreach (FinalBossPillar pillar in phase.Pillars)
+                        Require(!pillar.IsBreaking && pillar.CurrentSprite == pillar.BrokenSprite
+                            && seenBreakFrames[pillar.Biome].Count == 5,
+                            "Incomplete destruction animation: " + pillar.Biome);
                     Require(phase.DestroyedPillarCount == 4 && phase.CurrentPhase == 2 && phase.BossVisible,
                         "Destroying four pillars did not unlock phase two");
                     Require(phase.Pillars.All(pillar => pillar != null && !pillar.RemnantVisible),
@@ -576,11 +661,17 @@ namespace NecrocisEditor
             UnityEngine.Tilemaps.Tilemap floor = arena.gameObject.scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<UnityEngine.Tilemaps.Tilemap>())
                 .First(tilemap => tilemap.name == "Base Tilemap");
-            Require(floor.GetTile(new Vector3Int(24, 19, 0)) != floor.GetTile(new Vector3Int(25, 19, 0)),
+                Require(floor.GetTile(new Vector3Int(24, arena.RoomArea.y + 19, 0)) != floor.GetTile(new Vector3Int(25, arena.RoomArea.y + 19, 0)),
                 "Authored environment must use position-specific tiles");
             Require(BiomeManager.Active == arena.GetComponent<ProceduralBiomeBridge>(), "Shared biome bridge not active");
             Require(player.GetComponent<ProceduralTerrainMotor>().HasActiveMap, "Common terrain motor not bound");
             MergeIntegrationChecks.VerifyGrabInput(player);
+            Require(PlayerProjectilePool.Instance != null && PlayerProjectilePool.Instance.IsPrefabAssigned
+                && PlayerProjectilePool.Instance.PooledCount > 0,
+                "Standalone final-boss ranged attacks require the Hub projectile pool");
+            Require(UnityEngine.Object.FindObjectsByType<PlayerProjectilePool>(FindObjectsSortMode.None).Length == 1,
+                "Final-boss entry duplicated the persistent projectile pool");
+            VerifyPlayerAttackFrames(player);
             FinalBossPhaseOneController phase = arena.GetComponent<FinalBossPhaseOneController>();
             Require(phase != null && phase.Pillars != null && phase.Pillars.Count == 4,
                 "Final boss phase-one controller or pillars missing");
@@ -604,6 +695,8 @@ namespace NecrocisEditor
                     "Pillar isolated intact/broken sprite set is missing");
                 Require(pillar.CurrentSprite.texture.name.Contains("Pillar_"),
                     "Pillar still uses a rectangular crop of the arena background");
+                Require(pillar.DestructionFrameCount == 5 && pillar.IntactSprite.pivot.y == 0f,
+                    "Tower destruction frames or ground pivot missing: " + pillar.Biome);
             }
             Require(UnityEngine.Object.FindObjectsByType<FinalBossWorldHealthBar>(FindObjectsSortMode.None).Length == 4,
                 "One health bar is required above each pillar");
@@ -630,6 +723,55 @@ namespace NecrocisEditor
                 }
             Require(UnityEngine.Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None)
                 .Length >= 4, "Shared tilemap layers missing");
+        }
+
+        private static void VerifyPlayerAttackFrames(PlayerController player)
+        {
+            const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+            Type type = typeof(PlayerController);
+            FieldInfo facing = type.GetField("lastMoveDirection", flags);
+            FieldInfo timer = type.GetField("frameTimer", flags);
+            FieldInfo end = type.GetField("attackAnimEndTime", flags);
+            MethodInfo update = type.GetMethod("UpdateAnimation", flags);
+            Vector3 previousFacing = (Vector3)facing.GetValue(player);
+            var settings = new SerializedObject(player);
+            float duration = Mathf.Max(.05f, settings.FindProperty("attackAnimDuration").floatValue);
+            string[] names = { "Down", "Up", "Left", "Right", "DownLeft", "DownRight", "UpLeft", "UpRight" };
+            Vector3[] directions = { Vector3.back, Vector3.forward, Vector3.left, Vector3.right,
+                new Vector3(-1, 0, -1), new Vector3(1, 0, -1), new Vector3(-1, 0, 1), new Vector3(1, 0, 1) };
+            try
+            {
+                foreach (bool melee in new[] { false, true })
+                    for (int direction = 0; direction < names.Length; direction++)
+                    {
+                        facing.SetValue(player, directions[direction].normalized);
+                        SerializedProperty frames = settings.FindProperty((melee ? "melee" : "ranged") + names[direction]);
+                        Require(frames.arraySize > 1, "Missing attack frames: " + frames.propertyPath);
+                        player.PlayAttackAnimation(melee);
+                        Require(player.CurrentVisualSprite == frames.GetArrayElementAtIndex(0).objectReferenceValue,
+                            "Attack did not start with its authored first frame: " + frames.propertyPath);
+                        // Advance a frame-sized slice of the configured attack window. This caught
+                        // the old 12fps/0.2s setup, which never reached the actual firing poses.
+                        for (int frame = 1; frame < frames.arraySize; frame++)
+                        {
+                            timer.SetValue(player, (float)timer.GetValue(player)
+                                + duration / frames.arraySize + .00001f - Time.deltaTime);
+                            update.Invoke(player, null);
+                            Require(player.CurrentVisualSprite == frames.GetArrayElementAtIndex(frame).objectReferenceValue,
+                                $"Attack window skipped authored pose {frames.propertyPath}[{frame}]");
+                        }
+                        end.SetValue(player, Time.time - 1f);
+                        update.Invoke(player, null);
+                        Require(!(bool)type.GetField("isPlayingAttackAnim", flags).GetValue(player),
+                            "Attack animation did not return to locomotion");
+                    }
+            }
+            finally
+            {
+                facing.SetValue(player, previousFacing);
+                end.SetValue(player, Time.time - 1f);
+                update.Invoke(player, null);
+            }
         }
 
         private static void VerifyPhaseOneMinionComposition(FinalBossPhaseOneController phase)
@@ -708,7 +850,8 @@ namespace NecrocisEditor
             }
             // Flood-fill the walkable floor; every region must be reachable from the entrance.
             const float step = .25f;
-            int width = Mathf.RoundToInt(arena.WorldSize.x / step), height = Mathf.RoundToInt(arena.WorldSize.y / step);
+            MapGenerator map = arena.GetComponent<MapGenerator>();
+            int width = Mathf.RoundToInt(map.MapWidth / step), height = Mathf.RoundToInt(map.MapHeight / step);
             var walkable = new HashSet<Vector2Int>();
             for (int x = 0; x <= width; x++)
                 for (int z = 0; z <= height; z++)
@@ -735,7 +878,25 @@ namespace NecrocisEditor
             Require(walkable.Count == 0, "Unreachable floor cells: " + walkable.Count + " " + string.Join(", ", walkable));
         }
 
-        private static void CaptureOverview(FinalBossArena arena, string filename = "arena-overview.png")
+        private static void VerifyApproach(FinalBossArena arena, PlayerController player)
+        {
+            MapGenerator map = arena.GetComponent<MapGenerator>();
+            Require(map != null && map.IsReady && map.AuthoredLayout != null, "Approach map missing");
+            Require(map.MapHeight == 62 && arena.RoomArea == new RectInt(0, 24, 48, 38),
+                "Room artwork was stretched instead of extending the approach");
+            Require(arena.SpawnPosition.z < arena.RoomArea.y && !arena.HasEnteredEncounter,
+                "Player spawned directly inside the boss room");
+            Require(!arena.GetComponent<FinalBossPhaseOneController>().IsEncounterStarted
+                && UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None).Length == 0
+                && UnityEngine.Object.FindObjectsByType<FinalBossScreenHealthBar>(FindObjectsSortMode.None).Length == 0,
+                "Combat or boss UI started in the approach");
+            Require(!map.CanPlayerMoveWorld(player.transform.position, player.transform.position + Vector3.right * 8f, Footprint),
+                "Approach side wall permits walking out");
+            Require(arena.CanTraverse(arena.SpawnPosition, arena.UVToWorld(new Vector2(.5f, .5f)), Footprint),
+                "Straight approach does not connect to the boss-room floor");
+        }
+
+        private static void CaptureOverview(FinalBossArena arena, string filename = "arena-overview.png", bool includeApproach = false)
         {
             var go = new GameObject("OverviewCapture");
             Camera camera = go.AddComponent<Camera>();
@@ -743,6 +904,12 @@ namespace NecrocisEditor
             camera.orthographicSize = 14.5f;
             camera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
             camera.transform.position = arena.UVToWorld(new Vector2(.5f, .5f)) + new Vector3(0f, 40f, -40f);
+            if (includeApproach)
+            {
+                camera.orthographicSize = 26f;
+                MapGenerator map = arena.GetComponent<MapGenerator>();
+                camera.transform.position = new Vector3(map.MapWidth * .5f, 40f, map.MapHeight * .5f - 40f);
+            }
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(.08f, .055f, .1f);
             Capture(camera, filename);
@@ -815,11 +982,15 @@ namespace NecrocisEditor
             }
             string result = failure ?? "PASS: all 15 incomplete clear combinations blocked; four-clear Hub trigger entered FinalBoss; walk-out return portal absent; visible but untargetable dormant boss, four shared minions, two-by-two biome-exclusive groups, four isolated transparent pillar sprites, hit/health behavior, authored broken-state swaps, weakened mid-boss at doubled room size and 33% combat stats, and phase-two damage target plus floor-warning attack activation verified; spawn, connected floor, pillar/wall collision and actual player movement verified.";
             if (directPreview && failure == null)
-                result = "PASS: direct FinalBoss scene Play creates the actual player and camera; correct spawn, visible animation, actual movement, no walk-out return portal, and no boss-progress unlock verified.";
+                result = "PASS: direct FinalBoss Play creates the player, camera and one projectile pool; all authored melee/ranged poses in eight directions fit the attack window and return to locomotion; visible ranged projectile spawns and flies; correct spawn, actual movement, no walk-out return portal, and no boss-progress unlock verified.";
             if (spriteAnimationSmoke && failure == null)
                 result = "PASS: broken pillars visible in phase one and hidden in phases two/three; preserved-health 40% detachment; animated mobile artwork, pursuit and eight hitboxes; final Death_03 corpse survives combat-root cleanup. Isolated test saves used.";
             if (victorySmoke && failure == null)
                 result = "PASS: four shrinking-floor overlays have no dark outline renderers; victory dialog appears after five real seconds; No restores input and stays in the arena without reopening; Yes loads MainMenu and cleans up gameplay; saved completion and Hard unlock preserved. Isolated test saves used.";
+            if (failure == null)
+                result += " Southern straight approach spawn, side-wall collision, actual corridor walk and delayed encounter/UI activation verified.";
+            if (failure == null && (!directPreview || spriteAnimationSmoke))
+                result += " All twenty approved tower destruction poses observed; grounded remnants and completed final collapse before phase two verified.";
             File.WriteAllText(Output + (directPreview ? "/direct-smoke-result.txt" : "/smoke-result.txt"), result);
             File.WriteAllText("Library/FinalBossSmoke.result", result);
             Debug.Log("[FinalBossSmoke] " + result);

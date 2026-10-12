@@ -42,6 +42,8 @@ namespace Necrocis
         private Vector3 bossRestScale;
         private SpriteRenderer dormantRenderer;
         private bool initialized;
+        private Coroutine phaseTransition;
+        public bool IsEncounterStarted => initialized;
 
         public Vector3 BossGroundPosition => new Vector3(
             bossVisual != null ? bossVisual.position.x : 24f,
@@ -54,7 +56,8 @@ namespace Necrocis
         public int CommonRuleCount => commonRules.Count;
         public IReadOnlyList<FinalBossPillar> Pillars => pillars;
         public bool BossVisible => bossVisual != null && bossVisual.gameObject.activeSelf;
-        public bool IsBiomeSpawning(BiomeType biome) => CurrentPhase == 1 && !disabledBiomes.Contains(biome);
+        public bool IsBiomeSpawning(BiomeType biome) => initialized && phaseTransition == null
+            && CurrentPhase == 1 && !disabledBiomes.Contains(biome);
         public int GetExclusiveRuleCount(BiomeType biome) =>
             exclusiveRules.TryGetValue(biome, out List<EnemySpawnRuleConfig> rules) ? rules.Count : 0;
 
@@ -86,6 +89,7 @@ namespace Necrocis
             while (!map.IsReady || PlayerController.Instance == null || SaveService.IsRestorePending) yield return null;
 
             BuildRules();
+            while (!arena.HasEnteredEncounter) yield return null;
             sealGauge = FinalBossScreenHealthBar.Create(transform, 4f, 4f);
             sealGauge.SetSealProgress(DestroyedPillarCount, 4);
             if (pillars != null)
@@ -99,7 +103,7 @@ namespace Necrocis
 
         private void Update()
         {
-            if (!initialized || CurrentPhase != 1 || spawningPausedForTests
+            if (!initialized || phaseTransition != null || CurrentPhase != 1 || spawningPausedForTests
                 || PlayerController.Instance == null || PlayerController.Instance.IsDead
                 || Time.time < nextSpawnTime) return;
             nextSpawnTime = Time.time + spawnInterval;
@@ -289,11 +293,20 @@ namespace Necrocis
             nextSpawnTime = Mathf.Max(nextSpawnTime, Time.time + 2f);
             if (DestroyedPillarCount >= 4)
             {
-                BeginPhaseTwo();
+                if (phaseTransition == null) phaseTransition = StartCoroutine(FinishSealDestruction());
                 return;
             }
             AudioManager.Instance?.PlaySFX("BossPhaseChange", .45f);
             SpawnWeakenedMidBoss(pillar.Biome);
+        }
+
+        private IEnumerator FinishSealDestruction()
+        {
+            ReleasePhaseOneCombatants();
+            while (pillars.Any(pillar => pillar != null && pillar.IsBreaking)) yield return null;
+            yield return new WaitForSeconds(.15f);
+            BeginPhaseTwo();
+            phaseTransition = null;
         }
 
         private void SpawnWeakenedMidBoss(BiomeType biomeType)
