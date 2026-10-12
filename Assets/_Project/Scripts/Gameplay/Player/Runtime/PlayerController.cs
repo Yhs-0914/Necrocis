@@ -111,11 +111,6 @@ namespace Necrocis
         private float lastDashTime = float.NegativeInfinity;
         private Vector3 dashVelocity;
 
-        // [Sound] 발소리 타이머
-        [Header("Sound")]
-        [SerializeField] private float footstepInterval = 0.35f;
-        private float nextFootstepTime;
-
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs;
 
@@ -320,12 +315,6 @@ namespace Necrocis
             HandleInput();
             UpdateAnimation();
             ApplyLockedRotation();
-            // [Sound] 이동 중 발소리
-            if (isMoving && !isDashing && Time.time >= nextFootstepTime)
-            {
-                nextFootstepTime = Time.time + footstepInterval;
-                AudioManager.Instance?.PlaySFX("PlayerFootstep");
-            }
         }
         // ?좊땲???앸챸二쇨린: 臾쇰━ ?ㅽ뀦 湲곕컲 濡쒖쭅???ㅽ뻾?⑸땲??
 
