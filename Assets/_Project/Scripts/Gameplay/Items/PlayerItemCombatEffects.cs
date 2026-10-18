@@ -6,68 +6,68 @@ namespace Necrocis
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerItemManager))]
-    public class PlayerItemCombatEffects : MonoBehaviour
+    public partial class PlayerItemCombatEffects : MonoBehaviour, IBasicAttackReadModel, IBasicAttackItemEffects, IItemEffectLifecycle, IItemCompanionOwner, IItemKillActions
     {
-        public const string DoubleCoreId = "double_core";
-        public const string TripleCoreId = "triple_core";
-        public const string HomingCellId = "homing_cell";
-        public const string HypertrophyCellId = "hypertrophy_cell";
-        public const string RefluxOrganId = "reflux_organ";
-        public const string PiercingMucusId = "piercing_mucus";
-        public const string LaryngealNerveId = "laryngeal_nerve";
-        public const string BeamOrganId = "beam_organ";
-        public const string SplitTissueId = "split_tissue";
-        public const string ExplosiveBloodCellId = "explosive_blood_cell";
-        public const string AcidicRuptureId = "acidic_rupture";
-        public const string CellProliferationId = "cell_proliferation";
-        public const string PulseBulletId = "pulse_bullet";
-        public const string VascularReflectionId = "vascular_reflection";
-        public const string ToxicMucosaId = "toxic_mucosa";
-        public const string FreezingNerveId = "freezing_nerve";
-        public const string HemorrhageOrganId = "hemorrhage_organ";
-        public const string OverheatedOrganId = "overheated_organ";
-        public const string MutantEyeId = "mutant_eye";
-        public const string OrganTentacleId = "organ_tentacle";
-        public const string RampageBloodFlowId = "rampage_bloodflow";
-        public const string MuscleSpasmId = "muscle_spasm";
-        public const string UnstableCoreId = "unstable_core";
-        public const string BioResonanceId = "bio_resonance";
-        public const string BloodPressureBurstId = "blood_pressure_burst";
-        public const string VoidCellId = "void_cell";
-        public const string ForbiddenGrowthId = "forbidden_growth";
-        public const string OverclockNerveId = "overclock_nerve";
-        public const string BloodContractId = "blood_contract";
-        public const string HyperplasiaHeartId = "hyperplasia_heart";
-        public const string DecayOrganId = "decay_organ";
-        public const string RuptureMuscleId = "rupture_muscle";
-        public const string ImperfectRegenerationId = "imperfect_regeneration";
-        public const string SeveranceReflexId = "severance_reflex";
-        public const string BioGambleId = "bio_gamble";
-        public const string ExoskeletonId = "exoskeleton";
-        public const string PlateletMembraneId = "platelet_membrane";
-        public const string RecoveryFactorId = "recovery_factor";
-        public const string ReflectiveSkinId = "reflective_skin";
-        public const string BioBarrierId = "bio_barrier";
-        public const string SplitRegenerationId = "split_regeneration";
-        public const string InfectedHostId = "infected_host";
-        public const string SporeColonyId = "spore_colony";
-        public const string BloodDroneId = "blood_drone";
-        public const string GuardianOrganId = "guardian_organ";
-        public const string TentacleColonyId = "tentacle_colony";
-        public const string ElectricNeuralNetworkId = "electric_neural_network";
-        public const string InfectionTransferenceId = "infection_transference";
-        public const string MacrophageId = "macrophage";
-        public const string GluttonousOrganId = "gluttonous_organ";
-        public const string HeartSniperId = "heart_sniper";
-        public const string BloodflowAccelerationId = "bloodflow_acceleration";
-        public const string FocusedNerveId = "focused_nerve";
-        public const string ExecutionInstinctId = "execution_instinct";
-        public const string BerserkCellId = "berserk_cell";
-        public const string UnstableCellId = "unstable_cell";
-        public const string GrotesqueGrowthId = "grotesque_growth";
-        public const string MutationRampageId = "mutation_rampage";
-        public const string ParasiticBombId = "parasitic_bomb";
-        public const string FrenzyHormoneId = "frenzy_hormone";
+        public const string DoubleCoreId = PlayerItemIds.DoubleCoreId;
+        public const string TripleCoreId = PlayerItemIds.TripleCoreId;
+        public const string HomingCellId = PlayerItemIds.HomingCellId;
+        public const string HypertrophyCellId = PlayerItemIds.HypertrophyCellId;
+        public const string RefluxOrganId = PlayerItemIds.RefluxOrganId;
+        public const string PiercingMucusId = PlayerItemIds.PiercingMucusId;
+        public const string LaryngealNerveId = PlayerItemIds.LaryngealNerveId;
+        public const string BeamOrganId = PlayerItemIds.BeamOrganId;
+        public const string SplitTissueId = PlayerItemIds.SplitTissueId;
+        public const string ExplosiveBloodCellId = PlayerItemIds.ExplosiveBloodCellId;
+        public const string AcidicRuptureId = PlayerItemIds.AcidicRuptureId;
+        public const string CellProliferationId = PlayerItemIds.CellProliferationId;
+        public const string PulseBulletId = PlayerItemIds.PulseBulletId;
+        public const string VascularReflectionId = PlayerItemIds.VascularReflectionId;
+        public const string ToxicMucosaId = PlayerItemIds.ToxicMucosaId;
+        public const string FreezingNerveId = PlayerItemIds.FreezingNerveId;
+        public const string HemorrhageOrganId = PlayerItemIds.HemorrhageOrganId;
+        public const string OverheatedOrganId = PlayerItemIds.OverheatedOrganId;
+        public const string MutantEyeId = PlayerItemIds.MutantEyeId;
+        public const string OrganTentacleId = PlayerItemIds.OrganTentacleId;
+        public const string RampageBloodFlowId = PlayerItemIds.RampageBloodFlowId;
+        public const string MuscleSpasmId = PlayerItemIds.MuscleSpasmId;
+        public const string UnstableCoreId = PlayerItemIds.UnstableCoreId;
+        public const string BioResonanceId = PlayerItemIds.BioResonanceId;
+        public const string BloodPressureBurstId = PlayerItemIds.BloodPressureBurstId;
+        public const string VoidCellId = PlayerItemIds.VoidCellId;
+        public const string ForbiddenGrowthId = PlayerItemIds.ForbiddenGrowthId;
+        public const string OverclockNerveId = PlayerItemIds.OverclockNerveId;
+        public const string BloodContractId = PlayerItemIds.BloodContractId;
+        public const string HyperplasiaHeartId = PlayerItemIds.HyperplasiaHeartId;
+        public const string DecayOrganId = PlayerItemIds.DecayOrganId;
+        public const string RuptureMuscleId = PlayerItemIds.RuptureMuscleId;
+        public const string ImperfectRegenerationId = PlayerItemIds.ImperfectRegenerationId;
+        public const string SeveranceReflexId = PlayerItemIds.SeveranceReflexId;
+        public const string BioGambleId = PlayerItemIds.BioGambleId;
+        public const string ExoskeletonId = PlayerItemIds.ExoskeletonId;
+        public const string PlateletMembraneId = PlayerItemIds.PlateletMembraneId;
+        public const string RecoveryFactorId = PlayerItemIds.RecoveryFactorId;
+        public const string ReflectiveSkinId = PlayerItemIds.ReflectiveSkinId;
+        public const string BioBarrierId = PlayerItemIds.BioBarrierId;
+        public const string SplitRegenerationId = PlayerItemIds.SplitRegenerationId;
+        public const string InfectedHostId = PlayerItemIds.InfectedHostId;
+        public const string SporeColonyId = PlayerItemIds.SporeColonyId;
+        public const string BloodDroneId = PlayerItemIds.BloodDroneId;
+        public const string GuardianOrganId = PlayerItemIds.GuardianOrganId;
+        public const string TentacleColonyId = PlayerItemIds.TentacleColonyId;
+        public const string ElectricNeuralNetworkId = PlayerItemIds.ElectricNeuralNetworkId;
+        public const string InfectionTransferenceId = PlayerItemIds.InfectionTransferenceId;
+        public const string MacrophageId = PlayerItemIds.MacrophageId;
+        public const string GluttonousOrganId = PlayerItemIds.GluttonousOrganId;
+        public const string HeartSniperId = PlayerItemIds.HeartSniperId;
+        public const string BloodflowAccelerationId = PlayerItemIds.BloodflowAccelerationId;
+        public const string FocusedNerveId = PlayerItemIds.FocusedNerveId;
+        public const string ExecutionInstinctId = PlayerItemIds.ExecutionInstinctId;
+        public const string BerserkCellId = PlayerItemIds.BerserkCellId;
+        public const string UnstableCellId = PlayerItemIds.UnstableCellId;
+        public const string GrotesqueGrowthId = PlayerItemIds.GrotesqueGrowthId;
+        public const string MutationRampageId = PlayerItemIds.MutationRampageId;
+        public const string ParasiticBombId = PlayerItemIds.ParasiticBombId;
+        public const string FrenzyHormoneId = PlayerItemIds.FrenzyHormoneId;
 
         private const string ParasiticBombVisualPoolName = "PlayerItem.ParasiticBombVisual";
         private const string OverheatExplosionVisualPoolName = "PlayerItem.OverheatExplosionVisual";
@@ -298,20 +298,10 @@ namespace Necrocis
         [SerializeField] private float frenzyHormoneMaxBonus = 1f;
 
 
+        private readonly ItemKillEffectState killState = new ItemKillEffectState();
         private PlayerItemManager itemManager;
         private PlayerController playerController;
         private PlayerStats playerStats;
-        private Vector3 previousPosition;
-        private float movementIntensity;
-        private float tentacleNextAutoAttackTime;
-        private float overheatLastAttackTime = float.NegativeInfinity;
-        private float overheatNextDecayTime = float.PositiveInfinity;
-        private int overheatStacks;
-        private readonly Dictionary<int, ResonanceState> resonanceStatesByEnemyId = new Dictionary<int, ResonanceState>();
-        private readonly List<int> tempResonanceRemovalIds = new List<int>();
-        private float unstableCoreNextRerollTime;
-        private float unstableCoreCurrentMultiplier = 1f;
-        private bool unstableCoreInitialized;
         private SpriteRenderer unstableCoreOverlay;
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
         private static readonly int OutlineSizeId = Shader.PropertyToID("_OutlineSize");
@@ -323,200 +313,84 @@ namespace Necrocis
         private bool plateletMembraneShaderWarningLogged;
         private SpriteRenderer playerVisualSpriteRenderer;
         private readonly List<SpriteRenderer> playerSpriteRendererBuffer = new List<SpriteRenderer>();
-        private float rampageMoveAccumulatedTime;
-        private float rampageIdleAccumulatedTime;
-        private int rampageAttackBonus;
-        private bool isMovingByPosition;
         private bool subscribedHealthEvents;
-        private bool forbiddenGrowthModifierApplied;
-        private bool overclockNerveModifierApplied;
-        private bool imperfectRegenModifierApplied;
-        private int bloodContractKillProgress;
-        private int bloodContractHealthGainCount;
-        private float decayOrganStartTime = float.NegativeInfinity;
-        private int decayOrganAttackBonus;
-        private float ruptureMuscleStacks;
-        private float ruptureMuscleLastAttackTime = float.NegativeInfinity;
-        private float severanceReflexBuffUntil = float.NegativeInfinity;
-        private float imperfectRegenPendingHeal;
-        private float imperfectRegenHealReadyTime = float.PositiveInfinity;
-        private float imperfectRegenCooldownUntil = float.NegativeInfinity;
-        private float ruptureAppliedMovePenalty;
-        private bool exoskeletonModifierApplied;
-        private float plateletMembraneCurrentShield;
-        private float plateletMembraneNextReadyTime;
-        private float recoveryFactorNextHealTime;
-        private float bioBarrierIdleTime;
-        private bool splitRegenerationUsed;
-        private readonly object forbiddenGrowthModifierSource = new object();
-        private readonly object overclockNerveModifierSource = new object();
-        private readonly object imperfectRegenModifierSource = new object();
-        private readonly object ruptureMovePenaltyModifierSource = new object();
-        private readonly object exoskeletonModifierSource = new object();
-        private readonly List<PlayerBioSummon> activeBioSummons = new List<PlayerBioSummon>();
         private readonly List<EnemyController> tempEnemyTargets = new List<EnemyController>();
-        private readonly HashSet<EnemyController> tempParasiticBombEnemies = new HashSet<EnemyController>();
-        private readonly List<EnemyController> randomEnemyCandidates = new List<EnemyController>();
-        private PlayerBloodDrone bloodDrone;
-        private PlayerGuardianOrgan guardianOrgan;
-        private float nextSporeSpawnTime;
-        private float tentacleNextBindTime;
-        private bool itemCacheInitialized;
         private bool disablingForEmptyInventory;
-        private bool hasAnyCachedItems;
-        private bool hasPersistentStatItems;
-        private bool hasDefensiveUpdateItems;
-        private bool hasPlateletMembraneItem;
-        private bool hasRecoveryFactorItem;
-        private bool hasBioBarrierItem;
-        private bool hasSplitRegenerationItem;
-        private bool hasBloodContractItem;
-        private bool hasSeveranceReflexItem;
-        private bool hasMovementTrackingItems;
-        private bool hasRampageBloodFlowItem;
-        private bool hasDecayOrganItem;
-        private bool hasRuptureMuscleItem;
-        private bool hasImperfectRegenItem;
-        private bool hasOrganTentacleItem;
-        private bool hasBioCompanionUpdateItems;
-        private bool hasSporeColonyItem;
-        private bool hasBloodDroneItem;
-        private bool hasGuardianOrganItem;
-        private bool hasTentacleColonyItem;
-        private bool hasKillChainBuffItems;
-        private bool hasMacrophageItem;
-        private bool hasGluttonousOrganItem;
-        private bool hasBossFightUpdateItems;
-        private bool hasFocusedNerveItem;
-        private bool hasBerserkCellItem;
-        private bool hasMutationChaosItems;
-        private bool hasGrotesqueGrowthItem;
-        private bool hasMutationRampageItem;
-        private bool hasFrenzyHormoneItem;
-        private bool hasDecayStateItems;
-        private bool hasOverheatedOrganItem;
-        private bool hasBioResonanceItem;
-        private bool hasUnstableCoreItem;
         private static Material runtimeLineMaterial;
-        private static readonly Func<GameObject> CreateCircleVisualFunc = CreateCircleVisualObject;
         private static readonly Func<GameObject> CreateLineVisualFunc = CreateLineVisualObject;
-        private static readonly Func<GameObject> CreateBloodDroneFunc = CreateBloodDroneObject;
-        private static readonly Func<GameObject> CreateGuardianOrganFunc = CreateGuardianOrganObject;
-        private static readonly Func<GameObject> CreateBloodDroneProjectileFunc = CreateBloodDroneProjectileObject;
-        private static readonly Func<GameObject> CreateBioSummonFunc = CreateBioSummonObject;
-        private int macrophageStacks;
-        private float macrophageExpireTime = float.NegativeInfinity;
-        private float macrophageAppliedAttackBonus;
-        private int gluttonousOrganStacks;
-        private float gluttonousOrganExpireTime = float.NegativeInfinity;
-        private float gluttonousOrganAppliedMoveBonus;
-        private float electricChainNextReadyTime = float.NegativeInfinity;
-        private float infectionTransferNextReadyTime = float.NegativeInfinity;
-        private int focusedNerveEnemyCount = int.MaxValue;
-        private float focusedNerveNextScanTime;
-        private float berserkCellExpireTime = float.NegativeInfinity;
-        private int berserkCellActiveBossId;
-        private int berserkCellLastTriggeredBossId;
-        private bool berserkCellModifierApplied;
-        private float grotesqueGrowthNextRollTime;
-        private bool grotesqueGrowthModifierApplied;
-        private bool grotesqueGrowthScaleCached;
-        private Vector3 grotesqueGrowthBaseScale = Vector3.one;
-        private float mutationRampageNextRollTime;
-        private float mutationRampageExpireTime = float.NegativeInfinity;
-        private bool mutationRampageModifierApplied;
-        private float frenzyHormoneCooldownUntil = float.NegativeInfinity;
-        private float frenzyHormoneExpireTime = float.NegativeInfinity;
-        private bool frenzyHormoneModifierApplied;
-        private bool applyingParasiticBombDamage;
-        private readonly object macrophageModifierSource = new object();
-        private readonly object gluttonousOrganModifierSource = new object();
-        private readonly object berserkCellModifierSource = new object();
-        private readonly object grotesqueGrowthModifierSource = new object();
-        private readonly object mutationRampageModifierSource = new object();
-        private readonly object frenzyHormoneModifierSource = new object();
-        private readonly Collider[] parasiticBombHitBuffer = new Collider[32];
-
-        private struct ResonanceState
-        {
-            public int Stacks;
-            public float LastHitTime;
-        }
-        private readonly HashSet<string> acquiredItemIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        public bool HasHomingCell => HasItem(HomingCellId);
-        public bool HasRefluxOrgan => HasItem(RefluxOrganId);
-        public bool HasPiercingMucus => HasItem(PiercingMucusId);
-        public bool HasLaryngealNerve => HasItem(LaryngealNerveId);
-        public bool HasBeamOrgan => HasItem(BeamOrganId);
-        public bool HasSplitTissue => HasItem(SplitTissueId);
-        public bool HasExplosiveBloodCell => HasItem(ExplosiveBloodCellId);
-        public bool HasAcidicRupture => HasItem(AcidicRuptureId);
-        public bool HasPulseBullet => HasItem(PulseBulletId);
-        public bool HasVascularReflection => HasItem(VascularReflectionId);
-        public bool HasToxicMucosa => HasItem(ToxicMucosaId);
-        public bool HasFreezingNerve => HasItem(FreezingNerveId);
-        public bool HasHemorrhageOrgan => HasItem(HemorrhageOrganId);
-        public bool HasOverheatedOrgan => HasItem(OverheatedOrganId);
-        public bool HasMutantEye => HasItem(MutantEyeId);
-        public bool HasOrganTentacle => HasItem(OrganTentacleId);
-        public bool HasRampageBloodFlow => HasItem(RampageBloodFlowId);
-        public bool HasMuscleSpasm => HasItem(MuscleSpasmId);
-        public bool HasUnstableCore => HasItem(UnstableCoreId);
-        public bool HasBioResonance => HasItem(BioResonanceId);
-        public bool HasBloodPressureBurst => HasItem(BloodPressureBurstId);
-        public bool HasVoidCell => HasItem(VoidCellId);
-        public bool HasForbiddenGrowth => HasItem(ForbiddenGrowthId);
-        public bool HasOverclockNerve => HasItem(OverclockNerveId);
-        public bool HasBloodContract => HasItem(BloodContractId);
-        public bool HasHyperplasiaHeart => HasItem(HyperplasiaHeartId);
-        public bool HasDecayOrgan => HasItem(DecayOrganId);
-        public bool HasRuptureMuscle => HasItem(RuptureMuscleId);
-        public bool HasImperfectRegeneration => HasItem(ImperfectRegenerationId);
-        public bool HasSeveranceReflex => HasItem(SeveranceReflexId);
-        public bool HasBioGamble => HasItem(BioGambleId);
-        public bool HasExoskeleton => HasItem(ExoskeletonId);
-        public bool HasPlateletMembrane => HasItem(PlateletMembraneId);
-        public bool HasRecoveryFactor => HasItem(RecoveryFactorId);
-        public bool HasReflectiveSkin => HasItem(ReflectiveSkinId);
-        public bool HasBioBarrier => HasItem(BioBarrierId);
-        public bool HasSplitRegeneration => HasItem(SplitRegenerationId);
-        public bool HasInfectedHost => HasItem(InfectedHostId);
-        public bool HasSporeColony => HasItem(SporeColonyId);
-        public bool HasBloodDrone => HasItem(BloodDroneId);
-        public bool HasGuardianOrgan => HasItem(GuardianOrganId);
-        public bool HasTentacleColony => HasItem(TentacleColonyId);
-        public bool HasElectricNeuralNetwork => HasItem(ElectricNeuralNetworkId);
-        public bool HasInfectionTransference => HasItem(InfectionTransferenceId);
-        public bool HasMacrophage => HasItem(MacrophageId);
-        public bool HasGluttonousOrgan => HasItem(GluttonousOrganId);
-        public bool HasHeartSniper => HasItem(HeartSniperId);
-        public bool HasBloodflowAcceleration => HasItem(BloodflowAccelerationId);
-        public bool HasFocusedNerve => HasItem(FocusedNerveId);
-        public bool HasExecutionInstinct => HasItem(ExecutionInstinctId);
-        public bool HasBerserkCell => HasItem(BerserkCellId);
-        public bool HasUnstableCell => HasItem(UnstableCellId);
-        public bool HasGrotesqueGrowth => HasItem(GrotesqueGrowthId);
-        public bool HasMutationRampage => HasItem(MutationRampageId);
-        public bool HasParasiticBomb => HasItem(ParasiticBombId);
-        public bool HasFrenzyHormone => HasItem(FrenzyHormoneId);
-
-        public int BeamHitBufferSize => Mathf.Max(1, beamHitBufferSize);
-        public float BeamRadius => Mathf.Max(0.05f, beamRadius);
-        public float BeamDamageMultiplier => Mathf.Max(0.05f, beamDamageMultiplier);
-        public float CellProliferationDamageMultiplier => Mathf.Max(0.05f, cellProliferationDamageMultiplier);
+        public bool HasHomingCell => Ownership.HasHomingCell;
+        public bool HasRefluxOrgan => Ownership.HasRefluxOrgan;
+        public bool HasPiercingMucus => Ownership.HasPiercingMucus;
+        public bool HasLaryngealNerve => Ownership.HasLaryngealNerve;
+        public bool HasBeamOrgan => Ownership.HasBeamOrgan;
+        public bool HasSplitTissue => Ownership.HasSplitTissue;
+        public bool HasExplosiveBloodCell => Ownership.HasExplosiveBloodCell;
+        public bool HasAcidicRupture => Ownership.HasAcidicRupture;
+        public bool HasPulseBullet => Ownership.HasPulseBullet;
+        public bool HasVascularReflection => Ownership.HasVascularReflection;
+        public bool HasToxicMucosa => Ownership.HasToxicMucosa;
+        public bool HasFreezingNerve => Ownership.HasFreezingNerve;
+        public bool HasHemorrhageOrgan => Ownership.HasHemorrhageOrgan;
+        public bool HasOverheatedOrgan => Ownership.HasOverheatedOrgan;
+        public bool HasMutantEye => Ownership.HasMutantEye;
+        public bool HasOrganTentacle => Ownership.HasOrganTentacle;
+        public bool HasRampageBloodFlow => Ownership.HasRampageBloodFlow;
+        public bool HasMuscleSpasm => Ownership.HasMuscleSpasm;
+        public bool HasUnstableCore => Ownership.HasUnstableCore;
+        public bool HasBioResonance => Ownership.HasBioResonance;
+        public bool HasBloodPressureBurst => Ownership.HasBloodPressureBurst;
+        public bool HasVoidCell => Ownership.HasVoidCell;
+        public bool HasForbiddenGrowth => Ownership.HasForbiddenGrowth;
+        public bool HasOverclockNerve => Ownership.HasOverclockNerve;
+        public bool HasBloodContract => Ownership.HasBloodContract;
+        public bool HasHyperplasiaHeart => Ownership.HasHyperplasiaHeart;
+        public bool HasDecayOrgan => Ownership.HasDecayOrgan;
+        public bool HasRuptureMuscle => Ownership.HasRuptureMuscle;
+        public bool HasImperfectRegeneration => Ownership.HasImperfectRegeneration;
+        public bool HasSeveranceReflex => Ownership.HasSeveranceReflex;
+        public bool HasBioGamble => Ownership.HasBioGamble;
+        public bool HasExoskeleton => Ownership.HasExoskeleton;
+        public bool HasPlateletMembrane => Ownership.HasPlateletMembrane;
+        public bool HasRecoveryFactor => Ownership.HasRecoveryFactor;
+        public bool HasReflectiveSkin => Ownership.HasReflectiveSkin;
+        public bool HasBioBarrier => Ownership.HasBioBarrier;
+        public bool HasSplitRegeneration => Ownership.HasSplitRegeneration;
+        public bool HasInfectedHost => Ownership.HasInfectedHost;
+        public bool HasSporeColony => Ownership.HasSporeColony;
+        public bool HasBloodDrone => Ownership.HasBloodDrone;
+        public bool HasGuardianOrgan => Ownership.HasGuardianOrgan;
+        public bool HasTentacleColony => Ownership.HasTentacleColony;
+        public bool HasElectricNeuralNetwork => Ownership.HasElectricNeuralNetwork;
+        public bool HasInfectionTransference => Ownership.HasInfectionTransference;
+        public bool HasMacrophage => Ownership.HasMacrophage;
+        public bool HasGluttonousOrgan => Ownership.HasGluttonousOrgan;
+        public bool HasHeartSniper => Ownership.HasHeartSniper;
+        public bool HasBloodflowAcceleration => Ownership.HasBloodflowAcceleration;
+        public bool HasFocusedNerve => Ownership.HasFocusedNerve;
+        public bool HasExecutionInstinct => Ownership.HasExecutionInstinct;
+        public bool HasBerserkCell => Ownership.HasBerserkCell;
+        public bool HasUnstableCell => Ownership.HasUnstableCell;
+        public bool HasGrotesqueGrowth => Ownership.HasGrotesqueGrowth;
+        public bool HasMutationRampage => Ownership.HasMutationRampage;
+        public bool HasParasiticBomb => Ownership.HasParasiticBomb;
+        public bool HasFrenzyHormone => Ownership.HasFrenzyHormone;
+        public int BeamHitBufferSize => Attack.BeamHitBufferSize;
+        public float BeamRadius => Attack.BeamRadius;
+        public float BeamDamageMultiplier => Attack.BeamDamageMultiplier;
+        public float CellProliferationDamageMultiplier => Attack.CellProliferationDamageMultiplier;
 
         private void Awake()
         {
             itemManager = GetComponent<PlayerItemManager>();
             playerController = GetComponent<PlayerController>();
             playerStats = GetComponent<PlayerStats>();
-            previousPosition = GetMovementAnchorPosition();
-            RebuildItemCache();
+            Timed.previousPosition = Timed.GetMovementAnchorPosition();
+            Ownership.RebuildItemCache();
         }
 
         private void OnEnable()
         {
+            if (!runtimeBound) return;
             if (itemManager == null)
             {
                 itemManager = GetComponent<PlayerItemManager>();
@@ -539,23 +413,24 @@ namespace Necrocis
                 return;
             }
 
-            itemManager.ItemAcquired += HandleItemAcquired;
-            itemManager.ItemRemoved += HandleItemRemoved;
-            RebuildItemCache();
+            itemManager.ItemAcquired += Ownership.HandleItemAcquired;
+            itemManager.ItemRemoved += Ownership.HandleItemRemoved;
+            Ownership.RebuildItemCache();
         }
 
         private void OnDisable()
         {
+            unchecked { killState.electricChainLifetimeVersion++; }
             if (itemManager != null)
             {
-                itemManager.ItemAcquired -= HandleItemAcquired;
-                itemManager.ItemRemoved -= HandleItemRemoved;
+                itemManager.ItemAcquired -= Ownership.HandleItemAcquired;
+                itemManager.ItemRemoved -= Ownership.HandleItemRemoved;
             }
 
             TryUnsubscribeHealthEvents();
             ClearPlateletMembraneOutline();
-            ClearPersistentStatModifiers();
-            resonanceStatesByEnemyId.Clear();
+            Ownership.ClearPersistentStatModifiers();
+            Attack.resonanceStatesByEnemyId.Clear();
             if (!disablingForEmptyInventory)
             {
                 ClearBioCompanions();
@@ -564,755 +439,203 @@ namespace Necrocis
             disablingForEmptyInventory = false;
         }
 
+        private bool runtimeBound;
+
+        internal void BindRuntime(PlayerController owner, PlayerStats stats, PlayerItemManager manager)
+        {
+            TryUnsubscribeHealthEvents();
+            if (itemManager != null)
+            {
+                itemManager.ItemAcquired -= Ownership.HandleItemAcquired;
+                itemManager.ItemRemoved -= Ownership.HandleItemRemoved;
+            }
+            playerController = owner;
+            playerStats = stats;
+            itemManager = manager;
+            runtimeBound = true;
+            if (isActiveAndEnabled)
+            {
+                TrySubscribeHealthEvents();
+                if (itemManager != null)
+                {
+                    itemManager.ItemAcquired += Ownership.HandleItemAcquired;
+                    itemManager.ItemRemoved += Ownership.HandleItemRemoved;
+                }
+            }
+            Timed.previousPosition = Timed.GetMovementAnchorPosition();
+            Ownership.RebuildItemCache();
+        }
+
         private void Update()
         {
-            if (!hasAnyCachedItems)
+            if (!Ownership.hasAnyCachedItems)
             {
                 return;
             }
 
-            if (hasPersistentStatItems)
+            if (Ownership.hasPersistentStatItems)
             {
-                SyncPersistentStatModifiers();
+                Timed.SyncPersistentStatModifiers();
             }
 
-            if (hasDefensiveUpdateItems)
+            if (Ownership.hasDefensiveUpdateItems)
             {
-                UpdateDefensiveStates();
+                Timed.UpdateDefensiveStates();
             }
 
-            if (hasMovementTrackingItems)
+            if (Ownership.hasMovementTrackingItems)
             {
-                UpdateMovementIntensity();
+                Timed.UpdateMovementIntensity();
             }
 
-            if (hasRampageBloodFlowItem)
+            if (Ownership.hasRampageBloodFlowItem)
             {
-                UpdateRampageBloodFlowState();
+                Timed.UpdateRampageBloodFlowState();
             }
 
-            if (hasDecayOrganItem)
+            if (Ownership.hasDecayOrganItem)
             {
-                UpdateDecayOrganState();
+                Timed.UpdateDecayOrganState();
             }
 
-            if (hasRuptureMuscleItem)
+            if (Ownership.hasRuptureMuscleItem)
             {
-                UpdateRuptureMuscleState();
+                Timed.UpdateRuptureMuscleState();
             }
 
-            if (hasImperfectRegenItem)
+            if (Ownership.hasImperfectRegenItem)
             {
-                UpdateImperfectRegenState();
+                Timed.UpdateImperfectRegenState();
             }
 
-            if (hasOrganTentacleItem)
+            if (Ownership.hasOrganTentacleItem)
             {
-                UpdateTentacleAutoAttack();
+                Attack.UpdateTentacleAutoAttack();
             }
 
-            if (hasBioCompanionUpdateItems)
+            if (Ownership.hasBioCompanionUpdateItems)
             {
-                UpdateBioCompanionItems();
+                Companions.UpdateBioCompanionItems();
             }
 
-            if (hasKillChainBuffItems)
+            if (Ownership.hasKillChainBuffItems)
             {
                 UpdateKillChainBuffs();
             }
 
-            if (hasBossFightUpdateItems)
+            if (Ownership.hasBossFightUpdateItems)
             {
-                UpdateBossFightItemStates();
+                Timed.UpdateBossFightItemStates();
             }
 
-            if (hasMutationChaosItems)
+            if (Ownership.hasMutationChaosItems)
             {
-                UpdateMutationChaosItems();
+                Timed.UpdateMutationChaosItems();
             }
 
-            if (hasDecayStateItems)
+            if (Ownership.hasDecayStateItems)
             {
-                UpdateDecayStates();
+                Attack.UpdateDecayStates();
             }
 
-            if (hasPlateletMembraneItem)
+            if (Ownership.hasPlateletMembraneItem)
             {
                 UpdatePlateletMembraneOutline();
             }
 
-            if (hasUnstableCoreItem)
+            if (Ownership.hasUnstableCoreItem)
             {
                 UpdateUnstableCoreOverlay();
             }
         }
-
         private void UpdateDefensiveStates()
-        {
-            if (!hasPlateletMembraneItem)
-            {
-                plateletMembraneCurrentShield = 0f;
-                plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
-            }
-            else
-            {
-                if (plateletMembraneCurrentShield <= 0f && Time.time >= plateletMembraneNextReadyTime)
-                {
-                    plateletMembraneCurrentShield = Mathf.Max(0f, plateletMembraneShieldAmount);
-                }
-            }
-
-            if (!hasRecoveryFactorItem || playerStats == null || playerStats.IsDead)
-            {
-                recoveryFactorNextHealTime = Time.time + Mathf.Max(0.1f, recoveryFactorInterval);
-            }
-            else if (Time.time >= recoveryFactorNextHealTime)
-            {
-                playerStats.Heal(Mathf.Max(0f, recoveryFactorHealAmount));
-                recoveryFactorNextHealTime = Time.time + Mathf.Max(0.1f, recoveryFactorInterval);
-            }
-
-            bool isMovingNow = (playerController != null && playerController.IsMoving) || isMovingByPosition || movementIntensity > 0.02f;
-            if (!hasBioBarrierItem || isMovingNow)
-            {
-                bioBarrierIdleTime = 0f;
-            }
-            else
-            {
-                bioBarrierIdleTime += Time.deltaTime;
-            }
-
-            if (!hasSplitRegenerationItem)
-            {
-                splitRegenerationUsed = false;
-            }
-
-        }
-
+            => Timed.UpdateDefensiveStates();
         public int GetForwardProjectileCount()
-        {
-            if (HasItem(TripleCoreId))
-            {
-                return 3;
-            }
-
-            if (HasItem(DoubleCoreId))
-            {
-                return 2;
-            }
-
-            return 1;
-        }
-
+            => Attack.GetForwardProjectileCount();
         public float GetSpreadAngleForCount(int projectileCount)
-        {
-            if (projectileCount >= 3)
-            {
-                return Mathf.Max(0f, tripleShotSpreadAngle);
-            }
-
-            if (projectileCount == 2)
-            {
-                return Mathf.Max(0f, doubleShotSpreadAngle);
-            }
-
-            return 0f;
-        }
-
+            => Attack.GetSpreadAngleForCount(projectileCount);
         public float GetForwardProjectileDamageMultiplier(int projectileCount)
-        {
-            if (projectileCount >= 3)
-            {
-                return Mathf.Clamp(tripleShotDamageMultiplier, 0.05f, 1f);
-            }
-
-            if (projectileCount == 2)
-            {
-                return Mathf.Clamp(doubleShotDamageMultiplier, 0.05f, 1f);
-            }
-
-            return 1f;
-        }
-
+            => Attack.GetForwardProjectileDamageMultiplier(projectileCount);
         public float GetBackShotDamageMultiplier()
-        {
-            return Mathf.Max(0.05f, backShotDamageMultiplier);
-        }
-
+            => Attack.GetBackShotDamageMultiplier();
         public bool RollCellProliferation()
-        {
-            return HasItem(CellProliferationId) && UnityEngine.Random.value <= cellProliferationChance;
-        }
-
+            => Attack.RollCellProliferation();
         public float GetRangeMultiplier()
-        {
-            return HasItem(HypertrophyCellId) ? Mathf.Max(0.1f, hypertrophyRangeMultiplier) : 1f;
-        }
-
+            => Attack.GetRangeMultiplier();
         public float GetScaleMultiplier()
-        {
-            return HasItem(HypertrophyCellId) ? Mathf.Max(0.1f, hypertrophyScaleMultiplier) : 1f;
-        }
-
+            => Attack.GetScaleMultiplier();
         public int GetPiercingHitCount()
-        {
-            return HasPiercingMucus ? Mathf.Max(1, piercingHitCount) : 1;
-        }
-
+            => Attack.GetPiercingHitCount();
         public float GetPiercingHitDamageMultiplier(int previousHitCount)
-        {
-            if (!HasPiercingMucus || previousHitCount <= 0)
-            {
-                return 1f;
-            }
-
-            float falloff = Mathf.Clamp(piercingSubsequentHitDamageMultiplier, 0.05f, 1f);
-            return Mathf.Pow(falloff, previousHitCount);
-        }
-
+            => Attack.GetPiercingHitDamageMultiplier(previousHitCount);
         public int GetReflectionBounceCount()
-        {
-            return HasVascularReflection ? Mathf.Max(1, reflectionBounceCount) : 0;
-        }
-
+            => Attack.GetReflectionBounceCount();
         public float GetBoomerangReturnDistance()
-        {
-            return Mathf.Max(0.5f, boomerangReturnDistance);
-        }
-
+            => Attack.GetBoomerangReturnDistance();
         public float GetBoomerangReturnDistance(float minimumReturnDistance)
-        {
-            return Mathf.Max(minimumReturnDistance, GetBoomerangReturnDistance());
-        }
-
+            => Attack.GetBoomerangReturnDistance(minimumReturnDistance);
         public float GetBoomerangRepeatHitDamageMultiplier()
-        {
-            return Mathf.Clamp(boomerangRepeatHitDamageMultiplier, 0.05f, 1f);
-        }
-
+            => Attack.GetBoomerangRepeatHitDamageMultiplier();
         public int GetBoomerangMaxHitsPerPass()
-        {
-            return Mathf.Max(1, boomerangMaxHitsPerPass);
-        }
-
+            => Attack.GetBoomerangMaxHitsPerPass();
         public float GetHomingTurnRate()
-        {
-            return Mathf.Max(0f, homingTurnRate);
-        }
-
+            => Attack.GetHomingTurnRate();
         public float GetHomingSearchRadius()
-        {
-            return Mathf.Max(0.5f, homingSearchRadius);
-        }
-
+            => Attack.GetHomingSearchRadius();
         public float GetPulseAmplitude()
-        {
-            return Mathf.Max(1.2f, pulseGrowEndScale);
-        }
-
+            => Attack.GetPulseAmplitude();
         public float GetPulseFrequency()
-        {
-            return Mathf.Clamp(pulseShrinkEndScale, 0.08f, 0.9f);
-        }
-
+            => Attack.GetPulseFrequency();
         public float GetSplitAngle()
-        {
-            return Mathf.Max(90f, splitAngle);
-        }
-
+            => Attack.GetSplitAngle();
         public float GetSplitDamageMultiplier()
-        {
-            return Mathf.Max(0.05f, splitDamageMultiplier);
-        }
-
+            => Attack.GetSplitDamageMultiplier();
         public float GetSplitRangeMultiplier()
-        {
-            return Mathf.Max(0.05f, splitRangeMultiplier);
-        }
-
+            => Attack.GetSplitRangeMultiplier();
         public float GetExplosionRadius()
-        {
-            return Mathf.Max(0.2f, explosionRadius);
-        }
-
+            => Attack.GetExplosionRadius();
         public float GetExplosionDamageMultiplier()
-        {
-            return Mathf.Max(0.05f, explosionDamageMultiplier);
-        }
-
+            => Attack.GetExplosionDamageMultiplier();
         public float GetRangedBasicDamageMultiplier()
-        {
-            return HasExplosiveBloodCell
-                ? Mathf.Clamp(explosiveBloodCellRangedDamageMultiplier, 0.05f, 1f)
-                : 1f;
-        }
-
+            => Attack.GetRangedBasicDamageMultiplier();
         public float GetAttackCooldownMultiplier()
-        {
-            float speedMultiplier = 1f;
-
-            if (HasOverheatedOrgan && overheatStacks > 0)
-            {
-                float bonus = 1f + Mathf.Max(0f, overheatPerStackAttackSpeedBonus) * overheatStacks;
-                speedMultiplier *= bonus;
-            }
-
-            if (HasBloodPressureBurst && playerStats != null && playerStats.MaxHealth > 0f)
-            {
-                float healthRatio = Mathf.Clamp01(playerStats.CurrentHealth / playerStats.MaxHealth);
-                int missingTenPercentSteps = Mathf.Clamp(Mathf.FloorToInt((1f - healthRatio) * 10f + 0.0001f), 0, 10);
-                float additiveAttackSpeed =
-                    Mathf.Max(0f, bloodPressureBaseAttackSpeedAdd)
-                    + Mathf.Max(0f, bloodPressurePerTenPercentMissingAdd) * missingTenPercentSteps;
-                float burstMultiplier = 1f + additiveAttackSpeed;
-                speedMultiplier *= burstMultiplier;
-            }
-
-            if (HasMuscleSpasm)
-            {
-                speedMultiplier *= Mathf.Clamp(muscleSpasmAttackSpeedMultiplier, 0.25f, 1f);
-            }
-
-            if (HasBloodflowAcceleration && IsBossOrEliteWithinRadius(Mathf.Max(0.1f, bloodflowAccelerationRadius)))
-            {
-                speedMultiplier *= 1f + Mathf.Max(0f, bloodflowAccelerationAttackSpeedBonus);
-            }
-
-            if (IsBerserkCellActive())
-            {
-                speedMultiplier *= 1f + Mathf.Max(0f, berserkCellAttackSpeedBonus);
-            }
-
-            return 1f / Mathf.Max(0.05f, speedMultiplier);
-        }
-
+            => Attack.GetAttackCooldownMultiplier();
         public float GetOutgoingBasicDamageMultiplier()
-        {
-            float multiplier = 1f;
-
-            if (HasOrganTentacle)
-            {
-                multiplier *= Mathf.Clamp(organTentacleBaseAttackPenaltyMultiplier, 0.2f, 1f);
-            }
-
-            return Mathf.Max(0.05f, multiplier);
-        }
-
+            => Attack.GetOutgoingBasicDamageMultiplier();
         public float GetOutgoingBasicDamageFlatBonus()
-        {
-            float bonus = 0f;
-            if (HasMutantEye)
-            {
-                bonus += Mathf.Max(0f, mutantEyeFlatDamageBonus);
-            }
-
-            if (HasRampageBloodFlow)
-            {
-                bonus += Mathf.Max(0, rampageAttackBonus);
-            }
-
-            if (HasHyperplasiaHeart && playerStats != null && playerStats.MaxHealth > 0f)
-            {
-                float healthRatio = Mathf.Clamp01(playerStats.CurrentHealth / playerStats.MaxHealth);
-                bonus += (1f - healthRatio) * Mathf.Max(0f, hyperplasiaMissingHealthAttackBonusMax);
-            }
-
-            if (HasDecayOrgan)
-            {
-                bonus += Mathf.Max(0, decayOrganAttackBonus);
-            }
-
-            if (HasRuptureMuscle && ruptureMuscleStacks > 0)
-            {
-                int effectiveRuptureStacks = Mathf.FloorToInt(Mathf.Max(0f, ruptureMuscleStacks));
-                bonus += Mathf.Max(0f, ruptureMuscleAttackBonusPerStack) * effectiveRuptureStacks;
-            }
-
-            if (HasSeveranceReflex && Time.time <= severanceReflexBuffUntil)
-            {
-                bonus += Mathf.Max(0f, severanceReflexFlatAttackBonus);
-            }
-
-            if (HasFocusedNerve)
-            {
-                bonus += GetFocusedNerveAttackBonus();
-            }
-
-            return bonus;
-        }
-
+            => Attack.GetOutgoingBasicDamageFlatBonus();
         public float GetMeleeRangeMultiplier()
-        {
-            return HasMuscleSpasm ? Mathf.Max(1f, muscleSpasmMeleeRangeMultiplier) : 1f;
-        }
-
+            => Attack.GetMeleeRangeMultiplier();
         public float GetAccuracyPenaltyAngle()
-        {
-            return HasMutantEye ? Mathf.Max(0f, mutantEyeAccuracyPenaltyAngle) : 0f;
-        }
-
+            => Attack.GetAccuracyPenaltyAngle();
         public float RollUnstableCoreDamageMultiplier()
-        {
-            if (!HasUnstableCore)
-            {
-                unstableCoreCurrentMultiplier = 1f;
-                unstableCoreInitialized = false;
-                return 1f;
-            }
-
-            if (!unstableCoreInitialized || Time.time >= unstableCoreNextRerollTime)
-            {
-                float attackPower = playerStats != null ? Mathf.Max(0.01f, playerStats.AttackPower) : 1f;
-                float minDamage = attackPower * Mathf.Max(0f, unstableCoreMinAttackRatio);
-                float maxDamage = attackPower * Mathf.Max(
-                    unstableCoreMinAttackRatio,
-                    unstableCoreMaxAttackRatio);
-                maxDamage = Mathf.Max(minDamage, maxDamage);
-                float rolledDamage = UnityEngine.Random.Range(minDamage, maxDamage);
-                unstableCoreCurrentMultiplier = rolledDamage / attackPower;
-                unstableCoreNextRerollTime = Time.time + Mathf.Max(0.1f, unstableCoreRerollInterval);
-                unstableCoreInitialized = true;
-            }
-
-            return unstableCoreCurrentMultiplier;
-        }
-
+            => Attack.RollUnstableCoreDamageMultiplier();
         public float RollUnstableCellProjectileSpeedMultiplier(out float damageMultiplier)
-        {
-            damageMultiplier = 1f;
-            if (!HasUnstableCell)
-            {
-                return 1f;
-            }
-
-            float minSpeed = Mathf.Max(0.05f, unstableCellMinProjectileSpeedMultiplier);
-            float maxSpeed = Mathf.Max(minSpeed, unstableCellMaxProjectileSpeedMultiplier);
-            float speedMultiplier = UnityEngine.Random.Range(minSpeed, maxSpeed);
-            if (speedMultiplier <= Mathf.Max(0.01f, unstableCellSlowThreshold))
-            {
-                damageMultiplier = Mathf.Max(1f, unstableCellSlowDamageMultiplier);
-            }
-
-            return speedMultiplier;
-        }
-
+            => Attack.RollUnstableCellProjectileSpeedMultiplier(out damageMultiplier);
         public void NotifyBasicAttackPerformed(float attackDamage, LayerMask mask, float range, Vector3 forwardDirection)
-        {
-            float now = Time.time;
-
-            if (HasOverheatedOrgan)
-            {
-                if (now - overheatLastAttackTime <= Mathf.Max(0.1f, overheatStackWindow))
-                {
-                    overheatStacks = Mathf.Clamp(overheatStacks + 1, 1, Mathf.Max(1, overheatMaxStacks));
-                }
-                else
-                {
-                    overheatStacks = 1;
-                }
-
-                overheatLastAttackTime = now;
-                overheatNextDecayTime = now + Mathf.Max(0.25f, overheatDecayInterval);
-
-                if (overheatStacks >= Mathf.Max(1, overheatMaxStacks))
-                {
-                    TriggerOverheatExplosionSelfDamage(attackDamage);
-                    overheatStacks = 0;
-                    overheatLastAttackTime = float.NegativeInfinity;
-                    overheatNextDecayTime = float.PositiveInfinity;
-                }
-            }
-
-            if (HasVoidCell && UnityEngine.Random.value <= Mathf.Clamp01(voidCellChance))
-            {
-                SpawnVoidCellProjectile(attackDamage, mask, range, forwardDirection);
-            }
-
-            if (HasRuptureMuscle)
-            {
-                ruptureMuscleStacks = Mathf.Clamp(ruptureMuscleStacks + 0.5f, 0f, Mathf.Max(1f, ruptureMuscleMaxStacks));
-                ruptureMuscleLastAttackTime = now;
-            }
-        }
-
+            => Attack.NotifyBasicAttackPerformed(attackDamage, mask, range, forwardDirection);
         public float GetIncomingDamageMultiplier()
-        {
-            float multiplier = 1f;
-            if (HasBloodContract)
-            {
-                multiplier *= Mathf.Max(1f, bloodContractIncomingDamageMultiplier);
-            }
-
-            if (HasExoskeleton)
-            {
-                float reduction = Mathf.Clamp01(exoskeletonDamageReductionRatio);
-                multiplier *= 1f - reduction;
-            }
-
-            if (HasBioBarrier)
-            {
-                int steps = Mathf.FloorToInt(bioBarrierIdleTime / Mathf.Max(0.1f, bioBarrierIdleSecondsPerStep));
-                float reduction = Mathf.Clamp(steps * Mathf.Max(0f, bioBarrierReductionPerStep), 0f, Mathf.Clamp01(bioBarrierMaxReduction));
-                multiplier *= 1f - reduction;
-            }
-
-            return Mathf.Max(0.01f, multiplier);
-        }
-
+            => Timed.GetIncomingDamageMultiplier();
         public float ProcessIncomingDamage(float damageAmount, EnemyController sourceEnemy = null)
-        {
-            float damage = Mathf.Max(0f, damageAmount);
-            if (damage <= 0f)
-            {
-                return 0f;
-            }
-
-            damage *= GetIncomingDamageMultiplier();
-            damage = Mathf.Max(0f, damage);
-
-            if (HasPlateletMembrane && plateletMembraneCurrentShield > 0f)
-            {
-                float absorbed = Mathf.Min(plateletMembraneCurrentShield, damage);
-                plateletMembraneCurrentShield -= absorbed;
-                damage -= absorbed;
-                if (plateletMembraneCurrentShield <= 0f)
-                {
-                    plateletMembraneCurrentShield = 0f;
-                    plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
-                }
-            }
-
-            if (HasReflectiveSkin && sourceEnemy != null && !sourceEnemy.IsDead && damage > 0f)
-            {
-                float reflectedDamage = damage * Mathf.Max(0f, reflectiveSkinDamageRatio);
-                if (reflectedDamage > 0f)
-                {
-                    sourceEnemy.TakeDamage(reflectedDamage);
-                }
-            }
-
-            return Mathf.Max(0f, damage);
-        }
-
+            => Timed.ProcessIncomingDamage(damageAmount, sourceEnemy);
         public bool TryConsumeSplitRegeneration(float currentHealth, float maxHealth, out float reviveHealth)
-        {
-            reviveHealth = 0f;
-            if (!HasSplitRegeneration || splitRegenerationUsed)
-            {
-                return false;
-            }
-
-            splitRegenerationUsed = true;
-            reviveHealth = Mathf.Clamp(Mathf.Max(0f, splitRegenerationReviveHealth), 0f, Mathf.Max(0f, maxHealth));
-            if (reviveHealth <= 0f)
-            {
-                reviveHealth = Mathf.Max(1f, Mathf.Min(2f, maxHealth));
-            }
-
-            return reviveHealth > 0f;
-        }
+            => Timed.TryConsumeSplitRegeneration(currentHealth, maxHealth, out reviveHealth);
 
         public void NotifyEnemyDefeatedByPlayer(EnemyController enemy)
-        {
-            TrySpawnInfectedHost(enemy);
-            TriggerElectricNeuralNetwork(enemy);
-            TriggerInfectionTransference(enemy);
-            TriggerMacrophageBuff();
-            TriggerGluttonousOrganBuff();
-            TriggerParasiticBomb();
-
-            if (!HasBloodContract || playerStats == null || playerStats.IsDead)
-            {
-                return;
-            }
-
-            int maxHealthGains = Mathf.Max(1, bloodContractMaxHealthGainCount);
-            if (bloodContractHealthGainCount >= maxHealthGains)
-            {
-                bloodContractKillProgress = 0;
-                return;
-            }
-
-            bloodContractKillProgress++;
-            int killsPerHeal = Mathf.Max(1, bloodContractKillsPerHeal);
-            if (bloodContractKillProgress < killsPerHeal)
-            {
-                return;
-            }
-
-            bloodContractKillProgress = 0;
-            float gain = Mathf.Max(0f, bloodContractHealthGainAmount);
-            if (gain <= 0f)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.AddModifier(
-                CharacterStatType.MaxHealth,
-                gain,
-                CharacterStatModifierMode.Flat,
-                this);
-            bloodContractHealthGainCount++;
-            playerStats.Heal(gain);
-        }
-
+            => KillEffects.NotifyDefeated(enemy);
         public float ApplyPerTargetDamageModifiers(EnemyController enemy, float damage)
-        {
-            float adjustedDamage = Mathf.Max(0f, damage);
-            if (enemy == null)
-            {
-                return adjustedDamage;
-            }
-
-            if (HasHeartSniper && IsEnemyAboveHealthRatio(enemy, Mathf.Clamp01(heartSniperHealthThreshold)))
-            {
-                adjustedDamage *= 1f + Mathf.Max(0f, heartSniperDamageBonusRatio);
-            }
-
-            if (!HasBioResonance || enemy == null)
-            {
-                return adjustedDamage;
-            }
-
-            int enemyId = enemy.GetInstanceID();
-            float now = Time.time;
-            int maxStacks = Mathf.Max(1, bioResonanceMaxStacks);
-            float window = Mathf.Max(0.1f, bioResonanceStackWindow);
-
-            if (!resonanceStatesByEnemyId.TryGetValue(enemyId, out ResonanceState state))
-            {
-                state = new ResonanceState
-                {
-                    Stacks = 0,
-                    LastHitTime = float.NegativeInfinity
-                };
-            }
-
-            int effectiveStacks = 0;
-            if (now - state.LastHitTime <= window)
-            {
-                effectiveStacks = Mathf.Clamp(state.Stacks, 0, maxStacks);
-            }
-
-            float stackBonus = Mathf.Max(0f, bioResonanceStackDamageBonus) * effectiveStacks;
-            adjustedDamage *= 1f + stackBonus;
-
-            state.Stacks = Mathf.Clamp(effectiveStacks + 1, 1, maxStacks);
-            state.LastHitTime = now;
-            resonanceStatesByEnemyId[enemyId] = state;
-
-            return adjustedDamage;
-        }
-
-        public void TryApplyPostDamageExecutionInstinct(EnemyController enemy, float appliedDamage)
-        {
-            if (!HasExecutionInstinct || enemy == null || enemy.IsDead)
-            {
-                return;
-            }
-
-            if (!IsEnemyBelowHealthRatio(enemy, Mathf.Clamp01(executionInstinctHealthThreshold)))
-            {
-                return;
-            }
-
-            if (UnityEngine.Random.value > Mathf.Clamp01(executionInstinctChance))
-            {
-                return;
-            }
-
-            if (IsBossLikeEnemy(enemy) || enemy.IsElite)
-            {
-                float bonusMultiplier = Mathf.Max(1f, executionInstinctBossDamageMultiplier) - 1f;
-                float bonusDamage = Mathf.Max(0f, appliedDamage) * bonusMultiplier;
-                if (bonusDamage > 0f)
-                {
-                    enemy.TakeDamage(bonusDamage);
-                }
-                return;
-            }
-
-            float remainingHealth = GetEnemyCurrentHealth(enemy);
-            if (remainingHealth > 0f)
-            {
-                enemy.TakeDamage(remainingHealth);
-            }
-        }
-
+            => Attack.ApplyPerTargetDamageModifiers(enemy, damage);
+        public void TryApplyPostDamageExecutionInstinct(EnemyController enemy, float appliedDamage, uint? expectedGeneration = null)
+            => Attack.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, expectedGeneration);
         public bool HasItem(string itemId)
-        {
-            if (string.IsNullOrWhiteSpace(itemId))
-            {
-                return false;
-            }
-
-            if (itemCacheInitialized)
-            {
-                return acquiredItemIds.Contains(itemId);
-            }
-
-            if (itemManager == null)
-            {
-                itemManager = GetComponent<PlayerItemManager>();
-            }
-
-            return itemManager != null && itemManager.ContainsItem(itemId);
-        }
-
+            => Ownership.HasItem(itemId);
         public void ApplyCommonOnHitEffects(
             EnemyController enemy,
             float hitDamage,
-            Vector3 hitPosition)
-        {
-            if (enemy == null)
-            {
-                return;
-            }
-
-            // Spawn acid puddle immediately at hit position even when the enemy dies on impact.
-            if (HasAcidicRupture)
-            {
-                float tickDamage = Mathf.Max(0.1f, acidTickDamage);
-                AcidPuddle.Spawn(hitPosition, tickDamage, acidDuration, GetExplosionRadius(), acidTickInterval);
-            }
-
-            if (enemy.IsDead)
-            {
-                return;
-            }
-
-            EnemyStatusEffectController status = EnsureStatusController(enemy);
-
-            if (HasToxicMucosa)
-            {
-                float tickDamage = Mathf.Max(0.05f, hitDamage * poisonTickDamageRatio);
-                status?.ApplyPoison(poisonDuration, poisonTickInterval, tickDamage);
-            }
-
-            if (HasFreezingNerve)
-            {
-                status?.ApplyMoveSpeedSlow(freezeSlowRatio, freezeDuration);
-            }
-
-            if (HasHemorrhageOrgan)
-            {
-                float tickDamage = Mathf.Max(0.05f, hitDamage * bleedTickDamageRatio);
-                status?.ApplyBleed(bleedDuration, bleedTickInterval, tickDamage);
-            }
-        }
-
+            Vector3 hitPosition, uint? expectedGeneration = null)
+            => Attack.ApplyCommonOnHitEffects(enemy, hitDamage, hitPosition, expectedGeneration);
         public void SpawnSplitProjectiles(Vector3 origin, Vector3 forwardDirection, float damage, LayerMask mask, float range)
-        {
-            Vector3 forward = forwardDirection.sqrMagnitude > 0.0001f
-                ? forwardDirection.normalized
-                : Vector3.forward;
-            float angle = GetSplitAngle();
-            float sideDamage = damage * GetSplitDamageMultiplier();
-            float sideRange = range * GetSplitRangeMultiplier();
-
-            SpawnChildProjectile(origin, Quaternion.Euler(0f, angle, 0f) * forward, sideDamage, mask, sideRange, Projectile.SpawnKind.SplitChild);
-            SpawnChildProjectile(origin, Quaternion.Euler(0f, -angle, 0f) * forward, sideDamage, mask, sideRange, Projectile.SpawnKind.SplitChild);
-        }
+            => Attack.SpawnSplitProjectiles(origin, forwardDirection, damage, mask, range);
 
         public void TrySpawnMutantEyeSplitProjectiles(Vector3 origin, Vector3 forwardDirection, float damage, LayerMask mask, float range)
         {
@@ -1333,986 +656,90 @@ namespace Necrocis
         {
             // Visual intentionally disabled. Unstable Core now uses player overlay tint.
         }
-
-        private void SpawnChildProjectile(Vector3 origin, Vector3 direction, float damage, LayerMask mask, float range, Projectile.SpawnKind spawnKind)
-        {
-            PlayerProjectilePool pool = ResolvePool();
-            if (pool == null)
-            {
-                return;
-            }
-
-            GameObject projectileObject = pool.GetPooledObject();
-            if (projectileObject == null)
-            {
-                return;
-            }
-
-            projectileObject.transform.position = origin;
-            projectileObject.SetActive(true);
-
-            Projectile projectile = projectileObject.GetComponent<Projectile>();
-            if (projectile == null)
-            {
-                return;
-            }
-
-            projectile.Launch(direction, damage, mask, range, this, spawnKind);
-            ProjectileDirectionalSprite directionalSprite = projectileObject.GetComponent<ProjectileDirectionalSprite>();
-            if (directionalSprite == null)
-            {
-                directionalSprite = projectileObject.AddComponent<ProjectileDirectionalSprite>();
-            }
-
-            directionalSprite.SetDirection(direction);
-        }
-
+        private void SpawnChildProjectile(Vector3 origin, Vector3 direction, float damage, LayerMask mask, float range, Projectile.SpawnKind spawnKind, HealthEffectSource source)
+            => Attack.SpawnChildProjectile(origin, direction, damage, mask, range, spawnKind, source);
         private void HandleItemAcquired(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem acquiredItem)
-        {
-            if (acquiredItem == null || string.IsNullOrWhiteSpace(acquiredItem.ItemId))
-            {
-                return;
-            }
-
-            RebuildItemCache();
-        }
-
+            => Ownership.HandleItemAcquired(_, acquiredItem);
         private void HandleItemRemoved(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem removedItem)
-        {
-            if (removedItem == null || string.IsNullOrWhiteSpace(removedItem.ItemId))
-            {
-                return;
-            }
-
-            RebuildItemCache();
-        }
-
+            => Ownership.HandleItemRemoved(_, removedItem);
         private void RebuildItemCache()
-        {
-            acquiredItemIds.Clear();
-            itemCacheInitialized = true;
-            if (itemManager == null || itemManager.AcquiredItems == null)
-            {
-                RefreshItemRuntimeFlags();
-                return;
-            }
-
-            IReadOnlyList<PlayerItemManager.AcquiredPlayerItem> acquiredItems = itemManager.AcquiredItems;
-            for (int i = 0; i < acquiredItems.Count; i++)
-            {
-                string itemId = acquiredItems[i].ItemId;
-                if (!string.IsNullOrWhiteSpace(itemId))
-                {
-                    acquiredItemIds.Add(itemId);
-                }
-            }
-
-            RefreshItemRuntimeFlags();
-        }
-
+            => Ownership.RebuildItemCache();
         public void EnsureActiveForInventoryChange()
-        {
-            if (!enabled)
-            {
-                enabled = true;
-                return;
-            }
-
-            RebuildItemCache();
-        }
-
+            => Ownership.EnsureActiveForInventoryChange();
         public void CapturePersistentItemState(SavedItemStateData target)
-        {
-            if (target == null || string.IsNullOrWhiteSpace(target.itemId))
-            {
-                return;
-            }
-
-            if (string.Equals(target.itemId, BloodContractId, StringComparison.OrdinalIgnoreCase))
-            {
-                target.bloodContractKillProgress = Mathf.Max(0, bloodContractKillProgress);
-                target.bloodContractHealthGainCount = Mathf.Max(0, bloodContractHealthGainCount);
-            }
-            else if (string.Equals(target.itemId, SplitRegenerationId, StringComparison.OrdinalIgnoreCase))
-            {
-                target.splitRegenerationUsed = splitRegenerationUsed;
-            }
-            else if (string.Equals(target.itemId, DecayOrganId, StringComparison.OrdinalIgnoreCase))
-            {
-                target.decayOrganElapsedSeconds = decayOrganStartTime <= float.NegativeInfinity * 0.5f
-                    ? 0f
-                    : Mathf.Max(0f, Time.time - decayOrganStartTime);
-            }
-            else if (string.Equals(target.itemId, PlateletMembraneId, StringComparison.OrdinalIgnoreCase))
-            {
-                target.plateletMembraneShield = Mathf.Max(0f, plateletMembraneCurrentShield);
-                target.plateletMembraneCooldownRemaining = Mathf.Max(0f, plateletMembraneNextReadyTime - Time.time);
-            }
-            else if (string.Equals(target.itemId, RecoveryFactorId, StringComparison.OrdinalIgnoreCase))
-            {
-                target.recoveryFactorCooldownRemaining = Mathf.Max(0f, recoveryFactorNextHealTime - Time.time);
-            }
-        }
-
+            => Timed.CapturePersistentItemState(target);
         public void RestorePersistentItemStates(IReadOnlyList<SavedItemStateData> savedItems)
-        {
-            bloodContractKillProgress = 0;
-            bloodContractHealthGainCount = 0;
-            splitRegenerationUsed = false;
-            decayOrganStartTime = hasDecayOrganItem ? Time.time : float.NegativeInfinity;
-            plateletMembraneCurrentShield = 0f;
-            plateletMembraneNextReadyTime = Time.time + Mathf.Max(0.1f, plateletMembraneInterval);
-            recoveryFactorNextHealTime = Time.time + Mathf.Max(0.1f, recoveryFactorInterval);
-            playerStats?.RuntimeStats.RemoveModifiersFromSource(this);
-
-            if (savedItems != null)
-            {
-                for (int i = 0; i < savedItems.Count; i++)
-                {
-                    SavedItemStateData state = savedItems[i];
-                    if (state == null || string.IsNullOrWhiteSpace(state.itemId))
-                    {
-                        continue;
-                    }
-
-                    if (hasBloodContractItem
-                        && string.Equals(state.itemId, BloodContractId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        bloodContractKillProgress = Mathf.Clamp(
-                            state.bloodContractKillProgress,
-                            0,
-                            Mathf.Max(1, bloodContractKillsPerHeal) - 1);
-                        bloodContractHealthGainCount = Mathf.Clamp(
-                            state.bloodContractHealthGainCount,
-                            0,
-                            Mathf.Max(1, bloodContractMaxHealthGainCount));
-                    }
-                    else if (hasSplitRegenerationItem
-                             && string.Equals(state.itemId, SplitRegenerationId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        splitRegenerationUsed = state.splitRegenerationUsed;
-                    }
-                    else if (hasDecayOrganItem
-                             && string.Equals(state.itemId, DecayOrganId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        decayOrganStartTime = Time.time - Mathf.Max(0f, state.decayOrganElapsedSeconds);
-                    }
-                    else if (hasPlateletMembraneItem
-                             && string.Equals(state.itemId, PlateletMembraneId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        plateletMembraneCurrentShield = Mathf.Clamp(
-                            state.plateletMembraneShield,
-                            0f,
-                            Mathf.Max(0f, plateletMembraneShieldAmount));
-                        plateletMembraneNextReadyTime =
-                            Time.time + Mathf.Max(0f, state.plateletMembraneCooldownRemaining);
-                    }
-                    else if (hasRecoveryFactorItem
-                             && string.Equals(state.itemId, RecoveryFactorId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        recoveryFactorNextHealTime =
-                            Time.time + Mathf.Max(0f, state.recoveryFactorCooldownRemaining);
-                    }
-                }
-            }
-
-            float restoredBloodContractHealth = bloodContractHealthGainCount
-                                                * Mathf.Max(0f, bloodContractHealthGainAmount);
-            if (hasBloodContractItem && restoredBloodContractHealth > 0f && playerStats != null)
-            {
-                playerStats.RuntimeStats.AddModifier(
-                    CharacterStatType.MaxHealth,
-                    restoredBloodContractHealth,
-                    CharacterStatModifierMode.Flat,
-                    this);
-            }
-
-            UpdateDecayOrganState();
-            UpdatePlateletMembraneOutline();
-        }
-
+            => Timed.RestorePersistentItemStates(savedItems);
         private bool HasCachedItem(string itemId)
-        {
-            return acquiredItemIds.Contains(itemId);
-        }
-
+            => Ownership.HasCachedItem(itemId);
         private void RefreshItemRuntimeFlags()
-        {
-            hasAnyCachedItems = acquiredItemIds.Count > 0;
-            hasPersistentStatItems =
-                HasCachedItem(ForbiddenGrowthId)
-                || HasCachedItem(OverclockNerveId)
-                || HasCachedItem(ImperfectRegenerationId)
-                || HasCachedItem(ExoskeletonId);
-
-            hasPlateletMembraneItem = HasCachedItem(PlateletMembraneId);
-            hasRecoveryFactorItem = HasCachedItem(RecoveryFactorId);
-            hasBioBarrierItem = HasCachedItem(BioBarrierId);
-            hasSplitRegenerationItem = HasCachedItem(SplitRegenerationId);
-
-            hasBloodContractItem = HasCachedItem(BloodContractId);
-            hasSeveranceReflexItem = HasCachedItem(SeveranceReflexId);
-            hasRampageBloodFlowItem = HasCachedItem(RampageBloodFlowId);
-            hasDecayOrganItem = HasCachedItem(DecayOrganId);
-            hasRuptureMuscleItem = HasCachedItem(RuptureMuscleId);
-            hasImperfectRegenItem = HasCachedItem(ImperfectRegenerationId);
-            hasOrganTentacleItem = HasCachedItem(OrganTentacleId);
-
-            hasSporeColonyItem = HasCachedItem(SporeColonyId);
-            hasBloodDroneItem = HasCachedItem(BloodDroneId);
-            hasGuardianOrganItem = HasCachedItem(GuardianOrganId);
-            hasTentacleColonyItem = HasCachedItem(TentacleColonyId);
-
-            hasMacrophageItem = HasCachedItem(MacrophageId);
-            hasGluttonousOrganItem = HasCachedItem(GluttonousOrganId);
-
-            hasFocusedNerveItem = HasCachedItem(FocusedNerveId);
-            hasBerserkCellItem = HasCachedItem(BerserkCellId);
-
-            hasGrotesqueGrowthItem = HasCachedItem(GrotesqueGrowthId);
-            hasMutationRampageItem = HasCachedItem(MutationRampageId);
-            hasFrenzyHormoneItem = HasCachedItem(FrenzyHormoneId);
-
-            hasOverheatedOrganItem = HasCachedItem(OverheatedOrganId);
-            hasBioResonanceItem = HasCachedItem(BioResonanceId);
-            hasUnstableCoreItem = HasCachedItem(UnstableCoreId);
-
-            RefreshDerivedUpdateFlags();
-            SyncPersistentStatModifiers();
-            ResetInactiveItemRuntimeState();
-            RefreshDerivedUpdateFlags();
-            SleepIfInventoryEmpty();
-        }
-
+            => Ownership.RefreshItemRuntimeFlags();
         private void RefreshDerivedUpdateFlags()
-        {
-            hasDefensiveUpdateItems =
-                hasPlateletMembraneItem
-                || hasRecoveryFactorItem
-                || hasBioBarrierItem
-                || hasSplitRegenerationItem;
-            hasMovementTrackingItems = hasRampageBloodFlowItem || hasBioBarrierItem;
-            hasBioCompanionUpdateItems =
-                hasSporeColonyItem
-                || hasBloodDroneItem
-                || hasGuardianOrganItem
-                || hasTentacleColonyItem
-                || activeBioSummons.Count > 0;
-            hasKillChainBuffItems =
-                hasMacrophageItem
-                || hasGluttonousOrganItem
-                || macrophageStacks > 0
-                || gluttonousOrganStacks > 0;
-            hasBossFightUpdateItems = hasFocusedNerveItem || hasBerserkCellItem || berserkCellModifierApplied;
-            hasMutationChaosItems =
-                hasGrotesqueGrowthItem
-                || hasMutationRampageItem
-                || hasFrenzyHormoneItem
-                || grotesqueGrowthModifierApplied
-                || mutationRampageModifierApplied
-                || frenzyHormoneModifierApplied;
-            hasDecayStateItems = hasOverheatedOrganItem || hasBioResonanceItem || resonanceStatesByEnemyId.Count > 0 || overheatStacks > 0;
-        }
-
+            => Ownership.RefreshDerivedUpdateFlags();
         private void ResetInactiveItemRuntimeState()
-        {
-            float now = Time.time;
-
-            if (!hasPlateletMembraneItem)
-            {
-                plateletMembraneCurrentShield = 0f;
-                plateletMembraneNextReadyTime = now + Mathf.Max(0.1f, plateletMembraneInterval);
-                ClearPlateletMembraneOutline();
-            }
-
-            if (!hasRecoveryFactorItem)
-            {
-                recoveryFactorNextHealTime = now + Mathf.Max(0.1f, recoveryFactorInterval);
-            }
-
-            if (!hasBioBarrierItem)
-            {
-                bioBarrierIdleTime = 0f;
-            }
-
-            if (!hasSplitRegenerationItem)
-            {
-                splitRegenerationUsed = false;
-            }
-
-            if (!hasBloodContractItem)
-            {
-                bloodContractKillProgress = 0;
-                bloodContractHealthGainCount = 0;
-                playerStats?.RuntimeStats.RemoveModifiersFromSource(this);
-            }
-
-            if (!hasSeveranceReflexItem)
-            {
-                severanceReflexBuffUntil = float.NegativeInfinity;
-            }
-
-            if (!hasMovementTrackingItems)
-            {
-                previousPosition = GetMovementAnchorPosition();
-                isMovingByPosition = false;
-                movementIntensity = 0f;
-            }
-
-            if (!hasRampageBloodFlowItem)
-            {
-                rampageMoveAccumulatedTime = 0f;
-                rampageIdleAccumulatedTime = 0f;
-                rampageAttackBonus = 0;
-            }
-
-            if (!hasDecayOrganItem)
-            {
-                decayOrganStartTime = float.NegativeInfinity;
-                decayOrganAttackBonus = 0;
-            }
-
-            if (!hasRuptureMuscleItem)
-            {
-                ruptureMuscleStacks = 0f;
-                ruptureMuscleLastAttackTime = float.NegativeInfinity;
-                ApplyRuptureMovePenalty(0f);
-            }
-
-            if (!hasImperfectRegenItem)
-            {
-                imperfectRegenPendingHeal = 0f;
-                imperfectRegenHealReadyTime = float.PositiveInfinity;
-                imperfectRegenCooldownUntil = float.NegativeInfinity;
-            }
-
-            if (!hasSporeColonyItem)
-            {
-                nextSporeSpawnTime = now + Mathf.Max(0.1f, sporeSpawnInterval);
-            }
-
-            if (!hasBloodDroneItem)
-            {
-                ReleaseBloodDrone();
-            }
-
-            if (!hasGuardianOrganItem)
-            {
-                ReleaseGuardianOrgan();
-            }
-
-            if (!hasTentacleColonyItem)
-            {
-                tentacleNextBindTime = now + Mathf.Max(0.1f, tentacleBindInterval);
-            }
-
-            if (!hasMacrophageItem && macrophageStacks > 0)
-            {
-                macrophageStacks = 0;
-                macrophageExpireTime = float.NegativeInfinity;
-                ClearKillChainStatBuff(macrophageModifierSource, ref macrophageAppliedAttackBonus);
-            }
-
-            if (!hasGluttonousOrganItem && gluttonousOrganStacks > 0)
-            {
-                gluttonousOrganStacks = 0;
-                gluttonousOrganExpireTime = float.NegativeInfinity;
-                ClearKillChainStatBuff(gluttonousOrganModifierSource, ref gluttonousOrganAppliedMoveBonus);
-            }
-
-            if (!hasFocusedNerveItem)
-            {
-                focusedNerveEnemyCount = int.MaxValue;
-                focusedNerveNextScanTime = 0f;
-            }
-
-            if (!hasBerserkCellItem)
-            {
-                ClearBerserkCellBuff();
-                berserkCellLastTriggeredBossId = 0;
-            }
-
-            if (!hasGrotesqueGrowthItem)
-            {
-                ClearGrotesqueGrowthState();
-                grotesqueGrowthNextRollTime = 0f;
-            }
-
-            if (!hasMutationRampageItem)
-            {
-                ClearMutationRampageState();
-                mutationRampageNextRollTime = 0f;
-            }
-
-            if (!hasFrenzyHormoneItem)
-            {
-                ClearFrenzyHormoneState();
-                frenzyHormoneCooldownUntil = float.NegativeInfinity;
-            }
-
-            if (!hasOverheatedOrganItem)
-            {
-                overheatStacks = 0;
-                overheatLastAttackTime = float.NegativeInfinity;
-                overheatNextDecayTime = float.PositiveInfinity;
-            }
-
-            if (!hasBioResonanceItem)
-            {
-                resonanceStatesByEnemyId.Clear();
-            }
-
-            if (!hasUnstableCoreItem)
-            {
-                unstableCoreCurrentMultiplier = 1f;
-                unstableCoreInitialized = false;
-                unstableCoreNextRerollTime = 0f;
-                if (unstableCoreOverlay != null)
-                {
-                    unstableCoreOverlay.enabled = false;
-                }
-            }
-        }
-
+            => Ownership.ResetInactiveItemRuntimeState();
         private void SleepIfInventoryEmpty()
-        {
-            if (hasAnyCachedItems || !enabled)
-            {
-                return;
-            }
-
-            disablingForEmptyInventory = true;
-            enabled = false;
-        }
-
+            => Ownership.SleepIfInventoryEmpty();
         private void UpdateBioCompanionItems()
-        {
-            CleanupBioSummonList();
-            UpdateSporeColony();
-            UpdateBloodDrone();
-            UpdateGuardianOrgan();
-            UpdateTentacleColony();
-        }
+            => Companions.UpdateBioCompanionItems();
 
         private void TriggerElectricNeuralNetwork(EnemyController defeatedEnemy)
-        {
-            if (!HasElectricNeuralNetwork || defeatedEnemy == null)
-            {
-                return;
-            }
+            => KillEffects.TriggerElectricNeuralNetwork(defeatedEnemy);
 
-            if (Time.time < electricChainNextReadyTime)
-            {
-                return;
-            }
 
-            tempEnemyTargets.Clear();
-            Vector3 chainOrigin = defeatedEnemy.transform.position;
-            Vector3 previousPosition = chainOrigin;
-            int maxHits = Mathf.Max(1, electricChainMaxHits);
-            float radius = Mathf.Max(0.1f, electricChainRadius);
-            float damage = Mathf.Max(0f, electricChainDamage);
-            if (damage <= 0f)
-            {
-                return;
-            }
-
-            for (int i = 0; i < maxHits; i++)
-            {
-                EnemyController target = FindClosestEnemy(previousPosition, radius, tempEnemyTargets);
-                if (target == null)
-                {
-                    break;
-                }
-
-                tempEnemyTargets.Add(target);
-                Vector3 targetPosition = target.transform.position;
-                SpawnElectricChainVisual(previousPosition, targetPosition);
-                target.TakeDamage(damage);
-                previousPosition = targetPosition;
-            }
-
-            if (tempEnemyTargets.Count > 0)
-            {
-                electricChainNextReadyTime = Time.time + Mathf.Max(0f, electricChainCooldown);
-            }
-        }
 
         private void TriggerInfectionTransference(EnemyController defeatedEnemy)
-        {
-            if (!HasInfectionTransference || defeatedEnemy == null)
-            {
-                return;
-            }
-
-            if (Time.time < infectionTransferNextReadyTime)
-            {
-                return;
-            }
-
-            tempEnemyTargets.Clear();
-            int maxTargets = Mathf.Max(1, infectionTransferMaxTargets);
-            Vector3 center = defeatedEnemy.transform.position;
-            for (int i = 0; i < maxTargets; i++)
-            {
-                EnemyController target = FindClosestEnemy(center, Mathf.Max(0.1f, infectionTransferRadius), tempEnemyTargets);
-                if (target == null)
-                {
-                    break;
-                }
-
-                tempEnemyTargets.Add(target);
-            }
-
-            for (int i = 0; i < tempEnemyTargets.Count; i++)
-            {
-                EnemyController enemy = tempEnemyTargets[i];
-                if (!IsEnemyTargetable(enemy))
-                {
-                    continue;
-                }
-
-                EnemyStatusEffectController status = EnsureStatusController(enemy);
-                status?.ApplyPoison(
-                    Mathf.Max(0.1f, infectionTransferDuration),
-                    Mathf.Max(0.1f, infectionTransferTickInterval),
-                    Mathf.Max(0f, infectionTransferTickDamage));
-                SpawnInfectionTransferVisual(center, enemy.transform.position);
-            }
-
-            if (tempEnemyTargets.Count > 0)
-            {
-                infectionTransferNextReadyTime = Time.time + Mathf.Max(0f, infectionTransferCooldown);
-            }
-        }
+            => KillEffects.TriggerInfectionTransference(defeatedEnemy);
 
         private void TriggerMacrophageBuff()
-        {
-            if (!HasMacrophage || playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            macrophageStacks = Mathf.Clamp(macrophageStacks + 1, 1, Mathf.Max(1, macrophageMaxStacks));
-            macrophageExpireTime = Time.time + Mathf.Max(0.1f, macrophageDuration);
-            ApplyKillChainStatBuff(
-                macrophageModifierSource,
-                CharacterStatType.AttackPower,
-                ref macrophageAppliedAttackBonus,
-                Mathf.Max(0f, macrophageAttackBonusPerStack) * macrophageStacks);
-        }
+            => KillEffects.TriggerMacrophageBuff();
 
         private void TriggerGluttonousOrganBuff()
-        {
-            if (!HasGluttonousOrgan || playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            gluttonousOrganStacks = Mathf.Clamp(gluttonousOrganStacks + 1, 1, Mathf.Max(1, gluttonousOrganMaxStacks));
-            gluttonousOrganExpireTime = Time.time + Mathf.Max(0.1f, gluttonousOrganDuration);
-            ApplyKillChainStatBuff(
-                gluttonousOrganModifierSource,
-                CharacterStatType.MoveSpeed,
-                ref gluttonousOrganAppliedMoveBonus,
-                Mathf.Max(0f, gluttonousOrganMoveBonusPerStack) * gluttonousOrganStacks);
-        }
+            => KillEffects.TriggerGluttonousOrganBuff();
 
         private void TriggerParasiticBomb()
-        {
-            if (applyingParasiticBombDamage || !HasParasiticBomb || playerStats == null || playerStats.IsDead)
-            {
-                return;
-            }
-
-            if (UnityEngine.Random.value > Mathf.Clamp01(parasiticBombChance))
-            {
-                return;
-            }
-
-            Vector3 center = playerController != null ? playerController.transform.position : transform.position;
-            float radius = Mathf.Max(0.1f, parasiticBombRadius);
-            float damage = Mathf.Max(0.1f, playerStats.AttackPower * Mathf.Max(0f, parasiticBombDamageMultiplier));
-            int hitCount = Physics.OverlapSphereNonAlloc(
-                center,
-                radius,
-                parasiticBombHitBuffer,
-                ~0,
-                QueryTriggerInteraction.Collide);
-
-            tempParasiticBombEnemies.Clear();
-            applyingParasiticBombDamage = true;
-            try
-            {
-                for (int i = 0; i < hitCount; i++)
-                {
-                    Collider hitCollider = parasiticBombHitBuffer[i];
-                    parasiticBombHitBuffer[i] = null;
-                    EnemyController enemy = hitCollider != null ? hitCollider.GetComponentInParent<EnemyController>() : null;
-                    if (enemy == null || enemy.IsDead || !tempParasiticBombEnemies.Add(enemy))
-                    {
-                        continue;
-                    }
-
-                    enemy.TakeDamage(damage);
-                }
-            }
-            finally
-            {
-                applyingParasiticBombDamage = false;
-                tempParasiticBombEnemies.Clear();
-            }
-
-            SpawnParasiticBombVisual(center, radius);
-        }
+            => KillEffects.TriggerParasiticBomb();
 
         private void UpdateKillChainBuffs()
-        {
-            if ((!hasMacrophageItem || Time.time >= macrophageExpireTime) && macrophageStacks > 0)
-            {
-                macrophageStacks = 0;
-                macrophageExpireTime = float.NegativeInfinity;
-                ClearKillChainStatBuff(macrophageModifierSource, ref macrophageAppliedAttackBonus);
-            }
-
-            if ((!hasGluttonousOrganItem || Time.time >= gluttonousOrganExpireTime) && gluttonousOrganStacks > 0)
-            {
-                gluttonousOrganStacks = 0;
-                gluttonousOrganExpireTime = float.NegativeInfinity;
-                ClearKillChainStatBuff(gluttonousOrganModifierSource, ref gluttonousOrganAppliedMoveBonus);
-            }
-        }
-
+            => KillEffects.UpdateKillChainBuffs();
         private void UpdateBossFightItemStates()
-        {
-            UpdateFocusedNerveScan();
-            UpdateBerserkCellState();
-        }
-
+            => Timed.UpdateBossFightItemStates();
         private void UpdateMutationChaosItems()
-        {
-            UpdateGrotesqueGrowthState();
-            UpdateMutationRampageState();
-            UpdateFrenzyHormoneState();
-        }
-
+            => Timed.UpdateMutationChaosItems();
         private void UpdateGrotesqueGrowthState()
-        {
-            if (!grotesqueGrowthScaleCached)
-            {
-                grotesqueGrowthBaseScale = transform.localScale;
-                grotesqueGrowthScaleCached = true;
-            }
-
-            if (!hasGrotesqueGrowthItem)
-            {
-                ClearGrotesqueGrowthState();
-                grotesqueGrowthNextRollTime = 0f;
-                return;
-            }
-
-            if (Time.time < grotesqueGrowthNextRollTime)
-            {
-                return;
-            }
-
-            grotesqueGrowthNextRollTime = Time.time + Mathf.Max(0.1f, grotesqueGrowthInterval);
-            bool rollSmall = UnityEngine.Random.value < 0.5f;
-            playerStats?.RuntimeStats?.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
-            grotesqueGrowthModifierApplied = true;
-
-            if (rollSmall)
-            {
-                transform.localScale = grotesqueGrowthBaseScale * Mathf.Max(0.1f, grotesqueGrowthSmallScale);
-                playerStats?.RuntimeStats?.AddModifier(
-                    CharacterStatType.MoveSpeed,
-                    Mathf.Max(0f, grotesqueGrowthSmallMoveBonus),
-                    CharacterStatModifierMode.Flat,
-                    grotesqueGrowthModifierSource);
-                return;
-            }
-
-            transform.localScale = grotesqueGrowthBaseScale * Mathf.Max(0.1f, grotesqueGrowthLargeScale);
-            playerStats?.RuntimeStats?.AddModifier(
-                CharacterStatType.AttackPower,
-                Mathf.Max(0f, grotesqueGrowthLargeAttackBonus),
-                CharacterStatModifierMode.Flat,
-                grotesqueGrowthModifierSource);
-            playerStats?.RuntimeStats?.AddModifier(
-                CharacterStatType.MoveSpeed,
-                -Mathf.Max(0f, grotesqueGrowthLargeMovePenalty),
-                CharacterStatModifierMode.Flat,
-                grotesqueGrowthModifierSource);
-        }
-
+            => Timed.UpdateGrotesqueGrowthState();
         private void ClearGrotesqueGrowthState()
-        {
-            if (grotesqueGrowthModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
-            }
-
-            if (grotesqueGrowthScaleCached)
-            {
-                transform.localScale = grotesqueGrowthBaseScale;
-            }
-
-            grotesqueGrowthModifierApplied = false;
-        }
-
+            => Timed.ClearGrotesqueGrowthState();
         private void UpdateMutationRampageState()
-        {
-            if (!hasMutationRampageItem)
-            {
-                ClearMutationRampageState();
-                mutationRampageNextRollTime = 0f;
-                return;
-            }
-
-            if (mutationRampageModifierApplied && Time.time >= mutationRampageExpireTime)
-            {
-                ClearMutationRampageState();
-            }
-
-            if (Time.time < mutationRampageNextRollTime)
-            {
-                return;
-            }
-
-            mutationRampageNextRollTime = Time.time + Mathf.Max(0.1f, mutationRampageInterval);
-            mutationRampageExpireTime = Time.time + Mathf.Max(0.1f, mutationRampageDuration);
-            ApplyRandomMutationRampageModifier();
-        }
-
+            => Timed.UpdateMutationRampageState();
         private void ApplyRandomMutationRampageModifier()
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
-            bool isBuff = UnityEngine.Random.value <= Mathf.Clamp01(mutationRampageBuffChance);
-            int statRoll = UnityEngine.Random.Range(0, 3);
-            CharacterStatType statType;
-            float value;
-
-            if (statRoll == 0)
-            {
-                statType = CharacterStatType.AttackPower;
-                value = isBuff ? Mathf.Max(0f, mutationRampageAttackBuff) : -Mathf.Max(0f, mutationRampageAttackDebuff);
-            }
-            else if (statRoll == 1)
-            {
-                statType = CharacterStatType.MoveSpeed;
-                value = isBuff ? Mathf.Max(0f, mutationRampageMoveBuff) : -Mathf.Max(0f, mutationRampageMoveDebuff);
-            }
-            else
-            {
-                statType = CharacterStatType.AttackSpeed;
-                value = isBuff ? Mathf.Max(0f, mutationRampageAttackSpeedBuff) : -Mathf.Max(0f, mutationRampageAttackSpeedDebuff);
-            }
-
-            playerStats.RuntimeStats.AddModifier(statType, value, CharacterStatModifierMode.Flat, mutationRampageModifierSource);
-            mutationRampageModifierApplied = true;
-        }
-
+            => Timed.ApplyRandomMutationRampageModifier();
         private void ClearMutationRampageState()
-        {
-            if (mutationRampageModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
-            }
-
-            mutationRampageModifierApplied = false;
-            mutationRampageExpireTime = float.NegativeInfinity;
-        }
-
+            => Timed.ClearMutationRampageState();
         private void UpdateFrenzyHormoneState()
-        {
-            if (!hasFrenzyHormoneItem)
-            {
-                ClearFrenzyHormoneState();
-                frenzyHormoneCooldownUntil = float.NegativeInfinity;
-                return;
-            }
-
-            if (frenzyHormoneModifierApplied && Time.time >= frenzyHormoneExpireTime)
-            {
-                ClearFrenzyHormoneState();
-            }
-        }
-
+            => Timed.UpdateFrenzyHormoneState();
         private void ApplyFrenzyHormoneBuff()
-        {
-            if (!HasFrenzyHormone || playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            if (Time.time < frenzyHormoneCooldownUntil)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
-            int statRoll = UnityEngine.Random.Range(0, 3);
-            CharacterStatType statType = statRoll == 0
-                ? CharacterStatType.AttackPower
-                : statRoll == 1 ? CharacterStatType.MoveSpeed : CharacterStatType.AttackSpeed;
-            float minBonus = Mathf.Max(0f, frenzyHormoneMinBonus);
-            float maxBonus = Mathf.Max(minBonus, frenzyHormoneMaxBonus);
-            float bonus = UnityEngine.Random.Range(minBonus, maxBonus);
-            playerStats.RuntimeStats.AddModifier(statType, bonus, CharacterStatModifierMode.Flat, frenzyHormoneModifierSource);
-            frenzyHormoneModifierApplied = true;
-            frenzyHormoneExpireTime = Time.time + Mathf.Max(0.1f, frenzyHormoneDuration);
-            frenzyHormoneCooldownUntil = Time.time + Mathf.Max(0f, frenzyHormoneCooldown);
-        }
-
+            => Timed.ApplyFrenzyHormoneBuff();
         private void ClearFrenzyHormoneState()
-        {
-            if (frenzyHormoneModifierApplied && playerStats != null && playerStats.RuntimeStats != null)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
-            }
-
-            frenzyHormoneModifierApplied = false;
-            frenzyHormoneExpireTime = float.NegativeInfinity;
-        }
-
+            => Timed.ClearFrenzyHormoneState();
         private void UpdateFocusedNerveScan()
-        {
-            if (!hasFocusedNerveItem)
-            {
-                focusedNerveEnemyCount = int.MaxValue;
-                focusedNerveNextScanTime = 0f;
-                return;
-            }
-
-            if (Time.time < focusedNerveNextScanTime)
-            {
-                return;
-            }
-
-            focusedNerveNextScanTime = Time.time + 0.2f;
-            focusedNerveEnemyCount = CountEnemiesWithinRadius(transform.position, Mathf.Max(0.1f, focusedNerveRadius));
-        }
-
+            => Timed.UpdateFocusedNerveScan();
         private void UpdateBerserkCellState()
-        {
-            if (!hasBerserkCellItem)
-            {
-                ClearBerserkCellBuff();
-                berserkCellLastTriggeredBossId = 0;
-                return;
-            }
-
-            EnemyController boss = FindNearestBossLikeEnemy(Mathf.Max(0.1f, berserkCellBossDetectionRadius));
-            if (boss != null)
-            {
-                int bossId = boss.GetInstanceID();
-                berserkCellActiveBossId = bossId;
-                if (berserkCellLastTriggeredBossId != bossId)
-                {
-                    berserkCellLastTriggeredBossId = bossId;
-                    ActivateBerserkCellBuff();
-                }
-            }
-            else
-            {
-                berserkCellActiveBossId = 0;
-            }
-
-            if (berserkCellModifierApplied && Time.time >= berserkCellExpireTime)
-            {
-                ClearBerserkCellBuff();
-            }
-        }
-
+            => Timed.UpdateBerserkCellState();
         private float GetFocusedNerveAttackBonus()
-        {
-            if (focusedNerveEnemyCount <= 1)
-            {
-                return Mathf.Max(0f, focusedNerveHighAttackBonus);
-            }
-
-            if (focusedNerveEnemyCount <= 3)
-            {
-                return Mathf.Max(0f, focusedNerveLowAttackBonus);
-            }
-
-            return 0f;
-        }
-
+            => Timed.GetFocusedNerveAttackBonus();
         private void ActivateBerserkCellBuff()
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
-            playerStats.RuntimeStats.AddModifier(
-                CharacterStatType.AttackPower,
-                Mathf.Max(0f, berserkCellAttackBonus),
-                CharacterStatModifierMode.Flat,
-                berserkCellModifierSource);
-            playerStats.RuntimeStats.AddModifier(
-                CharacterStatType.MoveSpeed,
-                Mathf.Max(0f, berserkCellMoveBonus),
-                CharacterStatModifierMode.Flat,
-                berserkCellModifierSource);
-            berserkCellExpireTime = Time.time + Mathf.Max(0.1f, berserkCellDuration);
-            berserkCellModifierApplied = true;
-        }
-
+            => Timed.ActivateBerserkCellBuff();
         private void ClearBerserkCellBuff()
-        {
-            if (playerStats != null && playerStats.RuntimeStats != null)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
-            }
-
-            berserkCellExpireTime = float.NegativeInfinity;
-            berserkCellModifierApplied = false;
-        }
-
+            => Timed.ClearBerserkCellBuff();
         private bool IsBerserkCellActive()
-        {
-            return berserkCellModifierApplied && Time.time < berserkCellExpireTime;
-        }
+            => Timed.IsBerserkCellActive();
 
         private void ApplyKillChainStatBuff(object source, CharacterStatType statType, ref float appliedValue, float value)
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                appliedValue = value;
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(source);
-            appliedValue = Mathf.Max(0f, value);
-            if (appliedValue <= 0f)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.AddModifier(
-                statType,
-                appliedValue,
-                CharacterStatModifierMode.Flat,
-                source);
-        }
+            => KillEffects.ApplyKillChainStatBuff(source, statType, ref appliedValue, value);
 
         private void ClearKillChainStatBuff(object source, ref float appliedValue)
-        {
-            if (playerStats != null && playerStats.RuntimeStats != null)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(source);
-            }
-
-            appliedValue = 0f;
-        }
+            => KillEffects.ClearKillChainStatBuff(source, ref appliedValue);
 
         private void SpawnElectricChainVisual(Vector3 start, Vector3 end)
         {
@@ -2400,188 +827,26 @@ namespace Necrocis
 
             RuntimePool.EnsureAutoReturn(lineObject)?.Schedule(Mathf.Max(0.02f, duration));
         }
-
         private void UpdateSporeColony()
-        {
-            if (!hasSporeColonyItem)
-            {
-                nextSporeSpawnTime = Time.time + Mathf.Max(0.1f, sporeSpawnInterval);
-                return;
-            }
-
-            if (Time.time < nextSporeSpawnTime)
-            {
-                return;
-            }
-
-            nextSporeSpawnTime = Time.time + Mathf.Max(0.1f, sporeSpawnInterval);
-            SpawnSporeSummon();
-        }
+            => Companions.UpdateSporeColony();
 
         private void UpdateBloodDrone()
-        {
-            if (!hasBloodDroneItem)
-            {
-                if (bloodDrone != null)
-                {
-                    ReleaseBloodDrone();
-                }
-
-                return;
-            }
-
-            if (bloodDrone != null)
-            {
-                return;
-            }
-
-            GameObject droneObject = RuntimePool.Acquire(BloodDronePoolName, CreateBloodDroneFunc);
-            if (droneObject == null)
-            {
-                return;
-            }
-
-            droneObject.name = "BloodDrone";
-            bloodDrone = droneObject.GetComponent<PlayerBloodDrone>();
-            bloodDrone.Initialize(this);
-        }
+            => Companions.UpdateBloodDrone();
 
         private void ReleaseBloodDrone()
-        {
-            if (bloodDrone == null)
-            {
-                return;
-            }
-
-            bloodDrone.ClearOwner();
-            RuntimePool.Release(bloodDrone.gameObject);
-            bloodDrone = null;
-        }
+            => Companions.ReleaseBloodDrone();
 
         private void UpdateGuardianOrgan()
-        {
-            if (!hasGuardianOrganItem)
-            {
-                if (guardianOrgan != null)
-                {
-                    ReleaseGuardianOrgan();
-                }
-
-                return;
-            }
-
-            if (guardianOrgan != null)
-            {
-                return;
-            }
-
-            GameObject guardianObject = RuntimePool.Acquire(GuardianOrganPoolName, CreateGuardianOrganFunc);
-            if (guardianObject == null)
-            {
-                return;
-            }
-
-            guardianObject.name = "GuardianOrgan";
-            guardianOrgan = guardianObject.GetComponent<PlayerGuardianOrgan>();
-            guardianOrgan.Initialize(this);
-        }
+            => Companions.UpdateGuardianOrgan();
 
         private void ReleaseGuardianOrgan()
-        {
-            if (guardianOrgan == null)
-            {
-                return;
-            }
-
-            guardianOrgan.ClearOwner();
-            RuntimePool.Release(guardianOrgan.gameObject);
-            guardianOrgan = null;
-        }
-
+            => Companions.ReleaseGuardianOrgan();
         private void UpdateTentacleColony()
-        {
-            if (!hasTentacleColonyItem)
-            {
-                tentacleNextBindTime = Time.time + Mathf.Max(0.1f, tentacleBindInterval);
-                return;
-            }
-
-            if (Time.time < tentacleNextBindTime)
-            {
-                return;
-            }
-
-            tentacleNextBindTime = Time.time + Mathf.Max(0.1f, tentacleBindInterval);
-            ApplyTentacleBind();
-        }
-
+            => Companions.UpdateTentacleColony();
         private void TrySpawnInfectedHost(EnemyController defeatedEnemy)
-        {
-            if (!HasInfectedHost || defeatedEnemy == null || !CanInfectEnemy(defeatedEnemy))
-            {
-                return;
-            }
-
-            if (CountBioSummons(PlayerBioSummon.SummonKind.InfectedHost) >= Mathf.Max(1, infectedHostMaxAllies))
-            {
-                return;
-            }
-
-            if (UnityEngine.Random.value > Mathf.Clamp01(infectedHostChance))
-            {
-                return;
-            }
-
-            Sprite enemySprite = FindEnemySprite(defeatedEnemy);
-            Sprite[] attackSprites = FindEnemyAttackSprites(defeatedEnemy);
-            Vector3 visualScale = FindEnemyVisualScale(defeatedEnemy, Vector3.one * 0.9f);
-            float damage = GetCompanionBaseDamage() * Mathf.Max(0.05f, infectedHostDamageMultiplier);
-            SpawnBioSummon(
-                PlayerBioSummon.SummonKind.InfectedHost,
-                defeatedEnemy.transform.position,
-                enemySprite,
-                attackSprites,
-                visualScale,
-                new Color(1f, 0.28f, 0.22f, 0.9f),
-                damage,
-                Mathf.Max(0.1f, infectedHostLifetime),
-                Mathf.Max(0.1f, infectedHostSearchRadius),
-                Mathf.Max(0.1f, infectedHostAttackRadius),
-                Mathf.Max(0.1f, infectedHostAttackInterval),
-                false);
-        }
-
+            => Companions.TrySpawnInfectedHost(defeatedEnemy);
         private void SpawnSporeSummon()
-        {
-            Vector2 offset2D = UnityEngine.Random.insideUnitCircle;
-            if (offset2D.sqrMagnitude <= 0.0001f)
-            {
-                offset2D = Vector2.right;
-            }
-
-            Vector3 desiredPosition = transform.position + new Vector3(offset2D.x, 0f, offset2D.y).normalized * 1.2f;
-            Vector3 spawnPosition = ResolveGroundSpawnPosition(desiredPosition, 0.15f);
-            float damage = GetCompanionBaseDamage() * Mathf.Max(0.05f, sporeDamageMultiplier);
-            Sprite sporeSprite = TextureSpriteCache.LoadResourceSprite(SporeColonyEffectPath);
-            if (sporeSprite == null)
-            {
-                sporeSprite = TextureSpriteCache.GetCircleSprite();
-            }
-
-            SpawnBioSummon(
-                PlayerBioSummon.SummonKind.Spore,
-                spawnPosition,
-                sporeSprite,
-                null,
-                Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(sporeSprite, 0.65f),
-                Color.white,
-                damage,
-                Mathf.Max(0.1f, sporeLifetime),
-                Mathf.Max(0.1f, sporeSearchRadius),
-                Mathf.Max(0.1f, sporeBurstRadius),
-                0.1f,
-                true);
-        }
+            => Companions.SpawnSporeSummon();
 
         private void SpawnBioSummon(
             PlayerBioSummon.SummonKind kind,
@@ -2596,56 +861,9 @@ namespace Necrocis
             float attackRadius,
             float attackInterval,
             bool destroyOnAttack)
-        {
-            GameObject summonObject = RuntimePool.Acquire(BioSummonPoolName, CreateBioSummonFunc);
-            if (summonObject == null || !summonObject.TryGetComponent(out PlayerBioSummon summon))
-            {
-                RuntimePool.Release(summonObject);
-                return;
-            }
-
-            summonObject.name = kind == PlayerBioSummon.SummonKind.Spore ? "SporeSummon" : "InfectedHostAlly";
-            summonObject.transform.position = position;
-            summon.Initialize(this, kind, sprite, attackSprites, visualScale, color, damage, lifetime, searchRadius, attackRadius, attackInterval, destroyOnAttack);
-            activeBioSummons.Add(summon);
-        }
-
+            => Companions.SpawnBioSummon(kind, position, sprite, attackSprites, visualScale, color, damage, lifetime, searchRadius, attackRadius, attackInterval, destroyOnAttack);
         private void ApplyTentacleBind()
-        {
-            tempEnemyTargets.Clear();
-            int targetCount = Mathf.Max(1, tentacleMaxTargets);
-            Vector3 center = transform.position;
-
-            for (int i = 0; i < targetCount; i++)
-            {
-                EnemyController enemy = FindClosestEnemy(center, Mathf.Max(0.1f, tentacleBindRadius), tempEnemyTargets);
-                if (enemy == null)
-                {
-                    break;
-                }
-
-                tempEnemyTargets.Add(enemy);
-            }
-
-            float damage = GetCompanionBaseDamage() * Mathf.Max(0f, tentacleDamageMultiplier);
-            for (int i = 0; i < tempEnemyTargets.Count; i++)
-            {
-                EnemyController enemy = tempEnemyTargets[i];
-                if (!IsEnemyTargetable(enemy))
-                {
-                    continue;
-                }
-
-                EnemyStatusEffectController status = EnsureStatusController(enemy);
-                status?.ApplyMoveSpeedSlow(Mathf.Clamp01(tentacleSlowRatio), Mathf.Max(0.1f, tentacleBindDuration));
-                if (damage > 0f)
-                {
-                    enemy.TakeDamage(damage);
-                }
-
-                SpawnTentacleBindVisual(enemy.transform.position, Mathf.Max(0.1f, tentacleBindDuration));
-            }
-        }
+            => Companions.ApplyTentacleBind();
 
         private void SpawnTentacleBindVisual(Vector3 targetPosition, float duration)
         {
@@ -2676,295 +894,39 @@ namespace Necrocis
         }
 
         private void CleanupBioSummonList()
-        {
-            for (int i = activeBioSummons.Count - 1; i >= 0; i--)
-            {
-                if (activeBioSummons[i] == null || !activeBioSummons[i].gameObject.activeInHierarchy)
-                {
-                    activeBioSummons.RemoveAt(i);
-                }
-            }
-        }
+            => Companions.CleanupBioSummonList();
 
         private int CountBioSummons(PlayerBioSummon.SummonKind kind)
-        {
-            CleanupBioSummonList();
-            int count = 0;
-            for (int i = 0; i < activeBioSummons.Count; i++)
-            {
-                if (activeBioSummons[i] != null && activeBioSummons[i].Kind == kind)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
+            => Companions.CountBioSummons(kind);
 
         private void ClearBioCompanions()
-        {
-            for (int i = activeBioSummons.Count - 1; i >= 0; i--)
-            {
-                if (activeBioSummons[i] != null)
-                {
-                    activeBioSummons[i].ReleaseToPool();
-                }
-            }
-
-            activeBioSummons.Clear();
-            if (bloodDrone != null)
-            {
-                ReleaseBloodDrone();
-            }
-
-            if (guardianOrgan != null)
-            {
-                ReleaseGuardianOrgan();
-            }
-        }
-
+            => Companions.ClearBioCompanions();
         private bool CanInfectEnemy(EnemyController enemy)
-        {
-            if (enemy == null || enemy.IsElite)
-            {
-                return false;
-            }
-
-            return !IsBossLikeEnemy(enemy);
-        }
-
+            => Queries.CanInfectEnemy(enemy);
         private float GetCompanionBaseDamage()
-        {
-            return playerStats != null ? Mathf.Max(0.1f, playerStats.AttackPower) : 1f;
-        }
-
+            => Queries.GetCompanionBaseDamage();
         private EnemyController FindClosestEnemy(Vector3 center, float radius, List<EnemyController> excluded = null)
-        {
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return null;
-            }
-
-            float radiusSqr = Mathf.Max(0.1f, radius);
-            radiusSqr *= radiusSqr;
-            float bestDistanceSqr = float.PositiveInfinity;
-            EnemyController bestEnemy = null;
-
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (!IsEnemyTargetable(enemy) || (excluded != null && excluded.Contains(enemy)))
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                float distanceSqr = toEnemy.sqrMagnitude;
-                if (distanceSqr > radiusSqr || distanceSqr >= bestDistanceSqr)
-                {
-                    continue;
-                }
-
-                bestDistanceSqr = distanceSqr;
-                bestEnemy = enemy;
-            }
-
-            return bestEnemy;
-        }
-
+            => Queries.FindClosestEnemy(center, radius, excluded);
         private int CountEnemiesWithinRadius(Vector3 center, float radius)
-        {
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return 0;
-            }
-
-            float radiusSqr = Mathf.Max(0.1f, radius);
-            radiusSqr *= radiusSqr;
-            int count = 0;
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (!IsEnemyTargetable(enemy))
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                if (toEnemy.sqrMagnitude <= radiusSqr)
-                {
-                    count++;
-                }
-            }
-
-            return count;
-        }
-
+            => Queries.CountEnemiesWithinRadius(center, radius);
         private bool IsBossOrEliteWithinRadius(float radius)
-        {
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return false;
-            }
-
-            float radiusSqr = Mathf.Max(0.1f, radius);
-            radiusSqr *= radiusSqr;
-            Vector3 center = transform.position;
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (!IsEnemyTargetable(enemy) || (!enemy.IsElite && !IsBossLikeEnemy(enemy)))
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                if (toEnemy.sqrMagnitude <= radiusSqr)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static EnemyController FindNearestBossLikeEnemy(float radius)
-        {
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return null;
-            }
-
-            Vector3 center = PlayerController.Instance != null ? PlayerController.Instance.transform.position : Vector3.zero;
-            float radiusSqr = Mathf.Max(0.1f, radius);
-            radiusSqr *= radiusSqr;
-            float bestDistanceSqr = float.PositiveInfinity;
-            EnemyController bestEnemy = null;
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (!IsEnemyTargetable(enemy) || !IsBossLikeEnemy(enemy))
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                float distanceSqr = toEnemy.sqrMagnitude;
-                if (distanceSqr > radiusSqr || distanceSqr >= bestDistanceSqr)
-                {
-                    continue;
-                }
-
-                bestDistanceSqr = distanceSqr;
-                bestEnemy = enemy;
-            }
-
-            return bestEnemy;
-        }
-
-        private static bool IsEnemyAboveHealthRatio(EnemyController enemy, float ratio)
-        {
-            CharacterStats stats = enemy != null ? enemy.Stats : null;
-            if (stats == null || stats.MaxHealth <= 0f)
-            {
-                return false;
-            }
-
-            return stats.CurrentHealth / stats.MaxHealth >= ratio;
-        }
-
-        private static bool IsEnemyBelowHealthRatio(EnemyController enemy, float ratio)
-        {
-            CharacterStats stats = enemy != null ? enemy.Stats : null;
-            if (stats == null || stats.MaxHealth <= 0f)
-            {
-                return false;
-            }
-
-            return stats.CurrentHealth / stats.MaxHealth <= ratio;
-        }
-
-        private static float GetEnemyCurrentHealth(EnemyController enemy)
-        {
-            CharacterStats stats = enemy != null ? enemy.Stats : null;
-            return stats != null ? Mathf.Max(0f, stats.CurrentHealth) : 0f;
-        }
-
-        private static bool IsEnemyTargetable(EnemyController enemy)
-        {
-            return enemy != null && enemy.gameObject.activeInHierarchy && !enemy.IsDead;
-        }
-
-        private static bool IsBossLikeEnemy(EnemyController enemy)
-        {
-            if (enemy == null)
-            {
-                return false;
-            }
-
-            if (enemy.GetComponent<IntestineBossPattern>() != null)
-            {
-                return true;
-            }
-
-            return enemy.gameObject.name.EndsWith("_MidBoss", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static Sprite FindEnemySprite(EnemyController enemy)
-        {
-            if (enemy == null)
-            {
-                return null;
-            }
-
-            SpriteRenderer[] renderers = enemy.GetComponentsInChildren<SpriteRenderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                SpriteRenderer renderer = renderers[i];
-                if (renderer == null || renderer.sprite == null || renderer.gameObject.name.Contains("Overlay"))
-                {
-                    continue;
-                }
-
-                return renderer.sprite;
-            }
-
-            return TextureSpriteCache.GetCircleSprite();
-        }
-
-        private static Sprite[] FindEnemyAttackSprites(EnemyController enemy)
-        {
-            EnemySpawnRuleConfig config = enemy != null ? enemy.Config : null;
-            if (config == null)
-            {
-                return null;
-            }
-
-            if (config.attackSprites != null && config.attackSprites.Length > 0)
-            {
-                return config.attackSprites;
-            }
-
-            if (config.attackSpritesDown != null && config.attackSpritesDown.Length > 0)
-            {
-                return config.attackSpritesDown;
-            }
-
-            if (config.attackSpritesUp != null && config.attackSpritesUp.Length > 0)
-            {
-                return config.attackSpritesUp;
-            }
-
-            return null;
-        }
+            => Queries.IsBossOrEliteWithinRadius(radius);
+        private EnemyController FindNearestBossLikeEnemy(float radius)
+            => Queries.FindNearestBossLikeEnemy(radius);
+        private bool IsEnemyAboveHealthRatio(EnemyController enemy, float ratio)
+            => Queries.IsEnemyAboveHealthRatio(enemy, ratio);
+        private bool IsEnemyBelowHealthRatio(EnemyController enemy, float ratio)
+            => Queries.IsEnemyBelowHealthRatio(enemy, ratio);
+        private float GetEnemyCurrentHealth(EnemyController enemy)
+            => Queries.GetEnemyCurrentHealth(enemy);
+        private bool IsEnemyTargetable(EnemyController enemy)
+            => Queries.IsEnemyTargetable(enemy);
+        private bool IsBossLikeEnemy(EnemyController enemy)
+            => Queries.IsBossLikeEnemy(enemy);
+        private Sprite FindEnemySprite(EnemyController enemy)
+            => Queries.FindEnemySprite(enemy);
+        private Sprite[] FindEnemyAttackSprites(EnemyController enemy)
+            => Queries.FindEnemyAttackSprites(enemy);
 
         private static Material GetRuntimeLineMaterial()
         {
@@ -2990,41 +952,9 @@ namespace Necrocis
             int sortingOrder,
             float duration,
             Sprite effectSprite = null)
-        {
-            GameObject visualObject = RuntimePool.Acquire(poolName, CreateCircleVisualFunc);
-            if (visualObject == null)
-            {
-                return;
-            }
+            => ItemEffectVisuals.SpawnPooledCircleVisual(poolName, objectName, position, scale, color, sortingOrder, duration, effectSprite);
 
-            visualObject.name = objectName;
-            visualObject.transform.position = position;
 
-            SpriteRenderer renderer = GetOrAddSpriteRenderer(visualObject);
-            if (renderer == null)
-            {
-                RuntimePool.Release(visualObject);
-                return;
-            }
-
-            renderer.enabled = true;
-            renderer.sprite = effectSprite != null ? effectSprite : TextureSpriteCache.GetCircleSprite();
-            renderer.color = color;
-            renderer.sortingOrder = sortingOrder;
-            visualObject.transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(
-                renderer.sprite,
-                Mathf.Max(0.01f, scale));
-
-            RuntimePool.EnsureAutoReturn(visualObject)?.Schedule(Mathf.Max(0.02f, duration));
-        }
-
-        private static GameObject CreateCircleVisualObject()
-        {
-            GameObject obj = new GameObject("PlayerItemCircleVisual");
-            SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = TextureSpriteCache.GetCircleSprite();
-            return obj;
-        }
 
         private static GameObject CreateLineVisualObject()
         {
@@ -3036,61 +966,19 @@ namespace Necrocis
             return obj;
         }
 
-        private static GameObject CreateBloodDroneObject()
-        {
-            GameObject obj = new GameObject("BloodDrone");
-            obj.AddComponent<PlayerBloodDrone>();
-            return obj;
-        }
 
-        private static GameObject CreateGuardianOrganObject()
-        {
-            GameObject obj = new GameObject("GuardianOrgan");
-            obj.AddComponent<PlayerGuardianOrgan>();
-            return obj;
-        }
 
-        private static GameObject CreateBloodDroneProjectileObject()
-        {
-            GameObject obj = new GameObject("BloodDroneProjectile");
-            obj.AddComponent<PlayerBioProjectile>();
-            return obj;
-        }
 
-        private static GameObject CreateBioSummonObject()
-        {
-            GameObject obj = new GameObject("PlayerBioSummon");
-            obj.AddComponent<SpriteRenderer>();
-            obj.AddComponent<PlayerBioSummon>();
-            return obj;
-        }
+
+
+
+
 
         private void ReleaseBioSummon(PlayerBioSummon summon)
-        {
-            if (summon == null)
-            {
-                return;
-            }
-
-            activeBioSummons.Remove(summon);
-            RuntimePool.Release(summon.gameObject);
-        }
+            => Companions.ReleaseBioSummon(summon);
 
         private static SpriteRenderer GetOrAddSpriteRenderer(GameObject obj)
-        {
-            if (obj == null)
-            {
-                return null;
-            }
-
-            SpriteRenderer renderer = obj.GetComponent<SpriteRenderer>();
-            if (renderer == null)
-            {
-                renderer = obj.AddComponent<SpriteRenderer>();
-            }
-
-            return renderer;
-        }
+            => ItemEffectVisuals.GetOrAddSpriteRenderer(obj);
 
         private static LineRenderer GetOrAddLineRenderer(GameObject obj)
         {
@@ -3107,495 +995,49 @@ namespace Necrocis
 
             return line;
         }
-
-        private static Vector3 FindEnemyVisualScale(EnemyController enemy, Vector3 fallback)
-        {
-            if (enemy == null)
-            {
-                return fallback;
-            }
-
-            SpriteRenderer[] renderers = enemy.GetComponentsInChildren<SpriteRenderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                SpriteRenderer renderer = renderers[i];
-                if (renderer == null || renderer.gameObject.name.Contains("Overlay"))
-                {
-                    continue;
-                }
-
-                return renderer.transform.lossyScale;
-            }
-
-            return fallback;
-        }
-
+        private Vector3 FindEnemyVisualScale(EnemyController enemy, Vector3 fallback)
+            => Queries.FindEnemyVisualScale(enemy, fallback);
         private Vector3 ResolveGroundSpawnPosition(Vector3 desiredPosition, float heightOffset)
-        {
-            BiomeManager biome = BiomeManager.Active;
-            if (biome == null)
-            {
-                Vector3 fallback = desiredPosition;
-                fallback.y = transform.position.y + heightOffset;
-                return fallback;
-            }
-
-            Vector2Int desiredGrid = biome.WorldToGrid(desiredPosition);
-            if (biome.IsWalkable(desiredGrid.x, desiredGrid.y))
-            {
-                return biome.GridToWorldWithHeight(desiredGrid.x, desiredGrid.y, heightOffset);
-            }
-
-            Vector2Int playerGrid = biome.WorldToGrid(transform.position);
-            for (int radius = 1; radius <= 3; radius++)
-            {
-                for (int y = -radius; y <= radius; y++)
-                {
-                    for (int x = -radius; x <= radius; x++)
-                    {
-                        if (Mathf.Abs(x) != radius && Mathf.Abs(y) != radius)
-                        {
-                            continue;
-                        }
-
-                        int gridX = playerGrid.x + x;
-                        int gridY = playerGrid.y + y;
-                        if (biome.IsWalkable(gridX, gridY))
-                        {
-                            return biome.GridToWorldWithHeight(gridX, gridY, heightOffset);
-                        }
-                    }
-                }
-            }
-
-            return biome.GridToWorldWithHeight(playerGrid.x, playerGrid.y, heightOffset);
-        }
-
-        private static PlayerProjectilePool ResolvePool()
-        {
-            PlayerProjectilePool pool = PlayerProjectilePool.Instance;
-            if (pool != null)
-            {
-                return pool;
-            }
-
-            pool = FindFirstObjectByType<PlayerProjectilePool>();
-            if (pool != null)
-            {
-                PlayerProjectilePool.Instance = pool;
-            }
-
-            return pool;
-        }
-
-        private static EnemyStatusEffectController EnsureStatusController(EnemyController enemy)
-        {
-            if (enemy == null)
-            {
-                return null;
-            }
-
-            EnemyStatusEffectController status = enemy.StatusEffects;
-            if (status == null)
-            {
-                status = enemy.GetComponent<EnemyStatusEffectController>();
-            }
-
-            if (status == null)
-            {
-                status = enemy.gameObject.AddComponent<EnemyStatusEffectController>();
-            }
-
-            status.Initialize(enemy);
-            return status;
-        }
-
+            => Queries.ResolveGroundSpawnPosition(desiredPosition, heightOffset);
+        private PlayerProjectilePool ResolvePool()
+            => Queries.ResolvePool();
+        private EnemyStatusEffectController EnsureStatusController(EnemyController enemy)
+            => Queries.EnsureStatusController(enemy);
         private Vector3 GetMovementAnchorPosition()
-        {
-            Transform anchor = playerController != null ? playerController.transform : transform;
-            return anchor.position;
-        }
-
+            => Timed.GetMovementAnchorPosition();
         private void UpdateMovementIntensity()
-        {
-            Vector3 currentPosition = GetMovementAnchorPosition();
-            Vector3 delta = currentPosition - previousPosition;
-            previousPosition = currentPosition;
-
-            delta.y = 0f;
-            float planarSpeed = Time.deltaTime > 0.0001f ? delta.magnitude / Time.deltaTime : 0f;
-            isMovingByPosition = planarSpeed > 0.05f;
-            float target = Mathf.Clamp01(planarSpeed / 2f);
-            movementIntensity = Mathf.MoveTowards(movementIntensity, target, Time.deltaTime * 5f);
-        }
-
+            => Timed.UpdateMovementIntensity();
         private void UpdateRampageBloodFlowState()
-        {
-            if (!hasRampageBloodFlowItem)
-            {
-                rampageMoveAccumulatedTime = 0f;
-                rampageIdleAccumulatedTime = 0f;
-                rampageAttackBonus = 0;
-                return;
-            }
-
-            bool isMovingNow = (playerController != null && playerController.IsMoving) || isMovingByPosition || movementIntensity > 0.02f;
-            if (isMovingNow)
-            {
-                rampageIdleAccumulatedTime = 0f;
-                if (rampageAttackBonus >= Mathf.Max(0, rampageMaxAttackBonus))
-                {
-                    return;
-                }
-
-                rampageMoveAccumulatedTime += Time.deltaTime;
-                float secondsPerBonus = Mathf.Max(0.1f, rampageMoveSecondsPerBonus);
-                while (rampageMoveAccumulatedTime >= secondsPerBonus && rampageAttackBonus < Mathf.Max(0, rampageMaxAttackBonus))
-                {
-                    rampageMoveAccumulatedTime -= secondsPerBonus;
-                    rampageAttackBonus++;
-                }
-
-                return;
-            }
-
-            if (rampageAttackBonus <= 0)
-            {
-                return;
-            }
-
-            rampageIdleAccumulatedTime += Time.deltaTime;
-            float secondsPerDecay = Mathf.Max(0.1f, rampageIdleSecondsPerDecay);
-            while (rampageIdleAccumulatedTime >= secondsPerDecay && rampageAttackBonus > 0)
-            {
-                rampageIdleAccumulatedTime -= secondsPerDecay;
-                rampageAttackBonus--;
-            }
-        }
-
+            => Timed.UpdateRampageBloodFlowState();
         private void UpdateTentacleAutoAttack()
-        {
-            if (!hasOrganTentacleItem || playerStats == null || playerStats.IsDead)
-            {
-                return;
-            }
-
-            if (Time.time < tentacleNextAutoAttackTime)
-            {
-                return;
-            }
-
-            tentacleNextAutoAttackTime = Time.time + Mathf.Max(0.15f, organTentacleAutoAttackInterval);
-
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return;
-            }
-
-            Vector3 center = transform.position;
-            float radiusSqr = Mathf.Max(0.5f, organTentacleAutoAttackRadius);
-            radiusSqr *= radiusSqr;
-            float damage = Mathf.Max(0.1f, playerStats.AttackPower * Mathf.Max(0.05f, organTentacleAutoAttackDamageMultiplier));
-            int hitLimit = Mathf.Max(1, organTentacleMaxTargets);
-            int hitCount = 0;
-
-            for (int i = 0; i < enemies.Count && hitCount < hitLimit; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                if (toEnemy.sqrMagnitude > radiusSqr)
-                {
-                    continue;
-                }
-
-                float adjustedDamage = ApplyPerTargetDamageModifiers(enemy, damage);
-                enemy.TakeDamage(adjustedDamage);
-                TryApplyPostDamageExecutionInstinct(enemy, adjustedDamage);
-                ApplyCommonOnHitEffects(enemy, adjustedDamage, enemy.transform.position);
-                Vector3 tentacleStart = GetPlayerVisualCenter();
-                Vector3 tentacleEnd = enemy.transform.position + Vector3.up * 0.4f;
-                Vector3 tentacleMidpoint = (tentacleStart + tentacleEnd) * 0.5f;
-                Vector3 extendedHalfLength = (tentacleEnd - tentacleStart) * 0.625f;
-                SpawnLineVisual(
-                    "OrganTentacleStrike",
-                    tentacleMidpoint - extendedHalfLength,
-                    tentacleMidpoint + extendedHalfLength,
-                    Color.white,
-                    Color.white,
-                    0.52f,
-                    0.24f,
-                    0.2f,
-                    OrganTentacleEffectPath);
-                hitCount++;
-            }
-        }
-
+            => Attack.UpdateTentacleAutoAttack();
         private void UpdateDecayStates()
-        {
-            float now = Time.time;
-            if (hasOverheatedOrganItem)
-            {
-                if (overheatStacks > 0 && now >= overheatNextDecayTime)
-                {
-                    overheatStacks = 0;
-                    overheatLastAttackTime = float.NegativeInfinity;
-                    overheatNextDecayTime = float.PositiveInfinity;
-                }
-            }
-            else
-            {
-                overheatStacks = 0;
-                overheatLastAttackTime = float.NegativeInfinity;
-                overheatNextDecayTime = float.PositiveInfinity;
-            }
-
-            if (!hasBioResonanceItem)
-            {
-                resonanceStatesByEnemyId.Clear();
-                return;
-            }
-
-            if (resonanceStatesByEnemyId.Count == 0)
-            {
-                return;
-            }
-
-            float cleanupThreshold = Mathf.Max(0.2f, bioResonanceStackWindow * 4f);
-            tempResonanceRemovalIds.Clear();
-            foreach (KeyValuePair<int, ResonanceState> pair in resonanceStatesByEnemyId)
-            {
-                if (now - pair.Value.LastHitTime > cleanupThreshold)
-                {
-                    tempResonanceRemovalIds.Add(pair.Key);
-                }
-            }
-
-            for (int i = 0; i < tempResonanceRemovalIds.Count; i++)
-            {
-                resonanceStatesByEnemyId.Remove(tempResonanceRemovalIds[i]);
-            }
-        }
-
+            => Attack.UpdateDecayStates();
         private void UpdateDecayOrganState()
-        {
-            if (!hasDecayOrganItem)
-            {
-                decayOrganStartTime = float.NegativeInfinity;
-                decayOrganAttackBonus = 0;
-                return;
-            }
-
-            if (decayOrganStartTime <= float.NegativeInfinity * 0.5f)
-            {
-                decayOrganStartTime = Time.time;
-                decayOrganAttackBonus = 0;
-                return;
-            }
-
-            float elapsed = Mathf.Max(0f, Time.time - decayOrganStartTime);
-            float secondsPerBonus = Mathf.Max(0.1f, decayOrganSecondsPerAttackBonus);
-            int bonus = Mathf.FloorToInt(elapsed / secondsPerBonus);
-            decayOrganAttackBonus = Mathf.Clamp(bonus, 0, Mathf.Max(0, decayOrganMaxAttackBonus));
-        }
-
+            => Timed.UpdateDecayOrganState();
         private void UpdateRuptureMuscleState()
-        {
-            if (!hasRuptureMuscleItem)
-            {
-                ruptureMuscleStacks = 0;
-                ruptureMuscleLastAttackTime = float.NegativeInfinity;
-                ApplyRuptureMovePenalty(0f);
-                return;
-            }
-
-            float decayDelay = Mathf.Max(0.25f, ruptureMuscleDecayDelay);
-            if (ruptureMuscleStacks > 0 && Time.time - ruptureMuscleLastAttackTime > decayDelay)
-            {
-                ruptureMuscleStacks = Mathf.Max(0f, ruptureMuscleStacks - 1f);
-                ruptureMuscleLastAttackTime = Time.time;
-            }
-
-            int effectiveRuptureStacks = Mathf.FloorToInt(Mathf.Max(0f, ruptureMuscleStacks));
-            float targetPenalty = Mathf.Max(0f, ruptureMuscleMovePenaltyPerStack) * effectiveRuptureStacks;
-            ApplyRuptureMovePenalty(targetPenalty);
-        }
-
+            => Timed.UpdateRuptureMuscleState();
         private void UpdateImperfectRegenState()
-        {
-            if (!hasImperfectRegenItem || playerStats == null || playerStats.IsDead)
-            {
-                imperfectRegenPendingHeal = 0f;
-                imperfectRegenHealReadyTime = float.PositiveInfinity;
-                imperfectRegenCooldownUntil = float.NegativeInfinity;
-                return;
-            }
-
-            if (imperfectRegenPendingHeal <= 0f || Time.time < imperfectRegenHealReadyTime)
-            {
-                return;
-            }
-
-            float healAmount = imperfectRegenPendingHeal;
-            imperfectRegenPendingHeal = 0f;
-            imperfectRegenHealReadyTime = float.PositiveInfinity;
-            playerStats.Heal(healAmount);
-            imperfectRegenCooldownUntil = Time.time + Mathf.Max(0f, imperfectRegenCooldownDuration);
-        }
-
+            => Timed.UpdateImperfectRegenState();
         private void ApplyRuptureMovePenalty(float penalty)
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                ruptureAppliedMovePenalty = penalty;
-                return;
-            }
-
-            if (Mathf.Approximately(ruptureAppliedMovePenalty, penalty))
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(ruptureMovePenaltyModifierSource);
-            ruptureAppliedMovePenalty = Mathf.Max(0f, penalty);
-            if (ruptureAppliedMovePenalty > 0f)
-            {
-                playerStats.RuntimeStats.AddModifier(
-                    CharacterStatType.MoveSpeed,
-                    -ruptureAppliedMovePenalty,
-                    CharacterStatModifierMode.Flat,
-                    ruptureMovePenaltyModifierSource);
-            }
-        }
-
+            => Timed.ApplyRuptureMovePenalty(penalty);
         private void SyncPersistentStatModifiers()
-        {
-            if (playerStats == null)
-            {
-                return;
-            }
-
-            SetSimpleModifierState(
-                HasForbiddenGrowth,
-                ref forbiddenGrowthModifierApplied,
-                forbiddenGrowthModifierSource,
-                new CharacterStatModifier(CharacterStatType.MaxHealth, -Mathf.Max(0f, forbiddenGrowthMaxHealthPenalty), CharacterStatModifierMode.Flat, forbiddenGrowthModifierSource),
-                new CharacterStatModifier(CharacterStatType.AttackPower, Mathf.Max(0f, forbiddenGrowthFlatAttackBonus), CharacterStatModifierMode.Flat, forbiddenGrowthModifierSource));
-
-            SetSimpleModifierState(
-                HasOverclockNerve,
-                ref overclockNerveModifierApplied,
-                overclockNerveModifierSource,
-                new CharacterStatModifier(CharacterStatType.MaxHealth, -Mathf.Max(0f, overclockNerveMaxHealthPenalty), CharacterStatModifierMode.Flat, overclockNerveModifierSource),
-                new CharacterStatModifier(CharacterStatType.MoveSpeed, Mathf.Max(0f, overclockNerveFlatMoveSpeedBonus), CharacterStatModifierMode.Flat, overclockNerveModifierSource));
-
-            SetSimpleModifierState(
-                HasImperfectRegeneration,
-                ref imperfectRegenModifierApplied,
-                imperfectRegenModifierSource,
-                new CharacterStatModifier(CharacterStatType.MaxHealth, -Mathf.Max(0f, imperfectRegenMaxHealthPenalty), CharacterStatModifierMode.Flat, imperfectRegenModifierSource));
-
-            SetSimpleModifierState(
-                HasExoskeleton,
-                ref exoskeletonModifierApplied,
-                exoskeletonModifierSource,
-                new CharacterStatModifier(CharacterStatType.MoveSpeed, -Mathf.Max(0f, exoskeletonMoveSpeedPenalty), CharacterStatModifierMode.Flat, exoskeletonModifierSource));
-        }
-
+            => Timed.SyncPersistentStatModifiers();
         private void SetSimpleModifierState(
             bool shouldApply,
             ref bool appliedFlag,
             object source,
             CharacterStatModifier modifier)
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            if (shouldApply && !appliedFlag)
-            {
-                playerStats.RuntimeStats.AddModifier(modifier);
-                appliedFlag = true;
-                return;
-            }
-
-            if (!shouldApply && appliedFlag)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(source);
-                appliedFlag = false;
-            }
-        }
-
+            => Timed.SetSimpleModifierState(shouldApply, ref appliedFlag, source, modifier);
         private void SetSimpleModifierState(
             bool shouldApply,
             ref bool appliedFlag,
             object source,
             CharacterStatModifier firstModifier,
             CharacterStatModifier secondModifier)
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            if (shouldApply && !appliedFlag)
-            {
-                playerStats.RuntimeStats.AddModifier(firstModifier);
-                playerStats.RuntimeStats.AddModifier(secondModifier);
-                appliedFlag = true;
-                return;
-            }
-
-            if (!shouldApply && appliedFlag)
-            {
-                playerStats.RuntimeStats.RemoveModifiersFromSource(source);
-                appliedFlag = false;
-            }
-        }
-
+            => Timed.SetSimpleModifierState(shouldApply, ref appliedFlag, source, firstModifier, secondModifier);
         private void ClearPersistentStatModifiers()
-        {
-            if (playerStats == null || playerStats.RuntimeStats == null)
-            {
-                return;
-            }
-
-            playerStats.RuntimeStats.RemoveModifiersFromSource(forbiddenGrowthModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(overclockNerveModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(imperfectRegenModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(ruptureMovePenaltyModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(exoskeletonModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(macrophageModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(gluttonousOrganModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(berserkCellModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(grotesqueGrowthModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(mutationRampageModifierSource);
-            playerStats.RuntimeStats.RemoveModifiersFromSource(frenzyHormoneModifierSource);
-            forbiddenGrowthModifierApplied = false;
-            overclockNerveModifierApplied = false;
-            imperfectRegenModifierApplied = false;
-            exoskeletonModifierApplied = false;
-            ClearGrotesqueGrowthState();
-            ClearMutationRampageState();
-            ClearFrenzyHormoneState();
-            ruptureAppliedMovePenalty = 0f;
-            macrophageStacks = 0;
-            macrophageAppliedAttackBonus = 0f;
-            macrophageExpireTime = float.NegativeInfinity;
-            gluttonousOrganStacks = 0;
-            gluttonousOrganAppliedMoveBonus = 0f;
-            gluttonousOrganExpireTime = float.NegativeInfinity;
-            berserkCellModifierApplied = false;
-            berserkCellExpireTime = float.NegativeInfinity;
-            berserkCellActiveBossId = 0;
-        }
+            => Ownership.ClearPersistentStatModifiers();
 
         private void TrySubscribeHealthEvents()
         {
@@ -3604,7 +1046,7 @@ namespace Necrocis
                 return;
             }
 
-            playerStats.HealthChanged += HandlePlayerHealthChanged;
+            playerStats.HealthChanged += Timed.HandlePlayerHealthChanged;
             subscribedHealthEvents = true;
         }
 
@@ -3615,160 +1057,21 @@ namespace Necrocis
                 return;
             }
 
-            playerStats.HealthChanged -= HandlePlayerHealthChanged;
+            playerStats.HealthChanged -= Timed.HandlePlayerHealthChanged;
             subscribedHealthEvents = false;
         }
-
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
-        {
-            if (args.CurrentValue >= args.PreviousValue)
-            {
-                return;
-            }
-
-            if (!Mathf.Approximately(args.MaxValue, args.PreviousMaxValue))
-            {
-                return;
-            }
-
-            float damageTaken = Mathf.Max(0f, args.PreviousValue - args.CurrentValue);
-            if (damageTaken <= 0f)
-            {
-                return;
-            }
-
-            if (HasImperfectRegeneration)
-            {
-                bool canScheduleRegen = Time.time >= imperfectRegenCooldownUntil;
-                canScheduleRegen &= !(imperfectRegenPendingHeal > 0f && Time.time < imperfectRegenHealReadyTime);
-                if (canScheduleRegen)
-                {
-                    imperfectRegenPendingHeal = Mathf.Max(0f, imperfectRegenHealPerTrigger);
-                    imperfectRegenHealReadyTime = Time.time + Mathf.Max(0.1f, imperfectRegenDelay);
-                }
-            }
-
-            if (HasSeveranceReflex)
-            {
-                severanceReflexBuffUntil = Time.time + Mathf.Max(0.1f, severanceReflexDuration);
-            }
-
-            ApplyFrenzyHormoneBuff();
-        }
-
+            => Timed.HandlePlayerHealthChanged(_, args);
         private void TriggerOverheatExplosionSelfDamage(float attackDamage)
-        {
-            SpawnOverheatExplosionVisual();
-
-            Vector3 center = transform.position;
-            float radius = Mathf.Max(0.1f, overheatExplosionRadius);
-            float radiusSqr = radius * radius;
-            float explosionDamage = Mathf.Max(
-                0.1f,
-                attackDamage * Mathf.Max(0.05f, overheatExplosionDamageMultiplier));
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies != null)
-            {
-                for (int i = 0; i < enemies.Count; i++)
-                {
-                    EnemyController enemy = enemies[i];
-                    if (enemy == null || enemy.IsDead)
-                    {
-                        continue;
-                    }
-
-                    Vector3 toEnemy = enemy.transform.position - center;
-                    toEnemy.y = 0f;
-                    if (toEnemy.sqrMagnitude > radiusSqr)
-                    {
-                        continue;
-                    }
-
-                    float appliedDamage = ApplyPerTargetDamageModifiers(enemy, explosionDamage);
-                    enemy.TakeDamage(appliedDamage);
-                    TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
-                    ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
-                }
-            }
-
-            float selfDamage = Mathf.Max(0.1f, overheatExplosionSelfDamage);
-            playerStats?.RuntimeStats?.ApplyDamage(selfDamage);
-        }
-
+            => Attack.TriggerOverheatExplosionSelfDamage(attackDamage);
         private void SpawnVoidCellProjectile(float attackDamage, LayerMask mask, float range, Vector3 fallbackDirection)
-        {
-            EnemyController target = FindRandomEnemyWithinRadius(12f);
-            if (target == null)
-            {
-                return;
-            }
-
-            Vector3 targetPos = target.transform.position;
-            Vector2 randomCircle = UnityEngine.Random.insideUnitCircle.normalized * Mathf.Max(0.3f, voidCellSpawnRadius);
-            Vector3 spawnPos = targetPos + new Vector3(randomCircle.x, 0f, randomCircle.y);
-            spawnPos.y = transform.position.y + 0.2f;
-
-            Vector3 shootDir = targetPos - spawnPos;
-            shootDir.y = 0f;
-            if (shootDir.sqrMagnitude <= 0.0001f)
-            {
-                shootDir = fallbackDirection.sqrMagnitude > 0.0001f ? fallbackDirection.normalized : Vector3.forward;
-            }
-
-            SpawnChildProjectile(
-                spawnPos,
-                shootDir.normalized,
-                Mathf.Max(0.05f, attackDamage * Mathf.Max(0.05f, voidCellDamageMultiplier)),
-                mask,
-                Mathf.Max(0.25f, range * 0.6f),
-                Projectile.SpawnKind.SplitChild);
-        }
-
+            => Attack.SpawnVoidCellProjectile(attackDamage, mask, range, fallbackDirection);
         private EnemyController FindRandomEnemyWithinRadius(float radius)
-        {
-            var enemies = EnemyController.ActiveEnemyControllers;
-            if (enemies == null || enemies.Count == 0)
-            {
-                return null;
-            }
-
-            randomEnemyCandidates.Clear();
-            Vector3 center = PlayerController.Instance != null ? PlayerController.Instance.transform.position : Vector3.zero;
-            float radiusSqr = Mathf.Max(0.5f, radius);
-            radiusSqr *= radiusSqr;
-
-            for (int i = 0; i < enemies.Count; i++)
-            {
-                EnemyController enemy = enemies[i];
-                if (enemy == null || enemy.IsDead)
-                {
-                    continue;
-                }
-
-                Vector3 toEnemy = enemy.transform.position - center;
-                toEnemy.y = 0f;
-                if (toEnemy.sqrMagnitude > radiusSqr)
-                {
-                    continue;
-                }
-
-                randomEnemyCandidates.Add(enemy);
-            }
-
-            if (randomEnemyCandidates.Count == 0)
-            {
-                return null;
-            }
-
-            int index = UnityEngine.Random.Range(0, randomEnemyCandidates.Count);
-            EnemyController selected = randomEnemyCandidates[index];
-            randomEnemyCandidates.Clear();
-            return selected;
-        }
+            => Attack.FindRandomEnemyWithinRadius(radius);
 
         private void UpdateUnstableCoreOverlay()
         {
-            if (!hasUnstableCoreItem)
+            if (!Ownership.hasUnstableCoreItem)
             {
                 if (unstableCoreOverlay != null)
                 {
@@ -3799,7 +1102,7 @@ namespace Necrocis
                 unstableCoreOverlay.sortingOrder = playerVisualSpriteRenderer.sortingOrder + 2;
             }
 
-            float multiplier = RollUnstableCoreDamageMultiplier();
+            float multiplier = Attack.RollUnstableCoreDamageMultiplier();
             float minMultiplier = Mathf.Max(0f, unstableCoreMinAttackRatio);
             float maxMultiplier = Mathf.Max(minMultiplier, unstableCoreMaxAttackRatio);
             float lowToHigh = Mathf.InverseLerp(
@@ -3814,7 +1117,7 @@ namespace Necrocis
 
         private void UpdatePlateletMembraneOutline()
         {
-            if (!hasPlateletMembraneItem || plateletMembraneCurrentShield <= 0f)
+            if (!Ownership.hasPlateletMembraneItem || Timed.shieldRuntime.Shield <= 0f)
             {
                 ClearPlateletMembraneOutline();
                 return;
@@ -3886,19 +1189,19 @@ namespace Necrocis
                 return;
             }
 
-            Shader outlineShader = Shader.Find("Necrocis/SpriteOutline");
-            if (outlineShader == null)
+            Material template = Resources.Load<Material>("ItemEffects/PlateletMembraneOutline");
+            if (template == null || template.shader == null)
             {
                 if (!plateletMembraneShaderWarningLogged)
                 {
-                    Debug.LogWarning("[PlayerItemCombatEffects] Necrocis/SpriteOutline shader not found.");
+                    Debug.LogWarning("[PlayerItemCombatEffects] PlateletMembraneOutline material resource not found.");
                     plateletMembraneShaderWarningLogged = true;
                 }
 
                 return;
             }
 
-            plateletMembraneOutlineMaterial = new Material(outlineShader)
+            plateletMembraneOutlineMaterial = new Material(template)
             {
                 name = "Runtime_PlateletMembraneOutline"
             };
@@ -4087,543 +1390,12 @@ namespace Necrocis
             return transform.position + Vector3.up * 0.6f;
         }
 
-        private class PlayerBioSummon : MonoBehaviour
-        {
-            public enum SummonKind
-            {
-                InfectedHost,
-                Spore
-            }
 
-            private PlayerItemCombatEffects owner;
-            private SpriteRenderer spriteRenderer;
-            private EnemyController target;
-            private float damage;
-            private float expireTime;
-            private float searchRadius;
-            private float attackRadius;
-            private float attackInterval;
-            private float nextAttackTime;
-            private float moveSpeed;
-            private bool destroyOnAttack;
-            private Sprite idleSprite;
-            private Sprite[] attackSprites;
-            private SpriteRenderer infectionMarkerRenderer;
-            private float attackVisualEndTime;
-            private float attackVisualFrameTime;
 
-            public SummonKind Kind { get; private set; }
 
-            public void Initialize(
-                PlayerItemCombatEffects owner,
-                SummonKind kind,
-                Sprite sprite,
-                Sprite[] attackSprites,
-                Vector3 visualScale,
-                Color color,
-                float damage,
-                float lifetime,
-                float searchRadius,
-                float attackRadius,
-                float attackInterval,
-                bool destroyOnAttack)
-            {
-                this.owner = owner;
-                Kind = kind;
-                this.damage = Mathf.Max(0f, damage);
-                this.searchRadius = Mathf.Max(0.1f, searchRadius);
-                this.attackRadius = Mathf.Max(0.1f, attackRadius);
-                this.attackInterval = Mathf.Max(0.05f, attackInterval);
-                this.destroyOnAttack = destroyOnAttack;
-                this.attackSprites = attackSprites;
-                target = null;
-                nextAttackTime = 0f;
-                attackVisualEndTime = 0f;
-                attackVisualFrameTime = 0f;
-                moveSpeed = kind == SummonKind.Spore ? 5.2f : 3.2f;
-                expireTime = Time.time + Mathf.Max(0.1f, lifetime);
 
-                if (spriteRenderer == null)
-                {
-                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
-                }
-                idleSprite = sprite != null ? sprite : TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.sprite = idleSprite;
-                spriteRenderer.color = color;
-                spriteRenderer.sortingOrder = kind == SummonKind.Spore ? 5100 : 5050;
-                spriteRenderer.enabled = true;
-                transform.localScale = visualScale;
-                SyncBillboard();
 
-                if (kind == SummonKind.InfectedHost)
-                {
-                    EnsureInfectionMarker();
-                }
-                else if (infectionMarkerRenderer != null)
-                {
-                    infectionMarkerRenderer.enabled = false;
-                }
-            }
 
-            private void EnsureInfectionMarker()
-            {
-                Sprite markerSprite = TextureSpriteCache.LoadResourceSprite(InfectedHostEffectPath);
-                if (markerSprite == null)
-                {
-                    return;
-                }
 
-                GameObject markerObject;
-                if (infectionMarkerRenderer == null)
-                {
-                    markerObject = new GameObject("InfectedHostMarker");
-                    markerObject.transform.SetParent(transform, false);
-                    infectionMarkerRenderer = markerObject.AddComponent<SpriteRenderer>();
-                }
-                else
-                {
-                    markerObject = infectionMarkerRenderer.gameObject;
-                }
-
-                markerObject.transform.localPosition = Vector3.zero;
-                markerObject.transform.localRotation = Quaternion.identity;
-                infectionMarkerRenderer.sprite = markerSprite;
-                infectionMarkerRenderer.color = Color.white;
-                infectionMarkerRenderer.sortingOrder = spriteRenderer.sortingOrder + 1;
-                infectionMarkerRenderer.enabled = true;
-
-                float parentScale = Mathf.Max(
-                    0.0001f,
-                    Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.y)));
-                float markerScale = TextureSpriteCache.GetUniformScaleForWorldSize(markerSprite, 0.48f);
-                markerObject.transform.localScale = Vector3.one * (markerScale / parentScale);
-            }
-
-            private void Update()
-            {
-                if (owner == null || Time.time >= expireTime)
-                {
-                    ReleaseToPool();
-                    return;
-                }
-
-                UpdateAttackVisual();
-                if (!IsEnemyTargetable(target))
-                {
-                    target = owner.FindClosestEnemy(transform.position, searchRadius);
-                }
-
-                if (!IsEnemyTargetable(target))
-                {
-                    DriftAroundOwner();
-                    return;
-                }
-
-                Vector3 toTarget = target.transform.position - transform.position;
-                toTarget.y = 0f;
-                float attackDistance = attackRadius;
-                if (toTarget.sqrMagnitude > attackDistance * attackDistance)
-                {
-                    Vector3 step = toTarget.normalized * moveSpeed * Time.deltaTime;
-                    transform.position += step;
-                    return;
-                }
-
-                if (Time.time < nextAttackTime)
-                {
-                    return;
-                }
-
-                nextAttackTime = Time.time + attackInterval;
-                StartAttackVisual();
-                target.TakeDamage(damage);
-                if (destroyOnAttack)
-                {
-                    SpawnBurstVisual();
-                    ReleaseToPool();
-                }
-            }
-
-            public void ReleaseToPool()
-            {
-                PlayerItemCombatEffects currentOwner = owner;
-                owner = null;
-                target = null;
-                if (currentOwner != null)
-                {
-                    currentOwner.ReleaseBioSummon(this);
-                    return;
-                }
-
-                RuntimePool.Release(gameObject);
-            }
-
-            private void StartAttackVisual()
-            {
-                if (attackSprites == null || attackSprites.Length == 0)
-                {
-                    return;
-                }
-
-                attackVisualEndTime = Time.time + 0.35f;
-                attackVisualFrameTime = Time.time;
-                spriteRenderer.sprite = attackSprites[0] != null ? attackSprites[0] : idleSprite;
-            }
-
-            private void UpdateAttackVisual()
-            {
-                if (attackSprites == null || attackSprites.Length == 0 || Time.time >= attackVisualEndTime)
-                {
-                    if (spriteRenderer != null && spriteRenderer.sprite != idleSprite)
-                    {
-                        spriteRenderer.sprite = idleSprite;
-                    }
-
-                    return;
-                }
-
-                float frameDuration = 0.35f / Mathf.Max(1, attackSprites.Length);
-                if (Time.time < attackVisualFrameTime + frameDuration)
-                {
-                    return;
-                }
-
-                int frameIndex = Mathf.Clamp(
-                    Mathf.FloorToInt((0.35f - Mathf.Max(0f, attackVisualEndTime - Time.time)) / frameDuration),
-                    0,
-                    attackSprites.Length - 1);
-                attackVisualFrameTime = Time.time;
-                if (attackSprites[frameIndex] != null)
-                {
-                    spriteRenderer.sprite = attackSprites[frameIndex];
-                }
-            }
-
-            private void DriftAroundOwner()
-            {
-                if (owner == null)
-                {
-                    return;
-                }
-
-                Vector3 home = owner.transform.position;
-                Vector3 toHome = home - transform.position;
-                toHome.y = 0f;
-                if (toHome.sqrMagnitude <= 1.8f * 1.8f)
-                {
-                    return;
-                }
-
-                transform.position += toHome.normalized * moveSpeed * 0.5f * Time.deltaTime;
-            }
-
-            private void SpawnBurstVisual()
-            {
-                PlayerItemCombatEffects.SpawnPooledCircleVisual(
-                    SporeBurstVisualPoolName,
-                    "SporeBurstVisual",
-                    transform.position,
-                    0.9f,
-                    new Color(0.52f, 1f, 0.45f, 0.45f),
-                    5150,
-                    0.18f,
-                    TextureSpriteCache.LoadResourceSprite(SporeColonyEffectPath));
-            }
-
-            private void SyncBillboard()
-            {
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    transform.rotation = activeCamera.transform.rotation;
-                }
-            }
-
-            private void OnDisable()
-            {
-                owner = null;
-                target = null;
-                attackSprites = null;
-            }
-        }
-
-        private class PlayerBloodDrone : MonoBehaviour
-        {
-            private PlayerItemCombatEffects owner;
-            private SpriteRenderer spriteRenderer;
-            private float angle;
-            private float nextFireTime;
-
-            public void Initialize(PlayerItemCombatEffects owner)
-            {
-                this.owner = owner;
-                angle = 0f;
-                nextFireTime = 0f;
-
-                if (spriteRenderer == null)
-                {
-                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
-                }
-
-                Sprite droneSprite = TextureSpriteCache.LoadResourceSprite(BloodDroneEffectPath);
-                spriteRenderer.sprite = droneSprite != null ? droneSprite : TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.color = droneSprite != null ? Color.white : new Color(0.95f, 0.08f, 0.18f, 0.92f);
-                spriteRenderer.sortingOrder = 5300;
-                spriteRenderer.enabled = true;
-                transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(spriteRenderer.sprite, 0.68f);
-                SyncBillboard();
-            }
-
-            public void ClearOwner()
-            {
-                owner = null;
-            }
-
-            private void Update()
-            {
-                if (owner == null)
-                {
-                    RuntimePool.Release(gameObject);
-                    return;
-                }
-
-                angle += Time.deltaTime * 170f;
-                float radians = angle * Mathf.Deg2Rad;
-                Vector3 offset = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.bloodDroneOrbitRadius);
-                transform.position = owner.transform.position + offset + Vector3.up * 0.45f;
-
-                if (Time.time < nextFireTime)
-                {
-                    return;
-                }
-
-                EnemyController target = owner.FindClosestEnemy(owner.transform.position, Mathf.Max(0.1f, owner.bloodDroneTargetRadius));
-                if (target == null)
-                {
-                    return;
-                }
-
-                nextFireTime = Time.time + Mathf.Max(0.1f, owner.bloodDroneFireInterval);
-                float damage = owner.GetCompanionBaseDamage() * Mathf.Max(0.05f, owner.bloodDroneDamageMultiplier);
-                PlayerBioProjectile.Spawn(transform.position, target, damage, new Color(1f, 0.05f, 0.16f, 0.95f));
-            }
-
-            private void SyncBillboard()
-            {
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    transform.rotation = activeCamera.transform.rotation;
-                }
-            }
-
-            private void OnDisable()
-            {
-                owner = null;
-            }
-        }
-
-        private class PlayerGuardianOrgan : MonoBehaviour
-        {
-            private PlayerItemCombatEffects owner;
-            private SpriteRenderer spriteRenderer;
-            private float angle;
-            private float nextBlockTime;
-            private Vector3 cameraRight = Vector3.right;
-            private Vector3 cameraUp = Vector3.up;
-
-            public void Initialize(PlayerItemCombatEffects owner)
-            {
-                this.owner = owner;
-                angle = 0f;
-                nextBlockTime = 0f;
-
-                if (spriteRenderer == null)
-                {
-                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
-                }
-
-                Sprite guardianSprite = TextureSpriteCache.LoadResourceSprite(GuardianOrganEffectPath);
-                spriteRenderer.sprite = guardianSprite != null ? guardianSprite : TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.color = guardianSprite != null ? Color.white : new Color(0.68f, 0.82f, 1f, 0.95f);
-                spriteRenderer.sortingOrder = 5350;
-                spriteRenderer.enabled = true;
-                transform.localScale = Vector3.one * TextureSpriteCache.GetUniformScaleForWorldSize(spriteRenderer.sprite, 0.82f);
-                CacheCameraBasis();
-            }
-
-            public void ClearOwner()
-            {
-                owner = null;
-            }
-
-            private void Update()
-            {
-                if (owner == null)
-                {
-                    RuntimePool.Release(gameObject);
-                    return;
-                }
-
-                angle += Time.deltaTime * 260f;
-                float radians = angle * Mathf.Deg2Rad;
-                Vector3 center = owner.GetPlayerVisualCenter();
-                Vector3 offset = (cameraRight * Mathf.Cos(radians) + cameraUp * Mathf.Sin(radians)) * Mathf.Max(0.2f, owner.guardianOrganOrbitRadius);
-                transform.position = center + offset;
-                spriteRenderer.color = Time.time >= nextBlockTime
-                    ? Color.white
-                    : new Color(0.45f, 0.55f, 0.7f, 0.5f);
-                if (Time.time < nextBlockTime)
-                {
-                    return;
-                }
-
-                TryBlockProjectile();
-            }
-
-            private void TryBlockProjectile()
-            {
-                IReadOnlyList<EnemyProjectile> projectiles = EnemyProjectile.ActiveEnemyProjectiles;
-                float blockRadius = Mathf.Max(0.1f, owner.guardianOrganBlockRadius);
-                float blockRadiusSqr = blockRadius * blockRadius;
-
-                for (int i = projectiles.Count - 1; i >= 0; i--)
-                {
-                    EnemyProjectile projectile = projectiles[i];
-                    if (projectile == null || !projectile.IsLaunched)
-                    {
-                        continue;
-                    }
-
-                    Vector3 toProjectile = projectile.transform.position - transform.position;
-                    toProjectile.y = 0f;
-                    if (toProjectile.sqrMagnitude > blockRadiusSqr)
-                    {
-                        continue;
-                    }
-
-                    projectile.Deflect();
-                    nextBlockTime = Time.time + Mathf.Max(0.1f, owner.guardianOrganCooldown);
-                    SpawnBlockVisual();
-                    return;
-                }
-            }
-
-            private void SpawnBlockVisual()
-            {
-                PlayerItemCombatEffects.SpawnPooledCircleVisual(
-                    GuardianBlockVisualPoolName,
-                    "GuardianBlockVisual",
-                    transform.position,
-                    1.2f,
-                    new Color(0.68f, 0.82f, 1f, 0.35f),
-                    5360,
-                    0.16f);
-            }
-
-            private void CacheCameraBasis()
-            {
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    cameraRight = activeCamera.transform.right;
-                    cameraUp = activeCamera.transform.up;
-                    transform.rotation = activeCamera.transform.rotation;
-                }
-                else
-                {
-                    cameraRight = Vector3.right;
-                    cameraUp = Vector3.up;
-                    transform.rotation = Quaternion.identity;
-                }
-            }
-
-            private void OnDisable()
-            {
-                owner = null;
-            }
-        }
-
-        private class PlayerBioProjectile : MonoBehaviour
-        {
-            private EnemyController target;
-            private SpriteRenderer spriteRenderer;
-            private float damage;
-            private float expireTime;
-            private float speed;
-
-            public static void Spawn(Vector3 position, EnemyController target, float damage, Color color)
-            {
-                if (!IsEnemyTargetable(target))
-                {
-                    return;
-                }
-
-                GameObject projectileObject = RuntimePool.Acquire(BloodDroneProjectilePoolName, CreateBloodDroneProjectileFunc);
-                if (projectileObject == null)
-                {
-                    return;
-                }
-
-                projectileObject.name = "BloodDroneProjectile";
-                projectileObject.transform.position = position;
-                PlayerBioProjectile projectile = projectileObject.GetComponent<PlayerBioProjectile>();
-                projectile.Initialize(target, damage, color);
-            }
-
-            private void Initialize(EnemyController target, float damage, Color color)
-            {
-                this.target = target;
-                this.damage = Mathf.Max(0f, damage);
-                speed = 11f;
-                expireTime = Time.time + 1.6f;
-                if (spriteRenderer == null)
-                {
-                    spriteRenderer = PlayerItemCombatEffects.GetOrAddSpriteRenderer(gameObject);
-                }
-
-                spriteRenderer.sprite = TextureSpriteCache.GetCircleSprite();
-                spriteRenderer.color = color;
-                spriteRenderer.sortingOrder = 5320;
-                spriteRenderer.enabled = true;
-                transform.localScale = Vector3.one * 0.22f;
-                Camera activeCamera = DontStarveCamera.GetActiveCamera();
-                if (activeCamera != null)
-                {
-                    transform.rotation = activeCamera.transform.rotation;
-                }
-            }
-
-            private void Update()
-            {
-                if (Time.time >= expireTime || !IsEnemyTargetable(target))
-                {
-                    ReleaseSelf();
-                    return;
-                }
-
-                Vector3 toTarget = target.transform.position - transform.position;
-                toTarget.y = 0f;
-                if (toTarget.sqrMagnitude <= 0.45f * 0.45f)
-                {
-                    target.TakeDamage(damage);
-                    ReleaseSelf();
-                    return;
-                }
-
-                transform.position += toTarget.normalized * speed * Time.deltaTime;
-            }
-
-            private void ReleaseSelf()
-            {
-                target = null;
-                RuntimePool.Release(gameObject);
-            }
-
-            private void OnDisable()
-            {
-                target = null;
-            }
-        }
     }
 }

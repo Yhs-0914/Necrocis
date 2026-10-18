@@ -5,6 +5,9 @@ namespace Necrocis
     public partial class EnemyController
     {
         public MonsterBalanceRuntime Balance { get; private set; }
+        public EnemySpawnContext SpawnContext { get; private set; }
+        public EnemyEncounterRole EncounterRole { get; private set; }
+        public IEnemyWorldQueries WorldQueries => SpawnContext.WorldQueries;
         public uint SpawnGeneration { get; private set; }
         private bool experienceGranted;
         public bool PatternOwnsContact { get; set; }
@@ -34,18 +37,18 @@ namespace Necrocis
             : seconds * Mathf.Max(0.01f, DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown);
 
         public EnemyDamageRequest CreateAttackDamage(float amount) => new EnemyDamageRequest(
-            Balance != null ? amount : amount * DifficultyBalanceService.GetIncomingDamageMultiplier(this), this);
+            Balance != null ? amount : amount * DifficultyBalanceService.GetIncomingDamageMultiplier(this), this, GetHealthEffectSource("attack"));
 
         public EnemyDamageRequest CreatePatternDamage(string id, float legacyDamage)
         {
             float amount = Balance != null
                 ? stats.AttackPower * Balance.GetCoefficient(id)
                 : legacyDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(this);
-            return new EnemyDamageRequest(amount, this);
+            return new EnemyDamageRequest(amount, this, GetHealthEffectSource("pattern/" + id));
         }
 
-        public EnemyDamageRequest CreateContactDamage(float legacyDamage) => Balance != null
-            ? new EnemyDamageRequest(Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f, this)
-            : CreateAttackDamage(legacyDamage);
+        public EnemyDamageRequest CreateContactDamage(float legacyDamage) => new EnemyDamageRequest(
+            Balance != null ? (Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f)
+                : legacyDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(this), this, GetHealthEffectSource("contact"));
     }
 }

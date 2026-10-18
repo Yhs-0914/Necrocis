@@ -25,7 +25,9 @@ namespace Necrocis
             statusController = status;
         }
 
-        public void ApplyDamage(float damage)
+        public void ApplyDamage(float damage) => ApplyDamage(damage, HealthEffectSource.Legacy);
+
+        public void ApplyDamage(float damage, HealthEffectSource source)
         {
             EnsureReferences();
             if (!IsValidTarget || damage <= 0f)
@@ -33,7 +35,7 @@ namespace Necrocis
                 return;
             }
 
-            enemyController.TakeDamage(damage);
+            enemyController.TakeDamage(damage, source);
         }
 
         public void ApplyStun(float duration)
@@ -50,12 +52,18 @@ namespace Necrocis
         public void ApplyPoison(float duration, float tickInterval, float tickDamage)
         {
             EnsureReferences();
+            if (IsValidTarget) statusController?.ApplyPoison(duration, tickInterval, tickDamage);
+        }
+
+        public void ApplyPoison(float duration, float tickInterval, float tickDamage, HealthEffectSource source)
+        {
+            EnsureReferences();
             if (!IsValidTarget)
             {
                 return;
             }
 
-            statusController?.ApplyPoison(duration, tickInterval, tickDamage);
+            statusController?.ApplyPoison(duration, tickInterval, tickDamage, source);
         }
 
         public void ApplyDamageTakenIncrease(float increaseRatio, float duration)

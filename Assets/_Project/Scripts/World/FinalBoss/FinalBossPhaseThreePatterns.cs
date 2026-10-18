@@ -145,7 +145,7 @@ namespace Necrocis
                 if (t >= nextEcho) { StartCoroutine(DashEcho()); nextEcho = t + .075f; }
                 PlayerController player = PlayerController.Instance;
                 if (!hit && player != null && SegmentDistance(player.transform.position, before, Position) < 1.8f)
-                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.dashDamage)); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.dashDamage, "phase3/dash")); hit = true; }
                 yield return null;
             }
             bodyLean = 0f;
@@ -224,7 +224,7 @@ namespace Necrocis
                     landing.y = GroundHeight(landing);
                     grabbedPlayer.SetBossDisplacementPosition(landing);
                     grabSafePosition = landing;
-                    grabbedPlayer.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.grabDamage));
+                    grabbedPlayer.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.grabDamage, "phase3/grab"));
                     Impact(landing, 1.5f);
                 }
                 ReleaseGrab();
@@ -295,7 +295,7 @@ namespace Necrocis
                 wake.SetSweep(-360f * t / .85f, 70f);
                 PlayerController player = PlayerController.Instance;
                 if (!hit && player != null && InLane(player.transform.position, origin, dir, 7.5f, .9f))
-                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage)); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage, "phase3/tentacle-swing")); hit = true; }
                 yield return null;
             }
             Destroy(wake.gameObject);
@@ -333,7 +333,7 @@ namespace Necrocis
                     extension, Mathf.Min(1f, (.62f - t) * 8f));
                 PlayerController player = PlayerController.Instance;
                 if (!hit && t < .28f && player != null && InLane(player.transform.position, origin, direction, reach, width * .5f))
-                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage)); hit = true; }
+                { player.TakeDamage(FinalBossArena.CreateDamage(arena.Balance.phaseThree.tentacleDamage, "phase3/tentacle-thrust")); hit = true; }
                 yield return null;
             }
             if (sprite != null) Destroy(sprite.gameObject);
@@ -359,7 +359,7 @@ namespace Necrocis
                     Vector3 direction = Quaternion.AngleAxis(i / 2 * 60f + (i % 2 == 0 ? -10f : 10f) + wave * 6f,
                         Vector3.up) * Vector3.forward;
                     FinalBossHomingProjectile.Launch(EffectRoot, ports[i / 2].transform.position,
-                        direction, 1f, 5.2f, 48f, 4.5f, "FinalBoss/PhaseThree/HomingNeuralCell");
+                        direction, 1f, 5.2f, 48f, 4.5f, "FinalBoss/PhaseThree/HomingNeuralCell", "phase3/homing-swarm");
                 }
                 AudioManager.Instance?.PlaySFX("LiverBloodThrow", .5f);
                 yield return new WaitForSeconds(.65f);
@@ -427,7 +427,7 @@ namespace Necrocis
             }
             if (sprite != null) Destroy(sprite.gameObject);
             PlayerController player = PlayerController.Instance;
-            if (player != null && Flat(player.transform.position - point).magnitude <= radius) player.TakeDamage(FinalBossArena.CreateDamage(bomb ? arena.Balance.phaseThree.fallingBombDamage : arena.Balance.phaseThree.fallingCellDamage));
+            if (player != null && Flat(player.transform.position - point).magnitude <= radius) player.TakeDamage(FinalBossArena.CreateDamage(bomb ? arena.Balance.phaseThree.fallingBombDamage : arena.Balance.phaseThree.fallingCellDamage, bomb ? "phase3/falling-bomb" : "phase3/falling-cell"));
             Impact(point, radius);
         }
 
@@ -552,7 +552,7 @@ namespace Necrocis
             PlayerController player = PlayerController.Instance;
             if (player != null && Time.time >= nextBoundaryHit
                 && (TimeRemaining <= 0f || !safeArea.Contains(new Vector2(player.transform.position.x, player.transform.position.z))))
-            { nextBoundaryHit = Time.time + 1f; player.TakeDamage(FinalBossArena.CreateDamage(TimeRemaining <= 0f ? arena.Balance.phaseThree.overtimeDamage : arena.Balance.phaseThree.boundaryDamage)); }
+            { nextBoundaryHit = Time.time + 1f; player.TakeDamage(FinalBossArena.CreateDamage(TimeRemaining <= 0f ? arena.Balance.phaseThree.overtimeDamage : arena.Balance.phaseThree.boundaryDamage, TimeRemaining <= 0f ? "phase3/overtime" : "phase3/boundary")); }
             // The shrinking edge may overtake the boss too; gently move it into the playable interior.
             Vector3 target = Position;
             target.x = Mathf.Clamp(target.x, safeArea.xMin + footprint.x, safeArea.xMax - footprint.x);

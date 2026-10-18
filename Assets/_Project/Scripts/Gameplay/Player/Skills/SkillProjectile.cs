@@ -23,6 +23,13 @@ namespace Necrocis
     [DisallowMultipleComponent]
     public class SkillProjectile : MonoBehaviour
     {
+        private enum HitResult
+        {
+            Ignored,
+            Continued,
+            Terminated
+        }
+
         private const int HitBufferSize = 8;
 
         [SerializeField] private float speed = 14f;
@@ -39,14 +46,16 @@ namespace Necrocis
         private bool keepFlightHeight;
         private float flightHeight;
         private float damage;
+        private HealthEffectSource damageSource;
         private SkillProjectileDebuff debuff;
         private float despawnTime;
         private bool initialized;
         private Collider hitCollider;
-        private bool hasImpacted;
+        private bool hasImpacted = true;
+        private uint launchGeneration;
         private int visualSortingOrder = 5200;
-        private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
-        private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
+        private Collider[] hitBuffer = new Collider[HitBufferSize];
+        private readonly HashSet<long> hitEnemyIds = new HashSet<long>();
         private Action<EnemyController, Vector3> onEnemyHit;
         private int propAttackToken;
 
@@ -58,12 +67,15 @@ namespace Necrocis
             LayerMask mask,
             bool shouldDisableOnHit,
             SkillProjectileDebuff debuff,
-            Action<EnemyController, Vector3> onEnemyHit = null)
+            Action<EnemyController, Vector3> onEnemyHit = null,
+            HealthEffectSource? source = null)
         {
+            unchecked { launchGeneration++; }
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             keepFlightHeight = Mathf.Abs(moveDirection.y) <= 0.0001f;
             flightHeight = transform.position.y;
             this.damage = damage;
+            damageSource = source ?? HealthEffectSource.Legacy;
             speed = Mathf.Max(0.01f, projectileSpeed);
             lifeTime = Mathf.Max(0.05f, projectileLifeTime);
             targetMask = mask;
@@ -101,6 +113,9 @@ namespace Necrocis
 
         private void Update()
         {
+            uint generation = launchGeneration;
+            if (hasImpacted || !IsCurrentFlight(generation)) return;
+
             Vector3 nextPosition = transform.position + moveDirection * speed * Time.deltaTime;
             if (keepFlightHeight)
             {
@@ -108,8 +123,10 @@ namespace Necrocis
             }
 
             ResidueRubble.HitAlongSegment(transform.position, nextPosition, hitCheckRadius, damage, targetMask, propAttackToken);
+            if (!IsCurrentFlight(generation)) return;
             transform.position = nextPosition;
             TryDetectHitByOverlap();
+            if (hasImpacted || !IsCurrentFlight(generation)) return;
 
             if (Time.time >= despawnTime)
             {
@@ -129,7 +146,8 @@ namespace Necrocis
 
         private void TryDetectHitByOverlap()
         {
-            if (hasImpacted)
+            uint generation = launchGeneration;
+            if (hasImpacted || !IsCurrentFlight(generation))
             {
                 return;
             }
@@ -141,43 +159,47 @@ namespace Necrocis
             Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
             Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
 
-            int hitCount = Physics.OverlapCapsuleNonAlloc(
-                capsuleTop,
-                capsuleBottom,
-                radius,
-                hitBuffer,
-                targetMask,
-                QueryTriggerInteraction.Collide);
+            var hits=EnemyHitSnapshot.Capsule(capsuleTop,capsuleBottom,
+                radius,targetMask,QueryTriggerInteraction.Collide,ref hitBuffer);
+            var hitData=hits;
+            int hitCount=hits.Length;
 
             for (int i = 0; i < hitCount; i++)
             {
-                Collider collider = hitBuffer[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider collider = hitData[i].Collider;
                 if (collider == null)
                 {
                     continue;
                 }
 
-                if (TryApplyHit(collider) && hasImpacted)
+                HitResult result = TryApplyHit(collider);
+                if (result == HitResult.Terminated || hasImpacted || !IsCurrentFlight(generation))
                 {
                     break;
                 }
             }
         }
 
-        private bool TryApplyHit(Collider other)
+        private HitResult TryApplyHit(Collider other)
         {
-            if (other == null || hasImpacted)
+            uint generation = launchGeneration;
+            if (other == null || hasImpacted || !IsCurrentFlight(generation))
             {
-                return false;
+                return HitResult.Ignored;
             }
 
             if ((targetMask.value & (1 << other.gameObject.layer)) == 0)
             {
-                return false;
+                return HitResult.Ignored;
             }
 
             if (other.TryGetComponent(out ResidueRubble rubble))
-                return rubble.ApplyPlayerHit(damage, propAttackToken); // Remains in flight after breaking the prop.
+            {
+                bool applied = rubble.ApplyPlayerHit(damage, propAttackToken);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                return applied ? HitResult.Continued : HitResult.Ignored;
+            } // Remains in flight after breaking the prop.
             EnemyController enemy = other.GetComponent<EnemyController>();
             if (enemy == null)
             {
@@ -186,43 +208,58 @@ namespace Necrocis
 
             if (enemy == null || enemy.IsDead)
             {
-                return false;
+                return HitResult.Ignored;
             }
 
-            int enemyId = enemy.GetInstanceID();
+            Vector3 receivingCenter=transform.position+Vector3.up*hitCheckHeightOffset;
+            if(!EnemyReceivingShape.Allows(enemy,other) || !EnemyReceivingShape.IntersectsCapsule(enemy,receivingCenter+Vector3.up*hitCheckVerticalHalfHeight,receivingCenter-Vector3.up*hitCheckVerticalHalfHeight,Mathf.Max(Mathf.Max(.05f,hitCheckRadius),PlayerAttackGeometry.ColliderRadius(hitCollider))+PlayerAttackGeometry.Padding))return HitResult.Ignored;
+            long enemyId = enemy.LogicalLife?.Id ?? (long.MinValue+unchecked((uint)enemy.GetInstanceID()));
             if (!hitEnemyIds.Add(enemyId))
             {
-                return false;
+                return HitResult.Ignored;
             }
 
-            enemy.TakeDamage(damage);
-            EnemyStatusEffectController status = EnsureStatusController(enemy);
-            if (debuff.applyStun)
+            bool terminates = disableOnHit || IsBossTarget(enemy);
+            if (terminates) hasImpacted = true; // Reserve this hit before invoking damage and skill callbacks.
+            var hitLife = new EnemyHitLife(enemy);
+            try
             {
-                status?.ApplyStun(debuff.stunDuration);
-            }
+                enemy.TakeDamage(damage, damageSource);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                EnemyStatusEffectController status = hitLife.IsCurrent ? EnsureStatusController(enemy) : null;
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                if (hitLife.IsCurrent && debuff.applyStun)
+                {
+                    status?.ApplyStun(debuff.stunDuration);
+                    if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                }
 
-            if (debuff.applyPoison)
+                if (hitLife.IsCurrent && debuff.applyPoison)
+                {
+                    status?.ApplyPoison(debuff.poisonDuration, debuff.poisonTickInterval, debuff.poisonTickDamage, damageSource.WithEffect("poison"));
+                    if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                }
+
+                if (hitLife.IsCurrent && debuff.applyDamageTakenIncrease)
+                {
+                    status?.ApplyDamageTakenIncrease(debuff.damageTakenIncreaseRatio, debuff.damageTakenIncreaseDuration);
+                    if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                }
+
+                if (hitLife.HasNotRespawned) onEnemyHit?.Invoke(enemy, transform.position);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                SpawnHitEffect(transform.position);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                return terminates ? HitResult.Terminated : HitResult.Continued;
+            }
+            finally
             {
-                status?.ApplyPoison(debuff.poisonDuration, debuff.poisonTickInterval, debuff.poisonTickDamage);
+                if (terminates && IsCurrentFlight(generation)) ReleaseSelf();
             }
-
-            if (debuff.applyDamageTakenIncrease)
-            {
-                status?.ApplyDamageTakenIncrease(debuff.damageTakenIncreaseRatio, debuff.damageTakenIncreaseDuration);
-            }
-
-            onEnemyHit?.Invoke(enemy, transform.position);
-            SpawnHitEffect(transform.position);
-
-            if (disableOnHit || IsBossTarget(enemy))
-            {
-                hasImpacted = true;
-                ReleaseSelf();
-            }
-
-            return true;
         }
+
+        private bool IsCurrentFlight(uint generation) =>
+            this != null && launchGeneration == generation && gameObject.activeInHierarchy;
 
         private static bool IsBossTarget(EnemyController enemy)
         {
@@ -317,6 +354,7 @@ namespace Necrocis
 
         private void ReleaseSelf()
         {
+            hasImpacted = true;
             if (TryGetComponent(out PooledRuntimeObject _))
             {
                 RuntimePool.Release(gameObject);
@@ -328,7 +366,9 @@ namespace Necrocis
 
         private void OnDisable()
         {
-            hasImpacted = false;
+            unchecked { launchGeneration++; }
+            hasImpacted = true;
+            initialized = false;
             onEnemyHit = null;
             hitEnemyIds.Clear();
         }

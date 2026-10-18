@@ -11,6 +11,13 @@ namespace Necrocis
             SplitChild = 1
         }
 
+        private enum HitResult
+        {
+            Ignored,
+            Continued,
+            Terminated
+        }
+
         private const int HitBufferSize = 8;
         private const int ExplosionBufferSize = 24;
         private const int ObstacleHitBufferSize = 12;
@@ -26,9 +33,11 @@ namespace Necrocis
         private Vector3 moveDirection;
         private float flightHeight;
         private float damage;
+        private HealthEffectSource damageSource;
         private float currentSpeed;
         private float deactivateTime;
-        private bool hasImpacted;
+        private bool hasImpacted = true;
+        private uint launchGeneration;
         private Collider hitCollider;
         private float traveledDistance;
         private bool returning;
@@ -40,16 +49,17 @@ namespace Necrocis
         private bool pulseScaleModeInitialized;
         private float pulseRangeBudget;
         private SpawnKind spawnKind = SpawnKind.Normal;
-        private PlayerItemCombatEffects itemEffects;
+        private IProjectileItemEffects itemEffects;
+        private bool HasItemEffects => itemEffects != null && itemEffects.IsAvailable;
         private Transform ownerTransform;
         private float launchRange;
         private Vector3 activeBaseScale = Vector3.one;
         private bool boomerangRehitResetDone;
         private int boomerangPassHitCount;
-        private readonly Collider[] hitBuffer = new Collider[HitBufferSize];
-        private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
-        private readonly RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
-        private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
+        private Collider[] hitBuffer = new Collider[HitBufferSize];
+        private Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
+        private RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
+        private readonly HashSet<long> hitEnemyIds = new HashSet<long>();
         private int propAttackToken;
 
         private Vector3 defaultLocalScale = Vector3.one;
@@ -70,12 +80,17 @@ namespace Necrocis
             Launch(direction, damage, mask, range, null, SpawnKind.Normal);
         }
 
-        public void Launch(Vector3 direction, float damage, LayerMask mask, float range, PlayerItemCombatEffects effects, SpawnKind kind = SpawnKind.Normal)
+        public void Launch(Vector3 direction, float damage, LayerMask mask, float range, PlayerItemCombatEffects effects, SpawnKind kind = SpawnKind.Normal, HealthEffectSource? source = null)
+            => LaunchWithItemContext(direction, damage, mask, range, effects, kind, source);
+
+        public void LaunchWithItemContext(Vector3 direction, float damage, LayerMask mask, float range, IProjectileItemEffects effects, SpawnKind kind = SpawnKind.Normal, HealthEffectSource? source = null)
         {
+            unchecked { launchGeneration++; }
             propAttackToken = ResidueRubble.NextAttackToken();
             direction.y = 0f;
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             this.damage = damage;
+            damageSource = source ?? HealthEffectSource.Legacy;
             currentSpeed = Mathf.Max(0.01f, speed);
             targetMask = mask;
             itemEffects = effects;
@@ -96,7 +111,7 @@ namespace Necrocis
             pulseRangeBudget = launchRange;
 
             maxHitCount = 1;
-            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects)
             {
                 float damageMultiplier;
                 currentSpeed = speed * itemEffects.RollUnstableCellProjectileSpeedMultiplier(out damageMultiplier);
@@ -116,7 +131,7 @@ namespace Necrocis
 
             CacheDefaultScale();
             float scaleMultiplier = 1f;
-            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects)
             {
                 scaleMultiplier = itemEffects.GetScaleMultiplier();
             }
@@ -124,7 +139,7 @@ namespace Necrocis
             activeBaseScale = transform.localScale;
 
             float effectiveRange = launchRange;
-            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects)
             {
                 effectiveRange *= itemEffects.GetRangeMultiplier();
                 if (itemEffects.HasRefluxOrgan)
@@ -134,7 +149,7 @@ namespace Necrocis
                 }
             }
             pulseRangeBudget = effectiveRange;
-            if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects && itemEffects.HasPulseBullet)
             {
                 pulseScaleGrowMode = Random.value < 0.5f;
                 pulseScaleModeInitialized = true;
@@ -155,13 +170,15 @@ namespace Necrocis
             {
                 deactivateTime = Time.time + lifeTime;
             }
-            hasImpacted = false;
         }
 
         private void Update()
         {
+            uint generation = launchGeneration;
+            if (hasImpacted || !IsCurrentFlight(generation)) return;
+
             float deltaTime = Time.deltaTime;
-            if (spawnKind == SpawnKind.Normal && itemEffects != null)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects)
             {
                 if (itemEffects.HasHomingCell)
                 {
@@ -185,10 +202,11 @@ namespace Necrocis
             Vector3 nextPosition = transform.position + step;
             nextPosition.y = flightHeight;
             ResidueRubble.HitAlongSegment(transform.position, nextPosition, GetScaledHitCheckRadius(), damage, targetMask, propAttackToken);
+            if (!IsCurrentFlight(generation)) return;
             transform.position = nextPosition;
             traveledDistance += reflected ? step.magnitude : stepDistance;
 
-            if (spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasPulseBullet)
+            if (spawnKind == SpawnKind.Normal && HasItemEffects && itemEffects.HasPulseBullet)
             {
                 ApplyPulseScale();
             }
@@ -199,17 +217,28 @@ namespace Necrocis
                 toOwner.y = 0f;
                 if (toOwner.sqrMagnitude <= 0.49f)
                 {
-                    gameObject.SetActive(false);
+                    EndFlight(generation);
                     return;
                 }
             }
 
             TryDetectHitByOverlap();
+            if (hasImpacted || !IsCurrentFlight(generation)) return;
 
             if (Time.time >= deactivateTime)
             {
-                gameObject.SetActive(false);
+                EndFlight(generation);
             }
+        }
+
+        private bool IsCurrentFlight(uint generation) =>
+            this != null && launchGeneration == generation && gameObject.activeInHierarchy;
+
+        private void EndFlight(uint generation)
+        {
+            if (!IsCurrentFlight(generation)) return;
+            hasImpacted = true;
+            gameObject.SetActive(false);
         }
 
         private void OnTriggerEnter(Collider other)
@@ -227,51 +256,59 @@ namespace Necrocis
             HandleHit(collision.collider);
         }
 
-        private void HandleHit(Collider other)
+        private HitResult HandleHit(Collider other)
         {
-            if (other == null || hasImpacted)
+            uint generation = launchGeneration;
+            if (other == null || hasImpacted || !IsCurrentFlight(generation))
             {
-                return;
+                return HitResult.Ignored;
             }
 
             if ((targetMask.value & (1 << other.gameObject.layer)) == 0)
             {
-                return;
+                return HitResult.Ignored;
             }
 
             if (other.TryGetComponent(out ResidueRubble rubble))
-            { rubble.ApplyPlayerHit(damage, propAttackToken); return; } // Prop hits do not consume or redirect the projectile.
+            {
+                bool applied = rubble.ApplyPlayerHit(damage, propAttackToken);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                return applied ? HitResult.Continued : HitResult.Ignored;
+            } // Prop hits do not consume or redirect the projectile.
             if (!TryGetEnemyController(other, out EnemyController enemy) || enemy.IsDead)
             {
-                return;
+                return HitResult.Ignored;
             }
 
-            bool isBoomerang = spawnKind == SpawnKind.Normal && itemEffects != null && itemEffects.HasRefluxOrgan;
-            if (isBoomerang && boomerangPassHitCount >= itemEffects.GetBoomerangMaxHitsPerPass())
+            Vector3 receivingCenter=transform.position+Vector3.up*hitCheckHeightOffset;
+            if(!EnemyReceivingShape.Allows(enemy,other) || !EnemyReceivingShape.IntersectsCapsule(enemy,receivingCenter+Vector3.up*hitCheckVerticalHalfHeight,receivingCenter-Vector3.up*hitCheckVerticalHalfHeight,GetScaledHitCheckRadius()))return HitResult.Ignored;
+            IProjectileItemEffects effects = HasItemEffects ? itemEffects : null;
+            bool isBoomerang = spawnKind == SpawnKind.Normal && effects != null && effects.IsAvailable && effects.HasRefluxOrgan;
+            if (isBoomerang && boomerangPassHitCount >= effects.GetBoomerangMaxHitsPerPass())
             {
-                return;
+                return HitResult.Ignored;
             }
 
-            int enemyId = enemy.GetInstanceID();
+            long enemyId = enemy.LogicalLife?.Id ?? (long.MinValue+unchecked((uint)enemy.GetInstanceID()));
             if (!hitEnemyIds.Add(enemyId))
             {
-                return;
+                return HitResult.Ignored;
             }
 
             float appliedDamage = damage;
-            if (itemEffects != null && itemEffects.HasPiercingMucus && !isBoomerang)
+            if (effects != null && effects.IsAvailable && effects.HasPiercingMucus && !isBoomerang)
             {
-                appliedDamage *= itemEffects.GetPiercingHitDamageMultiplier(currentHitCount);
+                appliedDamage *= effects.GetPiercingHitDamageMultiplier(currentHitCount);
             }
 
             if (isBoomerang && returning)
             {
-                appliedDamage *= itemEffects.GetBoomerangRepeatHitDamageMultiplier();
+                appliedDamage *= effects.GetBoomerangRepeatHitDamageMultiplier();
             }
 
-            if (itemEffects != null)
+            if (effects != null && effects.IsAvailable)
             {
-                appliedDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, appliedDamage);
+                appliedDamage = effects.ApplyPerTargetDamageModifiers(enemy, appliedDamage);
             }
 
             currentHitCount++;
@@ -279,36 +316,49 @@ namespace Necrocis
             {
                 boomerangPassHitCount++;
             }
-            enemy.TakeDamage(appliedDamage);
-            CombatVfx.PlayProjectileImpact(transform.position, moveDirection);
-
-            if (itemEffects != null)
+            bool terminates = currentHitCount >= maxHitCount;
+            if (terminates) hasImpacted = true; // Claim the final hit before damage callbacks can reenter.
+            var hitLife = new EnemyHitLife(enemy);
+            try
             {
-                itemEffects.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
-                itemEffects.ApplyCommonOnHitEffects(enemy, appliedDamage, transform.position);
+                enemy.TakeDamage(appliedDamage, damageSource);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                CombatVfx.PlayProjectileImpact(transform.position, moveDirection);
+                if (!IsCurrentFlight(generation)) return HitResult.Terminated;
 
-                if (spawnKind == SpawnKind.Normal && itemEffects.HasSplitTissue && !splitTriggered)
+                if (effects != null && effects.IsAvailable)
                 {
-                    splitTriggered = true;
-                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, appliedDamage, targetMask, GetRemainingRange());
+                    effects.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, hitLife.Generation);
+                    if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                    effects.ApplyCommonOnHitEffects(enemy, appliedDamage, transform.position, hitLife.Generation);
+                    if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+
+                    if (spawnKind == SpawnKind.Normal && effects.HasSplitTissue && !splitTriggered)
+                    {
+                        splitTriggered = true;
+                        effects.SpawnSplitProjectiles(transform.position, moveDirection, appliedDamage, targetMask, GetRemainingRange());
+                        if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                    }
+
+                    if (spawnKind == SpawnKind.Normal && effects.HasExplosiveBloodCell)
+                    {
+                        ApplyExplosionDamage(enemy, appliedDamage);
+                        if (!IsCurrentFlight(generation)) return HitResult.Terminated;
+                    }
                 }
 
-                if (spawnKind == SpawnKind.Normal && itemEffects.HasExplosiveBloodCell)
-                {
-                    ApplyExplosionDamage(enemy, appliedDamage);
-                }
+                return terminates ? HitResult.Terminated : HitResult.Continued;
             }
-
-            if (currentHitCount >= maxHitCount)
+            finally
             {
-                hasImpacted = true;
-                gameObject.SetActive(false);
+                if (terminates) EndFlight(generation);
             }
         }
 
         private void TryDetectHitByOverlap()
         {
-            if (hasImpacted)
+            uint generation = launchGeneration;
+            if (hasImpacted || !IsCurrentFlight(generation))
             {
                 return;
             }
@@ -320,24 +370,22 @@ namespace Necrocis
             Vector3 capsuleTop = hitCenter + Vector3.up * halfHeight;
             Vector3 capsuleBottom = hitCenter - Vector3.up * halfHeight;
 
-            int count = Physics.OverlapCapsuleNonAlloc(
-                capsuleTop,
-                capsuleBottom,
-                radius,
-                hitBuffer,
-                targetMask,
-                QueryTriggerInteraction.Collide);
+            var hits=EnemyHitSnapshot.Capsule(capsuleTop,capsuleBottom,
+                radius,targetMask,QueryTriggerInteraction.Collide,ref hitBuffer);
+            var hitData=hits;
+            int count=hits.Length;
 
             for (int i = 0; i < count; i++)
             {
-                Collider collider = hitBuffer[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider collider = hitData[i].Collider;
                 if (collider == null)
                 {
                     continue;
                 }
 
-                HandleHit(collider);
-                if (hasImpacted)
+                HitResult result = HandleHit(collider);
+                if (result == HitResult.Terminated || hasImpacted || !IsCurrentFlight(generation))
                 {
                     break;
                 }
@@ -401,7 +449,7 @@ namespace Necrocis
 
         private void UpdateBoomerangState()
         {
-            if (itemEffects == null || ownerTransform == null)
+            if (!HasItemEffects || ownerTransform == null)
             {
                 return;
             }
@@ -510,14 +558,9 @@ namespace Necrocis
 
             Vector3 direction = step / stepDistance;
             float probeRadius = Mathf.Max(0.05f, GetScaledHitCheckRadius() * 0.65f);
-            int hitCount = Physics.SphereCastNonAlloc(
-                transform.position,
-                probeRadius,
-                direction,
-                obstacleHitBuffer,
-                stepDistance + 0.02f,
-                ~0,
-                QueryTriggerInteraction.Ignore);
+            int hitCount=CompletePhysicsQueries.FillSphereCast(transform.position,probeRadius,direction,
+                stepDistance+.02f,~0,QueryTriggerInteraction.Ignore,ref obstacleHitBuffer);
+            var obstacles=obstacleHitBuffer;
 
             if (hitCount <= 0)
             {
@@ -529,7 +572,7 @@ namespace Necrocis
             RaycastHit nearestHit = default;
             for (int i = 0; i < hitCount; i++)
             {
-                RaycastHit hit = obstacleHitBuffer[i];
+                RaycastHit hit = obstacles[i];
                 Collider obstacle = hit.collider;
                 if (!IsValidObstacleCollider(obstacle))
                 {
@@ -632,43 +675,53 @@ namespace Necrocis
 
         private void ApplyExplosionDamage(EnemyController primaryEnemy, float sourceDamage)
         {
-            float radius = itemEffects.GetExplosionRadius();
-            int hitCount = Physics.OverlapSphereNonAlloc(
-                transform.position,
-                radius,
-                explosionBuffer,
-                targetMask,
-                QueryTriggerInteraction.Collide);
+            uint generation = launchGeneration;
+            if (!IsCurrentFlight(generation)) return;
+            IProjectileItemEffects effects = HasItemEffects ? itemEffects : null;
+            if (effects == null) return;
+            float radius = effects.GetExplosionRadius();
+            var hits=EnemyHitSnapshot.Sphere(transform.position,radius,
+                targetMask,QueryTriggerInteraction.Collide,ref explosionBuffer);
+            var hitData=hits;
+            int hitCount=hits.Length;
+            var explosionEnemies=new HashSet<EnemyController>();
 
-            float explosionDamage = Mathf.Max(0f, sourceDamage * itemEffects.GetExplosionDamageMultiplier());
+            HealthEffectSource explosionSource = effects.GetItemHealthEffectSource(PlayerItemIds.ExplosiveBloodCellId, "explosion");
+            float explosionDamage = Mathf.Max(0f, sourceDamage * effects.GetExplosionDamageMultiplier());
             ResidueRubble.HitArea(transform.position, radius, Vector3.forward, 180, explosionDamage, targetMask, propAttackToken);
+            if (!IsCurrentFlight(generation)) return;
             SpawnExplosionVisual(transform.position, radius);
+            if (!IsCurrentFlight(generation)) return;
             for (int i = 0; i < hitCount; i++)
             {
-                Collider collider = explosionBuffer[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider collider = hitData[i].Collider;
                 if (collider == null)
                 {
                     continue;
                 }
 
-                if (!TryGetEnemyController(collider, out EnemyController enemy)
-                    || enemy.IsDead
-                    || enemy == primaryEnemy)
+                EnemyController enemy=hitData[i].Enemy;
+                if (enemy==null || enemy.IsDead || enemy==primaryEnemy || !EnemyReceivingShape.IntersectsSphere(enemy,transform.position,radius) || !explosionEnemies.Add(enemy))
                 {
                     continue;
                 }
 
-                float appliedExplosionDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, explosionDamage);
-                enemy.TakeDamage(appliedExplosionDamage);
-                itemEffects.TryApplyPostDamageExecutionInstinct(enemy, appliedExplosionDamage);
-                itemEffects.ApplyCommonOnHitEffects(enemy, appliedExplosionDamage, transform.position);
+                float appliedExplosionDamage = effects.ApplyPerTargetDamageModifiers(enemy, explosionDamage);
+                var hitLife = new EnemyHitLife(enemy);
+                enemy.TakeDamage(appliedExplosionDamage, explosionSource);
+                if (!IsCurrentFlight(generation)) return;
+                effects.TryApplyPostDamageExecutionInstinct(enemy, appliedExplosionDamage, hitLife.Generation);
+                if (!IsCurrentFlight(generation)) return;
+                effects.ApplyCommonOnHitEffects(enemy, appliedExplosionDamage, transform.position, hitLife.Generation);
+                if (!IsCurrentFlight(generation)) return;
             }
         }
 
         private static void SpawnExplosionVisual(Vector3 center, float radius)
         {
             Sprite effectSprite = TextureSpriteCache.LoadResourceSprite("ItemEffects/explosive_blood_cell_effect");
-            PlayerItemCombatEffects.SpawnPooledCircleVisual(
+            ItemEffectVisuals.SpawnPooledCircleVisual(
                 ExplosionVisualPoolName,
                 "ExplosiveBloodCellFx",
                 new Vector3(center.x, center.y + 0.08f, center.z),
@@ -719,13 +772,14 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            unchecked { launchGeneration++; }
+            hasImpacted = true;
             if (defaultScaleCached)
             {
                 transform.localScale = defaultLocalScale;
             }
 
             hitEnemyIds.Clear();
-            hasImpacted = false;
             itemEffects = null;
             returning = false;
             splitTriggered = false;
@@ -740,153 +794,4 @@ namespace Necrocis
         }
     }
 
-    internal static class TextureSpriteCache
-    {
-        private static Sprite circleSprite;
-        private static Material spriteMaterial;
-        private static readonly Dictionary<string, Sprite> ResourceSprites = new Dictionary<string, Sprite>();
-        private static readonly Dictionary<string, Material> ResourceSpriteMaterials = new Dictionary<string, Material>();
-
-        public static Sprite LoadResourceSprite(string resourcePath, float pixelsPerUnit = 100f)
-        {
-            if (string.IsNullOrWhiteSpace(resourcePath))
-            {
-                return null;
-            }
-
-            if (ResourceSprites.TryGetValue(resourcePath, out Sprite cachedSprite))
-            {
-                return cachedSprite;
-            }
-
-            Sprite sprite = Resources.Load<Sprite>(resourcePath);
-            if (sprite == null)
-            {
-                Texture2D texture = Resources.Load<Texture2D>(resourcePath);
-                if (texture != null)
-                {
-                    sprite = Sprite.Create(
-                        texture,
-                        new Rect(0f, 0f, texture.width, texture.height),
-                        new Vector2(0.5f, 0.5f),
-                        Mathf.Max(1f, pixelsPerUnit));
-                    sprite.name = texture.name;
-                }
-            }
-
-            ResourceSprites[resourcePath] = sprite;
-            return sprite;
-        }
-
-        public static float GetUniformScaleForWorldSize(Sprite sprite, float targetWorldSize)
-        {
-            float spriteSize = sprite != null
-                ? Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y)
-                : 1f;
-            return Mathf.Max(0.01f, targetWorldSize) / Mathf.Max(0.0001f, spriteSize);
-        }
-
-        public static Material GetResourceSpriteMaterial(string resourcePath)
-        {
-            if (string.IsNullOrWhiteSpace(resourcePath))
-            {
-                return GetSpriteMaterial();
-            }
-
-            if (ResourceSpriteMaterials.TryGetValue(resourcePath, out Material cachedMaterial))
-            {
-                return cachedMaterial;
-            }
-
-            Sprite sprite = LoadResourceSprite(resourcePath);
-            Material baseMaterial = GetSpriteMaterial();
-            if (sprite == null || baseMaterial == null)
-            {
-                return baseMaterial;
-            }
-
-            Material material = new Material(baseMaterial)
-            {
-                name = $"Runtime_{sprite.name}_Material",
-                mainTexture = sprite.texture
-            };
-            ResourceSpriteMaterials[resourcePath] = material;
-            return material;
-        }
-
-        public static Sprite GetCircleSprite()
-        {
-            if (circleSprite != null)
-            {
-                return circleSprite;
-            }
-
-            const int size = 64;
-            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.wrapMode = TextureWrapMode.Clamp;
-            texture.filterMode = FilterMode.Bilinear;
-
-            float center = (size - 1) * 0.5f;
-            float radius = center - 1f;
-            float innerRadius = radius * 0.45f;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
-                    if (distance > radius)
-                    {
-                        texture.SetPixel(x, y, Color.clear);
-                        continue;
-                    }
-
-                    if (distance <= innerRadius)
-                    {
-                        texture.SetPixel(x, y, Color.white);
-                        continue;
-                    }
-
-                    float alpha = Mathf.InverseLerp(radius, innerRadius, distance);
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
-                }
-            }
-
-            texture.Apply();
-            circleSprite = Sprite.Create(
-                texture,
-                new Rect(0f, 0f, size, size),
-                new Vector2(0.5f, 0.5f),
-                size);
-            circleSprite.name = "RuntimeCircleSprite";
-            return circleSprite;
-        }
-
-        public static Material GetSpriteMaterial()
-        {
-            if (spriteMaterial != null)
-            {
-                return spriteMaterial;
-            }
-
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null)
-            {
-                shader = Shader.Find("Unlit/Transparent");
-            }
-
-            if (shader == null)
-            {
-                return null;
-            }
-
-            spriteMaterial = new Material(shader)
-            {
-                name = "RuntimeSpriteMaterial"
-            };
-            return spriteMaterial;
-        }
-    }
 }

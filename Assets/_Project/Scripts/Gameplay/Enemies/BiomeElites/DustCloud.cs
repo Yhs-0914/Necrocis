@@ -49,22 +49,7 @@ namespace Necrocis
         }
 
         public static bool CanTravel(Vector3 from, Vector3 to, float radius)
-        {
-            if (!GasSacOrb.HasClearPath(from, to) || !ResidueRubble.CanTraverse(from, to, new Vector2(radius, radius))) return false;
-            var biome = BiomeManager.Active; if (biome == null) return true;
-            var first = biome.WorldToGrid(from); int level = biome.GetHeightLevel(first.x, first.y);
-            var min = biome.WorldToGrid(new Vector3(Mathf.Min(from.x, to.x) - radius, 0, Mathf.Min(from.z, to.z) - radius));
-            var max = biome.WorldToGrid(new Vector3(Mathf.Max(from.x, to.x) + radius, 0, Mathf.Max(from.z, to.z) + radius));
-            for (int z = min.y; z <= max.y; z++) for (int x = min.x; x <= max.x; x++)
-            {
-                var center = biome.GridToWorld(x, z);
-                if (biome.IsValidPosition(x, z) && biome.IsWalkable(x, z) && biome.GetHeightLevel(x, z) == level
-                    && !MidBossArenaController.IsPlayerInsideLockedArena(center)) continue;
-                var bounds = new Bounds(center, new Vector3(biome.TileSize, 1, biome.TileSize));
-                if (CombatHitGeometry.SegmentRectDistanceSquared(CombatHitGeometry.Flat(from), CombatHitGeometry.Flat(to), bounds) <= radius * radius) return false;
-            }
-            return true;
-        }
+            => EnemyWorldBindings.Attacks.CanTravelDisk(from, to, radius);
 
         private void Update()
         {
@@ -91,8 +76,8 @@ namespace Necrocis
         private void TryHit(Vector3 from, Vector3 to)
         {
             var player = PlayerController.Instance;
-            if (HitAttempts != 0 || player == null || player.IsDead || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)
-                || !GasSacOrb.HasClearPath(to, player.transform.position)) return;
+            if (HitAttempts != 0 || player == null || player.IsDead || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)
+                || !EnemyWorldBindings.Attacks.HasClearPath(to, player.transform.position)) return;
             if (CombatHitGeometry.PointSegmentDistanceSquared(CombatHitGeometry.Flat(player.transform.position), CombatHitGeometry.Flat(from), CombatHitGeometry.Flat(to)) > radius * radius) return;
             HitAttempts++; float hp = player.HealthComponent.CurrentHealth;
             player.TakeDamage(damage);
@@ -105,7 +90,7 @@ namespace Necrocis
         }
         private void UpdateView()
         {
-            var p = transform.position; if (BiomeManager.Active != null) p.y = BiomeManager.Active.GetGroundHeight(p);
+            var p = transform.position; if (EnemyWorldBindings.Surface != null) p.y = EnemyWorldBindings.Surface.GetGroundHeight(p);
             transform.position = p;
             var camera = DontStarveCamera.GetActiveCamera(); if (camera != null) body.transform.rotation = camera.transform.rotation;
             body.transform.position = p;

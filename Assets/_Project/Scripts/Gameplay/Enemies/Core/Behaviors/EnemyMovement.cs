@@ -9,7 +9,7 @@ namespace Necrocis
         public bool IsPlayerInChaseRange()
         {
             if (playerTransform == null) return false;
-            if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsPlayerInsideLockedArena(playerTransform.position))
+            if (!ignoreMidBossArenaRestriction && (WorldQueries != null && WorldQueries.IsPlayerInsideLockedEncounter(playerTransform.position)))
             {
                 return false;
             }
@@ -31,7 +31,7 @@ namespace Necrocis
         public bool IsPlayerInAttackRange()
         {
             if (playerTransform == null) return false;
-            if (!ignoreMidBossArenaRestriction && MidBossArenaController.IsPlayerInsideLockedArena(playerTransform.position))
+            if (!ignoreMidBossArenaRestriction && (WorldQueries != null && WorldQueries.IsPlayerInsideLockedEncounter(playerTransform.position)))
             {
                 return false;
             }
@@ -171,14 +171,23 @@ namespace Necrocis
         }
 
 
+        public void SetEncounterMovementExemption(bool ignore) => ignoreMidBossArenaRestriction = ignore;
+
+        public void SetEncounterRole(EnemyEncounterRole role) => EncounterRole = role;
+
+        public void ReinitializeStatsForEncounterRole()
+        {
+            if (config != null && stats != null) ConfigureStats();
+        }
+
+        // Compatibility for existing editor tools and external callers. Production spawns
+        // pass role and movement exemption explicitly in their spawn context.
         public void SetIgnoreMidBossArenaRestriction(bool ignore)
         {
             bool changed = ignoreMidBossArenaRestriction != ignore;
-            ignoreMidBossArenaRestriction = ignore;
-            if (changed && config != null && stats != null)
-            {
-                ConfigureStats();
-            }
+            SetEncounterMovementExemption(ignore);
+            SetEncounterRole(ignore ? EnemyEncounterRole.Boss : EnemyEncounterRole.Field);
+            if (changed) ReinitializeStatsForEncounterRole();
         }
 
 
@@ -309,47 +318,22 @@ namespace Necrocis
 
         public void ApplyAggroBoost(float percentBoost)
         {
-            if (config == null || hasAggroBoost) return;
-            originalChaseRadius = config.chaseRadius;
-            config.chaseRadius *= (1f + percentBoost);
-            hasAggroBoost = true;
+            ApplyLegacyAggroBoost(percentBoost);
         }
 
         public void RemoveAggroBoost()
         {
-            if (!hasAggroBoost || config == null) return;
-            config.chaseRadius = originalChaseRadius;
-            hasAggroBoost = false;
+            RemoveLegacyAggroBoost();
         }
 
         public void ForceChasePlayer()
         {
-            if (IsDead) return;
-
-            // 이동속도 3배 버프 (source로 "AggroDebris" 문자열 사용)
-            if (stats != null)
-            {
-                stats.AddModifier(new CharacterStatModifier(
-                    CharacterStatType.MoveSpeed,
-                    2.0f,
-                    CharacterStatModifierMode.PercentMultiply,
-                    "AggroDebris"
-                ));
-            }
-
-            // 공격 쿨타임 리셋 (즉시 공격 가능)
-            attackTimer = 0f;
-
-            ChangeState(EnemyChaseState.Instance);
+            ForceLegacyAggroChase();
         }
 
         public void RemoveAllAggroEffects()
         {
-            RemoveAggroBoost();
-            if (stats != null)
-            {
-                stats.RemoveModifiersFromSource("AggroDebris");
-            }
+            RemoveLegacyAggroEffects();
         }
 
 
@@ -362,8 +346,8 @@ namespace Necrocis
 
         private bool TryPickWanderDestination(out Vector3 wanderDestination)
         {
-            BiomeManager biome = BiomeManager.Active;
-            if (biome == null)
+            IEnemyWorldQueries world = WorldQueries;
+            if (world == null || !world.HasTerrain)
             {
                 wanderDestination = anchorPosition;
                 return true;
@@ -373,28 +357,27 @@ namespace Necrocis
             {
                 Vector2 offset = Random.insideUnitCircle * Mathf.Max(0f, config.wanderRadius);
                 Vector3 candidate = anchorPosition + new Vector3(offset.x, 0f, offset.y);
-                Vector2Int grid = biome.WorldToGrid(candidate);
-                if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
+                Vector2Int grid = world.WorldToCell(candidate);
+                if (!world.IsValidCell(grid) || !world.IsWalkableCell(grid))
                     continue;
 
-                candidate.y = biome.GetGroundHeight(candidate) + config.heightOffset;
+                candidate.y = world.GetGroundHeight(candidate) + config.heightOffset;
                 wanderDestination = candidate;
                 return true;
             }
 
             wanderDestination = anchorPosition;
-            wanderDestination.y = biome.GetGroundHeight(anchorPosition) + config.heightOffset;
+            wanderDestination.y = world.GetGroundHeight(anchorPosition) + config.heightOffset;
             return true;
         }
 
 
         private bool TryMove(Vector3 currentPosition, Vector3 step)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyWorldQueries world = WorldQueries;
             Vector2 half = boxCollider != null ? new Vector2(boxCollider.bounds.extents.x, boxCollider.bounds.extents.z) : Vector2.one * .4f;
-            bool Clear(Vector3 target) => ResidueRubble.CanTraverse(currentPosition, target, half)
-                && (biome == null || biome.CanMove(currentPosition, target));
-            if (biome == null)
+            bool Clear(Vector3 target) => world == null || world.CanEnemyMove(currentPosition, target, half);
+            if (world == null || !world.HasTerrain)
             {
                 if (!Clear(currentPosition + step)) return false;
                 MoveToPosition(currentPosition + step);

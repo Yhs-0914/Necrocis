@@ -43,6 +43,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5e954767ce750fa4fa4d2b06d853a96e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.ObjectPooler
+  m_EditorClassIdentifier: Necrocis.Pooling::Necrocis.PlayerProjectilePool
   objectToPool: {fileID: 6400152538108438740, guid: 544f062a84149db41bd3fcd823def264, type: 3}
   amountToPool: 10

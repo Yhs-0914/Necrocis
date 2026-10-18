@@ -5,7 +5,7 @@ namespace Necrocis
     public enum GasSacAttackKind { Burst, Orb }
 
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Gas Sac Pattern")]
-    public sealed class GasSacPatternSettings : MonsterPatternSettings
+    public sealed class GasSacPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "gas-burst";
         public const string OrbDamageId = "gas-orb";
@@ -67,7 +67,7 @@ namespace Necrocis
             return presentation.GetValidationError();
         }
 
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var controller = enemy.GetComponent<GasSacElitePattern>() ?? enemy.gameObject.AddComponent<GasSacElitePattern>();
             controller.Initialize(enemy, this);

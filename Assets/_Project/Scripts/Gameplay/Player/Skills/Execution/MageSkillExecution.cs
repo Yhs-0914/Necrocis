@@ -9,6 +9,7 @@ namespace Necrocis
 
         private void ExecuteMageSkill1()
         {
+            HealthEffectSource source = GetSkillHealthEffectSource("mage/E");
             Vector3 center = GetSkillCenter(mageSkill1.forwardOffset);
             float baseDamage = mageSkill1.baseDamage;
             float bonusMin = Mathf.Min(mageSkill1.additionalDamageMin, mageSkill1.additionalDamageMax);
@@ -26,7 +27,9 @@ namespace Necrocis
                 {
                     float bonusDamage = UnityEngine.Random.Range(bonusMin, bonusMax + 0.001f);
                     float totalDamage = PlayerCombatCalculator.GetSkillDamage(baseDamage + bonusDamage, CurrentPlayerStats);
-                    enemy.TakeDamage(totalDamage);
+                    uint generation=enemy.SpawnGeneration;
+                    enemy.TakeDamage(totalDamage, source);
+                    if(enemy==null || enemy.SpawnGeneration!=generation)return;
                     EnemyStatusEffectController status = EnsureStatusController(enemy);
                     status?.ApplyStun(mageSkill1.stunDuration);
                 }, PlayerCombatCalculator.GetSkillDamage(baseDamage + bonusMax, CurrentPlayerStats));
@@ -60,6 +63,8 @@ namespace Necrocis
                 yield break;
             }
 
+            var targetLife=new EnemyHitLife(target);
+            HealthEffectSource source = GetSkillHealthEffectSource("mage/R");
             float markLifeTime = Mathf.Max(0.1f, Mathf.Min(mageSkill2.markEffectLifetime, mageSkill2.detonationDelay + 0.05f));
             SpawnAttachedSkillEffect(
                 mageSkill2.markEffectPrefab,
@@ -75,7 +80,12 @@ namespace Necrocis
                 yield return new WaitForSeconds(delay);
             }
 
-            if (target == null || target.IsDead)
+            while (IsSkillExecutionPaused)
+            {
+                yield return null;
+            }
+
+            if (!targetLife.IsCurrent || target == null || target.IsDead)
             {
                 if (enableDebugLogs)
                 {
@@ -87,9 +97,12 @@ namespace Necrocis
             Vector3 targetEffectPosition = GetTargetEffectPosition(target);
             float targetEffectScaleMultiplier = GetTargetEffectScaleMultiplier(target);
             float damage = PlayerCombatCalculator.GetSkillDamage(mageSkill2.baseDamage, CurrentPlayerStats);
-            target.TakeDamage(damage);
-            EnemyStatusEffectController status = EnsureStatusController(target);
-            status?.ApplyDamageTakenIncrease(mageSkill2.damageTakenIncreaseRatio, mageSkill2.damageTakenIncreaseDuration);
+            target.TakeDamage(damage, source);
+            if(targetLife.IsCurrent)
+            {
+                EnemyStatusEffectController status = EnsureStatusController(target);
+                status?.ApplyDamageTakenIncrease(mageSkill2.damageTakenIncreaseRatio, mageSkill2.damageTakenIncreaseDuration);
+            }
 
             SpawnSkillEffect(
                 mageSkill2.explosionEffectPrefab,

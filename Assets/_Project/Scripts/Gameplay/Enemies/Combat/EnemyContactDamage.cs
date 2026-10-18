@@ -75,14 +75,13 @@ namespace Necrocis
                 || sourceEnemy.PatternOwnsContact
                 || sourceEnemy.IsDead
                 || player == null
-                || player.IsDead
-                || player.IsDashInvincible)
+                || player.IsDead)
             {
                 return false;
             }
 
             Health health = player.HealthComponent;
-            if (health == null || health.IsDead || health.IsInvincible)
+            if (health == null || health.IsDead)
             {
                 return false;
             }
@@ -92,10 +91,8 @@ namespace Necrocis
             float skin = (collider != null ? collider.contactOffset : 0) + (player.HitCollider != null ? player.HitCollider.contactOffset : 0);
             if (!CombatHitGeometry.BoundsTouchCollider(CombatHitGeometry.EnemyBodyBounds(sourceEnemy), player.HitCollider, skin)) return false;
 
-            float healthBefore = health.CurrentHealth;
-            health.TakeDamage(sourceEnemy.CreateContactDamage(damage));
-            bool hitApplied = health.CurrentHealth < healthBefore || health.IsInvincible;
-            if (!hitApplied)
+            DamageResult result = player.TryTakeDamage(sourceEnemy.CreateContactDamage(damage));
+            if (!result.HitAccepted || result.HpBlock == DamageBlockReason.Absorbed || player.IsDead)
             {
                 return false;
             }

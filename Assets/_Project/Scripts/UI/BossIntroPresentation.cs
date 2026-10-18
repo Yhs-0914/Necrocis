@@ -35,8 +35,7 @@ namespace Necrocis
         private RectTransform nameRect;
         private Image flashImage;
         private float elapsed;
-        private float previousTimeScale;
-        private bool ownsPause;
+        private ModalInputScope inputScope;
         private bool finished;
 
         public static bool Show(
@@ -173,9 +172,7 @@ namespace Necrocis
             flashImage = CreateStretchImage("ImpactFlash", root, Color.clear);
             flashImage.transform.SetAsLastSibling();
 
-            previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-            ownsPause = true;
+            inputScope = new ModalInputScope(this, gameObject, true, allowAuxiliary: false);
 
             ApplyAnimation(0f);
         }
@@ -312,15 +309,11 @@ namespace Necrocis
             }
         }
 
+        private void OnDisable() => CancelInternal();
+
         private void RestoreTimeScale()
         {
-            if (!ownsPause)
-            {
-                return;
-            }
-
-            Time.timeScale = previousTimeScale;
-            ownsPause = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         private void CreatePortraits(

@@ -8,7 +8,7 @@ namespace Necrocis
         private const float TerrainInset = .02f;
         public readonly Vector3 Origin, Forward, Right;
         public readonly float Range, Arc;
-        private readonly BiomeManager biome;
+        private readonly IEnemyTerrainSurface biome;
         private readonly int heightLevel;
         private readonly float[] limits = new float[Segments + 1], scratch = new float[Segments + 1];
         public bool TerrainClipped { get; private set; }
@@ -17,7 +17,7 @@ namespace Necrocis
         {
             Origin = origin; Forward = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
             Right = Vector3.Cross(Vector3.up, Forward); Range = range; Arc = arc;
-            biome = BiomeManager.Active;
+            biome = EnemyWorldBindings.Surface;
             if (biome != null) { var cell = biome.WorldToGrid(origin); heightLevel = biome.GetHeightLevel(cell.x, cell.y); }
             for (int i = 0; i < limits.Length; i++) limits[i] = range;
             MaximumReach = range; ReduceToCurrentTerrain();
@@ -47,7 +47,7 @@ namespace Necrocis
         // A new obstruction can shrink a committed warning, never enlarge it after a wall disappears.
         public bool ReduceToCurrentTerrain()
         {
-            if (biome == null) return false;
+            if (biome == null || !biome.IsAvailable) return false;
             for (int i = 0; i <= Segments; i++)
             {
                 float u = i / (float)Segments, halfStep = .5f / Segments;
@@ -68,7 +68,7 @@ namespace Necrocis
         private bool ClearCell(int x, int z)
         {
             return biome.IsValidPosition(x,z) && biome.IsWalkable(x,z) && biome.GetHeightLevel(x,z)==heightLevel
-                && !MidBossArenaController.IsPlayerInsideLockedArena(biome.GridToWorld(x,z));
+                && !EnemyWorldBindings.Encounters.IsInsideLockedArena(biome.GridToWorld(x,z));
         }
         private float RayLimit(Vector3 direction)
         {

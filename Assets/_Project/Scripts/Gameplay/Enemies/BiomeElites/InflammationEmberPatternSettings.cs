@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Inflammation Ember Pattern")]
-    public sealed class InflammationEmberPatternSettings : MonsterPatternSettings
+    public sealed class InflammationEmberPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "ember-counter";
         [Min(.1f)] public float counterMaxDistance = 8f;
@@ -33,7 +33,7 @@ namespace Necrocis
             return presentation != null ? presentation.GetValidationError() : "염증 불씨 표현 원본이 없습니다.";
         }
 
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<InflammationEmberElitePattern>() ?? enemy.gameObject.AddComponent<InflammationEmberElitePattern>();
             pattern.Initialize(enemy, this);

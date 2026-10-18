@@ -41,9 +41,12 @@ namespace Necrocis
             public AreaSkillCandidate(EnemyController enemy, float distanceSqr)
             {
                 Enemy = enemy;
+                life = new EnemyHitLife(enemy);
                 DistanceSqr = distanceSqr;
             }
 
+            private readonly EnemyHitLife life;
+            public bool HasNotRespawned => life.HasNotRespawned;
             public EnemyController Enemy { get; }
             public float DistanceSqr { get; }
         }
@@ -100,8 +103,10 @@ namespace Necrocis
             public float projectileDamage = 1f;
             public float projectileSpeed = 16f;
             public float projectileRange = 6f;
+            [Tooltip("Legacy serialized value; E lifetime is calculated from projectileRange / projectileSpeed.")]
             public float projectileLifeTime = 2f;
             public GameObject projectilePrefab;
+            [Tooltip("Fallback visual scale only. An assigned E prefab retains its authored root scale.")]
             public float projectileScale = 0.25f;
             public float poisonDuration = 3f;
             public float poisonTickInterval = 1f;
@@ -115,6 +120,7 @@ namespace Necrocis
         {
             public float cooldown = 10f;
             public float aimDuration = 0.5f;
+            [Tooltip("Target search distance and automatic lifetime distance; a positive lifetime controls flight independently.")]
             public float range = 10f;
             [FormerlySerializedAs("lineHitRadius")]
             public float projectileHitRadius = 0.8f;
@@ -123,6 +129,7 @@ namespace Necrocis
             public float targetForwardOffset = 6f;
             public float projectileDamage = 4f;
             public float projectileTravelSpeed = 16f;
+            [Tooltip("Positive: flight seconds (distance = speed x lifetime). Zero/negative: range / speed.")]
             public float projectileLifeTime = 0f;
             public GameObject projectilePrefab;
             public float projectileScale = 1f;
@@ -210,20 +217,24 @@ namespace Necrocis
         [SerializeField] private float testSkill1Cooldown = 1f;
         [SerializeField] private float testSkill2Cooldown = 3f;
 
-        private readonly List<AreaSkillCandidate> areaSkillCandidates = new List<AreaSkillCandidate>(64);
+        private static readonly Comparison<AreaSkillCandidate> AreaSkillComparison = CompareAreaSkillCandidates;
 
         private PlayerController playerController;
         private Collider[] overlapBuffer;
 
         private float nextSkill1ReadyTime;
         private float nextSkill2ReadyTime;
+        private float skill1CooldownDuration, skill2CooldownDuration;
 
         private bool archerSkill2Running;
+        private MovementExecutionLease warriorDashExecution;
 
         private PlayerStats CurrentPlayerStats => playerController != null ? playerController.Stats : PlayerStats.Instance;
+        private bool IsSkillExecutionPaused => IsPauseSuspended || Time.timeScale <= Mathf.Epsilon;
 
         public bool ConsumesSkillInput => enabled && currentClass != PlayerClassType.None;
         public PlayerClassType CurrentClass => currentClass;
+        public bool IsPauseSuspended { get; private set; }
         public event Action<SkillSlot, float> CooldownStarted;
         public event Action<SkillSlot> CooldownReset;
 
@@ -294,6 +305,12 @@ namespace Necrocis
             ResetCooldownState();
         }
 
+        // Pause execution without invoking the death/job-change reset in OnDisable.
+        public void SetPauseSuspended(bool suspended)
+        {
+            IsPauseSuspended = suspended;
+        }
+
         public bool IsSkillCoolingDown(SkillSlot slot)
         {
             return GetRemainingCooldown(slot) > 0f;
@@ -305,6 +322,10 @@ namespace Necrocis
             float nextReady = slot == SkillSlot.Skill1 ? nextSkill1ReadyTime : nextSkill2ReadyTime;
             return Mathf.Max(0f, nextReady - now);
         }
+
+        public CooldownSnapshot GetCooldownSnapshot(SkillSlot slot) => slot==SkillSlot.Skill1
+            ? new CooldownSnapshot(nextSkill1ReadyTime,skill1CooldownDuration)
+            : new CooldownSnapshot(nextSkill2ReadyTime,skill2CooldownDuration);
 
         public float GetConfiguredCooldown(SkillSlot slot)
         {
@@ -335,12 +356,12 @@ namespace Necrocis
 
         private bool ShouldAcceptInput()
         {
-            if (Time.timeScale <= Mathf.Epsilon)
+            if (IsSkillExecutionPaused)
             {
                 return false;
             }
 
-            if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
+            if (!CanStartSkillInput() || Time.timeSinceLevelLoad < 0.5f)
             {
                 return false;
             }
@@ -373,7 +394,7 @@ namespace Necrocis
 
         private void TryUseSkill1()
         {
-            if (!CanUseSkillSlot(SkillSlot.Skill1))
+            if (IsSkillExecutionPaused || !CanStartSkillInput() || !CanUseSkillSlot(SkillSlot.Skill1))
             {
                 return;
             }
@@ -414,7 +435,7 @@ namespace Necrocis
 
         private void TryUseSkill2()
         {
-            if (!CanUseSkillSlot(SkillSlot.Skill2))
+            if (IsSkillExecutionPaused || !CanStartSkillInput() || !CanUseSkillSlot(SkillSlot.Skill2))
             {
                 return;
             }
@@ -458,14 +479,31 @@ namespace Necrocis
                     break;
 
                 case PlayerClassType.Warrior:
-                    if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R", SkillSlot.Skill2))
+                    MovementExecutionLease execution = playerController.MovementExecutions.TryAcquire(this);
+                    if (execution == null) return;
+                    warriorDashExecution = execution;
+                    bool startedExecution = false;
+                    try
                     {
-                        return;
+                        if (!TryStartCooldown(ref nextSkill2ReadyTime, warriorSkill2.cooldown, "Warrior Skill R", SkillSlot.Skill2)
+                            || !execution.IsActive || !isActiveAndEnabled || currentClass != PlayerClassType.Warrior) return;
+                        StartCoroutine(ExecuteWarriorSkill2Dash());
+                        startedExecution = true;
                     }
-
-                    StartCoroutine(ExecuteWarriorSkill2Dash());
+                    finally { if (!startedExecution) ReleaseWarriorDash(execution); }
                     break;
             }
+        }
+
+        private bool CanStartSkillInput() => isActiveAndEnabled && playerController != null
+            && !playerController.IsDead && !playerController.IsBossDisplaced
+            && !playerController.MovementExecutions.BlocksOrdinaryInput
+            && InputManager.Instance.Gameplay.CanReadGameplay;
+
+        private void ReleaseWarriorDash(MovementExecutionLease execution)
+        {
+            execution?.Dispose();
+            if (ReferenceEquals(warriorDashExecution, execution)) warriorDashExecution = null;
         }
 
         private bool TryStartCooldown(ref float nextReadyTime, float cooldown, string label, SkillSlot slot)
@@ -485,6 +523,7 @@ namespace Necrocis
 
             float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
             nextReadyTime = now + effectiveCooldown;
+            if(slot==SkillSlot.Skill1)skill1CooldownDuration=effectiveCooldown;else skill2CooldownDuration=effectiveCooldown;
             AudioManager.Instance?.PlaySFX("SkillUse");
             CooldownStarted?.Invoke(slot, effectiveCooldown);
             return true;
@@ -511,8 +550,10 @@ namespace Necrocis
 
         private void ResetCooldownState()
         {
+            ReleaseWarriorDash(warriorDashExecution);
             nextSkill1ReadyTime = 0f;
             nextSkill2ReadyTime = 0f;
+            skill1CooldownDuration=skill2CooldownDuration=0f;
             archerSkill2Running = false;
             StopAllCoroutines();
             CooldownReset?.Invoke(SkillSlot.Skill1);

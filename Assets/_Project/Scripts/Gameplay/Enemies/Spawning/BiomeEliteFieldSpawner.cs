@@ -2,10 +2,11 @@ using UnityEngine;
 
 namespace Necrocis
 {
-    public sealed class BiomeEliteFieldSpawner : MonoBehaviour, IEnemySpawnOwner
+    public sealed class BiomeEliteFieldSpawner : MonoBehaviour, IEnemySpawnOwner, IEnemyDefeatApproval
     {
         private EnemySpawnRuleConfig rule;
         private string runId;
+        private IFieldEliteProgress progress;
         private float activationDistance, releaseDistance;
         private bool defeated;
         private System.Action<string> recordLocalDefeat;
@@ -15,8 +16,12 @@ namespace Necrocis
         public EnemyController ActiveEnemy { get; private set; }
 
         public void Configure(BiomeElitePlacement point, EnemySpawnRuleConfig source, BiomeEliteSpawnConfig settings, string currentRunId, System.Action<string> recordDefeat)
+            => ConfigureWithProgress(point, source, settings, currentRunId, recordDefeat, WorldProgressBindings.Elites);
+
+        public void ConfigureWithProgress(BiomeElitePlacement point, EnemySpawnRuleConfig source, BiomeEliteSpawnConfig settings, string currentRunId, System.Action<string> recordDefeat, IFieldEliteProgress progress)
         {
             ReleaseEnemy();
+            this.progress = progress;
             Placement = point;
             runId = currentRunId;
             recordLocalDefeat = recordDefeat;
@@ -26,13 +31,13 @@ namespace Necrocis
             rule.leashRadius = settings.leashDistance;
             activationDistance = settings.activationDistance;
             releaseDistance = settings.releaseDistance;
-            defeated = SaveService.IsBiomeEliteDefeated(point.spawnId);
+            defeated = progress.IsDefeated(point.spawnId);
             configured = true;
         }
 
         public void Refresh(Vector3 playerPosition)
         {
-            if (!configured || (runId != SaveService.ActiveRunId)) { ReleaseEnemy(); return; }
+            if (!configured || (runId != progress.CurrentRunId)) { ReleaseEnemy(); return; }
             Vector3 delta = playerPosition - transform.position;
             delta.y = 0;
             if (ActiveEnemy != null)
@@ -46,21 +51,22 @@ namespace Necrocis
             if (defeated) return; // A dead actor may finish its visual animation, but this point can never respawn it.
             if (delta.sqrMagnitude > activationDistance * activationDistance) return;
             EnemyController enemy = EnemyController.Acquire(transform, "BiomeElite_" + rule.name, EnemyController.GetPoolArchetypeId(rule));
-            enemy.Configure(this, rule, transform.position, transform.position);
+            enemy.ConfigureWithContext(this, rule, transform.position, transform.position,
+                EnemySpawnBindings.CaptureForSurface(EnemyWorldBindings.Surface, rule, transform.position));
             ActiveEnemy = enemy;
             var lifetime = enemy.GetComponent<EnemyPatternLifetime>() ?? enemy.gameObject.AddComponent<EnemyPatternLifetime>();
             if (lifetime.Generation != enemy.SpawnGeneration) lifetime.Bind(enemy);
-            enemy.Defeated += OnDefeated;
+            enemy.BindDefeatApproval(this);
         }
 
-        private void OnDefeated(EnemyController enemy)
+        public void ApproveDefeat(EnemyController enemy)
         {
             if (enemy != ActiveEnemy || defeated) { enemy.SuppressExperienceReward = true; return; }
             defeated = true;
             recordLocalDefeat?.Invoke(Placement.spawnId);
             enemy.GetComponent<EnemyPatternLifetime>()?.Cancel();
             if (runId == null) return; // Unsaved development session: this placement still dies once in memory.
-            if (!SaveService.TryRecordBiomeEliteDefeat(runId, Placement.spawnId, out bool fresh, out string error))
+            if (!progress.TryRecordDefeat(runId, Placement.spawnId, out bool fresh, out string error))
             {
                 enemy.SuppressExperienceReward = true;
                 Debug.LogError("[BiomeElite] 처치 저장 실패: " + error);
@@ -71,7 +77,7 @@ namespace Necrocis
         public void NotifyEnemyReleased(EnemyController enemy)
         {
             if (enemy != ActiveEnemy) return;
-            enemy.Defeated -= OnDefeated;
+            enemy.BindDefeatApproval(null);
             ActiveEnemy = null;
         }
 
@@ -80,7 +86,7 @@ namespace Necrocis
             if (releasing || ActiveEnemy == null) return;
             releasing = true;
             EnemyController enemy = ActiveEnemy;
-            enemy.Defeated -= OnDefeated;
+            enemy.BindDefeatApproval(null);
             ActiveEnemy = null;
             enemy.ReleaseToPool();
             releasing = false;

@@ -15,9 +15,9 @@ namespace Necrocis
             float lifeTime,
             Vector3 direction,
             SkillProjectileDebuff debuff,
-            bool shouldDisableOnHit = true)
+            bool shouldDisableOnHit = true, HealthEffectSource? source = null)
         {
-            SpawnSkillProjectile(prefab, fallbackScale, damage, speed, lifeTime, direction, debuff, null, shouldDisableOnHit);
+            SpawnSkillProjectile(prefab, fallbackScale, damage, speed, lifeTime, direction, debuff, null, shouldDisableOnHit, source);
         }
 
 
@@ -30,7 +30,7 @@ namespace Necrocis
             Vector3 direction,
             SkillProjectileDebuff debuff,
             Vector3? worldSpawnPosition,
-            bool shouldDisableOnHit = true)
+            bool shouldDisableOnHit = true, HealthEffectSource? source = null)
         {
             Vector3 spawnPosition = worldSpawnPosition ?? GetProjectileSpawnPosition(direction);
             GameObject projectileObject = CreateProjectileObject(prefab, spawnPosition, fallbackScale);
@@ -46,9 +46,16 @@ namespace Necrocis
             }
 
             projectile.ConfigureVisualSorting(skillEffectSortingOrder);
-            projectile.Launch(direction, damage, speed, lifeTime, enemyMask, shouldDisableOnHit, debuff);
+            projectile.Launch(direction, damage, speed, lifeTime, enemyMask, shouldDisableOnHit, debuff, null, source);
         }
 
+
+        private HealthEffectSource GetSkillHealthEffectSource(string skillId)
+        {
+            return playerController != null
+                ? playerController.GetHealthEffectSource("skill/" + skillId)
+                : HealthEffectSource.ForOwner(this, "skill/" + skillId);
+        }
 
         private GameObject CreateProjectileObject(GameObject prefab, Vector3 position, float fallbackScale)
         {
@@ -391,7 +398,7 @@ namespace Necrocis
         private void EnsureOverlapBuffer()
         {
             int desiredSize = Mathf.Max(1, overlapBufferSize);
-            if (overlapBuffer != null && overlapBuffer.Length == desiredSize)
+            if (overlapBuffer != null && overlapBuffer.Length >= desiredSize)
             {
                 return;
             }

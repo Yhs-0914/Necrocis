@@ -83,11 +83,11 @@ namespace Necrocis
             if (player == null || player.IsDead || !enemy.IsPlayerInChaseRange() || enemy.IsOutOfLeash()) return false;
             Vector3 delta = player.transform.position - Position; delta.y = 0;
             if (delta.sqrMagnitude < .0001f || delta.sqrMagnitude > triggerDistance * triggerDistance
-                || !GasSacOrb.IsVisible(Position + Vector3.up * .6f) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return false;
+                || !EnemyWorldBindings.Attacks.IsVisible(Position + Vector3.up * .6f) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return false;
             Vector3 direction = -delta.normalized;
             if (!ClearRetreat(Position, Position + direction * retreatDistance) || !ClearBurstArea(Position))
             { RejectedPaths++; nextSafetyCheck = Time.time + .25f; return false; }
-            center = Position; if (BiomeManager.Active != null) center.y = BiomeManager.Active.GetGroundHeight(center);
+            center = Position; if (EnemyWorldBindings.Surface != null) center.y = EnemyWorldBindings.Surface.GetGroundHeight(center);
             retreatDirection = direction;
             return lifetime.TryStartCycle(AttackCycle());
         }
@@ -155,7 +155,7 @@ namespace Necrocis
 
         private bool ClearRetreat(Vector3 from, Vector3 to)
         {
-            var biome = BiomeManager.Active;
+            var biome = EnemyWorldBindings.Surface;
             Vector3 leash = to - anchor; leash.y = 0;
             if (enemy.Config.leashRadius < 0 || leash.sqrMagnitude > enemy.Config.leashRadius * enemy.Config.leashRadius) return false;
             var collider = enemy.GetComponent<Collider>(); Vector3 extents = collider != null ? collider.bounds.extents : Vector3.one * .4f;
@@ -170,14 +170,14 @@ namespace Necrocis
                 Vector2Int max = biome.WorldToGrid(p + new Vector3(extents.x, 0, extents.z));
                 for (int z = min.y; z <= max.y; z++) for (int x = min.x; x <= max.x; x++)
                     if (!biome.IsValidPosition(x, z) || !biome.IsWalkable(x, z) || biome.GetHeightLevel(x, z) != level
-                        || MidBossArenaController.IsPlayerInsideLockedArena(biome.GridToWorld(x, z))) return false;
+                        || EnemyWorldBindings.Encounters.IsInsideLockedArena(biome.GridToWorld(x, z))) return false;
             }
             return true;
         }
 
         private bool ClearBurstArea(Vector3 point)
         {
-            var biome = BiomeManager.Active; if (biome == null) return true;
+            var biome = EnemyWorldBindings.Surface; if (biome == null) return true;
             Vector2Int first = biome.WorldToGrid(point); int level = biome.GetHeightLevel(first.x, first.y);
             Vector2Int min = biome.WorldToGrid(point - new Vector3(radius, 0, radius)), max = biome.WorldToGrid(point + new Vector3(radius, 0, radius));
             float half = biome.TileSize * .5f;
@@ -186,7 +186,7 @@ namespace Necrocis
                 Vector3 c = biome.GridToWorld(x, z); float dx = Mathf.Max(0, Mathf.Abs(c.x - point.x) - half), dz = Mathf.Max(0, Mathf.Abs(c.z - point.z) - half);
                 if (dx * dx + dz * dz > radius * radius) continue;
                 if (!biome.IsValidPosition(x, z) || !biome.IsWalkable(x, z) || biome.GetHeightLevel(x, z) != level
-                    || MidBossArenaController.IsPlayerInsideLockedArena(c)) return false;
+                    || EnemyWorldBindings.Encounters.IsInsideLockedArena(c)) return false;
             }
             return true;
         }
@@ -194,9 +194,9 @@ namespace Necrocis
         private void ApplyBurst(EnemyDamageRequest damage)
         {
             var player = PlayerController.Instance;
-            if (player == null || player.IsDead || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)) return;
+            if (player == null || player.IsDead || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)) return;
             Vector3 delta = player.transform.position - center; delta.y = 0;
-            if (delta.sqrMagnitude <= radius * radius && GasSacOrb.HasClearPath(center, player.transform.position)) player.TakeDamage(damage);
+            if (delta.sqrMagnitude <= radius * radius && EnemyWorldBindings.Attacks.HasClearPath(center, player.transform.position)) player.TakeDamage(damage);
         }
         private void CreateRemnant()
         {
@@ -229,7 +229,7 @@ namespace Necrocis
             UpdateRemnantView();
             if (shadow != null && shadow.activeSelf)
             {
-                Vector3 p = transform.position; if (BiomeManager.Active != null) p.y = BiomeManager.Active.GetGroundHeight(p);
+                Vector3 p = transform.position; if (EnemyWorldBindings.Surface != null) p.y = EnemyWorldBindings.Surface.GetGroundHeight(p);
                 shadow.transform.position = p + Vector3.up * .035f;
             }
         }

@@ -26,6 +26,13 @@ namespace Necrocis
 
             chunk.isObjectsLoaded = true;
             chunk.objectGenerationRoutine = null;
+            var store = GetComponent<EnemyVisitStateStore>();
+            var coordinate = new Vector2Int(chunk.chunkX, chunk.chunkY);
+            if (store != null && store.HasStoredLooseChunk(coordinate))
+            {
+                EnsureChunkObjectsRoot(chunk);
+                store.ResumeLooseChunk(coordinate, chunk.objectsRoot);
+            }
         }
 
 
@@ -90,7 +97,7 @@ namespace Necrocis
                 return;
             }
 
-            if (pooledObjectsParent != null && obj.transform.parent == pooledObjectsParent && !obj.activeSelf)
+            if (pooledObjectsParent != null && obj.transform.parent == pooledObjectsParent)
             {
                 return;
             }
@@ -98,14 +105,15 @@ namespace Necrocis
             EnemySpawner spawner = obj.GetComponent<EnemySpawner>();
             if (spawner != null)
             {
+                spawner.SuspendSpawnedEnemies();
                 spawner.ReleaseSpawnedEnemies();
-                spawner.enabled = false;
+                // The pool detaches this placement before retaining its native node.
             }
 
             EnemyController enemy = obj.GetComponent<EnemyController>();
             if (enemy != null)
             {
-                enemy.ReleaseToPool();
+                if(!enemy.TrySuspendByOwner())enemy.ReleaseToPool();
                 return;
             }
 
@@ -151,6 +159,11 @@ namespace Necrocis
             }
 
             state.Initialize(this, id, poolKey, blocksMovement);
+            if(obj.TryGetComponent<EnemySpawner>(out var spawner))
+            {
+                spawner.BindStateStore(EnemyVisitStateStore.ForBiome(this));
+                spawner.BindSchedule(ChunkEnemySpawnSchedule.ForBiome(this));
+            }
 
             if (blocksMovement)
             {

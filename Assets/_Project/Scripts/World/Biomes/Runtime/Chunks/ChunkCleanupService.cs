@@ -210,6 +210,8 @@ namespace Necrocis
             {
                 GameObject runtimeRoot = chunk.objectsRoot.gameObject;
                 chunk.objectsRoot = null;
+                foreach(var spawner in runtimeRoot.GetComponentsInChildren<EnemySpawner>(true))spawner.SuspendSpawnedEnemies();
+                foreach(var actor in runtimeRoot.GetComponentsInChildren<EnemyController>(true))if(actor!=null&&!actor.IsDead)actor.TrySuspendByOwner();
                 DestroyChunkRootObject(runtimeRoot);
             }
 
@@ -232,6 +234,8 @@ namespace Necrocis
                     RemoveBlockedCells(state.OccupiedCells);
                 }
 
+                if(state.TryGetComponent<EnemySpawner>(out var spawner))spawner.SuspendSpawnedEnemies();
+                if(state.TryGetComponent<EnemyController>(out var actor)&&actor.TrySuspendByOwner())continue;
                 DestroyPooledObject(state.gameObject);
             }
         }

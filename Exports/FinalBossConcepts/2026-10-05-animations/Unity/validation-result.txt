@@ -1,1 +1,0 @@
-PASS: 24 imported sprites; consistent size/pivots; state transitions, loops, melee impact/recovery and terminal death; existing geometry/hitboxes; 24 Unity-rendered previews.

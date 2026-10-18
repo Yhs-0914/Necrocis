@@ -97,7 +97,7 @@ namespace Necrocis
             // Local X remains the authored long axis; only its ground orientation changes.
             landingDirection = UsesVerticalRubble ? -screenRight : Vector3.Cross(screenRight, Vector3.up);
             landingCenter = transform.position + aim * placementDistance;
-            if (BiomeManager.Active != null) landingCenter.y = BiomeManager.Active.GetGroundHeight(landingCenter);
+            if (EnemyWorldBindings.Surface != null) landingCenter.y = EnemyWorldBindings.Surface.GetGroundHeight(landingCenter);
             if (!ResiduePlacementSafety.CanPlace(landingCenter, landingDirection, footprint))
             { RejectedPlacements++; nextSafetyCheck = Time.time + .25f; return false; }
             attackDirection = aim;
@@ -157,8 +157,8 @@ namespace Necrocis
         {
             PlayerController player = PlayerController.Instance;
             if (player == null || player.IsDead || !ActiveRubble.ContainsPoint(player.transform.position)
-                || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)) return;
-            var biome = BiomeManager.Active;
+                || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)) return;
+            var biome = EnemyWorldBindings.Surface;
             if (biome != null)
             {
                 Vector2Int a = biome.WorldToGrid(landingCenter), b = biome.WorldToGrid(player.transform.position);
@@ -208,7 +208,7 @@ namespace Necrocis
         {
             if (shadow == null || !shadow.activeSelf) return;
             Vector3 position = transform.position;
-            if (BiomeManager.Active != null) position.y = BiomeManager.Active.GetGroundHeight(position);
+            if (EnemyWorldBindings.Surface != null) position.y = EnemyWorldBindings.Surface.GetGroundHeight(position);
             shadow.transform.position = position + Vector3.up * .035f;
         }
 

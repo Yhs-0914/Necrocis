@@ -13,6 +13,8 @@ namespace Necrocis
     {
         [Tooltip("피격 후 무적 시간(초)")]
         [SerializeField] private float invincibilityDuration = 0.5f;
+        [Tooltip("분열 재생 부활 후 보호 시간(초)")]
+        [SerializeField] private float revivalInvincibilityDuration = 0.5f;
         [SerializeField] private float hitFlashInterval = 0.08f;
         [SerializeField] private Color hitFlashColor = new Color(1f, 0.18f, 0.12f, 1f);
 
@@ -21,10 +23,12 @@ namespace Necrocis
         private readonly List<SpriteRenderer> cachedSpriteRenderers = new List<SpriteRenderer>();
         private readonly List<Color> cachedSpriteColors = new List<Color>();
         private PlayerController playerController;
-        private PlayerItemCombatEffects itemEffects;
+        private PlayerStats playerStats;
+        private CharacterStats subscribedStats;
+        private PlayerDamageCoordinator damageCoordinator;
 
         // PlayerStats의 CharacterStats를 참조 (PlayerStats가 아직 없으면 null 반환)
-        private CharacterStats Stats => PlayerStats.Instance?.RuntimeStats;
+        private CharacterStats Stats => playerStats != null ? playerStats.RuntimeStats : null;
 
         public float CurrentHealth => Stats?.CurrentHealth ?? 0f;
         public float MaxHealth => Stats?.MaxHealth ?? 0f;
@@ -35,6 +39,7 @@ namespace Necrocis
         public event Action OnDeath;                         // 사망 시
 
         private bool subscribed; // CharacterStats 이벤트 구독 완료 여부
+        private bool runtimeBound;
 
         private void Awake()
         {
@@ -44,7 +49,8 @@ namespace Necrocis
                 playerController = GetComponentInParent<PlayerController>();
             }
 
-            itemEffects = GetComponent<PlayerItemCombatEffects>();
+            playerStats = GetComponent<PlayerStats>() ?? GetComponentInParent<PlayerStats>();
+            damageCoordinator = GetComponent<PlayerDamageCoordinator>();
         }
 
         private void OnEnable()
@@ -58,137 +64,78 @@ namespace Necrocis
                 TrySubscribe();
         }
 
-        // PlayerStats가 준비되면 HP 변경 이벤트 구독
-        // OnEnable 시점에 PlayerStats가 없을 수 있어서 Update에서도 재시도
+        public void BindRuntime(PlayerController owner, PlayerStats ownerStats, PlayerDamageCoordinator coordinator)
+        {
+            Unsubscribe();
+            playerController = owner;
+            playerStats = ownerStats;
+            damageCoordinator = coordinator;
+            runtimeBound = true;
+            TrySubscribe();
+        }
+
         private void TrySubscribe()
         {
-            if (subscribed || Stats == null) return;
-            Stats.HealthChanged += HandleHealthChanged;
+            if (subscribed || !runtimeBound || !isActiveAndEnabled) return;
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>() ?? GetComponentInParent<PlayerStats>();
+            if (damageCoordinator == null) damageCoordinator = GetComponent<PlayerDamageCoordinator>();
+            if (Stats == null || damageCoordinator == null) return;
+            subscribedStats = Stats;
+            subscribedStats.HealthChanged += HandleHealthChanged;
             subscribed = true;
+        }
+
+        private void Unsubscribe()
+        {
+            if (subscribedStats != null) subscribedStats.HealthChanged -= HandleHealthChanged;
+            subscribedStats = null;
+            subscribed = false;
         }
 
         private void OnDisable()
         {
-            if (Stats != null)
-                Stats.HealthChanged -= HandleHealthChanged;
-            subscribed = false;
+            Unsubscribe();
             StopInvincibilityRoutine();
             RestoreSpriteColors();
         }
 
         private void HandleHealthChanged(CharacterStats sender, CharacterHealthChangedEventArgs args)
         {
-            OnHealthChanged?.Invoke(args.CurrentValue, args.MaxValue);
-
-            if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
-            {
-                if (TryReviveFromSplitRegeneration(args.MaxValue))
-                {
-                    return;
-                }
-
-                OnDeath?.Invoke();
-
-                playerController?.HandleDeath();
-            }
+            OnHealthChanged?.Invoke(sender.CurrentHealth, sender.MaxHealth);
         }
 
-        private bool TryReviveFromSplitRegeneration(float maxHealth)
-        {
-            if (Stats != null && Stats.CurrentHealth > 0f)
-            {
-                return true;
-            }
+        internal void NotifyResolvedDeath() => OnDeath?.Invoke();
+        internal void BeginHitProtection() => StartInvincibility(invincibilityDuration, true);
+        internal void BeginRevivalProtection() => StartInvincibility(revivalInvincibilityDuration, true);
 
-            PlayerItemCombatEffects effects = ResolveItemEffects();
-            if (effects == null || Stats == null)
-            {
-                return false;
-            }
-
-            if (!effects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
-            {
-                return false;
-            }
-
-            Stats.RestoreHealth(reviveHealth);
-            StartInvincibility(invincibilityDuration, true);
-            return true;
-        }
-
-        // 데미지 처리: 무적/사망 체크 → 실제 데미지 적용 → 무적 시작
         public void TakeDamage(float damageAmount, EnemyController sourceEnemy = null)
         {
-            TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damageAmount * DifficultyBalanceService.GetIncomingDamageMultiplier(sourceEnemy)), sourceEnemy));
+            TryTakeDamage(new EnemyDamageRequest(Mathf.Max(0f,
+                damageAmount * DifficultyBalanceService.GetIncomingDamageMultiplier(sourceEnemy)), sourceEnemy));
         }
 
-        public void TakeDamage(EnemyDamageRequest request)
+        public void TakeDamage(EnemyDamageRequest request) => TryTakeDamage(request);
+
+        public DamageResult TryTakeDamage(EnemyDamageRequest request)
         {
-            float damageAmount = request.Amount;
-            EnemyController sourceEnemy = request.Source;
-            if (isInvincible || IsDead || damageAmount <= 0f) return;
-            if (Stats == null) return;
-
-            float actualDamage = damageAmount;
-            PlayerItemCombatEffects effects = ResolveItemEffects();
-            if (effects != null)
-            {
-                actualDamage = effects.ProcessIncomingDamage(actualDamage, sourceEnemy);
-            }
-
-            if (actualDamage <= 0f)
-            {
-                return;
-            }
-
-            if (effects != null)
-            {
-                float currentHealth = Stats.CurrentHealth;
-                float maxHealth = Stats.MaxHealth;
-                if (actualDamage >= currentHealth
-                    && effects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
-                {
-                    float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
-                    if (currentHealth > targetHealth)
-                    {
-                        Stats.ApplyDamage(currentHealth - targetHealth);
-                    }
-                    else if (targetHealth > currentHealth)
-                    {
-                        Stats.RestoreHealth(targetHealth - currentHealth);
-                    }
-
-                    StartInvincibility(invincibilityDuration, true);
-                    return;
-                }
-            }
-
-            AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
-            float appliedDamage = Stats.ApplyDamage(actualDamage);
-            if (appliedDamage > 0f)
-            {
-                Vector3 sourcePosition = sourceEnemy != null
-                    ? sourceEnemy.transform.position
-                    : transform.position - Vector3.forward;
-                CombatVfx.PlayPlayerHit(transform, sourcePosition, appliedDamage, IsDead);
-            }
-
-            if (!IsDead)
-            {
-                StartInvincibility(invincibilityDuration, true);
-            }
+            return damageCoordinator != null ? damageCoordinator.TryApplyIncoming(request) : DamageResult.Invalid;
         }
 
-        public void Heal(float amount)
+        public void Heal(float amount) => Heal(amount, playerStats != null
+            ? playerStats.GetHealthEffectSource("legacy-heal", "player:legacy-heal") : HealthEffectSource.Legacy);
+
+        public void Heal(float amount, HealthEffectSource source)
         {
             if (IsDead || amount <= 0f) return;
-            Stats?.RestoreHealth(amount);
+            Stats?.RestoreHealth(amount, source);
         }
 
         public void ResetHealth()
         {
             StopInvincibilityRoutine();
             RestoreSpriteColors();
+            if (damageCoordinator != null) damageCoordinator.BeginLifetime();
+            else Stats?.BeginHealthLifetime();
             Stats?.ResetHealthToMax();
         }
 
@@ -321,14 +268,5 @@ namespace Necrocis
             }
         }
 
-        private PlayerItemCombatEffects ResolveItemEffects()
-        {
-            if (itemEffects == null)
-            {
-                itemEffects = GetComponent<PlayerItemCombatEffects>();
-            }
-
-            return itemEffects;
-        }
     }
 }

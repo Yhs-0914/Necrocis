@@ -132,10 +132,9 @@ namespace Necrocis
         private readonly Dictionary<CharacterStatType, float> baseStatValues = new Dictionary<CharacterStatType, float>();   // 기본 스탯값
         private readonly Dictionary<CharacterStatType, float> finalStatValues = new Dictionary<CharacterStatType, float>(); // 모디파이어 적용 후 최종값
         private readonly List<CharacterStatModifier> modifiers = new List<CharacterStatModifier>(); // 활성 모디파이어 목록
-        private readonly Dictionary<CharacterStatType, float> previousStatValues = new Dictionary<CharacterStatType, float>();
-        private readonly HashSet<CharacterStatType> recalculationStatTypes = new HashSet<CharacterStatType>();
 
         private float currentHealth; // 현재 HP (최대HP와 별도 관리)
+        private readonly HealthDeltaAccumulator healthDeltas = new HealthDeltaAccumulator();
 
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged;   // 스탯 변경 이벤트
         public event Action<CharacterStats, CharacterHealthChangedEventArgs> HealthChanged; // HP 변경 이벤트
@@ -307,31 +306,119 @@ namespace Necrocis
         // 데미지 적용 (HP 감소, 실제 받은 데미지 반환)
         public float ApplyDamage(float damage)
         {
-            if (damage <= 0f || MaxHealth <= 0f)
-            {
-                return 0f;
-            }
+            return ApplyDamage(damage, HealthEffectSource.Legacy);
+        }
 
-            float damageUnits = ToHealthDeltaUnits(damage);
+        public float ApplyDamage(float damage, HealthEffectSource source)
+        {
+            if (damage <= 0f || MaxHealth <= 0f || IsDead) return 0f;
+            HealthDeltaPreview preview = PreviewDamage(damage, source);
+            return TryApplyDamage(preview, out float applied) ? applied : 0f;
+        }
+
+        public HealthDeltaPreview PreviewDamage(float damage, HealthEffectSource source)
+            => healthDeltas.PreviewDamage(damage, source);
+
+        // A revival replaces the lethal outcome without publishing an intermediate HP-zero event.
+        public bool TryApplyDamage(HealthDeltaPreview preview, out float applied, float? revivalHealth = null)
+        {
+            applied = 0f;
+            if (preview.Healing || IsDead || MaxHealth <= 0f) return false;
+            if (revivalHealth.HasValue && (float.IsNaN(revivalHealth.Value) || float.IsInfinity(revivalHealth.Value)
+                || revivalHealth.Value <= 0f)) throw new ArgumentOutOfRangeException(nameof(revivalHealth));
+            if (!healthDeltas.TryCommit(preview)) return false;
             float previousCurrentHealth = ToHealthUnits(currentHealth);
-            currentHealth = Mathf.Max(0f, previousCurrentHealth - damageUnits);
+            if (revivalHealth.HasValue)
+            {
+                healthDeltas.BeginLifetime();
+                currentHealth = Mathf.Clamp(ToHealthUnits(revivalHealth.Value), Mathf.Min(1f, MaxHealth), MaxHealth);
+            }
+            else currentHealth = Mathf.Max(0f, previousCurrentHealth - preview.WholeUnits);
+            applied = Mathf.Max(0f, previousCurrentHealth - currentHealth);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
-            return previousCurrentHealth - currentHealth;
+            return true;
         }
 
         // HP 회복 (최대HP 초과 불가, 실제 회복량 반환)
         public float RestoreHealth(float amount)
+        {
+            return RestoreHealth(amount, HealthEffectSource.Legacy);
+        }
+
+        public float RestoreHealth(float amount, HealthEffectSource source)
         {
             if (amount <= 0f || MaxHealth <= 0f)
             {
                 return 0f;
             }
 
-            float healUnits = ToHealthDeltaUnits(amount);
+            if (currentHealth >= MaxHealth)
+            {
+                healthDeltas.ClearHealing();
+                return 0f;
+            }
+            HealthDeltaPreview preview = healthDeltas.PreviewHealing(amount, source);
+            if (!healthDeltas.TryCommit(preview)) return 0f;
             float previousCurrentHealth = ToHealthUnits(currentHealth);
-            currentHealth = Mathf.Min(MaxHealth, previousCurrentHealth + healUnits);
+            currentHealth = Mathf.Min(MaxHealth, previousCurrentHealth + preview.WholeUnits);
+            float applied = Mathf.Max(0f, currentHealth - previousCurrentHealth);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
-            return currentHealth - previousCurrentHealth;
+            return applied;
+        }
+
+        public sealed class RuntimeSnapshot
+        {
+            internal readonly CharacterStatValue[] Bases;
+            internal readonly CharacterStatModifier[] Modifiers;
+            public readonly float Health;
+            public readonly HealthDeltaAccumulator Ledger;
+            internal RuntimeSnapshot(CharacterStatValue[] bases, CharacterStatModifier[] modifiers,
+                float health, HealthDeltaAccumulator ledger)
+            { Bases=bases; Modifiers=modifiers; Health=health; Ledger=ledger; }
+        }
+
+        public RuntimeSnapshot CaptureRuntime(Func<object,bool> includeModifier)
+        {
+            var bases=new List<CharacterStatValue>(baseStatValues.Count);
+            foreach(var pair in baseStatValues) bases.Add(new CharacterStatValue(pair.Key,pair.Value));
+            var retained=new List<CharacterStatModifier>();
+            foreach(var modifier in modifiers)
+                if(includeModifier==null || includeModifier(modifier.Source))retained.Add(modifier);
+            return new RuntimeSnapshot(bases.ToArray(),retained.ToArray(),currentHealth,healthDeltas.CloneRuntime());
+        }
+
+        public void RestoreRuntime(RuntimeSnapshot snapshot, Func<bool> stillCurrent = null)
+        {
+            if(snapshot==null)throw new ArgumentNullException(nameof(snapshot));
+            baseStatValues.Clear();foreach(var value in snapshot.Bases)baseStatValues[value.statType]=value.value;
+            modifiers.Clear();modifiers.AddRange(snapshot.Modifiers);
+            RecalculateAllStats();
+            if(stillCurrent!=null&&!stillCurrent())return;
+            SetCurrentHealth(snapshot.Health);
+            if(stillCurrent!=null&&!stillCurrent())return;
+            healthDeltas.RestoreRuntime(snapshot.Ledger);
+        }
+
+        public HealthDeltaAccumulator RuntimeHealthLedger => healthDeltas;
+        public void BeginHealthLifetime() => healthDeltas.BeginLifetime();
+        public void RemoveHealthEffectSource(HealthEffectSource source) => healthDeltas.RemoveSource(source);
+        public float DamageRemainder(HealthEffectSource source) => healthDeltas.DamageRemainder(source);
+        public float HealingRemainder(HealthEffectSource source) => healthDeltas.HealingRemainder(source);
+        public List<HealthDeltaRemainderData> CapturePersistentHealthDeltas() => healthDeltas.CapturePersistent();
+        public void RestorePersistentHealthDeltas(IEnumerable<HealthDeltaRemainderData> entries,
+            Func<string, HealthEffectSource?> resolve)
+        {
+            healthDeltas.RestorePersistent(entries, resolve);
+            if (currentHealth >= MaxHealth) healthDeltas.ClearHealing();
+        }
+
+        // An explicit state correction, such as a boss phase transition, is not a heal effect.
+        public void AdjustCurrentHealth(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) throw new ArgumentOutOfRangeException(nameof(value));
+            float previousCurrentHealth = currentHealth;
+            currentHealth = ClampHealthUnits(value);
+            NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
         }
 
         // HP를 최대로 완전 회복
@@ -379,13 +466,14 @@ namespace Necrocis
                 return 0f;
             }
 
-            return Mathf.Max(1f, Mathf.Floor(value + 0.5f + HealthUnitEpsilon));
+            return Mathf.Floor(value + 0.0000001f);
         }
 
         // HP 변경 이벤트 발행 (force=true면 값 변화 없어도 강제 발행)
         private void NotifyHealthChanged(float previousCurrentHealth, float previousMaxHealth, bool force)
         {
             float currentMaxHealth = MaxHealth;
+            if (currentHealth >= currentMaxHealth) healthDeltas.ClearHealing();
             if (!force
                 && Mathf.Approximately(previousCurrentHealth, currentHealth)
                 && Mathf.Approximately(previousMaxHealth, currentMaxHealth))
@@ -393,6 +481,7 @@ namespace Necrocis
                 return;
             }
 
+            healthDeltas.InvalidatePreviews();
             HealthChanged?.Invoke(
                 this,
                 new CharacterHealthChangedEventArgs(previousCurrentHealth, currentHealth, previousMaxHealth, currentMaxHealth));
@@ -401,47 +490,25 @@ namespace Necrocis
         // 모든 스탯을 기본값 + 모디파이어로 재계산하고, 변경된 스탯에 대해 이벤트 발행
         private void RecalculateAllStats()
         {
-            previousStatValues.Clear();
-            foreach (KeyValuePair<CharacterStatType, float> pair in finalStatValues)
-            {
-                previousStatValues.Add(pair.Key, pair.Value);
-            }
-
-            recalculationStatTypes.Clear();
-
-            foreach (KeyValuePair<CharacterStatType, float> pair in baseStatValues)
-            {
-                recalculationStatTypes.Add(pair.Key);
-            }
-
-            for (int i = 0; i < modifiers.Count; i++)
-            {
-                recalculationStatTypes.Add(modifiers[i].StatType);
-            }
-
+            // Complete the operation's values before publishing synchronous callbacks.
+            // Locals also keep nested modifier changes from mutating this event iteration.
+            var previous = new Dictionary<CharacterStatType, float>(finalStatValues);
+            var types = new HashSet<CharacterStatType>();
+            foreach (var pair in baseStatValues) types.Add(pair.Key);
+            for (int i=0;i<modifiers.Count;i++) types.Add(modifiers[i].StatType);
+            var changes = new List<CharacterStatChangedEventArgs>();
             finalStatValues.Clear();
-
-            foreach (CharacterStatType statType in recalculationStatTypes)
+            foreach (var type in types)
             {
-                float currentValue = EvaluateStat(statType);
-                finalStatValues[statType] = currentValue;
-
-                float previousValue = previousStatValues.TryGetValue(statType, out float cachedValue) ? cachedValue : 0f;
-                if (!Mathf.Approximately(previousValue, currentValue))
-                {
-                    StatChanged?.Invoke(this, new CharacterStatChangedEventArgs(statType, previousValue, currentValue));
-                }
+                float current=EvaluateStat(type);
+                finalStatValues[type]=current;
+                float before=previous.TryGetValue(type,out float cached)?cached:0f;
+                if(!Mathf.Approximately(before,current)) changes.Add(new CharacterStatChangedEventArgs(type,before,current));
             }
-
-            foreach (KeyValuePair<CharacterStatType, float> pair in previousStatValues)
-            {
-                if (finalStatValues.ContainsKey(pair.Key) || Mathf.Approximately(pair.Value, 0f))
-                {
-                    continue;
-                }
-
-                StatChanged?.Invoke(this, new CharacterStatChangedEventArgs(pair.Key, pair.Value, 0f));
-            }
+            foreach(var pair in previous)
+                if(!finalStatValues.ContainsKey(pair.Key) && !Mathf.Approximately(pair.Value,0f))
+                    changes.Add(new CharacterStatChangedEventArgs(pair.Key,pair.Value,0f));
+            foreach(var change in changes) StatChanged?.Invoke(this,change);
         }
 
         // 단일 스탯의 최종값 계산: 기본값 → Flat 합산 → PercentAdd 합산 → PercentMultiply 곱셈

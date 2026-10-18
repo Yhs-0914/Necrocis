@@ -88,11 +88,11 @@ namespace Necrocis
             if (player == null || player.IsDead || enemy.IsOutOfLeash() || !enemy.IsPlayerInChaseRange()) return false;
             Vector3 delta = player.transform.position - Position; delta.y = 0;
             if (delta.sqrMagnitude < .0001f || delta.sqrMagnitude > trigger * trigger
-                || !GasSacOrb.IsVisible(Position + Vector3.up * .6f) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return false;
+                || !EnemyWorldBindings.Attacks.IsVisible(Position + Vector3.up * .6f) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return false;
             Vector3 target = Position + delta.normalized * offset;
-            if (!DustCloud.CanTravel(Position, target, radius)) { RejectedPaths++; nextSafety = Time.time + .25f; return false; }
+            if (!EnemyWorldBindings.Attacks.CanTravelDisk(Position, target, radius)) { RejectedPaths++; nextSafety = Time.time + .25f; return false; }
             coreCenter = Position; direction = delta.normalized; launch = target;
-            if (BiomeManager.Active != null) launch.y = BiomeManager.Active.GetGroundHeight(launch);
+            if (EnemyWorldBindings.Surface != null) launch.y = EnemyWorldBindings.Surface.GetGroundHeight(launch);
             return lifetime.TryStartCycle(Cycle());
         }
         private IEnumerator Cycle()
@@ -119,7 +119,7 @@ namespace Necrocis
                     }
                     yield return null;
                 }
-                if (IsStunned() || !DustCloud.CanTravel(coreCenter, launch, radius) || !GasSacOrb.IsVisible(launch + Vector3.up * .6f)) yield break;
+                if (IsStunned() || !EnemyWorldBindings.Attacks.CanTravelDisk(coreCenter, launch, radius) || !EnemyWorldBindings.Attacks.IsVisible(launch + Vector3.up * .6f)) yield break;
                 Clear(ref gather); gatherBody = null; SetGeometry(true); SetFrame(release);
                 cloud = DustCloud.Launch(lifetime, generation, launch, direction, damage, marker, radius, speed, duration,
                     clouds, dissolve, cloudSeconds, dissolveSeconds, opacity, overlapOpacity);
@@ -158,7 +158,7 @@ namespace Necrocis
         {
             if (gatherBody != null) DustCloud.ApplyPlayerOverlapOpacity(gatherBody, opacity, overlapOpacity);
             if (shadow == null || !shadow.activeSelf) return;
-            Vector3 point = transform.position; if (BiomeManager.Active != null) point.y = BiomeManager.Active.GetGroundHeight(point);
+            Vector3 point = transform.position; if (EnemyWorldBindings.Surface != null) point.y = EnemyWorldBindings.Surface.GetGroundHeight(point);
             shadow.transform.position = point + Vector3.up * .035f;
             var size = coreExposed ? coreShadowSize : shadowSize; shadow.transform.localScale = new Vector3(size.x * .5f, size.y * .5f, 1);
         }

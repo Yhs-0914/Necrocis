@@ -11,6 +11,8 @@ namespace Necrocis
     public class DontStarveCamera : MonoBehaviour
     {
         private static DontStarveCamera instance;
+        public static event System.Action<DontStarveCamera> Created;
+        public Transform Target => target;
 
         public static DontStarveCamera Instance
         {
@@ -87,12 +89,11 @@ namespace Necrocis
             {
                 cam = gameObject.AddComponent<Camera>();
             }
+            Created?.Invoke(this);
         }
 
         private void Start()
         {
-            TryAssignDefaultTarget();
-
             CalculateOffset();
             SetupCamera();
 
@@ -106,7 +107,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
-            if (!TryAssignDefaultTarget()) return;
+            if (target == null) return;
 
             // 줌 처리
             HandleZoom();
@@ -186,7 +187,7 @@ namespace Necrocis
         private void HandleZoom()
         {
             // 새 Input System 사용
-            float scroll = Mouse.current != null ? Mouse.current.scroll.ReadValue().y : 0f;
+            float scroll = InputManager.Instance.Gameplay.ScrollY;
             scroll *= 0.01f; // 스크롤 값 정규화
 
             if (Mathf.Abs(scroll) > 0.001f)
@@ -216,31 +217,6 @@ namespace Necrocis
         {
             target = newTarget;
             InvalidateRendererCache();
-        }
-
-        private bool TryAssignDefaultTarget()
-        {
-            if (target != null)
-            {
-                return true;
-            }
-
-            PlayerController player = PlayerController.Instance;
-            if (player != null)
-            {
-                target = player.transform;
-                InvalidateRendererCache();
-                return true;
-            }
-
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject != null)
-            {
-                target = playerObject.transform;
-                InvalidateRendererCache();
-            }
-
-            return target != null;
         }
 
         private void OnDestroy()

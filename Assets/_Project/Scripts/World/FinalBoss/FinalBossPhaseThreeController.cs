@@ -128,6 +128,10 @@ namespace Necrocis
             artworkHitboxes = new BoxCollider[ArtworkHitboxNames.Length];
             for (int i = 0; i < artworkHitboxes.Length; i++)
                 artworkHitboxes[i] = ConfigureHitbox(ArtworkHitboxNames[i], Vector3.zero, Vector3.one, core);
+            var receivingParts = new Collider[artworkHitboxes.Length + 1];
+            receivingParts[0] = core;
+            System.Array.Copy(artworkHitboxes, 0, receivingParts, 1, artworkHitboxes.Length);
+            EnemyReceivingShape.BindParts(damageTarget, receivingParts);
             UpdateArtworkHitboxes();
             Physics.SyncTransforms();
         }

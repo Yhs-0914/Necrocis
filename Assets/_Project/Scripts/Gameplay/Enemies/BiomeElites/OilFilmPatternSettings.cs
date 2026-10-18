@@ -2,7 +2,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Oil Film Pattern")]
-    public sealed class OilFilmPatternSettings : MonsterPatternSettings
+    public sealed class OilFilmPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "oil-film-spread";
         [Min(.1f)] public float triggerDistance = 3.2f;
@@ -31,7 +31,7 @@ namespace Necrocis
                 return "Elite 등급과 oil-film-spread 피해 계수가 필요합니다.";
             return presentation != null ? presentation.GetValidationError() : "기름막 표현 원본이 없습니다.";
         }
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<OilFilmElitePattern>() ?? enemy.gameObject.AddComponent<OilFilmElitePattern>();
             pattern.Initialize(enemy, this);

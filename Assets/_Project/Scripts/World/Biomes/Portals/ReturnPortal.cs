@@ -60,14 +60,11 @@ namespace Necrocis
             Debug.Log("[ReturnPortal] 허브로 귀환!");
             AudioManager.Instance?.PlaySFX("PortalEnter");
 
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ReturnToHub();
-            }
+            WorldProgressBindings.Travel.NotifyHubReturned();
 
-            if (SceneLoader.Instance != null)
+            if (WorldProgressBindings.Travel.HasLoader)
             {
-                SceneLoader.Instance.ReturnToHub();
+                WorldProgressBindings.Travel.ReturnToHub();
             }
             else
             {

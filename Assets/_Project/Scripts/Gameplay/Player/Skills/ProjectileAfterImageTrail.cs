@@ -146,9 +146,8 @@ namespace Necrocis
 
         private void HandleGhostFadeCompleted(ProjectileAfterImageGhost ghost)
         {
-            if (ghost != null)
+            if (ghost != null && activeGhosts.Remove(ghost))
             {
-                activeGhosts.Remove(ghost);
                 RuntimePool.Release(ghost.gameObject);
             }
         }
@@ -323,11 +322,10 @@ namespace Necrocis
                 return;
             }
 
-            isActive = false;
-            enabled = false;
-
             System.Action<ProjectileAfterImageGhost> callback = onFadeCompleted;
             onFadeCompleted = null;
+            isActive = false;
+            enabled = false;
             callback?.Invoke(this);
         }
     }

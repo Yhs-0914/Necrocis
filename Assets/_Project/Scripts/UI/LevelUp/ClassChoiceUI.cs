@@ -28,8 +28,7 @@ public class ClassChoiceUI : MonoBehaviour
     [SerializeField] private float uiScaleMultiplier = 1f;
 
     private bool isBound;
-    private bool pausedByThisUI;
-    private float previousTimeScale = 1f;
+    private ModalInputScope inputScope;
     private Canvas classCanvasRoot;
     private GameObject overlayBlocker;
     private bool cachedAuthoredUIScale;
@@ -108,6 +107,7 @@ public class ClassChoiceUI : MonoBehaviour
 
     private void SelectJob(JobType job)
     {
+        if (inputScope?.CanInteract != true) return;
         if (job == JobType.None || LevelUpManager.GetCurrentJob() != JobType.None)
         {
             AudioManager.Instance?.PlaySFX("UIInvalid");
@@ -148,39 +148,15 @@ public class ClassChoiceUI : MonoBehaviour
 
         classChoiceUI.transform.SetAsLastSibling();
 
-        if (!pauseGameWhileOpen || pausedByThisUI)
-        {
-            return;
-        }
-
-        previousTimeScale = Time.timeScale;
-        Time.timeScale = 0f;
-        pausedByThisUI = true;
+        inputScope ??= new ModalInputScope(this,
+            classCanvasRoot != null ? classCanvasRoot.gameObject : classChoiceUI, pauseGameWhileOpen);
     }
 
     private void HideUI(bool forceRestoreTimeScale = true)
     {
-        if (overlayBlocker != null && overlayBlocker.activeSelf)
-        {
-            overlayBlocker.SetActive(false);
-        }
-
-        if (classChoiceUI != null && classChoiceUI.activeSelf)
-        {
-            classChoiceUI.SetActive(false);
-        }
-
-        if (!pausedByThisUI)
-        {
-            return;
-        }
-
-        if (forceRestoreTimeScale)
-        {
-            Time.timeScale = previousTimeScale;
-        }
-
-        pausedByThisUI = false;
+        if (overlayBlocker != null && overlayBlocker.activeSelf) overlayBlocker.SetActive(false);
+        if (classChoiceUI != null && classChoiceUI.activeSelf) classChoiceUI.SetActive(false);
+        inputScope?.Dispose(); inputScope = null;
     }
 
     private void ResolveReferences()
@@ -284,7 +260,7 @@ public class ClassChoiceUI : MonoBehaviour
         }
 
         Transform playerTransform = player.transform;
-        if (attachScriptObjectToPlayer && transform.parent != playerTransform)
+        if (attachScriptObjectToPlayer && transform != playerTransform && transform.parent != playerTransform)
         {
             transform.SetParent(playerTransform, false);
         }

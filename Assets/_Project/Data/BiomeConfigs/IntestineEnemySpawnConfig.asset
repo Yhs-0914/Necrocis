@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: IntestineEnemySpawnConfig
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   normalKillsPerElite: 10
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: 650bae08b30304f06acc8eb4119faeac, type: 2}
     name: Macrophage
+    receivingProfile: {fileID: 0}
     density: 0.05
     minDistance: 6
     poissonSalt: 501
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 5
@@ -104,11 +105,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.15
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -124,10 +125,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: b025256d6048b45cba4d3e38214b1bac, type: 2}
     name: NKCell
+    receivingProfile: {fileID: 0}
     density: 0.07
     minDistance: 5
     poissonSalt: 502
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 3
     activationRadius: 58
     respawnCooldown: 4
@@ -219,11 +221,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.12
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -239,10 +241,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 38da51144b79d46af83b7d0260844d36, type: 2}
     name: BCell
+    receivingProfile: {fileID: 0}
     density: 0.04
     minDistance: 7
     poissonSalt: 503
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -329,11 +332,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.15
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -349,10 +352,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 7ac5acdc9d7ad4d9f8c020f3491bb0e2, type: 2}
     name: Granuloma
+    receivingProfile: {fileID: 0}
     density: 0.01
     minDistance: 15
     poissonSalt: 510
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 1
     activationRadius: 60
     respawnCooldown: 30
@@ -459,10 +463,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 9e12b36d011fb490ba7505d3e3219228, type: 2}
     name: Antibody
+    receivingProfile: {fileID: 0}
     density: 0.01
     minDistance: 15
     poissonSalt: 520
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 1
     activationRadius: 60
     respawnCooldown: 30
@@ -552,7 +557,7 @@ MonoBehaviour:
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -574,10 +579,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.08
   - monsterDefinition: {fileID: 11400000, guid: fa0e27fbe157f4123897b7576c0f6c43, type: 2}
     name: IntestineFoldworm
+    receivingProfile: {fileID: 11400000, guid: e0db409f7953b428687074d6572fa848, type: 2}
     density: 0.02
     minDistance: 6
     poissonSalt: 1604
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -648,11 +654,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -668,10 +674,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 78210f5a2c21844c1b8ec2acc9654ab2, type: 2}
     name: IntestineVillusHand
+    receivingProfile: {fileID: 11400000, guid: f817264eaf7ea44d2bfce220e631be5c, type: 2}
     density: 0.02
     minDistance: 6
     poissonSalt: 1605
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -742,11 +749,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -762,10 +769,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 78699e52925f548d1acecb49cb2d265f, type: 2}
     name: IntestineKnottedEel
+    receivingProfile: {fileID: 11400000, guid: eaf80edcf293f43e9a2270124978fd8b, type: 2}
     density: 0.02
     minDistance: 6
     poissonSalt: 1606
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -836,11 +844,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08

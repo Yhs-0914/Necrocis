@@ -67,9 +67,6 @@ namespace Necrocis
         private bool isCharging;          // 돌진 중 여부
         private float chargeCooldownTimer; // 돌진 쿨타임 타이머
 
-        // 어그로 부스트 (잔해 효과)
-        private float originalChaseRadius; // 원래 chaseRadius (부스트 해제용)
-        private bool hasAggroBoost;        // 어그로 부스트 적용 여부
         private bool defeatEventRaised;
         private bool ignoreMidBossArenaRestriction;
         private bool hasCachedGroundHeight;
@@ -84,6 +81,8 @@ namespace Necrocis
         public CharacterStats Stats => stats;
         public EnemyStatusEffectController StatusEffects => statusEffectController;
         public static IReadOnlyList<EnemyController> ActiveEnemyControllers => ActiveEnemies;
+        private static readonly HashSet<EnemyController> ActiveMembership = new HashSet<EnemyController>();
+        internal static bool IsRegisteredActive(EnemyController enemy) => ActiveMembership.Contains(enemy);
         public bool IsAttackAnimPlaying => attackAnimPlaying;
         public bool IsDeathAnimPlaying => deathAnimPlaying;
         public bool IsStationary => config != null && config.isRanged;
@@ -92,9 +91,10 @@ namespace Necrocis
         public bool IsCharger => config != null && config.chargesAtPlayer;
         public bool IsCharging => isCharging;
         public bool CanCharge => IsCharger && chargeCooldownTimer <= 0f;
-        public bool IsBossEncounter => ignoreMidBossArenaRestriction;
+        public bool IsBossEncounter => EncounterRole == EnemyEncounterRole.Boss;
         public event System.Action<EnemyController> Defeated;
         public event System.Action<EnemyController, float> DamageTaken;
+        public event System.Action<EnemyController> DamageAccepted;
 
         private void Update()
         {

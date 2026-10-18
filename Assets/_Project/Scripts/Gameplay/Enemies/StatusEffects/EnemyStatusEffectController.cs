@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [DisallowMultipleComponent]
-    public class EnemyStatusEffectController : MonoBehaviour
+    public partial class EnemyStatusEffectController : MonoBehaviour
     {
         private struct MoveSpeedSlow
         {
@@ -21,19 +21,29 @@ namespace Necrocis
         private float vulnerabilityEndTime;
         private float damageTakenIncreaseRatio;
 
+        private HealthEffectSource poisonSource;
+        private bool hasPoisonSource;
         private Coroutine poisonCoroutine;
         private float poisonEndTime;
         private float poisonTickInterval;
         private float poisonTickDamage;
         private WaitForSeconds poisonWaitInstruction;
         private float poisonWaitDuration = -1f;
+        private float poisonNextTickTime;
+        private bool poisonWaitPending;
 
+        private HealthEffectSource bleedSource;
+        private bool hasBleedSource;
         private Coroutine bleedCoroutine;
         private float bleedEndTime;
         private float bleedTickInterval;
         private float bleedTickDamage;
         private WaitForSeconds bleedWaitInstruction;
         private float bleedWaitDuration = -1f;
+        private float bleedNextTickTime;
+        private bool bleedWaitPending;
+        private float slowNextRefreshTime, appliedSlowRatio;
+        private bool resumeWaitersReserved, slowReappliedBeforeResume;
 
         private float freezeVisualEndTime;
         private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
@@ -52,6 +62,11 @@ namespace Necrocis
 
         public void ResetEffects()
         {
+            resumeWaitersReserved = slowReappliedBeforeResume = false;
+            EndPoisonSource();
+            EndBleedSource();
+            poisonWaitPending=bleedWaitPending=false;
+            poisonNextTickTime=bleedNextTickTime=slowNextRefreshTime=appliedSlowRatio=0f;
             stunEndTime = 0f;
             vulnerabilityEndTime = 0f;
             damageTakenIncreaseRatio = 0f;
@@ -145,17 +160,24 @@ namespace Necrocis
         }
 
         public void ApplyBleed(float duration, float tickInterval, float tickDamage)
+            => ApplyBleed(duration, tickInterval, tickDamage, enemy != null
+                ? enemy.GetHealthEffectSource("legacy-bleed") : HealthEffectSource.ForOwner(this, "legacy-bleed"));
+
+        public void ApplyBleed(float duration, float tickInterval, float tickDamage, HealthEffectSource source)
         {
             if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)
             {
                 return;
             }
 
+            if (hasBleedSource && (bleedSource != source || Time.time >= bleedEndTime)) EndBleedSource();
+            bleedSource = source;
+            hasBleedSource = true;
             bleedTickInterval = tickInterval;
             bleedTickDamage = tickDamage;
             bleedEndTime = Mathf.Max(bleedEndTime, Time.time + duration);
 
-            if (bleedCoroutine == null)
+            if (bleedCoroutine == null && !resumeWaitersReserved)
             {
                 bleedCoroutine = StartCoroutine(BleedRoutine());
             }
@@ -169,17 +191,24 @@ namespace Necrocis
         }
 
         public void ApplyPoison(float duration, float tickInterval, float tickDamage)
+            => ApplyPoison(duration, tickInterval, tickDamage, enemy != null
+                ? enemy.GetHealthEffectSource("legacy-poison") : HealthEffectSource.ForOwner(this, "legacy-poison"));
+
+        public void ApplyPoison(float duration, float tickInterval, float tickDamage, HealthEffectSource source)
         {
             if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)
             {
                 return;
             }
 
+            if (hasPoisonSource && (poisonSource != source || Time.time >= poisonEndTime)) EndPoisonSource();
+            poisonSource = source;
+            hasPoisonSource = true;
             poisonTickInterval = tickInterval;
             poisonTickDamage = tickDamage;
             poisonEndTime = Mathf.Max(poisonEndTime, Time.time + duration);
 
-            if (poisonCoroutine == null)
+            if (poisonCoroutine == null && !resumeWaitersReserved)
             {
                 poisonCoroutine = StartCoroutine(PoisonRoutine());
             }
@@ -208,10 +237,14 @@ namespace Necrocis
 
             RefreshMoveSpeedSlow();
 
-            if (slowRoutine == null)
+            // A new slow can expire before the effect for which the current wait was scheduled.
+            // Restart only the expiry waiter; poison and bleed keep their tick schedules.
+            if (slowRoutine != null)
             {
-                slowRoutine = StartCoroutine(SlowRoutine());
+                StopCoroutine(slowRoutine);
             }
+            if (resumeWaitersReserved) slowReappliedBeforeResume = true;
+            else slowRoutine = StartCoroutine(SlowRoutine());
 
             RefreshStatusVisuals();
 
@@ -223,6 +256,7 @@ namespace Necrocis
 
         private IEnumerator PoisonRoutine()
         {
+            uint generation = enemy != null ? enemy.SpawnGeneration : 0;
             while (Time.time < poisonEndTime)
             {
                 float interval = Mathf.Max(0.05f, poisonTickInterval);
@@ -231,16 +265,21 @@ namespace Necrocis
                     poisonWaitDuration = interval;
                     poisonWaitInstruction = new WaitForSeconds(interval);
                 }
+                poisonNextTickTime=Time.time+interval;poisonWaitPending=true;
                 yield return poisonWaitInstruction;
+                poisonWaitPending=false;
 
-                if (enemy == null || enemy.IsDead)
+                if (enemy == null || enemy.SpawnGeneration != generation || enemy.IsDead)
                 {
                     break;
                 }
 
-                enemy.TakeDamage(poisonTickDamage);
+                enemy.TakeDamage(poisonTickDamage, poisonSource);
+                if (enemy == null || enemy.SpawnGeneration != generation) yield break;
             }
 
+            if (enemy != null && enemy.SpawnGeneration != generation) yield break;
+            EndPoisonSource();
             poisonCoroutine = null;
             poisonEndTime = 0f;
             RefreshStatusVisuals();
@@ -248,6 +287,7 @@ namespace Necrocis
 
         private IEnumerator BleedRoutine()
         {
+            uint generation = enemy != null ? enemy.SpawnGeneration : 0;
             while (Time.time < bleedEndTime)
             {
                 float interval = Mathf.Max(0.05f, bleedTickInterval);
@@ -256,19 +296,38 @@ namespace Necrocis
                     bleedWaitDuration = interval;
                     bleedWaitInstruction = new WaitForSeconds(interval);
                 }
+                bleedNextTickTime=Time.time+interval;bleedWaitPending=true;
                 yield return bleedWaitInstruction;
+                bleedWaitPending=false;
 
-                if (enemy == null || enemy.IsDead)
+                if (enemy == null || enemy.SpawnGeneration != generation || enemy.IsDead)
                 {
                     break;
                 }
 
-                enemy.TakeDamage(bleedTickDamage);
+                enemy.TakeDamage(bleedTickDamage, bleedSource);
+                if (enemy == null || enemy.SpawnGeneration != generation) yield break;
             }
 
+            if (enemy != null && enemy.SpawnGeneration != generation) yield break;
+            EndBleedSource();
             bleedCoroutine = null;
             bleedEndTime = 0f;
             RefreshStatusVisuals();
+        }
+
+        private void EndPoisonSource()
+        {
+            if (hasPoisonSource && enemy != null && enemy.Stats != null) enemy.Stats.RemoveHealthEffectSource(poisonSource);
+            hasPoisonSource = false;
+            poisonSource = default;
+        }
+
+        private void EndBleedSource()
+        {
+            if (hasBleedSource && enemy != null && enemy.Stats != null) enemy.Stats.RemoveHealthEffectSource(bleedSource);
+            hasBleedSource = false;
+            bleedSource = default;
         }
 
         private IEnumerator SlowRoutine()
@@ -282,6 +341,7 @@ namespace Necrocis
                 }
 
                 float waitTime = Mathf.Max(0.02f, nextEndTime - Time.time);
+                slowNextRefreshTime=Time.time+waitTime;
                 yield return new WaitForSeconds(waitTime);
                 RefreshMoveSpeedSlow();
                 RefreshStatusVisuals();
@@ -308,6 +368,7 @@ namespace Necrocis
                 return;
             }
 
+            appliedSlowRatio=0f;
             enemy.Stats.RemoveModifiersFromSource(this);
 
             float strongestSlow = 0f;
@@ -316,6 +377,7 @@ namespace Necrocis
                 strongestSlow = Mathf.Max(strongestSlow, moveSpeedSlows[i].ratio);
             }
 
+            appliedSlowRatio=strongestSlow;
             if (strongestSlow > 0f)
             {
                 enemy.Stats.AddModifier(

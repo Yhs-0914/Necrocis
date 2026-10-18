@@ -27,7 +27,7 @@ namespace Necrocis
             if (!bottoms.TryGetValue(body.sprite, out float bottom)) return;
             body.transform.rotation = camera.transform.rotation;
             Vector3 ground = physicsBody != null ? physicsBody.position : transform.position;
-            if (BiomeManager.Active != null) ground.y = BiomeManager.Active.GetGroundHeight(ground);
+            if (EnemyWorldBindings.Surface != null) ground.y = EnemyWorldBindings.Surface.GetGroundHeight(ground);
             Vector3 screenDepth = Vector3.ProjectOnPlane(camera.transform.up, Vector3.up).normalized;
             float nearAxis = pattern.BodyHalfLength * Mathf.Abs(Vector3.Dot(pattern.BodyDirection, screenDepth));
             GroundContactPosition = ground - screenDepth * nearAxis + Vector3.up * .025f;

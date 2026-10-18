@@ -33,9 +33,19 @@ namespace Necrocis
         }
 
         public static EnemyDamageRequest CreateDamage(float amount)
+            => CreateDamage(amount, CreateHealthEffectSource("legacy"));
+
+        public static HealthEffectSource CreateHealthEffectSource(string effectId)
+            => Instance != null ? HealthEffectSource.ForOwner(Instance, "final-boss/" + effectId)
+                : HealthEffectSource.Legacy.WithEffect("final-boss/" + effectId);
+
+        public static EnemyDamageRequest CreateDamage(float amount, string effectId)
+            => CreateDamage(amount, CreateHealthEffectSource(effectId));
+
+        public static EnemyDamageRequest CreateDamage(float amount, HealthEffectSource source)
         {
-            float multiplier = Instance != null ? Instance.Balance.GetDifficulty(SaveService.ActiveDifficulty).damage : 1f;
-            return new EnemyDamageRequest(Mathf.Max(0f, amount * multiplier), null);
+            float multiplier = Instance != null ? Instance.Balance.GetDifficulty(WorldProgressBindings.Session.ActiveDifficulty).damage : 1f;
+            return new EnemyDamageRequest(Mathf.Max(0f, amount * multiplier), null, source);
         }
 
         public MonsterBalanceRuntime CaptureSummonBalance(MonsterDefinition definition, bool weakened)
@@ -44,7 +54,7 @@ namespace Necrocis
             if (summonDifficulty == null)
             {
                 summonDifficulty = ScriptableObject.CreateInstance<DifficultyBalanceProfile>();
-                summonDifficulty.difficulty = SaveService.ActiveDifficulty;
+                summonDifficulty.difficulty = WorldProgressBindings.Session.ActiveDifficulty;
                 summonDifficulty.hideFlags = HideFlags.HideAndDontSave;
                 summonProgression = ScriptableObject.CreateInstance<MonsterProgressionProfile>();
                 summonProgression.hideFlags = HideFlags.HideAndDontSave;
@@ -111,9 +121,16 @@ namespace Necrocis
             // A direct-scene preview may restore the new run's Hub checkpoint on the first frame.
             // Apply the scene state only after that restore has finished.
             yield return null;
-            while (!map.IsReady || PlayerController.Instance == null || SaveService.IsRestorePending) yield return null;
+            BiomeRuntimeContext context = BiomeRuntimeContext.Ensure(map, GetComponent<ProceduralBiomeBridge>());
+            IEnumerator encounterWait = context.WaitForEncounterReady();
+            try
+            {
+                while (encounterWait.MoveNext()) yield return encounterWait.Current;
+            }
+            finally { (encounterWait as System.IDisposable)?.Dispose(); }
+            if (context.IsCancelled) yield break;
             // Shared ProceduralTerrainMotor handles spawn and floor height, as in all four biomes.
-            GameManager.Instance?.SetGameState(GameState.InFinalBoss);
+            WorldProgressBindings.Encounters.EnterFinalBoss();
         }
 
         private void OnDestroy()
@@ -126,7 +143,7 @@ namespace Necrocis
 
         private void Update()
         {
-            if (HasEnteredEncounter || map == null || !map.IsReady || SaveService.IsRestorePending
+            if (HasEnteredEncounter || map == null || !map.IsReady || WorldProgressBindings.Session.IsRestorePending
                 || PlayerController.Instance == null || PlayerController.Instance.IsDead) return;
             Vector3 position = PlayerController.Instance.transform.position;
             float entrance = RoomArea.y + 7f;

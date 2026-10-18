@@ -2,7 +2,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Helico Spiral Pattern")]
-    public sealed class HelicoSpiralPatternSettings : MonsterPatternSettings
+    public sealed class HelicoSpiralPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "helico-dash";
         public const string TailDamageId = "helico-tail";
@@ -38,7 +38,7 @@ namespace Necrocis
             if (definition.tier != MonsterTier.Elite || definition.patternDamage == null || !definition.patternDamage.Exists(p => p != null && p.id == DamageId)) return "Elite 등급과 helico-dash 피해 계수가 필요합니다.";
             return presentation != null ? presentation.GetValidationError() : "나선충 표현 원본이 없습니다.";
         }
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var p = enemy.GetComponent<HelicoSpiralElitePattern>() ?? enemy.gameObject.AddComponent<HelicoSpiralElitePattern>();
             p.Initialize(enemy, this);

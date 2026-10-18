@@ -60,13 +60,13 @@ namespace Necrocis
             position = owner.GetPatternVisualOrigin();
             var camera = DontStarveCamera.GetActiveCamera();
             if (camera == null || Mathf.Abs(camera.transform.forward.y) < .1f) return false;
-            float ground = BiomeManager.Active != null ? BiomeManager.Active.GetGroundHeight(owner.transform.position) : owner.transform.position.y;
+            float ground = EnemyWorldBindings.Surface != null ? EnemyWorldBindings.Surface.GetGroundHeight(owner.transform.position) : owner.transform.position.y;
             // Project the authored opening along the viewing ray onto the low flight plane.
             // Sprite and damage start at this same point; there is no invisible bridge hit from the owner.
             position += camera.transform.forward * ((ground + radius - position.y) / camera.transform.forward.y);
             position.y = ground;
-            return DustCloud.CanTravel(owner.transform.position, position, radius)
-                && GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(position, radius));
+            return EnemyWorldBindings.Attacks.CanTravelDisk(owner.transform.position, position, radius)
+                && EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(position, radius));
         }
 
         public static PollenPellet Launch(EnemyController owner, EnemyPatternLifetime lifetime, uint generation, PollenVolley volley,
@@ -97,13 +97,13 @@ namespace Necrocis
             for (int i = 1; i <= steps; i++)
             {
                 var next = Vector3.Lerp(from, end, i / (float)steps);
-                if (!DustCloud.CanTravel(transform.position, next, Radius)
-                    || !GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(next, Radius))) { Finish(); return; }
+                if (!EnemyWorldBindings.Attacks.CanTravelDisk(transform.position, next, Radius)
+                    || !EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(next, Radius))) { Finish(); return; }
                 var previous = transform.position; transform.position = next;
                 var player = PlayerController.Instance;
-                if (player != null && !player.IsDead && !MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)
-                    && GasSacOrb.HasClearPath(next, player.transform.position)
-                    && GasSacOrb.SweepTouchesPlayer(previous, next, Radius, player))
+                if (player != null && !player.IsDead && !EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)
+                    && EnemyWorldBindings.Attacks.HasClearPath(next, player.transform.position)
+                    && CombatHitGeometry.SweepTouchesPlayer(previous, next, Radius, player))
                 { volley.TryHit(player); Finish(); return; }
             }
             UpdateVisual(); if (remaining <= 0) Finish();
@@ -130,7 +130,7 @@ namespace Necrocis
         private void UpdateVisual()
         {
             body.sprite = frames[Mathf.FloorToInt(elapsed / frameSeconds) % frames.Length];
-            body.transform.position = GasSacOrb.GetFlightPosition(transform.position, Radius);
+            body.transform.position = EnemyWorldBindings.Attacks.GetFlightPosition(transform.position, Radius);
             var camera = DontStarveCamera.GetActiveCamera(); if (camera != null) body.transform.rotation = camera.transform.rotation;
             float diameter = Mathf.Max(frames[0].bounds.size.x, frames[0].bounds.size.y);
             body.transform.localScale = Vector3.one * (Radius * 2 / diameter);

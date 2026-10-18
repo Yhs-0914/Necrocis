@@ -93,6 +93,11 @@ namespace Necrocis
         private readonly HashSet<Vector2Int> reportedResidualChunks = new HashSet<Vector2Int>();
 
         public MonsterVisitContext MonsterVisit { get; private set; }
+        internal void CopyLoadedChunkCoordinates(List<Vector2Int> target)
+        {
+            target.Clear();
+            target.AddRange(loadedChunks);
+        }
         public bool IsChunkLoadedAt(int x, int y) => loadedChunks.Contains(GridToChunk(x, y));
         public int MapWidth => mapWidth;
         public int MapHeight => mapHeight;
@@ -107,12 +112,12 @@ namespace Necrocis
         protected virtual void Awake()
         {
             Active = this;
-            MonsterVisit = SaveService.EnterLoadedBiome(biomeType, gameObject.scene.handle);
+            MonsterVisit = WorldProgressBindings.Visits.EnterLoadedBiome(biomeType, gameObject.scene.handle);
 
             // 시드 설정
             if (useRandomSeed)
             {
-                seed = SaveService.GetOrCreateBiomeSeed(biomeType);
+                seed = WorldProgressBindings.Visits.GetOrCreateSeed(biomeType);
             }
 
             if (chunkSize <= 0)
@@ -240,9 +245,9 @@ namespace Necrocis
             {
                 Debug.LogError("[BiomeManager] 플레이어가 없습니다! Hub 씬에서 시작하세요.");
                 // Hub로 이동
-                if (SceneLoader.Instance != null)
+                if (WorldProgressBindings.Travel.HasLoader)
                 {
-                    SceneLoader.Instance.ReturnToHub();
+                    WorldProgressBindings.Travel.ReturnToHub();
                 }
                 return;
             }
@@ -356,6 +361,8 @@ namespace Necrocis
         /// <summary>
         /// 청크 로드
         /// </summary>
+        protected virtual bool CreatesChunkTilemaps => true;
+
         protected virtual void LoadChunk(int chunkX, int chunkY)
         {
             if (!IsValidChunk(chunkX, chunkY)) return;

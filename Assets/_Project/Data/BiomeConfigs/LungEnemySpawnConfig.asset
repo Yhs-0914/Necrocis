@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: LungEnemySpawnConfig
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   normalKillsPerElite: 10
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: 499aed563f6cc4da79eaad32bd62751b, type: 2}
     name: LungBreathBubble
+    receivingProfile: {fileID: 11400000, guid: 5bac0542be5e04c199cbe305354a5c48, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1610
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -90,11 +91,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -110,10 +111,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 09c64a797ef7441ad977d9749ce1b1ab, type: 2}
     name: LungCiliaBrush
+    receivingProfile: {fileID: 11400000, guid: 3022b035a94f8466591c7154847c7a12, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1611
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -184,11 +186,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -204,10 +206,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 643bd1d9f29654393b97f17d249d2599, type: 2}
     name: LungOverinflatedAlveoli
+    receivingProfile: {fileID: 11400000, guid: 7ba6d18a07beb4863b937d8f00966d23, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1612
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -278,11 +281,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08

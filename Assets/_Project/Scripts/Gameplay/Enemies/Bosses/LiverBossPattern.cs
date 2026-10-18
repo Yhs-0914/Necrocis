@@ -588,7 +588,7 @@ namespace Necrocis
                 return;
             }
 
-            stats.RestoreHealth(appliedDamage * damageHealRatio);
+            stats.RestoreHealth(appliedDamage * damageHealRatio, boss.GetHealthEffectSource("healing-pose"));
         }
 
         private void ApplyPhaseStats()
@@ -718,7 +718,7 @@ namespace Necrocis
 
         private float GetGroundHeight(Vector3 position)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             return biome != null ? biome.GetGroundHeight(position) : position.y;
         }
 

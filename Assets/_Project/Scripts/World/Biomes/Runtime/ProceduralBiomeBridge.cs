@@ -12,7 +12,7 @@ namespace Necrocis
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MapGenerator))]
-    public sealed class ProceduralBiomeBridge : BiomeManager
+    public sealed class ProceduralBiomeBridge : BiomeManager, IEnemyRuleCatalogProvider
     {
         [SerializeField] private BiomeConfig config;
         [SerializeField, Min(8)] private int proceduralChunkSize = 32;
@@ -30,6 +30,16 @@ namespace Necrocis
         private MapGenerator mapGenerator;
         private readonly List<EnemySpawnRuleConfig> normalEnemyRules = new List<EnemySpawnRuleConfig>();
         private MidBossArenaController bossArena;
+        private static readonly System.Func<GameObject> CreateSpawnerNode = CreateInactiveSpawnerNode;
+        protected override bool CreatesChunkTilemaps => false;
+
+        private static GameObject CreateInactiveSpawnerNode()
+        {
+            var node = new GameObject("EnemySpawner");
+            node.SetActive(false);
+            node.AddComponent<EnemySpawner>();
+            return node;
+        }
 
         public void Configure(BiomeConfig biomeConfig)
         {
@@ -37,6 +47,8 @@ namespace Necrocis
         }
 
         public BiomeConfig GetBiomeConfig() => config;
+        public IEnemyRuleCatalog GetEnemyRuleCatalog()
+            => new BiomeEnemyRuleCatalog(config != null ? config.GetEnemySpawnRules() : null);
 
         protected override void Awake()
         {
@@ -67,6 +79,7 @@ namespace Necrocis
             useChunkRootPooling = true;
             ConfigureBossArenaReservation();
             base.Awake();
+            BiomeRuntimeContext.Ensure(mapGenerator, this);
             mapGenerator.ConfigureRandomSeed(seed);
         }
 
@@ -100,18 +113,20 @@ namespace Necrocis
 
         private IEnumerator InitializeWhenMapReady()
         {
-            while (mapGenerator != null && !mapGenerator.IsReady)
+            BiomeRuntimeContext context = BiomeRuntimeContext.Ensure(mapGenerator, this);
+            // Pump the shared wait in place: yielding an already-complete nested
+            // IEnumerator adds a frame and changes the existing spawn/chunk order.
+            IEnumerator terrainWait = context.WaitForTerrainReady();
+            try
             {
-                yield return null;
+                while (terrainWait.MoveNext()) yield return terrainWait.Current;
             }
-
-            if (mapGenerator == null) yield break;
+            finally { (terrainWait as System.IDisposable)?.Dispose(); }
+            if (context.IsCancelled || mapGenerator == null) yield break;
 
             Initialize();
             BuildEnemyRules();
-            playerTransform = PlayerController.Instance != null
-                ? PlayerController.Instance.transform
-                : null;
+            playerTransform = PlayerWorldBindings.ResolvePlayerTransform();
 
             if (playerTransform != null)
             {
@@ -148,6 +163,7 @@ namespace Necrocis
                 }
                 if (existingCycle == null) gameObject.AddComponent<StomachAcidCycle>();
             }
+            context.MarkEncounterPrepared();
         }
 
         private void BuildEnemyRules()
@@ -210,6 +226,12 @@ namespace Necrocis
             AudioManager.Instance?.PlayBGM(key);
         }
 
+        protected override void GenerateTiles(Chunk chunk)
+        {
+            // MapGenerator renders this terrain. This bridge owns gameplay chunks only;
+            // neither duplicate Tilemaps nor their buffers are created.
+        }
+
         protected override TileSample SampleBaseTile(int worldX, int worldY)
         {
             bool walkable = mapGenerator != null && mapGenerator.IsCellWalkable(worldX, worldY);
@@ -247,14 +269,7 @@ namespace Necrocis
                 if (chanceHash >= Mathf.RoundToInt(chance * 10000f)) continue;
                 if (!TryFindWalkableCell(chunk, rule.poissonSalt, out int x, out int y)) continue;
 
-                GameObject spawnerObject = new GameObject($"{rule.name}_Spawner_{x}_{y}");
-                spawnerObject.transform.position = GridToWorldWithHeight(x, y, rule.heightOffset);
-                EnemySpawner spawner = spawnerObject.AddComponent<EnemySpawner>();
-                spawner.Configure(rule, spawnerObject.transform.position);
-
-                ObjectId id = new ObjectId(x, y, BiomeObjectKind.EnemySpawner);
-                ObjectPoolKey poolKey = new ObjectPoolKey(BiomeObjectKind.EnemySpawner, ruleIndex);
-                RegisterObject(chunk, spawnerObject, id, poolKey, false);
+                SpawnEnemySpawner(chunk, rule, ruleIndex, x, y);
             }
         }
 
@@ -396,14 +411,16 @@ namespace Necrocis
             int y,
             float activationRadiusOverride = -1f)
         {
-            GameObject spawnerObject = new GameObject($"{rule.name}_Spawner_{x}_{y}");
-            spawnerObject.transform.position = GridToWorldWithHeight(x, y, rule.heightOffset);
-            EnemySpawner spawner = spawnerObject.AddComponent<EnemySpawner>();
-            spawner.Configure(rule, spawnerObject.transform.position, activationRadiusOverride);
-
             ObjectId id = new ObjectId(x, y, BiomeObjectKind.EnemySpawner);
             ObjectPoolKey poolKey = new ObjectPoolKey(BiomeObjectKind.EnemySpawner, ruleIndex);
+            GameObject spawnerObject = GetPooledObject(poolKey, CreateSpawnerNode);
+            spawnerObject.name = $"{rule.name}_Spawner_{x}_{y}";
+            spawnerObject.transform.SetPositionAndRotation(GridToWorldWithHeight(x, y, rule.heightOffset), Quaternion.identity);
+            spawnerObject.transform.localScale = Vector3.one;
+            EnemySpawner spawner = spawnerObject.GetComponent<EnemySpawner>();
+            spawner.ConfigureForWorld(rule, spawnerObject.transform.position, activationRadiusOverride);
             RegisterObject(chunk, spawnerObject, id, poolKey, false);
+            spawnerObject.SetActive(true);
         }
 
         private bool TryFindWalkableCell(Chunk chunk, int salt, out int resultX, out int resultY)

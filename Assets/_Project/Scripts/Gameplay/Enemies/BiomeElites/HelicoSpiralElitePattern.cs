@@ -82,9 +82,9 @@ namespace Necrocis
         {
             if (enemy == null || lifetime == null || !lifetime.IsCurrent(generation) || Phase != HelicoSpiralPhase.Ready || IsStunned() || Time.time < nextReady) return false;
             var player = PlayerController.Instance;
-            if (player == null || player.IsDead || enemy.IsOutOfLeash() || !enemy.IsPlayerInChaseRange() || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)) return false;
+            if (player == null || player.IsDead || enemy.IsOutOfLeash() || !enemy.IsPlayerInChaseRange() || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)) return false;
             Vector3 delta = player.transform.position - Position; delta.y = 0;
-            if (delta.sqrMagnitude < .01f || delta.magnitude > trigger || !GasSacOrb.IsVisible(Position) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return false;
+            if (delta.sqrMagnitude < .01f || delta.magnitude > trigger || !EnemyWorldBindings.Attacks.IsVisible(Position) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return false;
             LockedDirection = bodyDirection = delta.normalized; DashStart = Position; PlannedDistance = 0;
             // Clip the forecast to the same swept body used by the moving attack. Never slide along a wall.
             for (float d = Mathf.Min(.1f, distance); d <= distance + .0001f; d = Mathf.Min(distance, d + .1f))
@@ -100,8 +100,8 @@ namespace Necrocis
         {
             var collider = enemy.GetComponent<Collider>();
             Vector2 half = new Vector2(collider.bounds.extents.x, collider.bounds.extents.z);
-            return DustCloud.CanTravel(from - LockedDirection * halfLength, to + LockedDirection * halfLength, radius)
-                && ResidueRubble.CanTraverse(from, to, half) && (BiomeManager.Active == null || BiomeManager.Active.CanMove(from, to));
+            return EnemyWorldBindings.Attacks.CanTravelDisk(from - LockedDirection * halfLength, to + LockedDirection * halfLength, radius)
+                && ResidueRubble.CanTraverse(from, to, half) && (EnemyWorldBindings.Surface == null || EnemyWorldBindings.Surface.CanMove(from, to));
         }
         private IEnumerator DashCycle()
         {
@@ -191,8 +191,8 @@ namespace Necrocis
         private void ApplyDashDamage(Vector3 from, Vector3 to, EnemyDamageRequest damage)
         {
             var player = PlayerController.Instance;
-            if (HitAttempts != 0 || player == null || player.IsDead || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)
-                || !GasSacOrb.HasClearPath(to, player.transform.position)) return;
+            if (HitAttempts != 0 || player == null || player.IsDead || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)
+                || !EnemyWorldBindings.Attacks.HasClearPath(to, player.transform.position)) return;
             if (CombatHitGeometry.PointSegmentDistanceSquared(CombatHitGeometry.Flat(player.transform.position), CombatHitGeometry.Flat(from - LockedDirection * halfLength),
                 CombatHitGeometry.Flat(to + LockedDirection * halfLength)) > radius * radius) return;
             HitAttempts++; float hp = player.HealthComponent.CurrentHealth; player.TakeDamage(damage);
@@ -201,12 +201,12 @@ namespace Necrocis
         private void ApplyBodyContact()
         {
             var player = PlayerController.Instance;
-            if (enemy.Balance == null || !enemy.Balance.ContactEnabled || player == null || player.IsDead || player.IsDashInvincible || player.HealthComponent.IsInvincible
-                || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return;
+            if (enemy.Balance == null || !enemy.Balance.ContactEnabled || player == null || player.IsDead
+                || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return;
             // The generous receiving box stays separate from this narrow oriented body.
             if (!CombatHitGeometry.SweepTouchesPlayer(Position - bodyDirection * halfLength, Position + bodyDirection * halfLength, radius, player)) return;
-            float hp = player.HealthComponent.CurrentHealth; player.TakeDamage(enemy.CreateContactDamage(0));
-            if (player.HealthComponent.CurrentHealth < hp)
+            DamageResult result = player.TryTakeDamage(enemy.CreateContactDamage(0));
+            if (result.HitAccepted && result.HpBlock != DamageBlockReason.Absorbed && !player.IsDead)
             {
                 Vector3 away = player.transform.position - Position; away.y = 0;
                 if (away.sqrMagnitude < .0001f) away = -bodyDirection;

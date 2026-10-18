@@ -1,0 +1,8 @@
+{
+  "name": "Necrocis.Input",
+  "rootNamespace": "Necrocis",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "autoReferenced": true
+}

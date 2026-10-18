@@ -12,7 +12,7 @@ namespace Necrocis
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(FinalBossArena), typeof(MapGenerator))]
-    public sealed class FinalBossPhaseTwoController : MonoBehaviour
+    public sealed class FinalBossPhaseTwoController : MonoBehaviour, IEnemyDamageGate
     {
         public enum PhaseTwoPattern
         {
@@ -24,6 +24,8 @@ namespace Necrocis
             ReflectionShield = 5,
             CellBarrage = 6
         }
+
+        private System.IDisposable damageGateBinding;
 
         [Header("Boss")]
         private float bossMaxHealth;
@@ -206,11 +208,13 @@ namespace Necrocis
                 runtimeRoot,
                 "FinalBoss_Cerebrum_DamageTarget",
                 EnemyController.GetPoolArchetypeId(rule));
-            bossDamageTarget.Configure(null, rule, targetPosition, targetPosition);
+            bossDamageTarget.ConfigureWithContext(null, rule, targetPosition, targetPosition,
+                EnemySpawnContextFactory.CaptureForBiome(BiomeManager.Active, rule, targetPosition, EnemyEncounterRole.Boss, true));
             bossDamageTarget.SetAiSuppressed(true);
-            bossDamageTarget.SetIgnoreMidBossArenaRestriction(true);
             bossDamageTarget.Stats.SetBaseStat(CharacterStatType.MaxHealth,
-                bossMaxHealth * arena.Balance.GetDifficulty(SaveService.ActiveDifficulty).health, true);
+                bossMaxHealth * arena.Balance.GetDifficulty(WorldProgressBindings.Session.ActiveDifficulty).health, true);
+            damageGateBinding?.Dispose();
+            damageGateBinding = bossDamageTarget.BindDamageGate(this);
             bossDamageTarget.DamageTaken += HandleBossDamageTaken;
             bossDamageTarget.Defeated += HandleBossDefeated;
 
@@ -434,12 +438,10 @@ namespace Necrocis
                 FinalBossTelegraph.CreateRectangle(runtimeRoot, area.Center, area.Size,
                     .3f, ElectricColor, true);
             }
-            bool canReceiveHit = hit
-                && !player.IsDashInvincible
-                && (player.HealthComponent == null || !player.HealthComponent.IsInvincible);
+            bool canReceiveHit = hit && player != null && !player.IsDead;
             if (canReceiveHit)
             {
-                player.TakeDamage(FinalBossArena.CreateDamage(electricDamage));
+                player.TakeDamage(FinalBossArena.CreateDamage(electricDamage, "phase2/electric"));
                 player.ApplyMovementControlReversal(reversedControlDuration);
             }
             yield return new WaitForSeconds(.3f);
@@ -466,7 +468,7 @@ namespace Necrocis
                 float spread = Mathf.Lerp(-42f, 42f, missileCount <= 1 ? .5f : i / (float)(missileCount - 1));
                 direction = Quaternion.Euler(0f, spread, 0f) * direction.normalized;
                 FinalBossHomingProjectile.Launch(runtimeRoot, spawn, direction,
-                    missileDamage, missileSpeed, missileTurnSpeed, 6.5f);
+                    missileDamage, missileSpeed, missileTurnSpeed, 6.5f, effectId: "phase2/homing-volley");
                 if (i % 4 == 0) PlayAttackAccent("LiverBloodThrow", .32f);
                 yield return new WaitForSeconds(missileInterval);
             }
@@ -504,7 +506,7 @@ namespace Necrocis
                     Vector3 direction = Quaternion.Euler(0f, angle, 0f) * forward;
                     FinalBossHomingProjectile cell = FinalBossHomingProjectile.Launch(
                         runtimeRoot, origin + direction * .8f, direction,
-                        barrageCellDamage, barrageCellSpeed, 0f, 5f);
+                        barrageCellDamage, barrageCellSpeed, 0f, 5f, effectId: "phase2/cell-barrage");
                     cell.name = "FinalBoss_BarrageCell";
                 }
                 FinalBossTelegraph.CreateCircle(runtimeRoot, GroundPosition(origin),
@@ -565,7 +567,7 @@ namespace Necrocis
             player = PlayerController.Instance;
             bool hit = player != null && positions.Exists(position =>
                 PlanarDistanceSqr(position, player.transform.position) <= bombRadius * bombRadius);
-            if (hit) player.TakeDamage(FinalBossArena.CreateDamage(bombDamage));
+            if (hit) player.TakeDamage(FinalBossArena.CreateDamage(bombDamage, "phase2/bomb"));
             PlayAttackAccent("StomachImpact", .55f);
             DontStarveCamera.Instance?.AddCombatImpulse(.13f, .2f);
             foreach (Vector3 position in positions)
@@ -686,7 +688,7 @@ namespace Necrocis
                     PlayAttackAccent("IntestineBossImpact", .55f);
                     DontStarveCamera.Instance?.AddCombatImpulse(.22f, .24f);
                     PlayerController player = PlayerController.Instance;
-                    if (player != null && area.Contains(player.transform.position)) player.TakeDamage(FinalBossArena.CreateDamage(sweepDamage));
+                    if (player != null && area.Contains(player.transform.position)) player.TakeDamage(FinalBossArena.CreateDamage(sweepDamage, "phase2/sweep"));
                 }
                 yield return null;
             }
@@ -749,30 +751,32 @@ namespace Necrocis
             if (shield != null) Destroy(shield);
         }
 
+        public DamageBlockReason EvaluateDamage(EnemyController target, float finalDamage, HealthDeltaPreview preview)
+        {
+            if (target != bossDamageTarget) return DamageBlockReason.None;
+            if (phaseThreeStarted && phaseThree != null && phaseThree.IsDetaching) return DamageBlockReason.Immune;
+            if (!reflecting) return DamageBlockReason.None;
+            PlayerController player = PlayerController.Instance;
+            if (player != null && Time.time >= nextReflectionHitTime)
+            {
+                nextReflectionHitTime = Time.time + .45f;
+                // Reflection keeps the integer HP preview basis. A sub-unit accepted hit still
+                // reaches the existing minimum reflection, without committing any boss carry.
+                float incomingUnits = preview.WholeUnits > 0f ? preview.WholeUnits : finalDamage;
+                incomingUnits = Mathf.Min(incomingUnits, target.Stats.CurrentHealth);
+                player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(incomingUnits * reflectedDamageRatio, 1f, 2f), "reflection"));
+            }
+            return DamageBlockReason.Reflected;
+        }
+
         private void HandleBossDamageTaken(EnemyController target, float damage)
         {
             if (target == null || target.Stats == null) return;
-            if (phaseThreeStarted && phaseThree != null && phaseThree.IsDetaching)
-            {
-                target.Stats.RestoreHealth(damage);
-                return;
-            }
-            if (reflecting)
-            {
-                target.Stats.RestoreHealth(damage);
-                PlayerController player = PlayerController.Instance;
-                if (player != null && Time.time >= nextReflectionHitTime)
-                {
-                    nextReflectionHitTime = Time.time + .45f;
-                    player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(damage * reflectedDamageRatio, 1f, 2f)));
-                }
-            }
-            else
             {
                 // Preserve one shared health pool. Even an oversized hit must enter phase III.
                 if (!phaseThreeStarted && target.Stats.HealthNormalized <= arena.Balance.phaseTwo.phaseThreeHealthRatio)
                 {
-                    if (target.Stats.IsDead) target.Stats.RestoreHealth(target.Stats.MaxHealth * arena.Balance.phaseTwo.phaseThreeHealthRatio);
+                    if (target.Stats.IsDead) target.Stats.AdjustCurrentHealth(target.Stats.MaxHealth * arena.Balance.phaseTwo.phaseThreeHealthRatio);
                     BeginPhaseThree();
                     return;
                 }
@@ -869,7 +873,7 @@ namespace Necrocis
                 healthBar.SetValue(0f, 0f, MaxHealth);
                 healthBar.SetPattern("CEREBRUM SILENCED", new Color(.55f, .86f, 1f), "FINAL BOSS DEFEATED", 3f);
             }
-            SaveService.MarkFinalBossDefeated();
+            bool clearSaved = WorldProgressBindings.Encounters.TryCompleteFinalBoss(out string clearSaveError);
             StopAllCoroutines();
             attackLoop = null;
             if (runtimeRoot != null)
@@ -881,9 +885,7 @@ namespace Necrocis
             DontStarveCamera.Instance?.AddCombatImpulse(.32f, .4f);
             AudioManager.Instance?.PlaySFX("BossDeath", .85f);
             StartCoroutine(DefeatPresentation());
-            FinalBossVictoryPrompt victoryPrompt = GetComponent<FinalBossVictoryPrompt>();
-            if (victoryPrompt == null) victoryPrompt = gameObject.AddComponent<FinalBossVictoryPrompt>();
-            victoryPrompt.Schedule();
+            WorldProgressBindings.Victory.Schedule(gameObject, clearSaved, clearSaveError);
             Debug.Log("[FinalBoss] Final cerebrum defeated.");
         }
 
@@ -1182,6 +1184,8 @@ namespace Necrocis
 
         private void OnDestroy()
         {
+            damageGateBinding?.Dispose();
+            damageGateBinding = null;
             if (bossDamageTarget != null)
             {
                 bossDamageTarget.DamageTaken -= HandleBossDamageTaken;

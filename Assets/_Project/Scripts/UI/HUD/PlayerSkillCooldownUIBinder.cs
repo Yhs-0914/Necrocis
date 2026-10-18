@@ -9,7 +9,9 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
     private static PlayerSkillCooldownUIBinder persistentInstance;
 
     [Header("References")]
-    [SerializeField] private PlayerClassSkillController skillController;
+    [SerializeField] private MonoBehaviour skillController;
+    private ISkillCooldownDisplay skillDisplay;
+    private const int Skill1=1,Skill2=2;
     [SerializeField] private SkillCooldownUI skillEUI;
     [SerializeField] private SkillCooldownUI skillRUI;
 
@@ -91,12 +93,10 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
 
     private void TryResolveController()
     {
-        if (skillController != null)
-        {
-            return;
-        }
-
-        skillController = FindFirstObjectByType<PlayerClassSkillController>();
+        if(skillController!=null && skillDisplay?.Owner==skillController)return;
+        Unsubscribe();
+        skillDisplay=PlayerDisplayBindings.Skills(skillController!=null?skillController.gameObject:gameObject);
+        skillController=skillDisplay?.Owner as MonoBehaviour;
     }
 
     private void Subscribe()
@@ -107,24 +107,24 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
             return;
         }
 
-        skillController.CooldownStarted -= HandleCooldownStarted;
-        skillController.CooldownStarted += HandleCooldownStarted;
-        skillController.CooldownReset -= HandleCooldownReset;
-        skillController.CooldownReset += HandleCooldownReset;
+        skillDisplay.CooldownStarted -= HandleCooldownStarted;
+        skillDisplay.CooldownStarted += HandleCooldownStarted;
+        skillDisplay.CooldownReset -= HandleCooldownReset;
+        skillDisplay.CooldownReset += HandleCooldownReset;
     }
 
     private void Unsubscribe()
     {
-        if (skillController == null)
+        if (skillDisplay == null)
         {
             return;
         }
 
-        skillController.CooldownStarted -= HandleCooldownStarted;
-        skillController.CooldownReset -= HandleCooldownReset;
+        skillDisplay.CooldownStarted -= HandleCooldownStarted;
+        skillDisplay.CooldownReset -= HandleCooldownReset;
     }
 
-    private void HandleCooldownStarted(PlayerClassSkillController.SkillSlot slot, float duration)
+    private void HandleCooldownStarted(int slot, float duration)
     {
         SkillCooldownUI targetUI = GetTargetUI(slot);
         if (targetUI == null || !IsSlotUnlocked(slot))
@@ -135,7 +135,7 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
         targetUI.StartCooldown(duration);
     }
 
-    private void HandleCooldownReset(PlayerClassSkillController.SkillSlot slot)
+    private void HandleCooldownReset(int slot)
     {
         SkillCooldownUI targetUI = GetTargetUI(slot);
         targetUI?.ForceReady();
@@ -148,11 +148,11 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
             return;
         }
 
-        SyncSlot(PlayerClassSkillController.SkillSlot.Skill1);
-        SyncSlot(PlayerClassSkillController.SkillSlot.Skill2);
+        SyncSlot(Skill1);
+        SyncSlot(Skill2);
     }
 
-    private void SyncSlot(PlayerClassSkillController.SkillSlot slot)
+    private void SyncSlot(int slot)
     {
         SkillCooldownUI targetUI = GetTargetUI(slot);
         if (targetUI == null)
@@ -166,11 +166,11 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
             return;
         }
 
-        float remain = skillController.GetRemainingCooldown(slot);
+        float remain = skillDisplay.GetRemainingCooldown(slot);
         if (remain > 0f)
         {
-            float configured = skillController.GetConfiguredCooldown(slot);
-            targetUI.StartCooldown(remain, configured);
+            var snapshot = skillDisplay.GetCooldownSnapshot(slot);
+            targetUI.StartCooldown(remain, snapshot.EffectiveDuration);
             return;
         }
 
@@ -179,19 +179,19 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
 
     private void SubscribeLevelEvents()
     {
-        LevelUpManager.OnLevelUp -= HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnLevelUp += HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnJobSelect -= HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnJobSelect += HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnJobChanged -= HandleJobChanged;
-        LevelUpManager.OnJobChanged += HandleJobChanged;
+        PlayerDisplayBindings.Progression.LevelChanged -= HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.LevelChanged += HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.JobSelection -= HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.JobSelection += HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.JobChanged -= HandleJobChanged;
+        PlayerDisplayBindings.Progression.JobChanged += HandleJobChanged;
     }
 
     private void UnsubscribeLevelEvents()
     {
-        LevelUpManager.OnLevelUp -= HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnJobSelect -= HandleLevelProgressOrJobChanged;
-        LevelUpManager.OnJobChanged -= HandleJobChanged;
+        PlayerDisplayBindings.Progression.LevelChanged -= HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.JobSelection -= HandleLevelProgressOrJobChanged;
+        PlayerDisplayBindings.Progression.JobChanged -= HandleJobChanged;
     }
 
     private void HandleLevelProgressOrJobChanged()
@@ -208,19 +208,19 @@ public class PlayerSkillCooldownUIBinder : MonoBehaviour
 
     private void SyncUnlockState()
     {
-        skillEUI?.SetUnlocked(IsSlotUnlocked(PlayerClassSkillController.SkillSlot.Skill1));
-        skillRUI?.SetUnlocked(IsSlotUnlocked(PlayerClassSkillController.SkillSlot.Skill2));
+        skillEUI?.SetUnlocked(IsSlotUnlocked(Skill1));
+        skillRUI?.SetUnlocked(IsSlotUnlocked(Skill2));
     }
 
-    private bool IsSlotUnlocked(PlayerClassSkillController.SkillSlot slot)
+    private bool IsSlotUnlocked(int slot)
     {
-        int skillSlotIndex = slot == PlayerClassSkillController.SkillSlot.Skill1 ? 1 : 2;
-        return LevelUpManager.IsSkillUnlocked(skillSlotIndex);
+        int skillSlotIndex = slot == Skill1 ? 1 : 2;
+        return PlayerDisplayBindings.Progression.IsSkillUnlocked(skillSlotIndex);
     }
 
-    private SkillCooldownUI GetTargetUI(PlayerClassSkillController.SkillSlot slot)
+    private SkillCooldownUI GetTargetUI(int slot)
     {
-        return slot == PlayerClassSkillController.SkillSlot.Skill1 ? skillEUI : skillRUI;
+        return slot == Skill1 ? skillEUI : skillRUI;
     }
 
     private void ApplyKeyLabels()

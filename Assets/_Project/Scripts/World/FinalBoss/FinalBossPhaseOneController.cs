@@ -86,7 +86,7 @@ namespace Necrocis
                 bossRestScale = bossVisual.localScale;
                 dormantRenderer = bossVisual.GetComponent<SpriteRenderer>();
             }
-            while (!map.IsReady || PlayerController.Instance == null || SaveService.IsRestorePending) yield return null;
+            while (!map.IsReady || PlayerController.Instance == null || WorldProgressBindings.Session.IsRestorePending) yield return null;
 
             BuildRules();
             while (!arena.HasEnteredEncounter) yield return null;
@@ -243,7 +243,10 @@ namespace Necrocis
             if (rule == null || !TryFindSpawnPosition(biome, out Vector3 position)) return null;
             EnemyController enemy = EnemyController.Acquire(transform, objectName, EnemyController.GetPoolArchetypeId(rule));
             bool weakened = objectName.EndsWith("_WeakenedMidBoss", StringComparison.Ordinal);
-            enemy.Configure(null, rule, position, position, arena.CaptureSummonBalance(rule.monsterDefinition, weakened));
+            enemy.ConfigureWithContext(null, rule, position, position,
+                EnemySpawnContextFactory.WithBalanceForBiome(BiomeManager.Active, rule, position,
+                    arena.CaptureSummonBalance(rule.monsterDefinition, weakened),
+                    weakened ? EnemyEncounterRole.Boss : EnemyEncounterRole.Field, weakened));
             return enemy;
         }
 
@@ -320,7 +323,7 @@ namespace Necrocis
             EnemySpawnRuleConfig weakened = CloneForWeakenedBoss(source, biomeType, definition);
             runtimeBossRules.Add(weakened);
             EnemyController boss = SpawnEnemy(weakened, biomeType, $"FinalBoss_{biomeType}_WeakenedMidBoss");
-            if (boss != null) boss.SetIgnoreMidBossArenaRestriction(true);
+            if (boss != null) boss.SetEncounterMovementExemption(true);
         }
 
         private EnemySpawnRuleConfig CloneForWeakenedBoss(

@@ -134,14 +134,19 @@ namespace Necrocis
             TileType type = tileMap[x, y];
             GameObject prefab = GetPrefabForType(type);
 
+            Vector3 worldPos = GridToWorld(x, y);
+            GameObject tile;
             if (prefab == null)
             {
-                // 프리팹 없으면 기본 큐브 생성 (테스트용)
-                prefab = CreateDefaultTile(type);
+                // The fallback is the tile itself, not an unowned prototype to clone.
+                tile = CreateDefaultTile(type);
+                tile.transform.SetParent(tilesParent, false);
+                tile.transform.SetPositionAndRotation(worldPos, Quaternion.identity);
             }
-
-            Vector3 worldPos = GridToWorld(x, y);
-            GameObject tile = Instantiate(prefab, worldPos, Quaternion.identity, tilesParent);
+            else
+            {
+                tile = Instantiate(prefab, worldPos, Quaternion.identity, tilesParent);
+            }
             tile.name = $"Tile_{x}_{y}_{type}";
             tileObjects[x, y] = tile;
         }
@@ -192,13 +197,18 @@ namespace Necrocis
             if (tilesParent == null) return;
 
             // 에디터에서는 DestroyImmediate, 런타임에서는 Destroy
-            while (tilesParent.childCount > 0)
+            for (int i = tilesParent.childCount - 1; i >= 0; i--)
             {
-                Transform child = tilesParent.GetChild(0);
+                Transform child = tilesParent.GetChild(i);
                 if (Application.isPlaying)
+                {
+                    child.gameObject.SetActive(false);
                     Destroy(child.gameObject);
+                }
                 else
+                {
                     DestroyImmediate(child.gameObject);
+                }
             }
 
             tileObjects = new GameObject[mapWidth, mapHeight];

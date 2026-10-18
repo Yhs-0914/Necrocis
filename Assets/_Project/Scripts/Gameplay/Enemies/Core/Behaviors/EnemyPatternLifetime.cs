@@ -23,11 +23,11 @@ namespace Necrocis
             Cancel();
             enemy = source;
             generation = source.SpawnGeneration;
-            runId = SaveService.ActiveRunId;
+            runId = WorldProgressBindings.Session.ActiveRunId;
         }
 
         public bool IsCurrent(uint token) => enemy != null && enemy.gameObject.activeInHierarchy
-            && !enemy.IsDead && enemy.SpawnGeneration == token && generation == token && runId == SaveService.ActiveRunId;
+            && !enemy.IsDead && enemy.SpawnGeneration == token && generation == token && runId == WorldProgressBindings.Session.ActiveRunId;
 
         public bool TryExecute(uint token, Action action)
         {

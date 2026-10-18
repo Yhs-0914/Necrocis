@@ -155,7 +155,7 @@ namespace Necrocis
             foreach (ResidueRubble prop in Active)
             {
                 if (prop == null || !prop.IsBlocking) continue;
-                BiomeManager biome = BiomeManager.Active;
+                IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
                 if (biome != null)
                 {
                     Vector2Int cell = biome.WorldToGrid(prop.transform.position), player = biome.WorldToGrid(from);

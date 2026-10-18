@@ -6,13 +6,7 @@ using UnityEngine;
 namespace Necrocis
 {
     // 직업 종류 (레벨 10에서 선택)
-    public enum JobType
-    {
-        None,    // 미선택
-        Warrior, // 전사: 공격력/방어력 특화
-        Mage,    // 마법사: 마력/쿨타임 특화
-        Archer   // 궁수: 공격속도/사거리 특화
-    }
+
 
     /// <summary>
     /// 경험치, 레벨업, 직업 선택을 관리하는 정적 클래스.
@@ -400,7 +394,7 @@ namespace Necrocis
         {
             get
             {
-                LevelProgressionConfig difficultyConfig = DifficultyBalanceService.GetProgressionConfig();
+                LevelProgressionConfig difficultyConfig = ProgressionPolicyBindings.ResolveActiveConfig?.Invoke();
                 if (difficultyConfig != null)
                 {
                     return difficultyConfig;

@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: StomachEnemySpawnConfig
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   normalKillsPerElite: 10
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: ed14b06444759459aa397748f15059de, type: 2}
     name: StomachGulp
+    receivingProfile: {fileID: 11400000, guid: b31cacef44f654ff2b8cf6206b4802ba, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1601
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -90,11 +91,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -110,10 +111,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 5776acaa48a8544d2b6221fe5ca01aab, type: 2}
     name: StomachMucusSnail
+    receivingProfile: {fileID: 11400000, guid: 15537e04b2580443683902a494fc397c, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1602
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -184,11 +186,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -204,10 +206,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: 83507b86eb762412da73736941f79ecf, type: 2}
     name: StomachOverfedSac
+    receivingProfile: {fileID: 11400000, guid: 6e292d34d42324d19884ba3c94afa50f, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1603
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -278,11 +281,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08

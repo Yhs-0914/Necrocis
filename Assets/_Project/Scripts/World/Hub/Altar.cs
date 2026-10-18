@@ -9,7 +9,10 @@ namespace Necrocis
     public class Altar : MonoBehaviour
     {
         [Header("재단 설정")]
+#if UNITY_EDITOR
+        [Tooltip("편집기에서 범위를 표시하는 선의 반경입니다. 실제 진입 감지는 Trigger Collider 크기를 사용합니다.")]
         [SerializeField] private float interactionRadius = 3f;
+#endif
         [SerializeField] private bool isActivated = false;
 
         [Header("부산물 슬롯 (시각용)")]
@@ -27,6 +30,7 @@ namespace Necrocis
         public UnityEvent OnAltarActivated;
         public UnityEvent OnFinalBossEnter;
 
+        private System.IDisposable relicSubscription;
         public bool IsActivated => isActivated;
 
         private void Start()
@@ -36,19 +40,13 @@ namespace Necrocis
             UpdateRelicDisplay();
             UpdateVisuals();
 
-            // GameManager 이벤트 구독
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.OnAllRelicsCollected.AddListener(OnAllRelicsCollected);
-            }
+            relicSubscription = WorldProgressBindings.Relics.SubscribeAllCollected(OnAllRelicsCollected);
         }
 
         private void OnDestroy()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.OnAllRelicsCollected.RemoveListener(OnAllRelicsCollected);
-            }
+            relicSubscription?.Dispose();
+            relicSubscription = null;
         }
 
         /// <summary>
@@ -65,9 +63,9 @@ namespace Necrocis
         /// </summary>
         public void TryInteract(GameObject player)
         {
-            if (GameManager.Instance == null) return;
+            if (!WorldProgressBindings.Relics.IsAvailable) return;
 
-            if (GameManager.Instance.HasAllRelics)
+            if (WorldProgressBindings.Relics.HasAll)
             {
                 if (!isActivated)
                     ActivateAltar();
@@ -76,7 +74,7 @@ namespace Necrocis
             else
             {
                 // 부산물 부족
-                int collected = GameManager.Instance.CollectedRelicCount;
+                int collected = WorldProgressBindings.Relics.Count;
                 Debug.Log($"[Altar] 부산물이 부족합니다. ({collected}/4)");
                 ShowMissingRelics();
             }
@@ -109,7 +107,7 @@ namespace Necrocis
         /// </summary>
         private void EnterFinalBoss()
         {
-            if (SceneLoader.Instance != null && SceneLoader.Instance.LoadFinalBoss())
+            if (WorldProgressBindings.Travel.LoadFinalBoss())
             {
                 AudioManager.Instance?.PlaySFX("PortalEnter");
                 OnFinalBossEnter?.Invoke();
@@ -121,17 +119,17 @@ namespace Necrocis
         /// </summary>
         private void ShowMissingRelics()
         {
-            if (GameManager.Instance == null) return;
+            if (!WorldProgressBindings.Relics.IsAvailable) return;
 
             string missing = "부족한 부산물: ";
 
-            if (!GameManager.Instance.HasRelic(BiomeType.Intestine))
+            if (!WorldProgressBindings.Relics.HasRelic(BiomeType.Intestine))
                 missing += "장, ";
-            if (!GameManager.Instance.HasRelic(BiomeType.Liver))
+            if (!WorldProgressBindings.Relics.HasRelic(BiomeType.Liver))
                 missing += "간, ";
-            if (!GameManager.Instance.HasRelic(BiomeType.Stomach))
+            if (!WorldProgressBindings.Relics.HasRelic(BiomeType.Stomach))
                 missing += "위, ";
-            if (!GameManager.Instance.HasRelic(BiomeType.Lung))
+            if (!WorldProgressBindings.Relics.HasRelic(BiomeType.Lung))
                 missing += "폐, ";
 
             Debug.Log($"[Altar] {missing.TrimEnd(',', ' ')}");
@@ -162,7 +160,7 @@ namespace Necrocis
             {
                 altarRenderer.color = activatedColor;
             }
-            else if (GameManager.Instance != null && GameManager.Instance.HasAllRelics)
+            else if (WorldProgressBindings.Relics.IsAvailable && WorldProgressBindings.Relics.HasAll)
             {
                 altarRenderer.color = readyColor;
             }
@@ -177,7 +175,7 @@ namespace Necrocis
         /// </summary>
         public void UpdateRelicDisplay()
         {
-            if (GameManager.Instance == null) return;
+            if (!WorldProgressBindings.Relics.IsAvailable) return;
 
             BiomeType[] biomes = { BiomeType.Intestine, BiomeType.Liver, BiomeType.Stomach, BiomeType.Lung };
 
@@ -185,7 +183,7 @@ namespace Necrocis
             {
                 if (relicVisuals[i] != null)
                 {
-                    relicVisuals[i].SetActive(GameManager.Instance.HasRelic(biomes[i]));
+                    relicVisuals[i].SetActive(WorldProgressBindings.Relics.HasRelic(biomes[i]));
                 }
             }
         }

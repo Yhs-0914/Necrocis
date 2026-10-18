@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 2478954075477239071}
   - component: {fileID: 7844111614911813513}
   - component: {fileID: 3149188188051561100}
+  - component: {fileID: 7793866378045300363}
   m_Layer: 0
   m_Name: FinalBossPlayerFallback
   m_TagString: Player
@@ -349,8 +350,9 @@ MonoBehaviour:
   lockedY: -2
   groundOffsetY: -2
   useDynamicGroundHeight: 1
-  footstepInterval: 0.35
   enableDebugLogs: 0
+  hurtboxWidthRatio: 0.9
+  attackEdgePadding: 0.08
 --- !u!54 &5446617639983970170
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -456,7 +458,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7994394bc01c564588e6c35d6653ebb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Health
-  invincibilityDuration: 0.2
+  invincibilityDuration: 0.5
+  revivalInvincibilityDuration: 0.5
   hitFlashInterval: 0.08
   hitFlashColor: {r: 1, g: 0.18, b: 0.12, a: 1}
 --- !u!114 &941600583578446029
@@ -482,7 +485,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9c01680b68414de69e2f057bab278891, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.CharacterStats
+  m_EditorClassIdentifier: Necrocis.Stats::Necrocis.CharacterStats
 --- !u!114 &5326989980048188633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -769,18 +772,21 @@ MonoBehaviour:
   - itemId: double_core
     displayName: "\uC774\uC911\uD575"
     description: "\uBC1C\uC0AC\uCCB4 2\uAC1C \uBC1C\uC0AC (\uAC01 75% \uD53C\uD574)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 0fdf7b5b219f4ad1982fc647c05a9b8a, type: 3}
     implementation: {fileID: 0}
   - itemId: triple_core
     displayName: "\uC0BC\uC911\uD575"
     description: "\uBC1C\uC0AC\uCCB4 3\uAC1C \uBC1C\uC0AC (\uAC01 55% \uD53C\uD574)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 5dd1a4e6e42049c2a47562b7c4f40f2a, type: 3}
     implementation: {fileID: 0}
   - itemId: homing_cell
     displayName: "\uC720\uB3C4 \uC138\uD3EC"
     description: "\uC801\uC744 \uCD94\uC801\uD558\uB294 \uC720\uB3C4 \uD22C\uC0AC\uCCB4"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 81d1d7f20f304bb0be0a9cf202b92d1a, type: 3}
     implementation: {fileID: 0}
@@ -788,6 +794,7 @@ MonoBehaviour:
     displayName: "\uBE44\uB300 \uC138\uD3EC"
     description: "\uD22C\uC0AC\uCCB4 \uD06C\uAE30\xB7\uCDA9\uB3CC \uBC94\uC704 45%,
       \uC0AC\uAC70\uB9AC 25% \uC99D\uAC00"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: c4f57f7fd6eb454f8d5d6f18f5bc5b2d, type: 3}
     implementation: {fileID: 0}
@@ -795,6 +802,7 @@ MonoBehaviour:
     displayName: "\uC5ED\uB958 \uC7A5\uAE30"
     description: "\uC655\uBCF5 \uACBD\uB85C\uB9C8\uB2E4 \uCD5C\uB300 3\uBA85 \uD0C0\uACA9,
       \uBCF5\uADC0 \uC911 \uAC19\uC740 \uC801 \uC7AC\uC801\uC911 \uC2DC 75% \uD53C\uD574"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 9a7e0131c7664cdb94ca5f2cf389a101, type: 3}
     implementation: {fileID: 0}
@@ -802,12 +810,14 @@ MonoBehaviour:
     displayName: "\uAD00\uD1B5 \uC810\uC561"
     description: "\uCD5C\uB300 3\uBA85 \uAD00\uD1B5, \uAD00\uD1B5\uD560 \uB54C\uB9C8\uB2E4
       \uD53C\uD574 25% \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: b6629a0e59624c9a8df06efecc705d51, type: 3}
     implementation: {fileID: 0}
   - itemId: laryngeal_nerve
     displayName: "\uD6C4\uB450 \uC2E0\uACBD"
     description: "\uB4A4\uCABD\uC73C\uB85C \uCD94\uAC00 \uD22C\uC0AC\uCCB4 \uBC1C\uC0AC"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 7c24bb9d53fa45fda66af0e0bde10276, type: 3}
     implementation: {fileID: 0}
@@ -815,6 +825,7 @@ MonoBehaviour:
     displayName: "\uAD11\uC120 \uAE30\uAD00"
     description: "80% \uD53C\uD574\uC758 \uAD00\uD1B5 \uAD11\uC120 \uACF5\uACA9 (\uB2E4\uC911\uD575\xB7\uD6C4\uBC29
       \uBC1C\uC0AC\xB7\uC138\uD3EC \uC99D\uC2DD \uC801\uC6A9)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 0a725d4bc1ca43be955108ef3f6b412c, type: 3}
     implementation: {fileID: 0}
@@ -822,6 +833,7 @@ MonoBehaviour:
     displayName: "\uBD84\uC5F4 \uC870\uC9C1"
     description: "\uC801 \uBA85\uC911 \uC2DC \uC591\uC606\uC73C\uB85C \uAC01\uAC01
       50% \uD53C\uD574\uC758 \uCD94\uAC00 \uD22C\uC0AC\uCCB4 \uC0DD\uC131"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: f22457e2296c4e5bb8a989d08d3fe3a4, type: 3}
     implementation: {fileID: 0}
@@ -829,6 +841,7 @@ MonoBehaviour:
     displayName: "\uD3ED\uBC1C \uD608\uAD6C"
     description: "\uC6D0\uAC70\uB9AC \uD53C\uD574\uAC00 50% \uAC10\uC18C\uD558\uACE0
       \uBC94\uC704 \uD3ED\uBC1C \uACF5\uACA9\uC73C\uB85C \uBCC0\uACBD"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 2c49df8a280c4f168256c5b1f1b28011, type: 3}
     implementation: {fileID: 0}
@@ -837,6 +850,7 @@ MonoBehaviour:
     description: "\uC801\uC911 \uC704\uCE58\uC5D0 4\uCD08\uAC04 1\uCD08\uB9C8\uB2E4
       0.5 \uD53C\uD574\uB97C \uC8FC\uB294 \uC0B0\uC131 \uC7A5\uD310 \uC0DD\uC131
       (\uB3D9\uC2DC\uC5D0 \uCD5C\uB300 2\uAC1C)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 4bb260e9caea4c50a97fc2e6f9af41de, type: 3}
     implementation: {fileID: 0}
@@ -844,6 +858,7 @@ MonoBehaviour:
     displayName: "\uC138\uD3EC \uC99D\uC2DD"
     description: "\uC77C\uC815 \uD655\uB960\uB85C \uACF5\uACA9\uC774 \uD55C \uBC88
       \uB354 \uBC1C\uB3D9"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 93a5bb1467774edb80e4cc9f0f9586f7, type: 3}
     implementation: {fileID: 0}
@@ -852,12 +867,14 @@ MonoBehaviour:
     description: "\uD22C\uC0AC\uCCB4\uAC00 \uC774\uB3D9\uD558\uBA70 \uD06C\uAE30\uC640
       \uC2E4\uC81C \uCDA9\uB3CC \uBC94\uC704\uAC00 \uC99D\uAC00\uD558\uAC70\uB098
       \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 65c749a76f734243b63c76d5d1d43c62, type: 3}
     implementation: {fileID: 0}
   - itemId: vascular_reflection
     displayName: "\uD608\uAD00 \uBC18\uC0AC"
     description: "\uBCBD\uC5D0 \uD295\uAE30\uB294 \uBC18\uC0AC \uD22C\uC0AC\uCCB4"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: e8a3d94111ab4dd2b70352572c158a16, type: 3}
     implementation: {fileID: 0}
@@ -865,6 +882,7 @@ MonoBehaviour:
     displayName: "\uB3C5\uC131 \uC810\uB9C9"
     description: "\uC801\uC911 \uC2DC 4\uCD08\uAC04 1\uCD08\uB9C8\uB2E4 \uC801\uC911
       \uD53C\uD574\uC758 20% \uC911\uB3C5 \uD53C\uD574"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 9986fc82441c47119bb568655973acd9, type: 3}
     implementation: {fileID: 0}
@@ -872,6 +890,7 @@ MonoBehaviour:
     displayName: "\uBE59\uACB0 \uC2E0\uACBD"
     description: "\uACF5\uACA9 \uC801\uC911 \uC2DC 2\uCD08\uAC04 \uC801 \uC774\uB3D9\uC18D\uB3C4
       30% \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 2dae7275370f4782bbefcadb7758e704, type: 3}
     implementation: {fileID: 0}
@@ -879,6 +898,7 @@ MonoBehaviour:
     displayName: "\uCD9C\uD608 \uAE30\uAD00"
     description: "\uC801\uC911 \uC2DC 3.5\uCD08\uAC04 0.8\uCD08\uB9C8\uB2E4 \uC801\uC911
       \uD53C\uD574\uC758 18% \uCD9C\uD608 \uD53C\uD574"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 48f6cc999e9a45039fc8eceffc54f26a, type: 3}
     implementation: {fileID: 0}
@@ -887,6 +907,7 @@ MonoBehaviour:
     description: "\uC5F0\uC18D \uACF5\uACA9\uB9C8\uB2E4 \uACF5\uACA9\uC18D\uB3C4
       +10% (10\uC911\uCCA9 \uC2DC \uC8FC\uBCC0 150% \uD53C\uD574, \uC790\uC2E0 1
       \uD53C\uD574)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: a2eef1bb211a4210ab5619137abc7952, type: 3}
     implementation: {fileID: 0}
@@ -894,6 +915,7 @@ MonoBehaviour:
     displayName: "\uB3CC\uC5F0\uBCC0\uC774 \uC548\uAD6C"
     description: "\uBC1C\uC0AC \uBC29\uD5A5\uC774 \uC88C\uC6B0 40\uB3C4 \uB0B4\uC5D0\uC11C
       \uBB34\uC791\uC704 \uBCC0\uD654, \uACF5\uACA9\uB825 +2"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 02864ace75954328bb1c8ad1c7e6d6c7, type: 3}
     implementation: {fileID: 0}
@@ -902,6 +924,7 @@ MonoBehaviour:
     description: "\uC8FC\uBCC0 \uC801 \uCD5C\uB300 2\uBA85\uC744 1.2\uCD08\uB9C8\uB2E4
       30% \uD53C\uD574\uB85C \uACF5\uACA9, \uAE30\uBCF8 \uACF5\uACA9 \uD53C\uD574
       20% \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 30ea581a77ed4f50b423105a66d8f601, type: 3}
     implementation: {fileID: 0}
@@ -909,6 +932,7 @@ MonoBehaviour:
     displayName: "\uD3ED\uC8FC \uD608\uB958"
     description: "\uC774\uB3D9 8\uCD08\uB9C8\uB2E4 \uACF5\uACA9\uB825 +1 (\uCD5C\uB300
       +2), \uC815\uC9C0 \uC2DC 4\uCD08\uB9C8\uB2E4 \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: ac6f186a235348a0bfbfdfde74c06175, type: 3}
     implementation: {fileID: 0}
@@ -916,6 +940,7 @@ MonoBehaviour:
     displayName: "\uADFC\uC721 \uACBD\uB828"
     description: "\uADFC\uC811 \uACF5\uACA9 \uBC94\uC704 1.7\uBC30, \uACF5\uACA9\uC18D\uB3C4
       20% \uAC10\uC18C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: da1db62dc85d4ff8b3718e999489bbae, type: 3}
     implementation: {fileID: 0}
@@ -923,6 +948,7 @@ MonoBehaviour:
     displayName: "\uBD88\uC548\uC815 \uD575"
     description: "5\uCD08\uB9C8\uB2E4 \uAE30\uBCF8 \uACF5\uACA9 \uD53C\uD574\uAC00
       60~160% \uC0AC\uC774\uC5D0\uC11C \uBCC0\uACBD"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 0238764490da4eb7b6b4775811a9ca1f, type: 3}
     implementation: {fileID: 0}
@@ -930,6 +956,7 @@ MonoBehaviour:
     displayName: "\uC0DD\uCCB4 \uACF5\uBA85"
     description: "3\uCD08 \uB0B4 \uAC19\uC740 \uC801 \uC5F0\uC18D \uACF5\uACA9 \uC2DC
       \uD53C\uD574 +15% (\uCD5C\uB300 +45%)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 08005822b1914de0bee328b21739e6af, type: 3}
     implementation: {fileID: 0}
@@ -937,6 +964,7 @@ MonoBehaviour:
     displayName: "\uD608\uC555 \uD3ED\uBC1C"
     description: "\uC783\uC740 \uCCB4\uB825 10%\uB2F9 \uACF5\uACA9\uC18D\uB3C4 +6%
       (\uCD5C\uB300 +60%)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: bf1c77e0f1a348268cc2ef88efd45fe6, type: 3}
     implementation: {fileID: 0}
@@ -944,18 +972,21 @@ MonoBehaviour:
     displayName: "\uACF5\uD5C8 \uC138\uD3EC"
     description: "\uACF5\uACA9 \uC2DC 20% \uD655\uB960\uB85C \uC801 \uC8FC\uBCC0\uC5D0\uC11C
       85% \uD53C\uD574\uC758 \uCD94\uAC00 \uD0C4\uD658 \uC0DD\uC131"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 44b4c21f87dc4d1980ec7aa03b0977b4, type: 3}
     implementation: {fileID: 0}
   - itemId: forbidden_growth
     displayName: "\uAE08\uB2E8 \uC131\uC7A5"
     description: "\uCCB4\uB825 -3, \uACF5\uACA9\uB825 +2 \uC99D\uAC00"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: a0bf5a6d28c64823b020d59972591ee2, type: 3}
     implementation: {fileID: 0}
   - itemId: overclock_nerve
     displayName: "\uACFC\uC18D \uC2E0\uACBD"
     description: "\uCCB4\uB825 -2, \uC774\uB3D9\uC18D\uB3C4 +2 \uC99D\uAC00"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: d4b0d7a6e8b94e12a5b9c77fa6d42430, type: 3}
     implementation: {fileID: 0}
@@ -963,6 +994,7 @@ MonoBehaviour:
     displayName: "\uD53C\uC758 \uACC4\uC57D"
     description: "\uC801 20\uBA85 \uCC98\uCE58 \uC2DC \uCCB4\uB825 +1 (\uCD5C\uB300
       +5), \uBC1B\uB294 \uD53C\uD574 1.3\uBC30"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 7e0fe0ed2b824d7d9fdc4f25b49b77bd, type: 3}
     implementation: {fileID: 0}
@@ -970,12 +1002,14 @@ MonoBehaviour:
     displayName: "\uACFC\uC99D\uC2DD \uC2EC\uC7A5"
     description: "\uC783\uC740 \uCCB4\uB825\uC5D0 \uBE44\uB840\uD574 \uACF5\uACA9\uB825
       \uC99D\uAC00 (\uCD5C\uB300 +2)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: e9365419c64b46c9aa094fe60ef9d0ce, type: 3}
     implementation: {fileID: 0}
   - itemId: decay_organ
     displayName: "\uBD80\uD328 \uC7A5\uAE30"
     description: "3\uBD84\uB9C8\uB2E4 \uACF5\uACA9\uB825 +1 (\uCD5C\uB300 +2)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 9b3e06a4a4c74590918318573745d224, type: 3}
     implementation: {fileID: 0}
@@ -983,6 +1017,7 @@ MonoBehaviour:
     displayName: "\uD30C\uC5F4 \uADFC\uC721"
     description: "\uACF5\uACA9 2\uD68C\uB9C8\uB2E4 \uACF5\uACA9\uB825 +0.5\xB7\uC774\uB3D9\uC18D\uB3C4
       -0.25 (\uCD5C\uB300 3\uC911\uCCA9)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 64519f00218d4dc5945148c55ee65576, type: 3}
     implementation: {fileID: 0}
@@ -990,12 +1025,14 @@ MonoBehaviour:
     displayName: "\uBD88\uC644\uC804 \uC7AC\uC0DD"
     description: "\uCCB4\uB825 -2, \uD53C\uACA9 2\uCD08 \uD6C4 \uCCB4\uB825 +1 \uD68C\uBCF5
       (10\uCD08 \uCFE8\uD0C0\uC784)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: b8585326984a471c81e363552ede00cc, type: 3}
     implementation: {fileID: 0}
   - itemId: severance_reflex
     displayName: "\uC808\uB2E8 \uBC18\uC0AC"
     description: "\uD53C\uACA9 \uD6C4 2\uCD08\uAC04 \uACF5\uACA9\uB825 +2"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: edba15146bde460caf3d26ebb02fdcb4, type: 3}
     implementation: {fileID: 0}
@@ -1003,6 +1040,7 @@ MonoBehaviour:
     displayName: "\uC0DD\uCCB4 \uB3C4\uBC15"
     description: "\uB808\uBCA8\uC5C5 \uC120\uD0DD \uC2DC \uC131\uC7A5\uB7C9\uC774
       0~+2 \uBC94\uC704\uC5D0\uC11C \uBB34\uC791\uC704 \uACB0\uC815"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 3975e26e5a454500bb016c167ad152e7, type: 3}
     implementation: {fileID: 0}
@@ -1010,6 +1048,7 @@ MonoBehaviour:
     displayName: "\uC678\uACE8\uACA9"
     description: "\uBC1B\uB294 \uD53C\uD574 25% \uAC10\uC18C, \uB300\uC2E0 \uC774\uB3D9\uC18D\uB3C4
       -1.5"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 1c06e224706e4e41ae9ffc85e79707bc, type: 3}
     implementation: {fileID: 0}
@@ -1017,12 +1056,14 @@ MonoBehaviour:
     displayName: "\uD608\uC18C\uD310 \uB9C9"
     description: "20\uCD08\uB9C8\uB2E4 \uD53C\uD574 1\uC744 \uB9C9\uB294 \uBCF4\uD638\uB9C9
       \uC0DD\uC131"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: ac5d40ecd9bc4f81aeb5db68f9ff801b, type: 3}
     implementation: {fileID: 0}
   - itemId: recovery_factor
     displayName: "\uD68C\uBCF5 \uC778\uC790"
     description: "30\uCD08\uB9C8\uB2E4 \uCCB4\uB825 +1 \uD68C\uBCF5"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: ea4f76c79d6e4826af2526d2eb2ab3fa, type: 3}
     implementation: {fileID: 0}
@@ -1030,6 +1071,7 @@ MonoBehaviour:
     displayName: "\uBC18\uC0AC \uD53C\uBD80"
     description: "\uD53C\uACA9 \uC2DC \uC2E4\uC81C \uBC1B\uC740 \uD53C\uD574\uC758
       75% \uBC18\uC0AC"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 515cafcd131d46d5b031bd4d409ee9b0, type: 3}
     implementation: {fileID: 0}
@@ -1037,6 +1079,7 @@ MonoBehaviour:
     displayName: "\uC0DD\uCCB4 \uC7A5\uB9C9"
     description: "\uC815\uC9C0 1.5\uCD08\uB9C8\uB2E4 \uBC1B\uB294 \uD53C\uD574 10%
       \uAC10\uC18C (\uCD5C\uB300 40%)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: bd715116c6d946a18bd57a4363532296, type: 3}
     implementation: {fileID: 0}
@@ -1044,6 +1087,7 @@ MonoBehaviour:
     displayName: "\uBD84\uC5F4 \uC7AC\uC0DD"
     description: "\uCCB4\uB825 0\uC774 \uB420 \uB54C \uC791\uC740 \uCCB4\uB825\uC73C\uB85C
       \uBD80\uD65C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: b7e6394cf9d64f5aacfe52a31e639e7c, type: 3}
     implementation: {fileID: 0}
@@ -1051,6 +1095,7 @@ MonoBehaviour:
     displayName: "\uAC10\uC5FC \uC219\uC8FC"
     description: "\uC7A1\uBAB9 \uCC98\uCE58 \uC2DC 15% \uD655\uB960\uB85C 6\uCD08\uAC04
       35% \uD53C\uD574\uC758 \uC544\uAD70 \uC0DD\uC131 (\uCD5C\uB300 2\uBA85)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 2b9e25cfeeef435eac4f4788c2beae32, type: 3}
     implementation: {fileID: 0}
@@ -1058,6 +1103,7 @@ MonoBehaviour:
     displayName: "\uD3EC\uC790 \uAD70\uC9D1"
     description: "\uC77C\uC815 \uC2DC\uAC04\uB9C8\uB2E4 \uC801\uC5D0\uAC8C \uB2EC\uB824\uB4DC\uB294
       \uC791\uC740 \uD3EC\uC790 \uC0DD\uBA85\uCCB4 \uC18C\uD658"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 1fd0bb7116fe498ba24b0558dc0b04c4, type: 3}
     implementation: {fileID: 0}
@@ -1065,6 +1111,7 @@ MonoBehaviour:
     displayName: "\uD608\uC561 \uB4DC\uB860"
     description: "1\uCD08\uB9C8\uB2E4 \uAC00\uAE4C\uC6B4 \uC801\uC5D0\uAC8C \uACF5\uACA9\uB825\uC758
       30% \uD53C\uD574"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 1f4bbe17d34a41efbfeacca751dc798a, type: 3}
     implementation: {fileID: 0}
@@ -1072,6 +1119,7 @@ MonoBehaviour:
     displayName: "\uC218\uD638 \uC7A5\uAE30"
     description: "\uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0\uC744 \uB9F4\uB3CC\uBA70
       3.5\uCD08\uB9C8\uB2E4 \uC801 \uD22C\uC0AC\uCCB4 \uD558\uB098 \uBC29\uC5B4"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 1b6965b707da40f08ab8f6391cf9312f, type: 3}
     implementation: {fileID: 0}
@@ -1079,6 +1127,7 @@ MonoBehaviour:
     displayName: "\uCD09\uC218 \uAD70\uCCB4"
     description: "3\uCD08\uB9C8\uB2E4 \uC801 2\uBA85\uC5D0\uAC8C 1.2\uCD08\uAC04
       60% \uB454\uD654\uC640 10% \uD53C\uD574"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 40925b61970b44f4bb0771f2324091c4, type: 3}
     implementation: {fileID: 0}
@@ -1086,6 +1135,7 @@ MonoBehaviour:
     displayName: "\uC804\uAE30 \uC2E0\uACBD\uB9DD"
     description: "\uC801 \uCC98\uCE58 \uC2DC \uCD5C\uB300 3\uBA85\uC5D0\uAC8C \uD53C\uD574
       1\uC758 \uC5F0\uC1C4 \uC804\uB958 (5\uCD08 \uCFE8\uD0C0\uC784)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 79ccd4e44605424b904bacee6d233d5d, type: 3}
     implementation: {fileID: 0}
@@ -1093,6 +1143,7 @@ MonoBehaviour:
     displayName: "\uAC10\uC5FC \uC804\uC774"
     description: "\uC801 \uCC98\uCE58 \uC2DC \uC8FC\uBCC0 3\uBA85\uC5D0\uAC8C 3\uCD08\uAC04
       \uCD08\uB2F9 0.5 \uAC10\uC5FC \uD53C\uD574 (5\uCD08 \uCFE8\uD0C0\uC784)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 44c180ca917c49a9a6025e11944cb3a6, type: 3}
     implementation: {fileID: 0}
@@ -1100,6 +1151,7 @@ MonoBehaviour:
     displayName: "\uB300\uC2DD \uC138\uD3EC"
     description: "\uC801 \uCC98\uCE58 \uC2DC 5\uCD08\uAC04 \uACF5\uACA9\uB825 +0.5
       (\uCD5C\uB300 3\uC911\uCCA9)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 9b0c2139036f4cd4a9bc0b31cfc7c1dc, type: 3}
     implementation: {fileID: 0}
@@ -1107,6 +1159,7 @@ MonoBehaviour:
     displayName: "\uD3ED\uC2DD \uC7A5\uAE30"
     description: "\uC801 \uCC98\uCE58 \uC2DC 3\uCD08 \uB3D9\uC548 \uC774\uB3D9\uC18D\uB3C4
       \uC99D\uAC00 (\uCD5C\uB300 4\uC2A4\uD0DD)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 235474cec8ea4c9b9b40cd93bfffbbc8, type: 3}
     implementation: {fileID: 0}
@@ -1114,6 +1167,7 @@ MonoBehaviour:
     displayName: "\uC2EC\uC7A5 \uC800\uACA9"
     description: "\uCCB4\uB825 60% \uC774\uC0C1\uC778 \uC801\uC5D0\uAC8C \uC9C1\uC811
       \uACF5\uACA9 \uD53C\uD574 35% \uC99D\uAC00"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: ca1bb1b767904f3db5d0b69dcbf1fc7b, type: 3}
     implementation: {fileID: 0}
@@ -1121,6 +1175,7 @@ MonoBehaviour:
     displayName: "\uD608\uB958 \uAC00\uC18D"
     description: "\uBCF4\uC2A4\xB7\uC5D8\uB9AC\uD2B8 \uADFC\uCC98\uC5D0\uC11C \uACF5\uACA9\uC18D\uB3C4
       35% \uC99D\uAC00"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 304747b797864b1fa1386ba975331c2d, type: 3}
     implementation: {fileID: 0}
@@ -1128,6 +1183,7 @@ MonoBehaviour:
     displayName: "\uC9D1\uC911 \uC2E0\uACBD"
     description: "\uC8FC\uBCC0 \uC801 1\uBA85 \uC774\uD558\uC77C \uB54C \uACF5\uACA9\uB825
       +0.75, 2~3\uBA85\uC77C \uB54C +0.5"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 298d285e577e42a895bc20ba5738ceae, type: 3}
     implementation: {fileID: 0}
@@ -1136,6 +1192,7 @@ MonoBehaviour:
     description: "\uCCB4\uB825 20% \uBBF8\uB9CC \uC801\uC744 20% \uD655\uB960\uB85C
       \uCC98\uD615 (\uBCF4\uC2A4\xB7\uC5D8\uB9AC\uD2B8\uB294 \uCD94\uAC00 \uD53C\uD574
       50%)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 486ccc7133284a47a64f0ad5e95cfa36, type: 3}
     implementation: {fileID: 0}
@@ -1143,6 +1200,7 @@ MonoBehaviour:
     displayName: "\uAD11\uD3ED \uC138\uD3EC"
     description: "\uBCF4\uC2A4\uC804 \uC9C4\uC785 \uC2DC 15\uCD08\uAC04 \uACF5\uACA9\uB825
       +0.75, \uC774\uB3D9\uC18D\uB3C4 +0.5, \uACF5\uACA9\uC18D\uB3C4 +30%"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: bb50b60bc68046478ebcc0893f470801, type: 3}
     implementation: {fileID: 0}
@@ -1150,6 +1208,7 @@ MonoBehaviour:
     displayName: "\uBD88\uC548\uC815 \uC138\uD3EC"
     description: "\uD22C\uC0AC\uCCB4 \uC18D\uB3C4 50~150%, 80% \uC774\uD558\uC758
       \uB290\uB9B0 \uD0C4\uC740 \uD53C\uD574 150%"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: a1a40e325ce64e12a81f09b18f96cd98, type: 3}
     implementation: {fileID: 0}
@@ -1158,6 +1217,7 @@ MonoBehaviour:
     description: "10\uCD08\uB9C8\uB2E4 \uC18C\uD615\uD654\xB7\uC774\uB3D9\uC18D\uB3C4
       +1 \uB610\uB294 \uB300\uD615\uD654\xB7\uACF5\uACA9\uB825 +1\xB7\uC774\uB3D9\uC18D\uB3C4
       -0.5"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 8758da4361e84648830e30f74074f09b, type: 3}
     implementation: {fileID: 0}
@@ -1165,6 +1225,7 @@ MonoBehaviour:
     displayName: "\uB3CC\uC5F0\uBCC0\uC774 \uD3ED\uC8FC"
     description: "15\uCD08\uB9C8\uB2E4 7\uCD08\uAC04 \uBB34\uC791\uC704 \uC2A4\uD0EF
       \uBC84\uD504 \uB610\uB294 \uB514\uBC84\uD504"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: 9d4c40e93e804cc585eeee9f04224548, type: 3}
     implementation: {fileID: 0}
@@ -1172,6 +1233,7 @@ MonoBehaviour:
     displayName: "\uAE30\uC0DD \uD3ED\uD0C4"
     description: "\uC801 \uCC98\uCE58 \uC2DC 20% \uD655\uB960\uB85C \uBC18\uACBD
       4\uC5D0 \uACF5\uACA9\uB825 150% \uD3ED\uBC1C"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: aeee8a2e20324ab69bb150c9b2e87f30, type: 3}
     implementation: {fileID: 0}
@@ -1179,6 +1241,7 @@ MonoBehaviour:
     displayName: "\uAD11\uB780 \uD638\uB974\uBAAC"
     description: "\uD53C\uACA9 \uC2DC \uBB34\uC791\uC704 \uB2A5\uB825 +0.5~1 (3\uCD08
       \uC9C0\uC18D, 8\uCD08 \uCFE8\uD0C0\uC784)"
+    descriptionMode: 0
     category: 0
     icon: {fileID: 21300000, guid: ee0b8c6b690b4141934f6d2bbea51407, type: 3}
     implementation: {fileID: 0}
@@ -1380,6 +1443,19 @@ MonoBehaviour:
   frenzyHormoneCooldown: 8
   frenzyHormoneMinBonus: 0.5
   frenzyHormoneMaxBonus: 1
+--- !u!114 &7793866378045300363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7965212509900270173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8f0eb5f47b364bdabc05f1e7b08ac32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerCompositionRoot
+  installHudOnStart: 1
 --- !u!1 &8992798731400703747
 GameObject:
   m_ObjectHideFlags: 0

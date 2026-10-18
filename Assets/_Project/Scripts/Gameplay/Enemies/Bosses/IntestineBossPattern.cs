@@ -126,6 +126,8 @@ namespace Necrocis
         [SerializeField] private bool useFastPatternCooldownsForDebug = false;
         [SerializeField] private float fastPatternCooldown = 1f;
 
+        private const string DungPoolName = "BossPattern.IntestineDung";
+
         private static Sprite dungSprite;
         private static Sprite parasiteSprite;
         private static Sprite shockwaveSprite;
@@ -558,8 +560,12 @@ namespace Necrocis
         private void SpawnDungHazard(Vector3 position, bool spawnParasites)
         {
             position.y = GetGroundHeight(position) + 0.05f;
-            GameObject obj = CreateTempSpriteObject("IntestineBoss_Dung", GetDungSprite(), dungColor, position, dungHazardRadius * 2f, 2500);
-            BossDungHazard hazard = obj.AddComponent<BossDungHazard>();
+            GameObject obj = BossPatternVisualPool.Acquire("IntestineBoss_Dung", GetDungSprite(), dungColor, position,
+                dungHazardRadius * 2f, 2500, this, activeTempObjects, DungPoolName);
+            if (obj == null) return;
+
+            BossDungHazard hazard = obj.GetComponent<BossDungHazard>();
+            if (hazard == null) hazard = obj.AddComponent<BossDungHazard>();
             hazard.Initialize(this, boss.CreatePatternDamage("dung", dungCollisionDamage), dungSlowRatio, dungSlowDuration, dungHazardRadius, dungLifeTime, spawnParasites, parasiteSpawnDelay);
         }
 
@@ -579,8 +585,8 @@ namespace Necrocis
 
                 int poolId = EnemyController.GetPoolArchetypeId(rule);
                 EnemyController parasite = EnemyController.Acquire(parent, "IntestineParasite_Summon", poolId);
-                parasite.Configure(null, rule, center, spawnPosition);
-                parasite.SetIgnoreMidBossArenaRestriction(true);
+                parasite.ConfigureWithContext(null, rule, center, spawnPosition,
+                    EnemySpawnBindings.CaptureForSurface(EnemyWorldBindings.Surface, rule, spawnPosition, EnemyEncounterRole.Boss, true));
                 ApplyParasiteVisual(parasite);
                 activeSummons.Add(parasite);
             }
@@ -665,7 +671,7 @@ namespace Necrocis
 
         private float GetGroundHeight(Vector3 position)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             return biome != null ? biome.GetGroundHeight(position) : position.y;
         }
 
@@ -866,9 +872,14 @@ namespace Necrocis
             return sprite;
         }
 
+        [DisallowMultipleComponent]
         private class BossDungHazard : MonoBehaviour
         {
             private IntestineBossPattern owner;
+            private EnemyController sourceEnemy;
+            private uint ownerGeneration;
+            private SphereCollider hitCollider;
+            private bool armed;
             private EnemyDamageRequest damage;
             private float slowRatio;
             private float slowDuration;
@@ -880,8 +891,12 @@ namespace Necrocis
 
             public void Initialize(IntestineBossPattern owner, EnemyDamageRequest damage, float slowRatio, float slowDuration, float radius, float lifeTime, bool spawnParasites, float parasiteDelay)
             {
+                enabled = false;
                 StopAllCoroutines();
+                armed = false;
                 this.owner = owner;
+                sourceEnemy = owner != null ? owner.boss : null;
+                ownerGeneration = sourceEnemy != null ? sourceEnemy.SpawnGeneration : 0;
                 this.damage = damage;
                 this.slowRatio = slowRatio;
                 this.slowDuration = slowDuration;
@@ -891,15 +906,15 @@ namespace Necrocis
                 this.parasiteDelay = Mathf.Max(0f, parasiteDelay);
                 destroyTime = Time.time + Mathf.Max(0.2f, lifeTime);
 
-                SphereCollider collider = GetComponent<SphereCollider>();
-                if (collider == null)
+                hitCollider = GetComponent<SphereCollider>();
+                if (hitCollider == null)
                 {
-                    collider = gameObject.AddComponent<SphereCollider>();
+                    hitCollider = gameObject.AddComponent<SphereCollider>();
                 }
 
-                collider.enabled = true;
-                collider.isTrigger = true;
-                collider.radius = this.radius;
+                hitCollider.enabled = false;
+                hitCollider.isTrigger = true;
+                hitCollider.radius = this.radius;
 
                 Rigidbody body = GetComponent<Rigidbody>();
                 if (body == null)
@@ -910,15 +925,26 @@ namespace Necrocis
                 body.useGravity = false;
                 body.isKinematic = true;
 
-                if (spawnParasites)
+                armed = IsOwnerCurrent();
+                hitCollider.enabled = armed;
+                enabled = armed;
+                if (armed && spawnParasites)
                 {
                     StartCoroutine(SpawnParasitesRoutine());
                 }
             }
 
+            private bool IsOwnerCurrent()
+            {
+                return owner != null && owner.isActiveAndEnabled && sourceEnemy != null
+                    && owner.boss == sourceEnemy && sourceEnemy.gameObject.activeInHierarchy
+                    && !sourceEnemy.IsDead && sourceEnemy.SpawnGeneration == ownerGeneration;
+            }
+
             private void Update()
             {
-                if (Time.time >= destroyTime)
+                if (!armed) return;
+                if (!IsOwnerCurrent() || Time.time >= destroyTime)
                 {
                     ReleaseSelf();
                     return;
@@ -937,7 +963,7 @@ namespace Necrocis
 
             private void OnTriggerEnter(Collider other)
             {
-                if (hasHitPlayer || other == null)
+                if (!armed || hasHitPlayer || other == null)
                 {
                     return;
                 }
@@ -956,15 +982,20 @@ namespace Necrocis
 
             private void HitPlayer(PlayerController player)
             {
+                if (!armed || hasHitPlayer || player == null || !IsOwnerCurrent()) return;
                 hasHitPlayer = true;
+                float hitSlowRatio = slowRatio;
+                float hitSlowDuration = slowDuration;
                 player.TakeDamage(damage);
-                ApplyPlayerMoveSlow(player, slowRatio, slowDuration);
+                ApplyPlayerMoveSlow(player, hitSlowRatio, hitSlowDuration);
             }
 
             private IEnumerator SpawnParasitesRoutine()
             {
+                IntestineBossPattern spawningOwner = owner;
+                uint generation = ownerGeneration;
                 yield return new WaitForSeconds(parasiteDelay);
-                if (owner != null && spawnParasites)
+                if (armed && spawnParasites && owner == spawningOwner && ownerGeneration == generation && IsOwnerCurrent())
                 {
                     owner.SpawnParasites(transform.position);
                 }
@@ -972,6 +1003,8 @@ namespace Necrocis
 
             private void ReleaseSelf()
             {
+                if (!armed) return;
+                armed = false;
                 BossPatternTempSprite tempSprite = GetComponent<BossPatternTempSprite>();
                 if (tempSprite != null)
                 {
@@ -991,9 +1024,17 @@ namespace Necrocis
 
             private void OnDisable()
             {
+                armed = false;
                 StopAllCoroutines();
+                if (hitCollider != null) hitCollider.enabled = false;
                 owner = null;
+                sourceEnemy = null;
+                ownerGeneration = 0;
+                damage = default;
+                slowRatio = slowDuration = radius = destroyTime = parasiteDelay = 0f;
                 hasHitPlayer = false;
+                spawnParasites = false;
+                enabled = false;
             }
         }
     }

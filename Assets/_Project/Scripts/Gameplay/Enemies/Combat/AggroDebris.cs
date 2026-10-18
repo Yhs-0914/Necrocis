@@ -6,12 +6,26 @@ namespace Necrocis
     /// <summary>
     /// 항체 엘리트 사망 시 생성되는 잔해.
     /// 1) 충격파 VFX가 화면 전체로 퍼짐
-    /// 2) 주변 적이 강제로 플레이어에게 돌진 (chaseRadius 50% 증가 + 강제 Chase)
+    /// 2) 주변 적이 강제로 플레이어에게 돌진 (이동속도 3배, chaseRadius 2배)
     /// 3) 지속 시간 후 효과 해제
     /// </summary>
     public class AggroDebris : MonoBehaviour
     {
         private const float AggroScanInterval = 0.2f;
+        private static readonly Dictionary<object, AggroDebris> liveSources = new Dictionary<object, AggroDebris>();
+        internal static bool IsSourceAlive(object source)
+            => source != null && liveSources.TryGetValue(source, out var producer)
+                && producer != null && producer.active && producer.isActiveAndEnabled
+                && ReferenceEquals(producer.lifetimeSource, source);
+
+        internal static void ReconnectSource(object source, EnemyController actor, EnemyAggroEffectHandle handle)
+        {
+            if (IsSourceAlive(source) && handle.IsCurrent)
+                liveSources[source].boostedEnemies[actor] = handle;
+            else
+                handle.Release();
+        }
+
 
         private float duration;
         private float aggroRadius;
@@ -29,13 +43,17 @@ namespace Necrocis
         private bool vfxFinished;
 
         // 영향받는 적 추적
-        private readonly HashSet<EnemyController> boostedEnemies = new HashSet<EnemyController>();
+        private readonly Dictionary<EnemyController, EnemyAggroEffectHandle> boostedEnemies = new Dictionary<EnemyController, EnemyAggroEffectHandle>();
+        private object lifetimeSource;
         private float aggroRadiusSqr;
         private float nextAggroScanTime;
 
         public void Configure(float duration, float aggroRadius, Sprite debrisSprite, int sortingOrder,
                               Sprite[] vfxSprites, float vfxTargetScale, float vfxSpeed)
         {
+            ReleaseLifetime();
+            lifetimeSource = new object();
+            liveSources.Add(lifetimeSource, this);
             this.duration = duration;
             this.aggroRadius = aggroRadius;
             this.elapsed = 0f;
@@ -92,19 +110,23 @@ namespace Necrocis
             vfxAnimator.enabled = true;
 
             // 반복 재생 (2회) 후 종료
+            object source = lifetimeSource;
+            GameObject animationObject = vfxObject;
+            SpriteFrameAnimator animator = vfxAnimator;
             int loopCount = 0;
             System.Action onLoop = null;
             onLoop = () =>
             {
+                if (!active || lifetimeSource != source || animationObject == null) return;
                 loopCount++;
                 if (loopCount >= 2)
                 {
                     vfxFinished = true;
-                    if (vfxObject != null) vfxObject.SetActive(false);
+                    animationObject.SetActive(false);
                 }
                 else
                 {
-                    vfxAnimator.PlayOneShot(frames, speed, onLoop);
+                    animator.PlayOneShot(frames, speed, onLoop);
                 }
             };
             vfxAnimator.PlayOneShot(frames, speed, onLoop);
@@ -162,9 +184,12 @@ namespace Necrocis
         /// </summary>
         private void ForceAggroNearbyEnemies()
         {
+            object source = lifetimeSource;
+            if (!active || source == null || !isActiveAndEnabled) return;
             IReadOnlyList<EnemyController> enemies = EnemyController.ActiveEnemyControllers;
             for (int i = 0; i < enemies.Count; i++)
             {
+                if (!active || lifetimeSource != source || !isActiveAndEnabled) return;
                 EnemyController enemy = enemies[i];
                 if (enemy == null || enemy.IsDead) continue;
                 if (enemy.Config == null) continue;
@@ -174,28 +199,45 @@ namespace Necrocis
                 delta.y = 0f;
                 if (delta.sqrMagnitude > aggroRadiusSqr) continue;
 
-                if (!boostedEnemies.Contains(enemy))
+                if (boostedEnemies.TryGetValue(enemy, out EnemyAggroEffectHandle existing) && existing.IsCurrent)
+                    continue;
+
+                // The same pooled component can now represent a different enemy spawn.
+                boostedEnemies.Remove(enemy);
+                if (enemy.TryAddAggroEffect(source, enemy.SpawnGeneration, 3f, 2f, out EnemyAggroEffectHandle handle))
                 {
-                    boostedEnemies.Add(enemy);
-                    enemy.ApplyAggroBoost(1.0f);  // chaseRadius 2배 증가
-                    enemy.ForceChasePlayer();     // 이동속도 3배 + 즉시 플레이어에게 돌진
+                    if (active && lifetimeSource == source && isActiveAndEnabled)
+                        boostedEnemies[enemy] = handle;
+                    else
+                        handle.Release();
                 }
             }
         }
 
-        private void OnDestroy()
+        private void ReleaseLifetime()
         {
-            foreach (EnemyController enemy in boostedEnemies)
-            {
-                if (enemy != null && !enemy.IsDead)
-                {
-                    enemy.RemoveAllAggroEffects();
-                }
-            }
+            active = false;
+            if(lifetimeSource!=null)liveSources.Remove(lifetimeSource);
+            lifetimeSource = null;
+            var handles = new List<EnemyAggroEffectHandle>(boostedEnemies.Values);
             boostedEnemies.Clear();
-
-            if (vfxObject != null)
-                Destroy(vfxObject);
+            SpriteFrameAnimator previousAnimator = vfxAnimator;
+            GameObject previousVfx = vfxObject;
+            vfxObject = null;
+            vfxRenderer = null;
+            vfxAnimator = null;
+            vfxFinished = true;
+            previousAnimator?.Stop();
+            if (previousVfx != null)
+            {
+                previousVfx.SetActive(false);
+                Destroy(previousVfx);
+            }
+            foreach (EnemyAggroEffectHandle handle in handles) handle.Release();
         }
+
+        private void OnDisable() => ReleaseLifetime();
+
+        private void OnDestroy() => ReleaseLifetime();
     }
 }

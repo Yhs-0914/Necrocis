@@ -15,6 +15,28 @@ namespace Necrocis
             }
         }
 
+        // Resolve per operation, including direct facade calls without a coordinator component.
+        // A partial capture is valid before a player exists; restore checks all required bindings.
+        internal static SessionSaveAdapter CreateSessionSaveAdapter()
+        {
+            return new SessionSaveAdapter(ResolveSourceBindings());
+        }
+
+        internal static SessionSaveAdapter.SourceBindings ResolveSourceBindings()
+        {
+            PlayerController player = PlayerController.Instance ?? Object.FindFirstObjectByType<PlayerController>();
+            PlayerStats stats = PlayerStats.Instance ?? Object.FindFirstObjectByType<PlayerStats>();
+            PlayerItemManager items = PlayerItemManager.Instance ?? Object.FindFirstObjectByType<PlayerItemManager>();
+            return new SessionSaveAdapter.SourceBindings(
+                player,
+                stats,
+                items,
+                GameManager.Instance,
+                SceneManager.GetActiveScene().name,
+                player != null ? player.GetComponent<PlayerItemCombatEffects>() : items != null ? items.GetComponent<PlayerItemCombatEffects>() : null,
+                player != null ? player.GetComponent<PlayerDamageCoordinator>() : null);
+        }
+
         private IEnumerator Start()
         {
             InGameAudioSettings.EnsureCreated();

@@ -18,7 +18,8 @@ namespace Necrocis
         [SerializeField] private bool autoFindHealth = true;
 
         [Header("References")]
-        [SerializeField] private Health health;
+        [SerializeField] private MonoBehaviour health;
+        private IHealthDisplay healthDisplay;
         [SerializeField] private RectTransform heartContainer;
 
         [Header("Sprites")]
@@ -37,16 +38,17 @@ namespace Necrocis
 
         [Header("Heart Mapping")]
         [SerializeField] private int healthPerHeart = 2;
+        [Tooltip("Hearts per row. Total heart count always follows maximum HP; zero uses one row.")]
         [SerializeField] private int maxVisibleHearts = 12;
         [SerializeField] private Color emptyHeartTint = new Color(1f, 1f, 1f, 0.35f);
 
         private static GameObject persistentCanvas;
         private readonly List<Image> heartImages = new List<Image>();
 
+        private RectTransform boundLayoutContainer;
         private bool subscribed;
         private int cachedHeartCount = -1;
         private Vector2 cachedAppliedHeartSize = new Vector2(-1f, -1f);
-        private float cachedAppliedSpacing = -1f;
         private Vector2 cachedAppliedAnchorPos = new Vector2(float.MinValue, float.MinValue);
 
         private void Awake()
@@ -91,21 +93,11 @@ namespace Necrocis
 
         private void ResolveHealth()
         {
-            if (health != null)
-            {
-                return;
-            }
-
-            if (!autoFindHealth)
-            {
-                return;
-            }
-
-            health = GetComponent<Health>();
-            if (health == null)
-            {
-                health = FindFirstObjectByType<Health>();
-            }
+            if(health!=null && healthDisplay?.Owner==health)return;
+            if(health==null && !autoFindHealth)return;
+            TryUnsubscribeHealth();
+            healthDisplay=PlayerDisplayBindings.Health(health!=null?health.gameObject:gameObject);
+            health=healthDisplay?.Owner as MonoBehaviour;
         }
 
         private void TrySubscribeHealth()
@@ -115,19 +107,19 @@ namespace Necrocis
                 return;
             }
 
-            health.OnHealthChanged += HandleHealthChanged;
+            healthDisplay.OnHealthChanged += HandleHealthChanged;
             subscribed = true;
         }
 
         private void TryUnsubscribeHealth()
         {
-            if (!subscribed || health == null)
+            if (!subscribed || healthDisplay == null)
             {
                 subscribed = false;
                 return;
             }
 
-            health.OnHealthChanged -= HandleHealthChanged;
+            healthDisplay.OnHealthChanged -= HandleHealthChanged;
             subscribed = false;
         }
 
@@ -143,7 +135,7 @@ namespace Necrocis
                 return;
             }
 
-            RefreshHearts(health.CurrentHealth, health.MaxHealth);
+            RefreshHearts(healthDisplay.CurrentHealth, healthDisplay.MaxHealth);
         }
 
         private void EnsureUIReady()
@@ -265,19 +257,14 @@ namespace Necrocis
 
         private void RefreshHearts(float currentHealth, float maxHealth)
         {
-            if (heartContainer == null || maxHealth <= 0f)
-            {
-                return;
-            }
+            if (heartContainer == null) return;
+            SynchronizeContainerIdentity();
+            if (maxHealth <= 0f) { EnsureHeartImageCount(0); ApplyContainerLayoutSettings(); return; }
 
             int valuePerHeart = Mathf.Max(1, healthPerHeart);
             int maxHealthUnits = Mathf.Max(0, Mathf.RoundToInt(maxHealth));
             int currentHealthUnits = Mathf.Clamp(Mathf.RoundToInt(currentHealth), 0, maxHealthUnits);
             int totalHearts = Mathf.Max(1, (maxHealthUnits + valuePerHeart - 1) / valuePerHeart);
-            if (maxVisibleHearts > 0)
-            {
-                totalHearts = Mathf.Min(totalHearts, maxVisibleHearts);
-            }
             EnsureHeartImageCount(totalHearts);
             ApplyContainerLayoutSettings();
             ApplyHeartSizeToExisting(force: false);
@@ -331,6 +318,14 @@ namespace Necrocis
             LayoutRebuilder.ForceRebuildLayoutImmediate(heartContainer);
         }
 
+        private void SynchronizeContainerIdentity()
+        {
+            if(boundLayoutContainer==heartContainer)return;
+            boundLayoutContainer=heartContainer;heartImages.Clear();cachedHeartCount=-1;
+            cachedAppliedHeartSize=new Vector2(-1f,-1f);
+            cachedAppliedAnchorPos=new Vector2(float.MinValue,float.MinValue);
+        }
+
         private void ApplyContainerLayoutSettings()
         {
             if (heartContainer == null)
@@ -338,22 +333,34 @@ namespace Necrocis
                 return;
             }
 
+            if(Application.isPlaying)SynchronizeContainerIdentity();
             if (cachedAppliedAnchorPos != anchoredPosition)
             {
                 heartContainer.anchoredPosition = anchoredPosition;
                 cachedAppliedAnchorPos = anchoredPosition;
             }
 
-            HorizontalLayoutGroup layout = heartContainer.GetComponent<HorizontalLayoutGroup>();
-            if (layout == null)
+            if (!Application.isPlaying)
             {
+                var authoredLayout=heartContainer.GetComponent<HorizontalLayoutGroup>();
+                if(authoredLayout!=null)authoredLayout.spacing=spacing;
                 return;
             }
 
-            if (!Mathf.Approximately(cachedAppliedSpacing, spacing))
+            // Layout is explicit so existing authored single-row containers migrate without
+            // two LayoutGroups competing during Unity's deferred component destruction.
+            var oldLayout=heartContainer.GetComponent<HorizontalLayoutGroup>();
+            if(oldLayout!=null){oldLayout.enabled=false;Destroy(oldLayout);}
+            var fitter=heartContainer.GetComponent<ContentSizeFitter>();if(fitter!=null)fitter.enabled=false;
+            int columns=maxVisibleHearts>0?maxVisibleHearts:Mathf.Max(1,heartImages.Count);
+            int usedColumns=Mathf.Min(columns,heartImages.Count);
+            int rows=(heartImages.Count+columns-1)/columns;
+            var size=new Vector2(Mathf.Max(1f,heartSize.x),Mathf.Max(1f,heartSize.y));
+            heartContainer.sizeDelta=new Vector2(usedColumns*size.x+Mathf.Max(0,usedColumns-1)*spacing,rows*size.y+Mathf.Max(0,rows-1)*spacing);
+            for(int i=0;i<heartImages.Count;i++)
             {
-                layout.spacing = spacing;
-                cachedAppliedSpacing = spacing;
+                var rect=heartImages[i].rectTransform;rect.anchorMin=rect.anchorMax=rect.pivot=new Vector2(0f,1f);
+                rect.anchoredPosition=new Vector2(i%columns*(size.x+spacing),-(i/columns)*(size.y+spacing));
             }
         }
 

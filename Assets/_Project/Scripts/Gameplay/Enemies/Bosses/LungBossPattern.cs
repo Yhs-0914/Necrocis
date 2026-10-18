@@ -266,9 +266,9 @@ namespace Necrocis
             Vector3 spawnPosition = GetGroundedPosition(anchorPosition + Vector3.right * Mathf.Max(1f, brotherSpacing) * 0.5f);
             int poolArchetypeId = EnemyController.GetPoolArchetypeId(brothers[0].Config);
             brothers[1] = EnemyController.Acquire(encounterParent, $"{brothers[0].Config.name}_Brother", poolArchetypeId);
-            brothers[1].Configure(null, brothers[0].Config, spawnPosition, spawnPosition);
+            brothers[1].ConfigureWithContext(null, brothers[0].Config, spawnPosition, spawnPosition,
+                EnemySpawnBindings.CaptureForSurface(EnemyWorldBindings.Surface, brothers[0].Config, spawnPosition, EnemyEncounterRole.Boss, true));
             brothers[1].transform.SetParent(encounterParent, true);
-            brothers[1].SetIgnoreMidBossArenaRestriction(true);
         }
 
         private void PositionBrothers()
@@ -296,7 +296,12 @@ namespace Necrocis
             brother.PatternOwnsContact = true;
             brother.SuppressExperienceReward = brother.Balance != null;
             brother.SetAiSuppressed(true);
-            brother.SetIgnoreMidBossArenaRestriction(true);
+            if (!brother.IsBossEncounter)
+            {
+                brother.SetEncounterRole(EnemyEncounterRole.Boss);
+                brother.ReinitializeStatsForEncounterRole();
+            }
+            brother.SetEncounterMovementExemption(true);
             brother.Defeated -= HandleBrotherDefeated;
             brother.Defeated += HandleBrotherDefeated;
 
@@ -993,7 +998,7 @@ namespace Necrocis
 
         private float GetGroundHeight(Vector3 position)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             return biome != null ? biome.GetGroundHeight(position) : position.y;
         }
 

@@ -77,39 +77,18 @@ namespace Necrocis
 
         private void SpawnSplitVfxThenSpawn(Vector3 deathPos, EnemySpawnRuleConfig splitConfig, Sprite[] vfxSprites)
         {
-            // VFX 오브젝트 생성
-            GameObject vfxObj = new GameObject($"SplitVFX_{config.name}");
-            vfxObj.transform.position = deathPos + new Vector3(0f, 0.8f, 0f);
-
-            SpriteRenderer vfxRenderer = vfxObj.AddComponent<SpriteRenderer>();
-            vfxRenderer.sprite = vfxSprites[0];
-            vfxRenderer.sortingOrder = config.sortingOrder + 200;
-            vfxRenderer.color = new Color(0.5f, 0.2f, 1f, 0.9f);
-
-            Billboard vfxBb = vfxObj.AddComponent<Billboard>();
-            vfxBb.enabled = true;
-
-            vfxObj.transform.localScale = Vector3.one * config.splitVfxScale;
-
-            SpriteFrameAnimator vfxAnim = vfxObj.AddComponent<SpriteFrameAnimator>();
-            vfxAnim.enabled = true;
-
-            // 캡처용 로컬 변수
-            int splitCount = config.splitCount;
-            Transform spawnParent = transform.parent != null ? transform.parent : transform;
-
-            // 이펙트 재생 → 완료 후 분열
-            vfxAnim.PlayOneShot(vfxSprites, config.splitVfxSpeed, () =>
-            {
-                // 이펙트 종료 후 분열 적 소환
-                DoSpawnSplitEnemies(deathPos, splitConfig, splitCount, spawnParent);
-
-                // VFX 페이드 아웃 후 제거
-                SplitVfxFadeOut fadeOut = vfxObj.AddComponent<SplitVfxFadeOut>();
-                fadeOut.Init(vfxRenderer, 0.3f);
-            });
+            QueueSplitEnemies(deathPos, splitConfig, vfxSprites);
         }
 
+        private void QueueSplitEnemies(Vector3 deathPos, EnemySpawnRuleConfig splitConfig, Sprite[] vfxSprites)
+        {
+            var request = new EnemyDeathSpawnRequest(GetInstanceID(), SpawnGeneration, SpawnContext,
+                splitConfig, deathPos, config.splitCount, vfxSprites,
+                config.splitVfxSpeed, config.splitVfxScale, config.sortingOrder + 200, config.name);
+            IEnemyDeathSpawnSink sink = SpawnContext.DeathSpawns;
+            if (sink == null || (sink is Object value && value == null) || !sink.TryQueue(request))
+                Debug.LogWarning("[EliteDeath] 분열 예약의 월드/방문 수명이 유효하지 않습니다.");
+        }
 
         private Sprite[] LoadVoidShieldSprites()
         {
@@ -180,47 +159,8 @@ namespace Necrocis
 
         private void DoSpawnSplitEnemies(Vector3 deathPos, EnemySpawnRuleConfig splitConfig)
         {
-            Transform spawnParent = transform.parent != null ? transform.parent : transform;
-            DoSpawnSplitEnemies(deathPos, splitConfig, config.splitCount, spawnParent);
+            QueueSplitEnemies(deathPos, splitConfig, System.Array.Empty<Sprite>());
         }
-
-
-        private void DoSpawnSplitEnemies(Vector3 deathPos, EnemySpawnRuleConfig splitConfig, int count, Transform spawnParent)
-        {
-            if (logDamageToConsole)
-            {
-                Debug.Log($"[EliteDeath] DoSpawnSplitEnemies: count={count}, deathPos={deathPos}, parent={spawnParent?.name}");
-            }
-
-            BiomeManager biome = BiomeManager.Active;
-            int poolId = GetPoolArchetypeId(splitConfig);
-
-            for (int i = 0; i < count; i++)
-            {
-                // 사망 위치 주변에 분산 배치
-                Vector2 offset = Random.insideUnitCircle * 1.5f;
-                Vector3 spawnPos = deathPos + new Vector3(offset.x, 0f, offset.y);
-
-                if (biome != null)
-                {
-                    Vector2Int grid = biome.WorldToGrid(spawnPos);
-                    if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
-                    {
-                        spawnPos = deathPos;
-                    }
-                    spawnPos.y = biome.GetGroundHeight(spawnPos) + splitConfig.heightOffset;
-                }
-
-                // 직접 적 생성 (스포너 없이 즉시)
-                EnemyController split = Acquire(spawnParent, $"{splitConfig.name}_Split_{i}", poolId);
-                split.Configure(null, splitConfig, spawnPos, spawnPos);
-                if (logDamageToConsole)
-                {
-                    Debug.Log($"[EliteDeath] 분열 적 #{i} 생성 완료: {split.gameObject.name} at {spawnPos}");
-                }
-            }
-        }
-
 
         private void SpawnAggroDebris()
         {
@@ -253,35 +193,9 @@ namespace Necrocis
 
         private EnemySpawnRuleConfig FindEnemyConfigByName(string enemyName)
         {
-            // ConfigurableBiomeManager에서 현재 바이옴의 적 설정 검색
-            BiomeManager biome = BiomeManager.Active;
-            if (biome == null)
-            {
-                Debug.LogWarning("[EliteDeath] FindEnemyConfigByName: BiomeManager.Active == null");
-                return null;
-            }
-
-            ConfigurableBiomeManager configBiome = biome as ConfigurableBiomeManager;
-            if (configBiome == null)
-            {
-                Debug.LogWarning($"[EliteDeath] FindEnemyConfigByName: ConfigurableBiomeManager 캐스트 실패, 타입={biome.GetType().Name}");
-                return null;
-            }
-
-            BiomeConfig biomeConfig = configBiome.GetBiomeConfig();
-            if (biomeConfig == null)
-            {
-                Debug.LogWarning("[EliteDeath] FindEnemyConfigByName: BiomeConfig == null");
-                return null;
-            }
-
-            IReadOnlyList<EnemySpawnRuleConfig> enemySpawnRules = biomeConfig.GetEnemySpawnRules();
-            foreach (EnemySpawnRuleConfig rule in enemySpawnRules)
-            {
-                if (rule != null && rule.name == enemyName)
-                    return rule;
-            }
-            Debug.LogWarning($"[EliteDeath] FindEnemyConfigByName: '{enemyName}'을 찾을 수 없음! 등록된 적: {enemySpawnRules.Count}개");
+            if (SpawnContext.Rules != null && SpawnContext.Rules.TryFindByName(enemyName, out EnemySpawnRuleConfig rule))
+                return rule;
+            Debug.LogWarning("[EliteDeath] 분열 설정을 찾을 수 없습니다: " + enemyName);
             return null;
         }
 

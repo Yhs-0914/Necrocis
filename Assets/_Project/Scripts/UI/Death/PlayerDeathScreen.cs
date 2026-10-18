@@ -23,6 +23,7 @@ namespace Necrocis
         private GameObject uiRoot;
         private bool isShowing;
         private bool isLoading;
+        private ModalInputScope inputScope;
 
         public bool IsShowing => isShowing;
 
@@ -30,8 +31,17 @@ namespace Necrocis
         {
             EnsureEventSystem();
             BuildUI();
-            HideImmediate();
+            if (!isShowing) HideImmediate();
         }
+
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+            HideImmediate();
+            isLoading = false;
+        }
+
+        private void OnDestroy() { inputScope?.Dispose(); inputScope = null; }
 
         public void ShowDeath()
         {
@@ -47,11 +57,12 @@ namespace Necrocis
 
             uiRoot.SetActive(true);
             isShowing = true;
-            Time.timeScale = 0f;
+            inputScope = new ModalInputScope(this, uiRoot, true, allowAuxiliary: false);
         }
 
         private void ReturnToHub()
         {
+            if (inputScope?.CanInteract != true) return;
             if (isLoading)
             {
                 AudioManager.Instance?.PlaySFX("UIInvalid");
@@ -64,103 +75,16 @@ namespace Necrocis
 
         private IEnumerator ReturnToHubRoutine()
         {
-            isLoading = true;
-
-            if (SaveService.HasActiveSession && SaveService.ActiveDifficulty == GameDifficulty.Hard)
+            isLoading=true;
+            if(!SessionActionBindings.Death.TryPrepare(out var plan,out var error))
             {
-                if (!SaveService.TryHandleHardDeath(out string hardDeathError))
-                {
-                    Debug.LogError($"[PlayerDeathScreen] Hard run 초기화 실패: {hardDeathError}");
-                    isLoading = false;
-                    AudioManager.Instance?.PlaySFX("UIInvalid");
-                    yield break;
-                }
-
-                Time.timeScale = 1f;
-                HideImmediate();
-                AsyncOperation mainMenuLoad = GameplaySessionLifecycle.LoadMainMenu();
-                while (mainMenuLoad != null && !mainMenuLoad.isDone)
-                {
-                    yield return null;
-                }
-
-                isLoading = false;
-                yield break;
+                Debug.LogError(error);isLoading=false;AudioManager.Instance?.PlaySFX("UIInvalid");yield break;
             }
-
-            bool restoreNormalProgress = false;
-            if (SaveService.HasActiveSession
-                && SaveService.ActiveDifficulty == GameDifficulty.Normal)
-            {
-                if (!SaveService.TryPrepareNormalDeathRespawn(out string normalDeathError))
-                {
-                    Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 보존 실패: {normalDeathError}");
-                    isLoading = false;
-                    AudioManager.Instance?.PlaySFX("UIInvalid");
-                    yield break;
-                }
-
-                restoreNormalProgress = true;
-            }
-
-            Time.timeScale = 1f;
             HideImmediate();
-            PreparePlayerForRespawn();
-
-            GameManager.Instance?.ReturnToHub();
-            if (!restoreNormalProgress
-                && SaveService.HasActiveSession
-                && !SaveService.TrySaveActiveRun(out string normalDeathSaveError))
-            {
-                Debug.LogError($"[PlayerDeathScreen] Normal 사망 저장 실패: {normalDeathSaveError}");
-            }
-
-            if (SceneLoader.Instance != null)
-            {
-                SceneLoader.Instance.ReturnToHub();
-                while (!string.Equals(
-                           SceneManager.GetActiveScene().name,
-                           SceneLoader.SCENE_HUB,
-                           System.StringComparison.Ordinal))
-                {
-                    yield return null;
-                }
-
-                // Wait one frame for the Hub initializer to finish attaching all
-                // runtime player components before restoring saved modifiers.
-                yield return null;
-            }
-            else
-            {
-                AsyncOperation load = SceneManager.LoadSceneAsync(SceneLoader.SCENE_HUB);
-                while (load != null && !load.isDone)
-                {
-                    yield return null;
-                }
-            }
-
-            if (restoreNormalProgress
-                && !SaveService.TryRestorePendingSession(out _, out string restoreError))
-            {
-                Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 복원 실패: {restoreError}");
-                AudioManager.Instance?.PlaySFX("UIInvalid");
-            }
-
-            isLoading = false;
-        }
-
-        private void PreparePlayerForRespawn()
-        {
-            PlayerController player = PlayerController.Instance;
-            if (player == null)
-            {
-                player = FindFirstObjectByType<PlayerController>();
-            }
-
-            if (player != null)
-            {
-                player.ReviveForRespawn();
-            }
+            var routine=SessionActionBindings.Death.Execute(plan);
+            try {while(routine.MoveNext())yield return routine.Current;}
+            finally {(routine as System.IDisposable)?.Dispose();}
+            isLoading=false;
         }
 
         private void HideImmediate()
@@ -171,6 +95,7 @@ namespace Necrocis
             }
 
             isShowing = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         private void EnsureEventSystem()

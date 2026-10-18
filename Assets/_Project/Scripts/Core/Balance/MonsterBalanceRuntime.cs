@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Necrocis
 {
@@ -20,7 +19,7 @@ namespace Necrocis
             MonsterProgressionProfile progression, int stage)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
-            string validation = definition.GetValidationError();
+            string validation = definition.GetBalanceValidationError();
             if (validation != null) throw new InvalidOperationException(validation);
             foreach (MonsterStatSet set in definition.statSets)
             {
@@ -35,17 +34,6 @@ namespace Necrocis
             ContactCoefficient = definition.contact.damageCoefficient;
             ContactKnockback = definition.contact.knockbackDistance;
             SelectPhase("Default");
-        }
-
-        public static MonsterBalanceRuntime Capture(MonsterDefinition definition)
-        {
-            var catalog = Resources.Load<MonsterBalanceCatalog>(CatalogResourcePath);
-            if (catalog == null) throw new InvalidOperationException("런타임 MonsterBalanceCatalog가 없습니다.");
-            MonsterVisitContext visit = BiomeManager.Active != null ? BiomeManager.Active.MonsterVisit : default;
-            bool inVisit = visit.Biome != BiomeType.None && visit.RunId == SaveService.ActiveRunId;
-            return new MonsterBalanceRuntime(definition,
-                catalog.difficultyCatalog.Get(inVisit ? visit.Difficulty : DifficultyBalanceService.ActiveDifficulty),
-                catalog.progression, inVisit ? visit.Stage : 0);
         }
 
         public void SelectPhase(string id)
@@ -72,21 +60,4 @@ namespace Necrocis
         }
     }
 
-    // Final outgoing damage, including difficulty/progression. Safe to keep in a projectile/DoT.
-    public readonly struct EnemyDamageRequest
-    {
-        public float Amount { get; }
-        private readonly EnemyController source;
-        private readonly uint generation;
-        public EnemyController Source => source != null && source.SpawnGeneration == generation
-            && source.gameObject.activeInHierarchy ? source : null;
-
-        public EnemyDamageRequest(float amount, EnemyController source)
-        {
-            if (!MonsterBalanceNumbers.NonNegative(amount)) throw new ArgumentOutOfRangeException(nameof(amount));
-            Amount = amount;
-            this.source = source;
-            generation = source != null ? source.SpawnGeneration : 0;
-        }
-    }
 }

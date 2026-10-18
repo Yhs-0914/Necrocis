@@ -106,7 +106,7 @@ namespace Necrocis
             else if (difficulty == null) error = "난이도 프로필이 없습니다.";
             else if (!Enum.IsDefined(typeof(GameDifficulty), difficulty.difficulty)) error = "난이도 종류가 올바르지 않습니다.";
             else if (progression == null) error = "몬스터 진행도 프로필이 없습니다.";
-            else error = definition.GetValidationError() ?? progression.GetValidationError();
+            else error = definition.GetBalanceValidationError() ?? progression.GetValidationError();
             if (error != null) return false;
 
             if (!definition.TryGetStatSet(statSetId, out MonsterStatSet set))

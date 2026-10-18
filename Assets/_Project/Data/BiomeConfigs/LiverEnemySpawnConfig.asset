@@ -11,15 +11,16 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: LiverEnemySpawnConfig
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   normalKillsPerElite: 10
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: 83e58fda032b14a40b4a66d7631a4558, type: 2}
     name: LiverSutureCell
+    receivingProfile: {fileID: 11400000, guid: b038c9df533a3488ea189f38de7e845a, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1607
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -90,11 +91,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -110,10 +111,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: b9f33a6fa1cea4cdeb17d27e9cc9f8c0, type: 2}
     name: LiverClot
+    receivingProfile: {fileID: 11400000, guid: edcc96b84a638428499bac7d070b5788, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1608
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -184,11 +186,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08
@@ -204,10 +206,11 @@ MonoBehaviour:
     debrisVfxSpeed: 0.12
   - monsterDefinition: {fileID: 11400000, guid: d29c7a3924e2c4b068c031c5159dacfb, type: 2}
     name: LiverCoagulationCore
+    receivingProfile: {fileID: 11400000, guid: 9492b4c88b521437cb9f6ef79696038b, type: 2}
     density: 0.05
     minDistance: 6
     poissonSalt: 1609
-    allowedRegions:
+    allowedRegions: 
     maxAlive: 2
     activationRadius: 55
     respawnCooldown: 6
@@ -278,11 +281,11 @@ MonoBehaviour:
     deathAnimationSpeed: 0.16
     isElite: 0
     tintColor: {r: 1, g: 1, b: 1, a: 1}
-    killTriggerEnemyName:
+    killTriggerEnemyName: 
     killTriggerCount: 5
     splitsOnDeath: 0
     splitCount: 2
-    splitEnemyName:
+    splitEnemyName: 
     splitVfxSprites: []
     splitVfxScale: 3
     splitVfxSpeed: 0.08

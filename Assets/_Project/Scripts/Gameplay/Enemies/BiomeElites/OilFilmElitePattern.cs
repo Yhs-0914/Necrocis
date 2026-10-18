@@ -35,7 +35,7 @@ namespace Necrocis
         public Vector3 Position => enemy != null ? enemy.GetComponent<Rigidbody>().position : transform.position;
         public Vector3 GroundOrigin
         {
-            get { Vector3 p = Position; if (BiomeManager.Active != null) p.y = BiomeManager.Active.GetGroundHeight(p); return p; }
+            get { Vector3 p = Position; if (EnemyWorldBindings.Surface != null) p.y = EnemyWorldBindings.Surface.GetGroundHeight(p); return p; }
         }
         public void Initialize(EnemyController source, OilFilmPatternSettings settings)
         {
@@ -80,9 +80,9 @@ namespace Necrocis
             var player = PlayerController.Instance;
             if (enemy == null || lifetime == null || !lifetime.IsCurrent(generation) || Phase != OilFilmPhase.Ready || IsStunned() || Time.time < nextReady
                 || player == null || player.IsDead || enemy.IsOutOfLeash() || !enemy.IsPlayerInChaseRange()
-                || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)) return false;
+                || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)) return false;
             Vector3 delta = player.transform.position - Position; delta.y = 0;
-            if (delta.sqrMagnitude < .01f || delta.magnitude > trigger || !GasSacOrb.IsVisible(Position) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return false;
+            if (delta.sqrMagnitude < .01f || delta.magnitude > trigger || !EnemyWorldBindings.Attacks.IsVisible(Position) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return false;
             enemy.CommitPatternFacing(delta, false);
             LockedDirection = FacingDirection(enemy.PatternFacing, DontStarveCamera.GetActiveCamera());
             Footprint = new OilFilmSector(GroundOrigin, LockedDirection, range, arc);
@@ -145,8 +145,8 @@ namespace Necrocis
         {
             var player = PlayerController.Instance;
             if (player == null || player.IsDead || !Footprint.Contains(player.transform.position)
-                || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position) || !GasSacOrb.HasClearPath(Position, player.transform.position)) return;
-            if (BiomeManager.Active != null && Mathf.Abs(BiomeManager.Active.GetGroundHeight(player.transform.position) - Footprint.Origin.y) > .25f) return;
+                || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)) return;
+            if (EnemyWorldBindings.Surface != null && Mathf.Abs(EnemyWorldBindings.Surface.GetGroundHeight(player.transform.position) - Footprint.Origin.y) > .25f) return;
             HitAttempts++; float hp = player.HealthComponent.CurrentHealth;
             player.TakeDamage(enemy.CreatePatternDamage(OilFilmPatternSettings.DamageId, 0));
             if (player.HealthComponent.CurrentHealth < hp) DamageApplications++;
@@ -154,11 +154,11 @@ namespace Necrocis
         private void ApplyCoreContact()
         {
             var player = PlayerController.Instance;
-            if (enemy.Balance == null || !enemy.Balance.ContactEnabled || player == null || player.IsDead || player.IsDashInvincible || player.HealthComponent.IsInvincible
-                || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position) || !GasSacOrb.HasClearPath(Position, player.transform.position)
+            if (enemy.Balance == null || !enemy.Balance.ContactEnabled || player == null || player.IsDead
+                || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position) || !EnemyWorldBindings.Attacks.HasClearPath(Position, player.transform.position)
                 || !CombatHitGeometry.SweepTouchesPlayer(Position, Position, coreRadius, player)) return;
-            float hp = player.HealthComponent.CurrentHealth; player.TakeDamage(enemy.CreateContactDamage(0));
-            if (player.HealthComponent.CurrentHealth < hp)
+            DamageResult result = player.TryTakeDamage(enemy.CreateContactDamage(0));
+            if (result.HitAccepted && result.HpBlock != DamageBlockReason.Absorbed && !player.IsDead)
             {
                 Vector3 away = player.transform.position - Position; away.y = 0;
                 if (away.sqrMagnitude < .0001f) away = -LockedDirection;

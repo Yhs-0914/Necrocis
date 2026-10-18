@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Dust Clump Pattern")]
-    public sealed class DustClumpPatternSettings : MonsterPatternSettings
+    public sealed class DustClumpPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "dust-cloud";
         [Min(.1f)] public float triggerDistance = 4.5f;
@@ -26,7 +26,7 @@ namespace Necrocis
             if (definition.tier != MonsterTier.Elite || !definition.patternDamage.Exists(p => p != null && p.id == DamageId)) return "Elite tier and dust-cloud coefficient required.";
             return presentation != null ? presentation.GetValidationError() : "Dust presentation required.";
         }
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<DustClumpElitePattern>() ?? enemy.gameObject.AddComponent<DustClumpElitePattern>();
             pattern.Initialize(enemy, this);

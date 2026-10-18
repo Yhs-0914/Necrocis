@@ -7,7 +7,6 @@ namespace Necrocis
     /// </summary>
     public static class BossProgress
     {
-        private const string KeyPrefix = "necrocis.boss-defeated.";
 
         public static bool IsDefeated(BiomeType biome)
         {
@@ -42,16 +41,6 @@ namespace Necrocis
             SaveService.ResetBossDiscoveriesForDevelopment();
         }
 
-        internal static string GetLegacyKey(BiomeType biome)
-        {
-            return biome switch
-            {
-                BiomeType.Intestine => KeyPrefix + "intestine",
-                BiomeType.Liver => KeyPrefix + "liver",
-                BiomeType.Stomach => KeyPrefix + "stomach",
-                BiomeType.Lung => KeyPrefix + "lung",
-                _ => string.Empty
-            };
-        }
+        internal static string GetLegacyKey(BiomeType biome)=>BossLegacyKeys.Get(biome);
     }
 }

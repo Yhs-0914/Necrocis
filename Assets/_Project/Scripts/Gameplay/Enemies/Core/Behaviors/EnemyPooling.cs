@@ -40,10 +40,38 @@ namespace Necrocis
         public void Configure(IEnemySpawnOwner owner, EnemySpawnRuleConfig config, Vector3 anchorPosition, Vector3 spawnPosition,
             MonsterBalanceRuntime encounterBalance)
         {
+            ConfigureWithContext(owner, config, anchorPosition, spawnPosition,
+                EnemySpawnBindings.CaptureCurrent(config, spawnPosition, encounterBalance));
+        }
+
+        public void ConfigureWithContext(IEnemySpawnOwner owner, EnemySpawnRuleConfig config,
+            Vector3 anchorPosition, Vector3 spawnPosition, EnemySpawnContext context)
+            =>ConfigureWithContextCore(owner,config,anchorPosition,spawnPosition,context,null);
+
+        private void ConfigureWithContextCore(IEnemySpawnOwner owner, EnemySpawnRuleConfig config,
+            Vector3 anchorPosition, Vector3 spawnPosition, EnemySpawnContext context,EnemyRuntimeSnapshot resume)
+        {
+            if (config.monsterDefinition != null)
+            {
+                string validation = config.monsterDefinition.GetValidationError();
+                if (validation != null) throw new System.InvalidOperationException(validation);
+                if (context.Balance == null)
+                    throw new System.InvalidOperationException(config.name + ": 명시적인 몬스터 밸런스가 필요합니다.");
+            }
+            uint configuringGeneration=++SpawnGeneration;
+            configuringLifetime=true;
+            if(resume!=null && gameObject.activeSelf)gameObject.SetActive(false);
+            if(this==null||SpawnGeneration!=configuringGeneration)return;
+            if(logicalLife!=null&&!logicalLife.IsSuspended&&!ReferenceEquals(logicalLife,resume?.Life))logicalLife.Retire();
+            logicalLife=resume?.Life??new EnemyLogicalLife();pendingResume=resume;preparingResume=resume!=null;retiringLifetime=false;preservingSuspendedLife=false;
+            ResetAggroEffects();
+            if(this==null||SpawnGeneration!=configuringGeneration)return;
+            BindDefeatApproval(null);
+            ResetDamageGate();
             hitByPlayer = false;
             suppressKillCredit = false;
-            pendingFloodDamage = 0f;
-            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>()) pattern.EndSpawn();
+            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>())
+            {pattern.EndSpawn();if(this==null||SpawnGeneration!=configuringGeneration)return;}
             ResetPatternDirections();
             SetPatternPositionLocked(false);
             if (config.monsterDefinition != null && config.additionalBaseStats != null)
@@ -54,11 +82,12 @@ namespace Necrocis
             config = config.CreateRuntimeCopy();
             this.owner = owner;
             this.config = config;
-            SpawnGeneration++;
             experienceGranted = false;
             PatternOwnsContact = false;
             SuppressExperienceReward = false;
-            Balance = encounterBalance ?? (config.monsterDefinition != null ? MonsterBalanceRuntime.Capture(config.monsterDefinition) : null);
+            SpawnContext = context;
+            EncounterRole = context.Role;
+            Balance = context.Balance;
             poolArchetypeId = GetPoolArchetypeId(config);
             this.anchorPosition = anchorPosition;
             playerTransform = null;
@@ -77,9 +106,8 @@ namespace Necrocis
             chargeElapsed = 0f;
             chargeCurrentSpeed = 0f;
             chargeCooldownTimer = 0f;
-            hasAggroBoost = false;
             defeatEventRaised = false;
-            ignoreMidBossArenaRestriction = false;
+            ignoreMidBossArenaRestriction = context.IgnoreEncounterMovementRestrictions;
             hasCachedGroundHeight = false;
             aiSuppressed = false;
 
@@ -88,63 +116,81 @@ namespace Necrocis
             transform.localScale = Vector3.one;
 
             EnsureComponents();
+            stats.BeginHealthLifetime();
             statusEffectController?.Initialize(this);
             statusEffectController?.ResetEffects();
+            if(this==null||SpawnGeneration!=configuringGeneration)return;
             enemySkillBridge?.Bind(this, statusEffectController);
             gameObject.tag = "Enemy";
-            ConfigureStats();
+            if(resume==null)ConfigureStats();
+            if(this==null||SpawnGeneration!=configuringGeneration)return;
             ApplyPhysicsSetup();
             ConfigureContactBalance();
             ApplyVisualSetup();
             SetIdleAnimation();
             SyncHeight();
-
-            if (!ActiveEnemies.Contains(this))
-            {
-                ActiveEnemies.Add(this);
-            }
-            RegisterOrUpdateSpatialCell(GetCurrentPosition());
+            EnemyReceivingShape.Bind(this, config.receivingProfile, spriteRenderer);
 
             enabled = config != null;
-            if (!gameObject.activeSelf)
-            {
-                gameObject.SetActive(true);
-            }
-
+            if(resume!=null){ApplySuspendedState(resume);return;}
+            logicalLife.BindLedger(stats.RuntimeHealthLedger);
+            PublishConfiguredLife();
             CombatVfx.PlayEnemySpawn(this);
 
             // FSM 시작 → Idle
             currentState = null;
             ChangeState(EnemyIdleState.Instance);
-            config.monsterDefinition?.pattern?.Attach(this);
+            EnemyPatternBinder.Attach(config.monsterDefinition?.pattern, this);
+        }
+
+        private void PublishConfiguredLife()
+        {
+            configuringLifetime=false;
+            if(ActiveMembership.Add(this))ActiveEnemies.Add(this);
+            RegisterOrUpdateSpatialCell(GetCurrentPosition());
+            if(!gameObject.activeSelf)gameObject.SetActive(true);
         }
 
         public void ReleaseToPool()
         {
             if (gameObject == null || !gameObject.activeSelf) return;
+            uint releasingGeneration=SpawnGeneration;
+            retiringLifetime=true;ActiveMembership.Remove(this);ActiveEnemies.Remove(this);UnregisterSpatialCell();
+            if(!preservingSuspendedLife)logicalLife?.Retire();
+            ResetAggroEffects();
+            if(SpawnGeneration!=releasingGeneration)return;
 
-            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>()) pattern.EndSpawn();
+            foreach (MonsterPatternController pattern in GetComponents<MonsterPatternController>())
+            {pattern.EndSpawn();if(this==null||SpawnGeneration!=releasingGeneration)return;}
 
             // FSM Exit
             currentState?.Exit(this);
+            if(this==null||SpawnGeneration!=releasingGeneration)return;
             currentState = null;
 
+            BindDefeatApproval(null);
             GetComponent<EnemyPatternLifetime>()?.Cancel();
+            if(this==null||SpawnGeneration!=releasingGeneration)return;
             EnemyProjectile.ReturnProjectilesOwnedBy(this);
             StopAllCoroutines();
             PrepareForPool();
             ResetPatternDirections();
             SetPatternPositionLocked(false);
             statusEffectController?.ResetEffects();
+            if(this==null||SpawnGeneration!=releasingGeneration)return;
             EnsurePoolRoot();
             gameObject.SetActive(false);
+            if(this==null||SpawnGeneration!=releasingGeneration)return;
             transform.SetParent(poolRoot, false);
 
             owner = null;
             Defeated = null;
             DamageTaken = null;
+            DamageAccepted = null;
             config = null;
             Balance = null;
+            SpawnContext = default;
+            EncounterRole = EnemyEncounterRole.Field;
             SpawnGeneration++;
             playerTransform = null;
             destination = Vector3.zero;
@@ -158,27 +204,36 @@ namespace Necrocis
             facingDirection = 3;
             currentLoopFrames = null;
             isCharging = false;
-            hasAggroBoost = false;
             ignoreMidBossArenaRestriction = false;
             hasCachedGroundHeight = false;
             aiSuppressed = false;
 
+            logicalLife=null;pendingResume=null;preparingResume=false;preservingSuspendedLife=false;retiringLifetime=false;configuringLifetime=false;
             GetOrCreatePool(poolArchetypeId).Push(this);
         }
 
 
         private void OnDisable()
         {
+            if(!preservingSuspendedLife&&!preparingResume)logicalLife?.Retire();
+            ResetDamageGate();
+            stats?.BeginHealthLifetime();
+            ResetAggroEffects();
             UnregisterSpatialCell();
             ActiveEnemies.Remove(this);
+            ActiveMembership.Remove(this);
             NotifyOwnerReleased();
         }
 
 
         private void OnDestroy()
         {
+            if(!preservingSuspendedLife)logicalLife?.Retire();
+            ResetDamageGate();
+            BindDefeatApproval(null);
             UnregisterSpatialCell();
             ActiveEnemies.Remove(this);
+            ActiveMembership.Remove(this);
             NotifyOwnerReleased();
         }
 

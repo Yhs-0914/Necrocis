@@ -3,14 +3,7 @@ using System.Collections.Generic;
 namespace Necrocis
 {
     // 레벨업 시 선택 가능한 스탯 종류
-    public enum LevelUpStatChoice
-    {
-        HealthUp,            // 체력 증가
-        SpeedUp,             // 이동속도 증가
-        AttackPowerUp,       // 공격력 증가
-        AttackSpeedRangeUp,  // 공격속도/사거리 증가
-        MagicUp              // 마력 증가
-    }
+
 
     /// <summary>
     /// 스탯 선택지의 효과를 정의하는 데이터 클래스.

@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
-using ProceduralMap;
 
 namespace Necrocis
 {
@@ -19,8 +17,8 @@ namespace Necrocis
         [SerializeField, Min(0f)] private float heightStep = 0.5f;
 
         private PlayerController player;
-        private MapGenerator map;
-        private MapGenerator boundMap;
+        private MovementExecutionLease traversalExecution;
+        private IPlayerTerrainQueries terrain;
         private float baseWorldY;
         private float holdTimer;
         private Vector3 pendingDestination;
@@ -32,7 +30,7 @@ namespace Necrocis
         private Vector3 traversalStart;
         private Vector3 traversalDestination;
 
-        public bool HasActiveMap => map && map.IsReady;
+        public bool HasActiveMap => terrain != null && terrain.IsReady;
         public bool IsTraversing => isTraversing;
         public Vector2 TerrainHalfExtents => terrainHalfExtents;
 
@@ -45,44 +43,42 @@ namespace Necrocis
         {
             BindMapIfNeeded();
             if (player != null && player.IsBossDisplaced) { ResetHold(); return; }
-            if (!HasActiveMap) { ResetHold(); return; }
+            if (!HasActiveMap || player == null || player.IsDead) { CancelTraversal(); return; }
             if (isTraversing) { UpdateTraversal(); return; }
             HandleTraversalInput();
         }
 
+        public void SetTerrainContext(IPlayerTerrainQueries context)
+        {
+            if (ReferenceEquals(terrain, context)) return;
+            terrain = context;
+            CancelTraversal();
+        }
+
+        public void ClearTerrainContext(IPlayerTerrainQueries context)
+        {
+            if (ReferenceEquals(terrain, context)) SetTerrainContext(null);
+        }
+
         public bool CanMove(Vector3 current, Vector3 target)
         {
-            if (!ResidueRubble.CanTraverse(current, target, terrainHalfExtents)) return false;
-            FinalBossPhaseThreeController boss = FinalBossArena.Instance != null
-                ? FinalBossArena.Instance.GetComponent<FinalBossPhaseThreeController>() : null;
-            if (boss != null && !boss.CanCrossBoundary(current, target, terrainHalfExtents)) return false;
-            if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(current, target, terrainHalfExtents))
-            {
-                return false;
-            }
-
-            return !HasActiveMap || map.CanPlayerMoveWorld(current, target, terrainHalfExtents);
+            return terrain != null ? terrain.CanPlayerMove(current, target, terrainHalfExtents)
+                : PlayerWorldBindings.CanTraverse(current, target, terrainHalfExtents);
         }
 
         private void BindMapIfNeeded()
         {
-            // Do not let a pending checkpoint restore overwrite the map's spawn on the next frame.
-            if (SaveService.IsRestorePending) return;
-            if (!map) map = FindFirstObjectByType<MapGenerator>();
-            if (!map || !map.IsReady || boundMap == map) return;
-
-            boundMap = map;
-            player.UnlockY();
-            Vector3 spawn = map.GetPlayerSpawnWorldPosition();
-            baseWorldY = transform.position.y;
-            spawn.y = baseWorldY;
-            player.SpawnAt(spawn);
+            terrain?.TryBindPlayer(player, spawn => {
+                player.UnlockY();
+                baseWorldY = transform.position.y;
+                spawn.y = baseWorldY;
+                player.SpawnAt(spawn);
+            });
         }
 
         private void HandleTraversalInput()
         {
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard == null || !keyboard.spaceKey.isPressed)
+            if (player.MovementExecutions.BlocksOrdinaryInput || !InputManager.Instance.Gameplay.TraversalHeld)
             {
                 ResetHold();
                 return;
@@ -90,15 +86,15 @@ namespace Necrocis
 
             Vector3 facing = player.GetLogicalFacingDirection();
             bool lavaJump = false;
-            bool found = map.TryGetClimbDestinationWorld(
-                transform.position, facing, out Vector3 destination, out _);
+            bool found = terrain.TryGetClimbDestination(
+                transform.position, facing, out Vector3 destination);
             if (!found)
             {
-                found = map.TryGetLavaJumpDestinationWorld(
+                found = terrain.TryGetLavaJumpDestination(
                     transform.position, facing, out destination);
                 lavaJump = found;
             }
-            if (!found || !map.TryGetClearTraversalLanding(destination, facing,
+            if (!found || !terrain.TryGetClearTraversalLanding(destination, facing,
                 terrainHalfExtents, out destination)) { ResetHold(); return; }
 
             if (!hasPendingDestination || pendingLavaJump != lavaJump ||
@@ -117,40 +113,57 @@ namespace Necrocis
 
         private void StartTraversal(Vector3 destination, bool lavaJump)
         {
-            if (!ResidueRubble.CanTraverse(transform.position, destination, terrainHalfExtents)) { ResetHold(); return; }
-            if (!MidBossArenaController.CanPlayerTraverseArenaBoundary(
-                    transform.position,
-                    destination,
-                    terrainHalfExtents))
+            if (!terrain.CanStartTraversal(transform.position, destination, terrainHalfExtents))
             {
                 ResetHold();
                 return;
             }
 
-            traversalStart = transform.position;
-            int targetLevel = map.GetHeightLevelAtWorld(destination);
-            destination.y = baseWorldY + targetLevel * heightStep;
-            traversalDestination = destination;
-            traversalDuration = lavaJump ? lavaJumpDuration : climbMoveDuration;
-            pendingLavaJump = lavaJump;
-            traversalTimer = 0f;
-            isTraversing = true;
-            ResetHold(false);
+            if (!InputManager.Instance.Gameplay.CanReadGameplay || player.IsDead || player.IsBossDisplaced) { ResetHold(); return; }
+            var execution = player.MovementExecutions.TryAcquire(this);
+            if (execution == null) { ResetHold(); return; }
+            traversalExecution = execution;
+
+            try
+            {
+                traversalStart = transform.position;
+                int targetLevel = terrain.GetHeightLevel(destination);
+                destination.y = baseWorldY + targetLevel * heightStep;
+                traversalDestination = destination;
+                traversalDuration = lavaJump ? lavaJumpDuration : climbMoveDuration;
+                pendingLavaJump = lavaJump;
+                traversalTimer = 0f;
+                isTraversing = true;
+                ResetHold(false);
+            }
+            catch { CancelTraversal(); throw; }
         }
 
         private void UpdateTraversal()
         {
-            traversalTimer += Time.deltaTime;
-            float t = Mathf.Clamp01(traversalTimer / traversalDuration);
-            float smooth = t * t * (3f - 2f * t);
-            Vector3 position = Vector3.Lerp(traversalStart, traversalDestination, smooth);
-            if (pendingLavaJump) position.y += Mathf.Sin(t * Mathf.PI) * lavaJumpHeight;
-            player.SpawnAt(position);
+            if (traversalExecution == null || !traversalExecution.IsActive) { CancelTraversal(); return; }
+            try
+            {
+                traversalTimer += Time.deltaTime;
+                float t = Mathf.Clamp01(traversalTimer / traversalDuration);
+                float smooth = t * t * (3f - 2f * t);
+                Vector3 position = Vector3.Lerp(traversalStart, traversalDestination, smooth);
+                if (pendingLavaJump) position.y += Mathf.Sin(t * Mathf.PI) * lavaJumpHeight;
+                player.SpawnAt(position);
 
-            if (t < 1f) return;
-            player.SpawnAt(traversalDestination);
-            isTraversing = false;
-            pendingLavaJump = false;
+                if (t < 1f) return;
+                player.SpawnAt(traversalDestination);
+                CancelTraversal();
+            }
+            catch { CancelTraversal(); throw; }
+        }
+
+        private void OnDisable() => CancelTraversal();
+        private void CancelTraversal()
+        {
+            traversalExecution?.Dispose(); traversalExecution = null;
+            isTraversing = false; pendingLavaJump = false;
+            ResetHold();
         }
 
         private void ResetHold(bool resetJumpKind = true)

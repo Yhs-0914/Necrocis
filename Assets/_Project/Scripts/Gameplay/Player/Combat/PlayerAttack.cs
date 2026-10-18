@@ -8,8 +8,10 @@ namespace Necrocis
     /// Basic player attack controller.
     /// Q = melee, W = ranged.
     /// </summary>
-    public class PlayerAttack : MonoBehaviour
+    public partial class PlayerAttack : MonoBehaviour, IBasicAttackDisplayReadModel
     {
+        private const string MeleeSlashPoolName = "PlayerAttack.MeleeSlash";
+        private static readonly System.Func<GameObject> CreateMeleeSlashFunc = BasicMeleeSlashVisual.CreateObject;
         private const string BeamVisualPoolName = "PlayerAttack.BeamVisual";
         private static readonly System.Func<GameObject> CreateBeamVisualFunc = CreateBeamVisualObject;
 
@@ -51,11 +53,10 @@ namespace Necrocis
         [SerializeField] private int meleeSlashSortingOrder = 5050;
 
         private PlayerController playerController;
-        private PlayerItemCombatEffects itemEffects;
+        private IBasicAttackItemEffects itemEffects;
+        private bool HasItemEffects => itemEffects != null && itemEffects.IsAvailable;
         private float lastAttackTime = float.NegativeInfinity;
         private float lastMeleeTime = float.NegativeInfinity;
-        private readonly HashSet<EnemyController> meleeHitEnemies = new HashSet<EnemyController>();
-        private readonly HashSet<EnemyController> beamHitEnemies = new HashSet<EnemyController>();
         private Collider[] meleeOverlapResults;
         private Collider[] beamOverlapResults;
         private Sprite meleeSlashSprite;
@@ -77,11 +78,7 @@ namespace Necrocis
                 Debug.LogError("[PlayerAttack] PlayerController not found.");
             }
 
-            itemEffects = GetComponent<PlayerItemCombatEffects>();
-            if (itemEffects == null)
-            {
-                itemEffects = gameObject.AddComponent<PlayerItemCombatEffects>();
-            }
+            itemEffects = GetComponent<IBasicAttackItemEffects>();
 
             if (meleeTargetMask.value == 0)
             {
@@ -100,6 +97,12 @@ namespace Necrocis
             ResolveRootFirePoint();
         }
 
+        internal void BindRuntime(PlayerController owner, IBasicAttackItemEffects effects)
+        {
+            playerController = owner;
+            itemEffects = effects;
+        }
+
         private void Update()
         {
             HandleAttackInput();
@@ -113,24 +116,24 @@ namespace Necrocis
             }
 
             InputManager input = InputManager.Instance;
-            if (input == null)
+            if (input == null || !input.Gameplay.CanReadGameplay)
             {
                 return;
             }
 
-            if (playerController == null || playerController.IsDead || playerController.IsBossDisplaced)
+            if (playerController == null || playerController.IsDead || playerController.IsBossDisplaced || playerController.MovementExecutions.BlocksOrdinaryInput)
             {
                 return;
             }
 
-            PlayerStats stats = PlayerStats.Instance;
+            PlayerStats stats = playerController.Stats;
             if (stats == null || stats.IsDead)
             {
                 return;
             }
 
             float effectiveAttackCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(attackCooldown, stats);
-            if (itemEffects != null)
+            if (HasItemEffects)
             {
                 effectiveAttackCooldown *= itemEffects.GetAttackCooldownMultiplier();
             }
@@ -145,7 +148,7 @@ namespace Necrocis
             if (input.MeleeAttackAction.WasPressedThisFrame())
             {
                 float effectiveMeleeCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(meleeCooldown, stats);
-                if (itemEffects != null)
+                if (HasItemEffects)
                 {
                     effectiveMeleeCooldown *= itemEffects.GetAttackCooldownMultiplier();
                 }
@@ -184,11 +187,12 @@ namespace Necrocis
 
         private void MeleeAttack()
         {
-            PlayerStats stats = PlayerStats.Instance;
+            HealthEffectSource source = playerController.GetHealthEffectSource("basic/melee");
+            PlayerStats stats = playerController.Stats;
             playerController?.PlayAttackAnimation(true);
             AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.MeleeAttack);
             Vector3 direction = GetAttackDirection();
-            float rangeMultiplier = itemEffects != null ? itemEffects.GetMeleeRangeMultiplier() : 1f;
+            float rangeMultiplier = HasItemEffects ? itemEffects.GetMeleeRangeMultiplier() : 1f;
             float effectiveAttackOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset * rangeMultiplier, stats);
             Vector3 boxCenter = transform.position + direction * effectiveAttackOffset;
             float configuredWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
@@ -199,28 +203,27 @@ namespace Necrocis
             float effectiveDepth = slashSprite != null ? slashWorldSize : configuredDepth;
             Vector3 tallBoxSize = new Vector3(effectiveWidth, 20f, effectiveDepth);
             Quaternion rotation = Quaternion.LookRotation(direction);
-            float damageMultiplier = itemEffects != null ? itemEffects.GetOutgoingBasicDamageMultiplier() : 1f;
-            float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
-            float unstableMultiplier = itemEffects != null ? itemEffects.RollUnstableCoreDamageMultiplier() : 1f;
+            float damageMultiplier = HasItemEffects ? itemEffects.GetOutgoingBasicDamageMultiplier() : 1f;
+            float flatDamageBonus = HasItemEffects ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
+            float unstableMultiplier = HasItemEffects ? itemEffects.RollUnstableCoreDamageMultiplier() : 1f;
             float baseDamage = PlayerCombatCalculator.GetBasicAttackDamage(stats, meleeAttackDamage) + flatDamageBonus;
             float finalDamage = baseDamage * damageMultiplier * unstableMultiplier;
             itemEffects?.NotifyBasicAttackPerformed(finalDamage, meleeTargetMask, effectiveAttackOffset + effectiveDepth * 0.5f, direction);
             SpawnMeleeSlashVisual(boxCenter, direction, slashSprite, slashWorldSize);
 
             EnsureMeleeOverlapBuffer();
-            meleeHitEnemies.Clear();
+            var meleeHitEnemies=new HashSet<EnemyController>();
             int propAttackToken = ResidueRubble.NextAttackToken();
-            int hitCount = Physics.OverlapBoxNonAlloc(
-                boxCenter,
-                tallBoxSize / 2f + new Vector3(PlayerAttackGeometry.Padding, 0, PlayerAttackGeometry.Padding),
-                meleeOverlapResults,
-                rotation,
-                meleeTargetMask,
-                QueryTriggerInteraction.Collide);
+            var hits=EnemyHitSnapshot.Box(boxCenter,
+                tallBoxSize/2f+new Vector3(PlayerAttackGeometry.Padding,0,PlayerAttackGeometry.Padding),
+                rotation,meleeTargetMask,QueryTriggerInteraction.Collide,ref meleeOverlapResults);
+            var hitData=hits;
+            int hitCount=hits.Length;
 
             for (int i = 0; i < hitCount; i++)
             {
-                Collider hitCollider = meleeOverlapResults[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider hitCollider = hitData[i].Collider;
                 if (hitCollider == null)
                 {
                     continue;
@@ -228,37 +231,32 @@ namespace Necrocis
 
                 if (hitCollider.TryGetComponent(out ResidueRubble rubble))
                 { rubble.ApplyPlayerHit(finalDamage, propAttackToken); continue; }
-                EnemyController enemy = hitCollider.GetComponentInParent<EnemyController>();
+                EnemyController enemy = hitData[i].Enemy;
                 if (enemy == null || enemy.IsDead || !PlayerAttackGeometry.InBox(boxCenter, tallBoxSize / 2f, rotation, enemy) || !meleeHitEnemies.Add(enemy))
                 {
                     continue;
                 }
 
-                float appliedDamage = itemEffects != null
+                float appliedDamage = HasItemEffects
                     ? itemEffects.ApplyPerTargetDamageModifiers(enemy, finalDamage)
                     : finalDamage;
-                enemy.TakeDamage(appliedDamage);
-                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
-                itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+                var hitLife = new EnemyHitLife(enemy);
+                Vector3 hitPosition = enemy.transform.position;
+                enemy.TakeDamage(appliedDamage, source);
+                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, hitLife.Generation);
+                itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, hitPosition, hitLife.Generation);
             }
         }
 
         private void SpawnMeleeSlashVisual(Vector3 center, Vector3 direction, Sprite sprite, float targetWorldSize)
         {
-            if (sprite == null)
-            {
-                return;
-            }
-
-            GameObject visualObject = new GameObject("BasicMeleeSlashVisual");
-            visualObject.transform.position = new Vector3(center.x, transform.position.y + meleeSlashHeightOffset, center.z);
-            visualObject.transform.localScale = Vector3.one * GetMeleeSlashWorldScale(sprite, targetWorldSize);
-            visualObject.transform.rotation = GetScreenAlignedRotation(direction);
-
-            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.sortingOrder = meleeSlashSortingOrder;
-            StartCoroutine(FadeAndDestroyMeleeSlash(renderer, Mathf.Max(0.02f, meleeSlashLifetime)));
+            if (sprite == null) return;
+            GameObject pooledVisual = RuntimePool.Acquire(MeleeSlashPoolName, CreateMeleeSlashFunc);
+            if (pooledVisual == null) return;
+            pooledVisual.GetComponent<BasicMeleeSlashVisual>().Show(this, sprite,
+                new Vector3(center.x, transform.position.y + meleeSlashHeightOffset, center.z),
+                GetScreenAlignedRotation(direction), GetMeleeSlashWorldScale(sprite, targetWorldSize),
+                meleeSlashSortingOrder, Mathf.Max(0.02f, meleeSlashLifetime));
         }
 
         private Sprite GetMeleeSlashSprite()
@@ -332,38 +330,11 @@ namespace Necrocis
             return activeCamera.transform.rotation * Quaternion.AngleAxis(rollAngle, Vector3.forward);
         }
 
-        private static IEnumerator FadeAndDestroyMeleeSlash(SpriteRenderer renderer, float lifetime)
-        {
-            if (renderer == null)
-            {
-                yield break;
-            }
-
-            Color baseColor = renderer.color;
-            float startTime = Time.time;
-            while (renderer != null)
-            {
-                float elapsed = Time.time - startTime;
-                if (elapsed >= lifetime)
-                {
-                    break;
-                }
-
-                float alpha = Mathf.Lerp(baseColor.a, 0f, elapsed / lifetime);
-                renderer.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
-                yield return null;
-            }
-
-            if (renderer != null)
-            {
-                Destroy(renderer.gameObject);
-            }
-        }
 
         private void EnsureMeleeOverlapBuffer()
         {
             int size = Mathf.Max(1, meleeOverlapBufferSize);
-            if (meleeOverlapResults == null || meleeOverlapResults.Length != size)
+            if (meleeOverlapResults == null || meleeOverlapResults.Length < size)
             {
                 meleeOverlapResults = new Collider[size];
             }
@@ -372,12 +343,12 @@ namespace Necrocis
         private void EnsureBeamOverlapBuffer()
         {
             int size = Mathf.Max(1, beamOverlapBufferSize);
-            if (itemEffects != null)
+            if (HasItemEffects)
             {
                 size = Mathf.Max(size, itemEffects.BeamHitBufferSize);
             }
 
-            if (beamOverlapResults == null || beamOverlapResults.Length != size)
+            if (beamOverlapResults == null || beamOverlapResults.Length < size)
             {
                 beamOverlapResults = new Collider[size];
             }
@@ -389,11 +360,11 @@ namespace Necrocis
             AudioManager.Instance?.PlayPlayerSfx(PlayerSoundId.RangedAttack);
 
             Vector3 direction = GetAttackDirection();
-            PlayerStats stats = PlayerStats.Instance;
-            float flatDamageBonus = itemEffects != null ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
+            PlayerStats stats = playerController.Stats;
+            float flatDamageBonus = HasItemEffects ? itemEffects.GetOutgoingBasicDamageFlatBonus() : 0f;
             float damage = PlayerCombatCalculator.GetBasicAttackDamage(stats, rangedAttackDamage) + flatDamageBonus;
             float unstableMultiplier = 1f;
-            if (itemEffects != null)
+            if (HasItemEffects)
             {
                 damage *= itemEffects.GetOutgoingBasicDamageMultiplier();
                 damage *= itemEffects.GetRangedBasicDamageMultiplier();
@@ -408,7 +379,7 @@ namespace Necrocis
             muzzleOrigin.y += projectileSpawnHeight + projectileSpawnExtraHeight;
             CombatVfx.PlayRangedMuzzle(muzzleOrigin, direction);
 
-            if (itemEffects != null && itemEffects.HasBeamOrgan)
+            if (HasItemEffects && itemEffects.HasBeamOrgan)
             {
                 FireBeamVolley(
                     direction,
@@ -426,19 +397,22 @@ namespace Necrocis
         }
 
         private void FireProjectileVolley(Vector3 direction, float damage, float range, bool allowExtraVolley)
+            => FireProjectileVolleyFromSource(direction, damage, range, allowExtraVolley, playerController.GetHealthEffectSource("basic/ranged"));
+
+        private void FireProjectileVolleyFromSource(Vector3 direction, float damage, float range, bool allowExtraVolley, HealthEffectSource source)
         {
-            int projectileCount = itemEffects != null ? itemEffects.GetForwardProjectileCount() : 1;
-            float spread = itemEffects != null ? itemEffects.GetSpreadAngleForCount(projectileCount) : 0f;
-            float accuracyPenalty = itemEffects != null ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
+            int projectileCount = HasItemEffects ? itemEffects.GetForwardProjectileCount() : 1;
+            float spread = HasItemEffects ? itemEffects.GetSpreadAngleForCount(projectileCount) : 0f;
+            float accuracyPenalty = HasItemEffects ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
             Vector3 firingDirection = ApplyAccuracyPenalty(direction, accuracyPenalty);
-            float forwardDamageMultiplier = itemEffects != null
+            float forwardDamageMultiplier = HasItemEffects
                 ? itemEffects.GetForwardProjectileDamageMultiplier(projectileCount)
                 : 1f;
             float forwardDamage = damage * forwardDamageMultiplier;
 
             if (projectileCount <= 1)
             {
-                SpawnProjectile(firingDirection, forwardDamage, range, Projectile.SpawnKind.Normal);
+                SpawnProjectileFromSource(firingDirection, forwardDamage, range, Projectile.SpawnKind.Normal, source);
             }
             else
             {
@@ -447,20 +421,20 @@ namespace Necrocis
                 {
                     float offset = (i - center) * spread;
                     Vector3 shotDirection = Quaternion.Euler(0f, offset, 0f) * firingDirection;
-                    SpawnProjectile(shotDirection, forwardDamage, range, Projectile.SpawnKind.Normal);
+                    SpawnProjectileFromSource(shotDirection, forwardDamage, range, Projectile.SpawnKind.Normal, source);
                 }
             }
 
-            if (itemEffects != null && itemEffects.HasLaryngealNerve)
+            if (HasItemEffects && itemEffects.HasLaryngealNerve)
             {
-                SpawnProjectile(
+                SpawnProjectileFromSource(
                     -firingDirection,
                     damage * itemEffects.GetBackShotDamageMultiplier(),
                     range,
-                    Projectile.SpawnKind.Normal);
+                    Projectile.SpawnKind.Normal, itemEffects.GetItemHealthEffectSource(PlayerItemIds.LaryngealNerveId, "projectile").WithEffect(source.EffectId));
             }
 
-            if (allowExtraVolley && itemEffects != null && itemEffects.RollCellProliferation())
+            if (allowExtraVolley && HasItemEffects && itemEffects.RollCellProliferation())
             {
                 StartCoroutine(FireCellProliferationVolleyDelayed(direction, damage, range));
             }
@@ -479,38 +453,45 @@ namespace Necrocis
         }
 
         private IEnumerator FireCellProliferationVolleyDelayed(Vector3 direction, float damage, float range)
+            => FireCellProliferationVolleyDelayedFromSource(direction, damage, range,
+                itemEffects.GetItemHealthEffectSource(PlayerItemIds.CellProliferationId, "projectile"));
+
+        private IEnumerator FireCellProliferationVolleyDelayedFromSource(Vector3 direction, float damage, float range, HealthEffectSource source)
         {
             if (cellProliferationDelay > 0f)
             {
                 yield return new WaitForSeconds(cellProliferationDelay);
             }
 
-            if (itemEffects == null || !isActiveAndEnabled)
+            if (!HasItemEffects || !isActiveAndEnabled)
             {
                 yield break;
             }
 
-            FireProjectileVolley(
+            FireProjectileVolleyFromSource(
                 direction,
                 damage * itemEffects.CellProliferationDamageMultiplier,
                 range,
-                false);
+                false, source);
         }
 
         private void FireBeamVolley(Vector3 direction, float damage, float range, bool allowExtraVolley)
+            => FireBeamVolleyFromSource(direction, damage, range, allowExtraVolley, playerController.GetHealthEffectSource("basic/beam"));
+
+        private void FireBeamVolleyFromSource(Vector3 direction, float damage, float range, bool allowExtraVolley, HealthEffectSource source)
         {
-            int beamCount = itemEffects != null ? itemEffects.GetForwardProjectileCount() : 1;
-            float spread = itemEffects != null ? itemEffects.GetSpreadAngleForCount(beamCount) : 0f;
-            float accuracyPenalty = itemEffects != null ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
+            int beamCount = HasItemEffects ? itemEffects.GetForwardProjectileCount() : 1;
+            float spread = HasItemEffects ? itemEffects.GetSpreadAngleForCount(beamCount) : 0f;
+            float accuracyPenalty = HasItemEffects ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
             Vector3 firingDirection = ApplyAccuracyPenalty(direction, accuracyPenalty);
-            float forwardDamageMultiplier = itemEffects != null
+            float forwardDamageMultiplier = HasItemEffects
                 ? itemEffects.GetForwardProjectileDamageMultiplier(beamCount)
                 : 1f;
             float forwardDamage = damage * forwardDamageMultiplier;
 
             if (beamCount <= 1)
             {
-                FireBeam(firingDirection, forwardDamage, range);
+                FireBeamFromSource(firingDirection, forwardDamage, range, source);
             }
             else
             {
@@ -519,44 +500,51 @@ namespace Necrocis
                 {
                     float offset = (i - center) * spread;
                     Vector3 beamDirection = Quaternion.Euler(0f, offset, 0f) * firingDirection;
-                    FireBeam(beamDirection, forwardDamage, range);
+                    FireBeamFromSource(beamDirection, forwardDamage, range, source);
                 }
             }
 
-            if (itemEffects != null && itemEffects.HasLaryngealNerve)
+            if (HasItemEffects && itemEffects.HasLaryngealNerve)
             {
-                FireBeam(
+                FireBeamFromSource(
                     -firingDirection,
                     damage * itemEffects.GetBackShotDamageMultiplier(),
-                    range);
+                    range, itemEffects.GetItemHealthEffectSource(PlayerItemIds.LaryngealNerveId, "beam").WithEffect(source.EffectId));
             }
 
-            if (allowExtraVolley && itemEffects != null && itemEffects.RollCellProliferation())
+            if (allowExtraVolley && HasItemEffects && itemEffects.RollCellProliferation())
             {
                 StartCoroutine(FireCellProliferationBeamVolleyDelayed(direction, damage, range));
             }
         }
 
         private IEnumerator FireCellProliferationBeamVolleyDelayed(Vector3 direction, float damage, float range)
+            => FireCellProliferationBeamVolleyDelayedFromSource(direction, damage, range,
+                itemEffects.GetItemHealthEffectSource(PlayerItemIds.CellProliferationId, "beam"));
+
+        private IEnumerator FireCellProliferationBeamVolleyDelayedFromSource(Vector3 direction, float damage, float range, HealthEffectSource source)
         {
             if (cellProliferationDelay > 0f)
             {
                 yield return new WaitForSeconds(cellProliferationDelay);
             }
 
-            if (itemEffects == null || !isActiveAndEnabled)
+            if (!HasItemEffects || !isActiveAndEnabled)
             {
                 yield break;
             }
 
-            FireBeamVolley(
+            FireBeamVolleyFromSource(
                 direction,
                 damage * itemEffects.CellProliferationDamageMultiplier,
                 range,
-                false);
+                false, source);
         }
 
         private void SpawnProjectile(Vector3 direction, float damage, float range, Projectile.SpawnKind spawnKind)
+            => SpawnProjectileFromSource(direction, damage, range, spawnKind, playerController.GetHealthEffectSource("basic/ranged"));
+
+        private void SpawnProjectileFromSource(Vector3 direction, float damage, float range, Projectile.SpawnKind spawnKind, HealthEffectSource source)
         {
             PlayerProjectilePool pooler = ResolveObjectPooler();
             if (pooler == null)
@@ -587,7 +575,7 @@ namespace Necrocis
                 return;
             }
 
-            proj.Launch(forward, damage, rangedTargetMask, range, itemEffects, spawnKind);
+            proj.LaunchWithItemContext(forward, damage, rangedTargetMask, range, itemEffects, spawnKind, source);
             ProjectileDirectionalSprite directionalSprite = projectile.GetComponent<ProjectileDirectionalSprite>();
             if (directionalSprite == null)
             {
@@ -598,9 +586,12 @@ namespace Necrocis
         }
 
         private void FireBeam(Vector3 direction, float damage, float range)
+            => FireBeamFromSource(direction, damage, range, playerController.GetHealthEffectSource("basic/beam"));
+
+        private void FireBeamFromSource(Vector3 direction, float damage, float range, HealthEffectSource source)
         {
             EnsureBeamOverlapBuffer();
-            beamHitEnemies.Clear();
+            var beamHitEnemies=new HashSet<EnemyController>();
 
             Vector3 forward = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             Vector3 origin = firePoint != null ? firePoint.position : transform.position;
@@ -608,41 +599,41 @@ namespace Necrocis
             origin.y += projectileSpawnHeight + projectileSpawnExtraHeight + beamHeightOffset;
 
             Vector3 end = origin + forward * Mathf.Max(0.5f, range);
-            float radius = itemEffects != null ? itemEffects.BeamRadius : 0.8f;
+            float radius = HasItemEffects ? itemEffects.BeamRadius : 0.8f;
             float halfHeight = Mathf.Max(0.05f, beamVerticalHalfHeight);
             SpawnBeamVisual(origin, end, radius);
             ResidueRubble.HitAlongSegment(origin, end, radius, damage, rangedTargetMask, ResidueRubble.NextAttackToken());
 
-            int hitCount = Physics.OverlapCapsuleNonAlloc(
-                origin + Vector3.up * halfHeight,
-                end - Vector3.up * halfHeight,
-                radius,
-                beamOverlapResults,
-                rangedTargetMask,
-                QueryTriggerInteraction.Collide);
+            var hits=EnemyHitSnapshot.Box((origin+end)*.5f,
+                new Vector3(radius,halfHeight+radius,Vector3.Distance(origin,end)*.5f+radius),Quaternion.LookRotation(forward),
+                rangedTargetMask,QueryTriggerInteraction.Collide,ref beamOverlapResults);
+            var hitData=hits;
+            int hitCount=hits.Length;
 
             for (int i = 0; i < hitCount; i++)
             {
-                Collider collider = beamOverlapResults[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider collider = hitData[i].Collider;
                 if (collider == null)
                 {
                     continue;
                 }
 
-                EnemyController enemy = collider.GetComponent<EnemyController>()
-                    ?? collider.GetComponentInParent<EnemyController>();
+                EnemyController enemy = hitData[i].Enemy;
 
-                if (enemy == null || enemy.IsDead || !beamHitEnemies.Add(enemy))
+                if (enemy == null || enemy.IsDead || !EnemyReceivingShape.IntersectsBeam(enemy,collider,origin,end,radius,halfHeight) || !beamHitEnemies.Add(enemy))
                 {
                     continue;
                 }
 
-                float appliedDamage = itemEffects != null
+                float appliedDamage = HasItemEffects
                     ? itemEffects.ApplyPerTargetDamageModifiers(enemy, damage)
                     : damage;
-                enemy.TakeDamage(appliedDamage);
-                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
-                itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+                var hitLife = new EnemyHitLife(enemy);
+                Vector3 hitPosition = enemy.transform.position;
+                enemy.TakeDamage(appliedDamage, source);
+                itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, hitLife.Generation);
+                itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, hitPosition, hitLife.Generation);
             }
         }
 
@@ -808,7 +799,7 @@ namespace Necrocis
         {
             Vector3 direction = GetAttackDirection();
             PlayerStats stats = PlayerStats.Instance;
-            float rangeMultiplier = itemEffects != null ? itemEffects.GetMeleeRangeMultiplier() : 1f;
+            float rangeMultiplier = HasItemEffects ? itemEffects.GetMeleeRangeMultiplier() : 1f;
             float gizmoOffset = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackOffset * rangeMultiplier, stats);
             float gizmoWidth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.x * rangeMultiplier, stats);
             float gizmoDepth = PlayerCombatCalculator.GetBasicAttackRange(meleeAttackBoxSize.z * rangeMultiplier, stats);

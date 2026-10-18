@@ -1,0 +1,11 @@
+{
+  "name": "Necrocis.UIPrimitives",
+  "rootNamespace": "Necrocis",
+  "references": [
+    "Necrocis.Input",
+    "UnityEngine.UI",
+    "Unity.InputSystem",
+    "Unity.TextMeshPro"
+  ],
+  "autoReferenced": true
+}

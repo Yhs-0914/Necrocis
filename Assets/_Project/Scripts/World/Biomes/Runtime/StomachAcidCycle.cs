@@ -57,7 +57,7 @@ namespace Necrocis
                 if (!floodMap.IsPlayerInAcid(enemy.transform.position, true)) continue;
                 float fraction = enemy.IsElite ? eliteEnemyFloodDamage : normalEnemyFloodDamage;
                 enemy.TakeFloodDamage(enemy.Stats.MaxHealth * fraction *
-                    exposureSeconds / Mathf.Max(0.1f, floodDuration));
+                    exposureSeconds / Mathf.Max(0.1f, floodDuration), HealthEffectSource.ForOwner(this, "enemy-flood"));
             }
         }
 
@@ -117,7 +117,8 @@ namespace Necrocis
             if (!floodMap.IsPlayerInAcid(player.transform.position, acidLevel > 0f)) return;
 
             nextDamageTime = Time.time + Mathf.Max(0.1f, damageInterval);
-            health.TakeDamage(damagePerTick);
+            health.TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damagePerTick * DifficultyBalanceService.GetIncomingDamageMultiplier(null)),
+                null, HealthEffectSource.ForOwner(this, "player-acid")));
         }
 
         private void OnDestroy() => hud?.Dispose();

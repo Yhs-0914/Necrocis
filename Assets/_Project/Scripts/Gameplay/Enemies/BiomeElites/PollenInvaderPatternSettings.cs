@@ -15,7 +15,7 @@ namespace Necrocis
     }
 
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Pollen Invader Pattern")]
-    public sealed class PollenInvaderPatternSettings : MonsterPatternSettings
+    public sealed class PollenInvaderPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "pollen-volley";
         public const string FollowupDamageId = "pollen-followup";
@@ -53,7 +53,7 @@ namespace Necrocis
             }
             return presentation != null ? presentation.GetValidationError(followup.enabled) : "꽃가루 표현 원본이 없습니다.";
         }
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<PollenInvaderElitePattern>() ?? enemy.gameObject.AddComponent<PollenInvaderElitePattern>();
             pattern.Initialize(enemy, this);

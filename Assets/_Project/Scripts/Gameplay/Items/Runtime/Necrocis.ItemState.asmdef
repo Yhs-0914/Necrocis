@@ -1,0 +1,8 @@
+{
+  "name": "Necrocis.ItemState",
+  "rootNamespace": "Necrocis",
+  "references": [
+    "Necrocis.Contracts"
+  ],
+  "autoReferenced": true
+}

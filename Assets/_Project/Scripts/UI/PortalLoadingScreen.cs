@@ -25,6 +25,11 @@ namespace Necrocis
         private Vector2 runnerBasePosition;
         private float visibleSince;
         private float displayedProgress;
+        private ModalInputScope inputScope;
+        private static readonly string[] LoadingLabels = { "LOADING.", "LOADING..", "LOADING..." };
+        private int shownDots = -1, shownPercent = -1;
+        private string shownPercentText;
+        private System.Globalization.CultureInfo shownPercentCulture;
 
         public float VisibleDuration => isActiveAndEnabled
             ? Time.unscaledTime - visibleSince
@@ -58,14 +63,22 @@ namespace Necrocis
             nextFrameTime = Time.unscaledTime;
             displayedProgress = 0f;
             visibleSince = Time.unscaledTime;
+            shownDots = shownPercent = -1;
+            shownPercentText = null;
+            shownPercentCulture = null;
 
             gameObject.SetActive(true);
             canvasGroup.alpha = 1f;
-            canvasGroup.blocksRaycasts = true;
-            canvasGroup.interactable = true;
+            if (inputScope == null)
+            {
+                canvasGroup.blocksRaycasts = true;
+                canvasGroup.interactable = true;
+            }
+            else inputScope.SetViewInteraction(true, true);
             runnerImage.sprite = FindFirstUsableFrame() ?? fallbackSprite;
             runnerImage.enabled = runnerImage.sprite != null;
             SetProgress(0f);
+            inputScope ??= new ModalInputScope(this, gameObject, false, allowAuxiliary: false);
         }
 
         public void SetProgress(float progress)
@@ -83,7 +96,16 @@ namespace Necrocis
             leadRect.anchorMax = new Vector2(displayedProgress, 1f);
             leadRect.anchoredPosition = Vector2.zero;
             progressLead.enabled = displayedProgress > 0.005f;
-            progressText.text = $"{Mathf.RoundToInt(displayedProgress * 100f):00}%";
+            int percent = Mathf.RoundToInt(displayedProgress * 100f);
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            if (percent != shownPercent || !object.ReferenceEquals(culture, shownPercentCulture)
+                || !string.Equals(progressText.text, shownPercentText, System.StringComparison.Ordinal))
+            {
+                shownPercent = percent;
+                shownPercentCulture = culture;
+                shownPercentText = $"{percent:00}%";
+                progressText.text = shownPercentText;
+            }
         }
 
         public void Hide()
@@ -92,6 +114,9 @@ namespace Necrocis
             canvasGroup.interactable = false;
             gameObject.SetActive(false);
         }
+
+        private void OnDisable() { inputScope?.Dispose(); inputScope = null; }
+        private void OnDestroy() { inputScope?.Dispose(); inputScope = null; }
 
         private void BuildInterface()
         {
@@ -275,7 +300,12 @@ namespace Necrocis
         private void AnimateLoadingLabel()
         {
             int dots = 1 + Mathf.FloorToInt((Time.unscaledTime - visibleSince) * 2.5f) % 3;
-            loadingText.text = "LOADING" + new string('.', dots);
+            string label = LoadingLabels[dots - 1];
+            if (dots != shownDots || loadingText.text != label)
+            {
+                shownDots = dots;
+                loadingText.text = label;
+            }
         }
 
         private void AnimateProgressBar()

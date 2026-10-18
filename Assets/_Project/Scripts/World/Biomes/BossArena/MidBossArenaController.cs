@@ -24,10 +24,7 @@ namespace Necrocis
         private EnemySpawnRuleConfig bossRule;
 
         private EnemyController activeBoss;
-        private IntestineBossPattern activeIntestinePattern;
-        private LiverBossPattern activeLiverPattern;
-        private StomachBossPattern activeStomachPattern;
-        private LungBossPattern activeLungPattern;
+        private IBossEncounter encounter;
         private readonly List<EnemyContactDamage> activeContactDamage = new List<EnemyContactDamage>();
         private Vector2Int centerGrid;
         private Vector2Int arenaSize;
@@ -88,9 +85,9 @@ namespace Necrocis
 
             EnforcePlayerInsidePlayableBounds();
 
-            if (activeLungPattern != null)
+            if (encounter != null && encounter.IsGroup)
             {
-                if (activeLungPattern.IsEncounterDefeated)
+                if (encounter.IsDefeated)
                 {
                     UnlockArena();
                 }
@@ -192,10 +189,7 @@ namespace Necrocis
             RecenterBossEncounter();
             SetBossEncounterActive(false);
 
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.SetGameState(GameState.InBossRoom);
-            }
+            WorldProgressBindings.Encounters.EnterMidBoss();
 
             StartBossIntroOrEncounter();
 
@@ -214,9 +208,9 @@ namespace Necrocis
         private bool TryPlayBossIntro()
         {
             List<SpriteRenderer> renderers = new List<SpriteRenderer>(2);
-            if (activeLungPattern != null)
+            if (encounter != null && encounter.IsGroup)
             {
-                activeLungPattern.ForEachEncounterBoss(boss =>
+                encounter.ForEachActor(boss =>
                 {
                     SpriteRenderer renderer = FindBossPortraitRenderer(boss);
                     if (renderer != null && !renderers.Contains(renderer))
@@ -309,9 +303,9 @@ namespace Necrocis
             Vector3 bossSpawnPosition = ResolveArenaCenterWorld(bossRule.heightOffset);
             int poolArchetypeId = EnemyController.GetPoolArchetypeId(bossRule);
             activeBoss = EnemyController.Acquire(transform, $"{bossRule.name}_MidBoss", poolArchetypeId);
-            activeBoss.Configure(null, bossRule, bossSpawnPosition, bossSpawnPosition);
+            activeBoss.ConfigureWithContext(null, bossRule, bossSpawnPosition, bossSpawnPosition,
+                EnemySpawnContextFactory.CaptureForBiome(biome, bossRule, bossSpawnPosition, EnemyEncounterRole.Boss, true));
             activeBoss.transform.SetParent(transform, true);
-            activeBoss.SetIgnoreMidBossArenaRestriction(true);
             activeBoss.Defeated -= HandleBossDefeated;
             activeBoss.Defeated += HandleBossDefeated;
             ConfigureBiomeSpecificBossPattern(activeBoss, bossSpawnPosition);
@@ -324,163 +318,14 @@ namespace Necrocis
 
         private void ConfigureBiomeSpecificBossPattern(EnemyController boss, Vector3 bossSpawnPosition)
         {
-            if (boss == null || biome == null)
-            {
-                return;
-            }
-
-            MidBossPatternType patternType = ResolveBossPatternType();
-            IntestineBossPattern intestinePattern = boss.GetComponent<IntestineBossPattern>();
-            LiverBossPattern liverPattern = boss.GetComponent<LiverBossPattern>();
-            StomachBossPattern stomachPattern = boss.GetComponent<StomachBossPattern>();
-            LungBossPattern lungPattern = GetComponent<LungBossPattern>();
-            activeIntestinePattern = null;
-            activeLiverPattern = null;
-            activeStomachPattern = null;
-            activeLungPattern = null;
-
-            if (patternType == MidBossPatternType.Intestine)
-            {
-                if (liverPattern != null)
-                {
-                    liverPattern.enabled = false;
-                }
-
-                if (stomachPattern != null)
-                {
-                    stomachPattern.enabled = false;
-                }
-
-                if (lungPattern != null)
-                {
-                    lungPattern.enabled = false;
-                }
-
-                if (intestinePattern == null)
-                {
-                    intestinePattern = boss.gameObject.AddComponent<IntestineBossPattern>();
-                }
-
-                intestinePattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.intestinePattern);
-                intestinePattern.SetEncounterActive(false);
-                activeIntestinePattern = intestinePattern;
-                return;
-            }
-
-            if (patternType == MidBossPatternType.Liver)
-            {
-                if (intestinePattern != null)
-                {
-                    intestinePattern.enabled = false;
-                }
-
-                if (stomachPattern != null)
-                {
-                    stomachPattern.enabled = false;
-                }
-
-                if (lungPattern != null)
-                {
-                    lungPattern.enabled = false;
-                }
-
-                if (liverPattern == null)
-                {
-                    liverPattern = boss.gameObject.AddComponent<LiverBossPattern>();
-                }
-
-                liverPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.liverPattern);
-                liverPattern.SetEncounterActive(false);
-                activeLiverPattern = liverPattern;
-                return;
-            }
-
-            if (patternType == MidBossPatternType.Stomach)
-            {
-                if (intestinePattern != null)
-                {
-                    intestinePattern.enabled = false;
-                }
-
-                if (liverPattern != null)
-                {
-                    liverPattern.enabled = false;
-                }
-
-                if (lungPattern != null)
-                {
-                    lungPattern.enabled = false;
-                }
-
-                if (stomachPattern == null)
-                {
-                    stomachPattern = boss.gameObject.AddComponent<StomachBossPattern>();
-                }
-
-                stomachPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.stomachPattern);
-                stomachPattern.SetEncounterActive(false);
-                activeStomachPattern = stomachPattern;
-                return;
-            }
-
-            if (patternType == MidBossPatternType.Lung)
-            {
-                if (intestinePattern != null)
-                {
-                    intestinePattern.enabled = false;
-                }
-
-                if (liverPattern != null)
-                {
-                    liverPattern.enabled = false;
-                }
-
-                if (stomachPattern != null)
-                {
-                    stomachPattern.enabled = false;
-                }
-
-                if (lungPattern == null)
-                {
-                    lungPattern = gameObject.AddComponent<LungBossPattern>();
-                }
-
-                activeLungPattern = lungPattern;
-                lungPattern.Initialize(boss, bossSpawnPosition, transform, arenaConfig?.boss?.lungPattern);
-                lungPattern.SetEncounterActive(false);
-                lungPattern.ForEachEncounterBoss(RegisterBossContactDamage);
-                return;
-            }
-
-            if (intestinePattern != null)
-            {
-                intestinePattern.enabled = false;
-            }
-
-            if (liverPattern != null)
-            {
-                liverPattern.enabled = false;
-            }
-
-            if (stomachPattern != null)
-            {
-                stomachPattern.enabled = false;
-            }
-
-            if (lungPattern != null)
-            {
-                lungPattern.enabled = false;
-            }
-
-            boss.SetAiSuppressed(true);
+            if (boss == null || biome == null) return;
+            encounter = BossEncounterAdapter.Create(ResolveBossPatternType(), boss, bossSpawnPosition,
+                transform, arenaConfig?.boss, RegisterBossContactDamage);
         }
 
         private void SetBossEncounterActive(bool active)
         {
-            bool hasPattern = activeIntestinePattern != null
-                || activeLiverPattern != null
-                || activeStomachPattern != null
-                || activeLungPattern != null;
+            bool hasPattern = encounter != null && encounter.HasPattern;
 
             if (activeBoss != null && !activeBoss.IsDead)
             {
@@ -496,10 +341,7 @@ namespace Necrocis
                 ConcealBossVisuals();
             }
 
-            activeIntestinePattern?.SetEncounterActive(active);
-            activeLiverPattern?.SetEncounterActive(active);
-            activeStomachPattern?.SetEncounterActive(active);
-            activeLungPattern?.SetEncounterActive(active);
+            encounter?.SetActive(active);
 
             for (int i = 0; i < activeContactDamage.Count; i++)
             {
@@ -519,7 +361,7 @@ namespace Necrocis
 
             concealedBossRenderers.RemoveWhere(renderer => renderer == null);
             ConcealBossRenderers(activeBoss);
-            activeLungPattern?.ForEachEncounterBoss(ConcealBossRenderers);
+            if (encounter != null && encounter.IsGroup) encounter.ForEachActor(ConcealBossRenderers);
         }
 
         private void ConcealBossRenderers(EnemyController boss)
@@ -561,9 +403,9 @@ namespace Necrocis
             }
 
             Vector3 center = ResolveArenaCenterWorld(bossRule.heightOffset);
-            if (activeLungPattern != null)
+            if (encounter != null && encounter.IsGroup)
             {
-                activeLungPattern.RecenterEncounter();
+                encounter.Recenter();
                 return;
             }
 
@@ -656,21 +498,13 @@ namespace Necrocis
                 activeBoss = null;
             }
 
-            if (activeLungPattern != null)
+            if (encounter != null && encounter.IsGroup)
             {
-                activeLungPattern.DisposeEncounter();
-                activeLungPattern = null;
+                encounter.Dispose();
+                encounter = null;
             }
 
-            if (GameManager.Instance != null)
-            {
-                if (biome != null)
-                {
-                    GameManager.Instance.CollectRelic(biome.BiomeType);
-                }
-
-                GameManager.Instance.SetGameState(GameState.InBiome);
-            }
+            WorldProgressBindings.Encounters.CompleteMidBoss(biome != null ? biome.BiomeType : (BiomeType?)null);
 
             SpawnReturnPortal(returnPortalPosition);
             SpawnBonusItemDrop(bossDeathPos);
@@ -718,10 +552,10 @@ namespace Necrocis
         private void PlayBossEncounterVfx()
         {
             BiomeType encounterBiome = biome != null ? biome.BiomeType : BiomeType.None;
-            if (activeLungPattern != null)
+            if (encounter != null && encounter.IsGroup)
             {
                 bool addCameraShake = true;
-                activeLungPattern.ForEachEncounterBoss(boss =>
+                encounter.ForEachActor(boss =>
                 {
                     CombatVfx.PlayBossEncounter(boss, encounterBiome, addCameraShake);
                     addCameraShake = false;
@@ -807,43 +641,29 @@ namespace Necrocis
                 return;
             }
 
-            WorldItemSpawner spawner = biome.GetComponent<WorldItemSpawner>();
-            if (spawner == null)
-            {
-                spawner = biome.gameObject.AddComponent<WorldItemSpawner>();
-            }
-
-            bool spawnedItem = spawner.TrySpawnSingleRandomItemAt(bossDeathPos);
+            bool spawnedItem = WorldProgressBindings.Rewards.TrySpawnBonus(biome.gameObject, bossDeathPos);
             if (!spawnedItem)
             {
                 Debug.Log("[MidBossArena] 보스 보너스 아이템 드랍 위치를 찾지 못했습니다.");
             }
         }
 
+        private BossEntranceGeometry GetEntranceGeometry()
+        {
+            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
+            return BossEntranceGeometry.Create(arenaSize, biome.TileSize, arenaConfig.lockBoundaryInsetInCells,
+                arenaConfig.wallThicknessInCells, presentation.entranceSide, presentation.entranceWidthInCells);
+        }
+
         private void BuildTrigger()
         {
             BoxCollider trigger = GetComponent<BoxCollider>();
-            if (trigger == null)
-            {
-                trigger = gameObject.AddComponent<BoxCollider>();
-            }
-
-            float tileSize = Mathf.Max(0.01f, biome.TileSize);
-            int entranceWidth = Mathf.Clamp(
-                arenaConfig.GetPresentationConfig().entranceWidthInCells,
-                2,
-                Mathf.Max(2, arenaSize.x - 2));
-            float triggerWidth = entranceWidth * tileSize;
-            float triggerDepth = Mathf.Max(tileSize, arenaConfig.triggerInsetInCells * tileSize);
-            ArenaWorldBounds arenaBounds = GetArenaWorldBounds(Vector2.zero);
-            float southInnerEdgeLocal = arenaBounds.playableMinZ - transform.position.z;
-
+            if (trigger == null) trigger = gameObject.AddComponent<BoxCollider>();
+            GetEntranceGeometry().GetTriggerBox(arenaConfig.triggerInsetInCells, arenaConfig.triggerHeight,
+                arenaConfig.wallHeightOffset, out Vector3 center, out Vector3 size);
             trigger.isTrigger = true;
-            trigger.size = new Vector3(triggerWidth, arenaConfig.triggerHeight, triggerDepth);
-            trigger.center = new Vector3(
-                0f,
-                arenaConfig.wallHeightOffset,
-                southInnerEdgeLocal + triggerDepth * 0.5f);
+            trigger.center = center;
+            trigger.size = size;
         }
 
         private void HandleBossDefeated(EnemyController boss)
@@ -853,7 +673,7 @@ namespace Necrocis
                 return;
             }
 
-            if (activeLungPattern != null && !activeLungPattern.IsEncounterDefeated)
+            if (encounter != null && encounter.IsGroup && !encounter.IsDefeated)
             {
                 return;
             }
@@ -1231,33 +1051,20 @@ namespace Necrocis
         {
             blockedBoundaryCells.Clear();
             approachBoundaryCells.Clear();
-
-            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
-            bool usesPresentedEntrance = presentation.enabled;
-
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
+            BossEntranceGeometry geometry = GetEntranceGeometry();
+            bool usesPresentedEntrance = arenaConfig.GetPresentationConfig().enabled;
+            int originX = centerGrid.x - arenaSize.x / 2;
+            int originY = centerGrid.y - arenaSize.y / 2;
             GetBoundaryGridBounds(out int minX, out int minY, out int maxX, out int maxY);
-
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    bool isBoundary = x < minX + thickness
-                        || x > maxX - thickness
-                        || y < minY + thickness
-                        || y > maxY - thickness;
-
-                    if (!isBoundary || !biome.IsValidPosition(x, y))
-                    {
-                        continue;
-                    }
-
+                    int localX = x - originX, localY = y - originY;
+                    if (!geometry.IsBoundaryCell(localX, localY) || !biome.IsValidPosition(x, y)) continue;
                     blockedBoundaryCells.Add(new Vector2Int(x, y));
-                    if (usesPresentedEntrance
-                        && !IsEntranceOpeningCell(x, y, minX, minY, maxX, maxY, thickness))
-                    {
+                    if (usesPresentedEntrance && !geometry.IsOpeningCell(localX, localY))
                         approachBoundaryCells.Add(new Vector2Int(x, y));
-                    }
                 }
             }
         }
@@ -1284,61 +1091,21 @@ namespace Necrocis
             approachBoundaryActive = false;
         }
 
-        private bool IsEntranceOpeningCell(
-            int x,
-            int y,
-            int minX,
-            int minY,
-            int maxX,
-            int maxY,
-            int thickness)
+        private bool IsEntranceOpeningCell(int x, int y, int minX, int minY, int maxX, int maxY, int thickness)
         {
-            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
-
-            bool isOnEntranceSide = presentation.entranceSide switch
-            {
-                BossArenaEntranceSide.North => y > maxY - thickness,
-                BossArenaEntranceSide.West => x < minX + thickness,
-                BossArenaEntranceSide.East => x > maxX - thickness,
-                _ => y < minY + thickness
-            };
-            if (!isOnEntranceSide)
-            {
-                return false;
-            }
-
-            GetEntranceOpeningRange(
-                minX,
-                minY,
-                maxX,
-                maxY,
-                thickness,
-                out int openingStart,
-                out int openingEnd,
-                out bool horizontalEntrance);
-            int coordinate = horizontalEntrance ? x : y;
-            return coordinate >= openingStart && coordinate <= openingEnd;
+            int originX = centerGrid.x - arenaSize.x / 2;
+            int originY = centerGrid.y - arenaSize.y / 2;
+            return GetEntranceGeometry().IsOpeningCell(x - originX, y - originY);
         }
 
-        private void GetEntranceOpeningRange(
-            int minX,
-            int minY,
-            int maxX,
-            int maxY,
-            int thickness,
-            out int openingStart,
-            out int openingEnd,
-            out bool horizontalEntrance)
+        private void GetEntranceOpeningRange(int minX, int minY, int maxX, int maxY, int thickness,
+            out int openingStart, out int openingEnd, out bool horizontalEntrance)
         {
-            BossArenaPresentationConfig presentation = arenaConfig.GetPresentationConfig();
-            horizontalEntrance = presentation.entranceSide == BossArenaEntranceSide.South
-                || presentation.entranceSide == BossArenaEntranceSide.North;
-            int sideMin = horizontalEntrance ? minX : minY;
-            int sideMax = horizontalEntrance ? maxX : maxY;
-            int availableWidth = Mathf.Max(2, sideMax - sideMin + 1 - thickness * 2);
-            int openingWidth = Mathf.Clamp(presentation.entranceWidthInCells, 2, availableWidth);
-            openingStart = sideMin + (sideMax - sideMin + 1 - openingWidth) / 2;
-            openingEnd = openingStart + openingWidth - 1;
+            BossEntranceGeometry geometry = GetEntranceGeometry();
+            horizontalEntrance = geometry.Horizontal;
+            int origin = horizontalEntrance ? centerGrid.x - arenaSize.x / 2 : centerGrid.y - arenaSize.y / 2;
+            openingStart = origin + geometry.OpeningStart;
+            openingEnd = origin + geometry.OpeningEnd;
         }
 
         private void GetBoundaryGridBounds(
@@ -1396,13 +1163,7 @@ namespace Necrocis
                 playableMaxZ);
         }
 
-        private int GetLockBoundaryInsetCells()
-        {
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            int configuredInset = Mathf.Max(0, arenaConfig.lockBoundaryInsetInCells);
-            int maxInset = Mathf.Max(0, (Mathf.Min(arenaSize.x, arenaSize.y) - thickness * 2 - 2) / 2);
-            return Mathf.Min(configuredInset, maxInset);
-        }
+        private int GetLockBoundaryInsetCells() => GetEntranceGeometry().LockInset;
 
         private Vector3 ResolveArenaCenterWorld(float heightOffset = 0f)
         {

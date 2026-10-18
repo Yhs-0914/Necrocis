@@ -12,7 +12,6 @@ namespace Necrocis
     /// 현재 보유 아이템의 정보 확인과 버리기를 담당한다.
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerItemManager))]
     public class PlayerItemInventoryUI : MonoBehaviour
     {
         private const string PanelSpritePath = "UI/Inventory/inventory_panel";
@@ -30,31 +29,31 @@ namespace Necrocis
         [SerializeField] private int sortingOrder = 210;
         [SerializeField] private bool pauseGameWhileOpen = true;
 
-        private PlayerItemManager itemManager;
+        private IInventoryDisplay itemManager;
+        private bool HasItems=>itemManager?.Owner!=null;
         private GameObject canvasObject;
         private Transform cardContainer;
         private Sprite panelSprite;
         private Sprite cardSprite;
         private bool isOpen;
-        private bool ownsPause;
-        private float previousTimeScale = 1f;
+        private ModalInputScope inputScope;
 
         public bool IsOpen => isOpen;
 
         private void Awake()
         {
-            itemManager = GetComponent<PlayerItemManager>();
+            itemManager = PlayerDisplayBindings.Inventory(gameObject);
             BuildUi();
         }
 
         private void OnEnable()
         {
-            if (itemManager == null)
+            if (!HasItems)
             {
-                itemManager = GetComponent<PlayerItemManager>();
+                itemManager = PlayerDisplayBindings.Inventory(gameObject);
             }
 
-            if (itemManager != null)
+            if (HasItems)
             {
                 itemManager.ItemAcquired += HandleInventoryChanged;
                 itemManager.ItemRemoved += HandleInventoryChanged;
@@ -63,7 +62,7 @@ namespace Necrocis
 
         private void OnDisable()
         {
-            if (itemManager != null)
+            if (HasItems)
             {
                 itemManager.ItemAcquired -= HandleInventoryChanged;
                 itemManager.ItemRemoved -= HandleInventoryChanged;
@@ -83,7 +82,8 @@ namespace Necrocis
         private void Update()
         {
             InputManager input = InputManager.Instance;
-            if (input != null && input.InventoryAction.WasPressedThisFrame())
+            if (input != null && input.InventoryAction.WasPressedThisFrame()
+                && (isOpen ? inputScope?.CanInteract == true : input.Contexts.CanOpenAuxiliary))
             {
                 SetOpen(!isOpen);
             }
@@ -91,7 +91,7 @@ namespace Necrocis
 
         public void SetOpen(bool open)
         {
-            if (isOpen == open)
+            if (isOpen == open || open && !InputManager.Instance.Contexts.CanOpenAuxiliary)
             {
                 return;
             }
@@ -115,7 +115,7 @@ namespace Necrocis
             }
         }
 
-        private void HandleInventoryChanged(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem __)
+        private void HandleInventoryChanged(IInventoryItemView _)
         {
             if (isOpen)
             {
@@ -125,7 +125,7 @@ namespace Necrocis
 
         private void DiscardItem(string itemId)
         {
-            if (itemManager == null || string.IsNullOrWhiteSpace(itemId))
+            if (!HasItems || string.IsNullOrWhiteSpace(itemId) || inputScope?.CanInteract != true)
             {
                 return;
             }
@@ -138,30 +138,12 @@ namespace Necrocis
 
         private void PauseGame()
         {
-            ownsPause = false;
-            if (!pauseGameWhileOpen || Time.timeScale <= Mathf.Epsilon)
-            {
-                return;
-            }
-
-            previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-            ownsPause = true;
+            inputScope ??= new ModalInputScope(this, canvasObject, pauseGameWhileOpen, () => SetOpen(false));
         }
 
         private void RestoreTimeScale()
         {
-            if (!ownsPause)
-            {
-                return;
-            }
-
-            if (Time.timeScale <= Mathf.Epsilon)
-            {
-                Time.timeScale = previousTimeScale;
-            }
-
-            ownsPause = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         private void BuildUi()
@@ -221,7 +203,7 @@ namespace Necrocis
                 new Vector2(52f, 46f),
                 "×",
                 new Color(0.32f, 0.085f, 0.12f, 0.96f));
-            closeButton.onClick.AddListener(() => SetOpen(false));
+            closeButton.onClick.AddListener(() => { if (inputScope?.CanInteract == true) SetOpen(false); });
 
             GameObject cards = CreateUiObject("ItemCards", panel.transform);
             RectTransform cardsRect = cards.GetComponent<RectTransform>();
@@ -245,7 +227,7 @@ namespace Necrocis
 
         private void Refresh()
         {
-            if (itemManager == null || cardContainer == null)
+            if (!HasItems || cardContainer == null)
             {
                 return;
             }
@@ -257,7 +239,7 @@ namespace Necrocis
                 Destroy(child);
             }
 
-            IReadOnlyList<PlayerItemManager.AcquiredPlayerItem> items = itemManager.AcquiredItems;
+            IReadOnlyList<IInventoryItemView> items = itemManager.AcquiredItems;
             int slotCount = Mathf.Max(1, itemManager.MaxItemSlots);
             float cardWidth = Mathf.Clamp((1190f - 34f * (slotCount - 1)) / slotCount, 285f, 360f);
 
@@ -274,7 +256,7 @@ namespace Necrocis
             }
         }
 
-        private void CreateItemCard(PlayerItemManager.AcquiredPlayerItem item, int slotIndex, float width)
+        private void CreateItemCard(IInventoryItemView item, int slotIndex, float width)
         {
             GameObject card = CreateCardRoot($"Item_{slotIndex + 1}", width, CardColor);
 
@@ -359,7 +341,7 @@ namespace Necrocis
             return card;
         }
 
-        private static string GetItemName(PlayerItemManager.AcquiredPlayerItem item)
+        private static string GetItemName(IInventoryItemView item)
         {
             return string.IsNullOrWhiteSpace(item.DisplayName) ? item.ItemId : item.DisplayName;
         }
