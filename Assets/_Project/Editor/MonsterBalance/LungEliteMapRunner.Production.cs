@@ -104,7 +104,7 @@ namespace NecrocisEditor
                     Move(Home(p) + Vector3.right * 4); Actor(p).ReleaseToPool(); field.Refresh(player.transform.position);
                     var e = Actor(p); CheckBalance(e, stage);
                     string id = p.monsterId == pollenDefinition.monsterId ? PollenInvaderPatternSettings.FollowupDamageId : DustClumpPatternSettings.DamageId;
-                    float expected = CharacterStats.ToHealthUnits(e.CreatePatternDamage(id, 0).Amount);
+                    float expected = Mathf.Floor(e.CreatePatternDamage(id, 0).Amount + 0.0001f);
                     yield return AttackAtPoint(p, expected);
                     Pass($"{difficulty} VISIT stage{stage}/{p.monsterId}: actual field HP/speed/XP snapshot, live attack damage={expected}, original tell/radius/facing");
                 }
@@ -220,9 +220,9 @@ namespace NecrocisEditor
             var catalog = Resources.Load<MonsterBalanceCatalog>(MonsterBalanceRuntime.CatalogResourcePath); var m = catalog.difficultyCatalog.Get(difficulty).elites;
             Require(catalog.progression.TryGetStage(stage, out var p), "progression source"); var stats = definition.statSets.Single(s => s.id == "Default");
             Require(e.Balance.Current.Stage == stage && e.Balance.Current.Difficulty == difficulty && e.Balance.ContactEnabled, "field captures current visit and body contact");
-            Equal(CharacterStats.ToHealthUnits(stats.maxHealth * m.maxHealth * p.maxHealth), e.Stats.MaxHealth, "HP once");
+            Equal((stats.maxHealth * m.maxHealth * p.maxHealth), e.Stats.MaxHealth, "HP once");
             Equal(stats.moveSpeed * m.moveSpeed, e.Stats.MoveSpeed, "speed excludes progression");
-            Equal((int)Math.Round((double)definition.reward.baseExperience * m.experienceReward * p.experience, MidpointRounding.ToEven), e.Balance.Current.Experience, "XP once");
+            Equal((int)Math.Round((double)(p.fieldEliteExperience > 0 ? p.fieldEliteExperience : definition.reward.baseExperience * p.experience) * m.experienceReward, MidpointRounding.ToEven), e.Balance.Current.Experience, "XP once");
             foreach (var d in definition.patternDamage) Equal(stats.attackPower * m.outgoingDamage * p.attackPower * d.coefficient, e.CreatePatternDamage(d.id, 0).Amount, "attack once");
         }
     }

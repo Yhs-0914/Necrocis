@@ -24,19 +24,19 @@ MonoBehaviour:
     activationRadius: 20
     respawnCooldown: 8
     spawnRadius: 1.5
-    moveSpeed: 1.5
+    moveSpeed: 1
     stoppingDistance: 0.2
     wanderRadius: 0
     chaseRadius: 8
     leashRadius: 16
     idleDelayRange: {x: 0.5, y: 1.5}
-    maxHealth: 30
-    attackDamage: 1
+    maxHealth: 40
+    attackDamage: 2
     attackRange: 1.5
     attackCooldown: 1
-    expReward: 10
+    expReward: 100
     enableContactDamage: 1
-    contactDamage: 1
+    contactDamage: 1.0
     contactKnockbackDistance: 0.45
     additionalBaseStats: []
     separationDistance: 1.1
@@ -102,19 +102,19 @@ MonoBehaviour:
     activationRadius: 20
     respawnCooldown: 8
     spawnRadius: 1.5
-    moveSpeed: 1.5
+    moveSpeed: 1
     stoppingDistance: 0.2
     wanderRadius: 0
     chaseRadius: 8
     leashRadius: 16
     idleDelayRange: {x: 0.5, y: 1.5}
-    maxHealth: 30
-    attackDamage: 1
+    maxHealth: 40
+    attackDamage: 2
     attackRange: 1.5
     attackCooldown: 1
-    expReward: 10
+    expReward: 100
     enableContactDamage: 1
-    contactDamage: 1
+    contactDamage: 1.0
     contactKnockbackDistance: 0.45
     additionalBaseStats: []
     separationDistance: 1.1

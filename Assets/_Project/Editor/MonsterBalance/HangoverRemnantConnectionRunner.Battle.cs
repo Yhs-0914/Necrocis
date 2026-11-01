@@ -250,24 +250,24 @@ namespace NecrocisEditor
                     origin = FindPatch(0); Spawn(); enemy.ApplyBalancePhase("Default", true);
                     var source = definition.statSets.Single(s => s.id == "Default"); var multi = catalog.difficultyCatalog.Get(difficulty).elites;
                     Require(catalog.progression.TryGetStage(stage, out var progression), "stage source exists");
-                    Equal(CharacterStats.ToHealthUnits(source.maxHealth * multi.maxHealth * progression.maxHealth), enemy.Stats.MaxHealth, "HP multipliers once");
+                    Equal((source.maxHealth * multi.maxHealth * progression.maxHealth), enemy.Stats.MaxHealth, "HP multipliers once");
                     Equal(source.moveSpeed * multi.moveSpeed, enemy.Stats.MoveSpeed, "move speed excludes progression");
                     float raw = source.attackPower * multi.outgoingDamage * progression.attackPower * definition.patternDamage.Single(p => p.id == HangoverRemnantPatternSettings.DamageId).coefficient;
                     Equal(raw, enemy.CreatePatternDamage(HangoverRemnantPatternSettings.DamageId, 0).Amount, "damage multipliers once");
                     enemy.Stats.SetBaseStat(CharacterStatType.MoveSpeed, 0); Move(origin + Vector3.right * 2.2f);
                     yield return Wait(() => pattern.ActiveRemnant != null, 3, "stage live burst"); Move(origin + Vector3.forward * 1.3f); health.ResetHealth(); float hp = health.CurrentHealth;
-                    yield return Wait(() => pattern.BurstCount == 1, 2, "stage actual damage"); Equal(CharacterStats.ToHealthUnits(raw), hp - health.CurrentHealth, "live burst actual HP");
+                    yield return Wait(() => pattern.BurstCount == 1, 2, "stage actual damage"); Equal(Mathf.Floor(raw + 0.0001f), hp - health.CurrentHealth, "live burst actual HP");
                     Equal(1.6f, pattern.BurstRadius, "stage does not expand danger area"); Equal(.65f, pattern.WindupDuration, "stage does not compress warning");
                     yield return Wait(() => pattern.Phase == HangoverRemnantPhase.Ready, 2, "stage rearm");
                     Require(Mathf.Abs(pattern.NextReadyTime - Time.time - settings.rearmSeconds * multi.attackCooldown) < .06f, "one difficulty rearm multiplier");
-                    int expectedXp = (int)Math.Round((double)definition.reward.baseExperience * multi.experienceReward * progression.experience, MidpointRounding.ToEven), xp = 0;
+                    int expectedXp = (int)Math.Round((double)(progression.fieldEliteExperience > 0 ? progression.fieldEliteExperience : definition.reward.baseExperience * progression.experience) * multi.experienceReward, MidpointRounding.ToEven), xp = 0;
                     enemy.SuppressExperienceReward = false; Action<int> observe = amount => xp += amount; var levelUp = LevelUpManager.OnLevelUp;
                     LevelUpManager.OnLevelUp = null; LevelUpManager.OnExpGained += observe;
                     try { enemy.TakeDamage(10000); enemy.TakeDamage(10000); enemy.GrantExp(); }
                     finally { LevelUpManager.OnLevelUp = levelUp; LevelUpManager.OnExpGained -= observe; }
                     Equal(expectedXp, xp, "actual reward once");
                     yield return Wait(() => !enemy.gameObject.activeSelf, 2, "stage death");
-                    Pass($"BALANCE {difficulty}/stage{stage}: actual HP, burst={CharacterStats.ToHealthUnits(raw)}, XP={xp} once, movement/radius/tell unchanged, single rearm multiplier");
+                    Pass($"BALANCE {difficulty}/stage{stage}: actual HP, burst={Mathf.Floor(raw + 0.0001f)}, XP={xp} once, movement/radius/tell unchanged, single rearm multiplier");
                     if (stage == 4) continue;
                     GameManager.Instance.CollectRelic(new[] { BiomeType.Intestine, BiomeType.Lung, BiomeType.Stomach, BiomeType.Liver }[stage]);
                     Require(biome.MonsterVisit.Stage == stage, "current visit stays frozen");

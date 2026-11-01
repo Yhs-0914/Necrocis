@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: IntestineEnemySpawnConfig
   m_EditorClassIdentifier:
-  normalKillsPerElite: 10
+  normalKillsPerElite: 40
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: 650bae08b30304f06acc8eb4119faeac, type: 2}
     name: Macrophage

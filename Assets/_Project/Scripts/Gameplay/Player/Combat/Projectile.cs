@@ -50,6 +50,9 @@ namespace Necrocis
         private readonly Collider[] explosionBuffer = new Collider[ExplosionBufferSize];
         private readonly RaycastHit[] obstacleHitBuffer = new RaycastHit[ObstacleHitBufferSize];
         private readonly HashSet<int> hitEnemyIds = new HashSet<int>();
+        private readonly Dictionary<int, float> lastEnemyHitTimes = new Dictionary<int, float>();
+        private const float RepeatedTargetHitCooldown = 0.2f;
+        private readonly HashSet<int> explosionEnemyIds = new HashSet<int>();
         private int propAttackToken;
 
         private Vector3 defaultLocalScale = Vector3.one;
@@ -86,6 +89,7 @@ namespace Necrocis
             traveledDistance = 0f;
             currentHitCount = 0;
             hitEnemyIds.Clear();
+            lastEnemyHitTimes.Clear();
             hasImpacted = false;
             returning = false;
             splitTriggered = false;
@@ -253,10 +257,12 @@ namespace Necrocis
             }
 
             int enemyId = enemy.GetInstanceID();
+            if (lastEnemyHitTimes.TryGetValue(enemyId, out float lastHit) && Time.time - lastHit < RepeatedTargetHitCooldown) return;
             if (!hitEnemyIds.Add(enemyId))
             {
                 return;
             }
+            lastEnemyHitTimes[enemyId] = Time.time;
 
             float appliedDamage = damage;
             if (itemEffects != null && itemEffects.HasPiercingMucus && !isBoomerang)
@@ -269,6 +275,7 @@ namespace Necrocis
                 appliedDamage *= itemEffects.GetBoomerangRepeatHitDamageMultiplier();
             }
 
+            float sourceDamage = appliedDamage;
             if (itemEffects != null)
             {
                 appliedDamage = itemEffects.ApplyPerTargetDamageModifiers(enemy, appliedDamage);
@@ -290,12 +297,12 @@ namespace Necrocis
                 if (spawnKind == SpawnKind.Normal && itemEffects.HasSplitTissue && !splitTriggered)
                 {
                     splitTriggered = true;
-                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, appliedDamage, targetMask, GetRemainingRange());
+                    itemEffects.SpawnSplitProjectiles(transform.position, moveDirection, sourceDamage, targetMask, GetRemainingRange());
                 }
 
                 if (spawnKind == SpawnKind.Normal && itemEffects.HasExplosiveBloodCell)
                 {
-                    ApplyExplosionDamage(enemy, appliedDamage);
+                    ApplyExplosionDamage(enemy, sourceDamage);
                 }
             }
 
@@ -643,6 +650,7 @@ namespace Necrocis
             float explosionDamage = Mathf.Max(0f, sourceDamage * itemEffects.GetExplosionDamageMultiplier());
             ResidueRubble.HitArea(transform.position, radius, Vector3.forward, 180, explosionDamage, targetMask, propAttackToken);
             SpawnExplosionVisual(transform.position, radius);
+            explosionEnemyIds.Clear();
             for (int i = 0; i < hitCount; i++)
             {
                 Collider collider = explosionBuffer[i];
@@ -653,7 +661,7 @@ namespace Necrocis
 
                 if (!TryGetEnemyController(collider, out EnemyController enemy)
                     || enemy.IsDead
-                    || enemy == primaryEnemy)
+                    || enemy == primaryEnemy || !explosionEnemyIds.Add(enemy.GetInstanceID()))
                 {
                     continue;
                 }

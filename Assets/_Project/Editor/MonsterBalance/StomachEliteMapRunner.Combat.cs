@@ -98,7 +98,7 @@ namespace NecrocisEditor
                 ResetPair();var actor=useHelico?helico:oil;var home=actor.GetComponent<Rigidbody>().position;
                 Move(home+Vector3.back*2.2f);health.ResetHealth();float hp=health.CurrentHealth;
                 for(int n=0;n<80&&health.CurrentHealth==hp;n++){player.TryMoveByWorld(Vector3.forward*.04f);yield return new WaitForFixedUpdate();}
-                Equal(CharacterStats.ToHealthUnits(actor.CreateContactDamage(0).Amount),hp-health.CurrentHealth,"native body contact");
+                Equal(Mathf.Floor(actor.CreateContactDamage(0).Amount + 0.0001f),hp-health.CurrentHealth,"native body contact");
                 Pass(difficulty+" CONTACT "+actor.Balance.Current.MonsterId+": actual walking collision damage, attacks isolated by temporary grace");
             }
             RestoreAssets();StagePair(cell,Vector3.right);ResetPair();Move(encounterOrigin+Vector3.right*2.1f);health.ResetHealth();float startHp=health.CurrentHealth;

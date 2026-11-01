@@ -10900,7 +10900,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7994394bc01c564588e6c35d6653ebb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Health
-  invincibilityDuration: 0.2
+  invincibilityDuration: 0.6
   disableIncomingDamageForTest: 0
 --- !u!114 &1905923577
 MonoBehaviour:
@@ -10935,7 +10935,8 @@ MonoBehaviour:
   beamVerticalHalfHeight: 2.5
   beamHeightOffset: -0.3
   beamVisualDuration: 0.1
-  attackCooldown: 1
+  meleeCooldown: 0.55
+  attackCooldown: 0.75
   cellProliferationDelay: 0.5
   enableDebugLogs: 0
 --- !u!114 &1905923578
@@ -10970,9 +10971,9 @@ MonoBehaviour:
     forwardOffset: 0
     baseDamage: 0
     additionalDamage: 0
-    additionalDamageMin: 4
-    additionalDamageMax: 6
-    stunDuration: 1
+    additionalDamageMin: 5
+    additionalDamageMax: 7
+    stunDuration: 0.75
     areaEffectPrefab: {fileID: 3983581763031629201, guid: f73f946bcf806594fb157aac0fee0209, type: 3}
     areaEffectLifetime: 1
     fallbackEffectScale: 10
@@ -10981,10 +10982,10 @@ MonoBehaviour:
     cooldown: 12
     radius: 3.5
     forwardOffset: 2.5
-    baseDamage: 10
+    baseDamage: 16
     detonationDelay: 0.7
-    damageTakenIncreaseRatio: 0.1
-    damageTakenIncreaseDuration: 3
+    damageTakenIncreaseRatio: 0.15
+    damageTakenIncreaseDuration: 4
     markEffectPrefab: {fileID: 6458501098902630320, guid: cf3d327d8753b394bb815654ed1f9694, type: 3}
     markEffectLifetime: 0.8
     markFallbackEffectScale: 0.8
@@ -11001,15 +11002,15 @@ MonoBehaviour:
     cooldown: 6
     projectileCount: 5
     fanAngle: 55
-    projectileDamage: 1
+    projectileDamage: 1.5
     projectileSpeed: 16
     projectileRange: 6
     projectileLifeTime: 2
     projectilePrefab: {fileID: 4631496915048584632, guid: c1cbf5f8078a0444d8f033977407ff70, type: 3}
     projectileScale: 0.5
-    poisonDuration: 3
+    poisonDuration: 4
     poisonTickInterval: 1
-    poisonTickDamage: 1
+    poisonTickDamage: 0.75
     shootEffectPrefab: {fileID: 0}
     shootEffectLifetime: 0.4
   archerSkill2:
@@ -11020,7 +11021,7 @@ MonoBehaviour:
     projectileVisualLength: 4
     projectileVisualThickness: 0.8
     targetForwardOffset: 6
-    projectileDamage: 4
+    projectileDamage: 8
     projectileTravelSpeed: 24
     projectileLifeTime: 0.65
     projectilePrefab: {fileID: 5377739703324984544, guid: 21c6d35c963bab846bfde230ca8d29fa, type: 3}
@@ -11029,7 +11030,7 @@ MonoBehaviour:
     prefabRotationOffsetEuler: {x: 0, y: 0, z: 0}
     autoRollToCamera: 1
     prefabSurfaceNormalAxis: 2
-    virusExplosionDamage: 5
+    virusExplosionDamage: 6
     virusExplosionRadius: 1.8
     virusExplosionEffectPrefab: {fileID: 545757833818925850, guid: e85d0693183cd4c4ca091330d68d1599, type: 3}
     virusExplosionEffectLifetime: 1
@@ -11039,23 +11040,23 @@ MonoBehaviour:
     afterImageStartAlpha: 0.4
     afterImageMaxVisibleCount: 3
   warriorSkill1:
-    cooldown: 4
+    cooldown: 5
     range: 4.125
     forwardAngle: 140
     maxTargets: 8
-    damage: 4
-    bleedDuration: 2
+    damage: 5
+    bleedDuration: 3
     bleedTickInterval: 1
     bleedTickDamage: 1
     hitEffectPrefab: {fileID: 840110001, guid: 67f284e219c3405b98cdb7df65e8bf81, type: 3}
     hitEffectLifetime: 0.35
     fallbackEffectScale: 0.8
   warriorSkill2:
-    cooldown: 8
+    cooldown: 9
     searchRange: 6
     dashSpeed: 18
-    damage: 8
-    rootDuration: 2
+    damage: 12
+    rootDuration: 1.5
     searchAngle: 90
     hitEffectPrefab: {fileID: 840120001, guid: e1b7d39d0ac54e2098105cb7a35a0da4, type: 3}
     hitEffectLifetime: 0.5
@@ -11180,7 +11181,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b93a709745f6f8f4dafeb5bad620a5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerItemManager
-  maxItemSlots: 3
   allowDuplicateItems: 0
   itemEntries:
   - itemId: double_core

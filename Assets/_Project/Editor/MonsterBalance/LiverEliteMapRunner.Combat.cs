@@ -119,7 +119,7 @@ namespace NecrocisEditor
                 Vector3 away = isEmber ? Vector3.forward : Vector3.left;
                 Vector3 home = actor.GetComponent<Rigidbody>().position; Move(home + away * 2.2f); health.ResetHealth(); float hp = health.CurrentHealth;
                 for (int n = 0; n < 60 && health.CurrentHealth == hp; n++) { player.TryMoveByWorld(-away * .05f); yield return new WaitForFixedUpdate(); }
-                Equal(CharacterStats.ToHealthUnits(actor.CreateContactDamage(0).Amount), hp - health.CurrentHealth, "real pair body contact");
+                Equal(Mathf.Floor(actor.CreateContactDamage(0).Amount + 0.0001f), hp - health.CurrentHealth, "real pair body contact");
                 Require(health.IsInvincible, "contact grants hurt invulnerability");
                 Pass(difficulty + (isEmber ? " CONTACT H-02" : " CONTACT H-03") + ": actual walking collision applies one body hit (attack isolated)");
             }

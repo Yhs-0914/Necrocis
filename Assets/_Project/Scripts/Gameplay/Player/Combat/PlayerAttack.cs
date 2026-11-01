@@ -38,8 +38,8 @@ namespace Necrocis
         [SerializeField] private string beamTextureResourcePath = "ItemEffects/beam_organ_beam";
 
         [Header("Shared")]
-        [SerializeField] private float meleeCooldown  = 0.2f;
-        [SerializeField] private float attackCooldown = 0.3f;
+        [SerializeField] private float meleeCooldown  = 0.55f;
+        [SerializeField] private float attackCooldown = 0.75f;
         [SerializeField, Min(0f)] private float cellProliferationDelay = 0.5f;
         [SerializeField] private bool enableDebugLogs;
 

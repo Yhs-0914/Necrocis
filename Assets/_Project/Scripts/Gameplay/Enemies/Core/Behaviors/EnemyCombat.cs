@@ -247,7 +247,9 @@ namespace Necrocis
             ApplyIncomingDamage(damage, true);
         }
 
-        private void ApplyIncomingDamage(float damage, bool fromPlayer)
+        public void TakeCompanionDamage(float damage) => ApplyIncomingDamage(damage, true, false);
+
+        private void ApplyIncomingDamage(float damage, bool fromPlayer, bool allowHostSpawn = true)
         {
             if (IsDead) return;
             if (stats == null)
@@ -263,13 +265,30 @@ namespace Necrocis
                 return;
             }
 
+            float previousHealth = stats.CurrentHealth;
             float appliedDamage = stats.ApplyDamage(finalDamage);
             if (appliedDamage > 0f)
             {
                 if (fromPlayer)
                 {
+                    PlayerController.Instance?.GetComponent<PlayerItemCombatEffects>()?.NotifyCombatInteraction();
                     hitByPlayer = true;
                     DamageTaken?.Invoke(this, appliedDamage);
+                    var metrics = SaveService.BalanceMetrics;
+                    if (metrics != null)
+                    {
+                        float effectiveDamage = Mathf.Max(0f, previousHealth - stats.CurrentHealth);
+                        metrics.enemyDamageDealt += effectiveDamage;
+                        var biome = BiomeManager.Active;
+                        if (biome != null && biome.BiomeType != BiomeType.None)
+                        {
+                            var row = metrics.Region(biome.BiomeType);
+                            if (IsBossEncounter) row.bossDamage += effectiveDamage;
+                            else if (IsElite) row.eliteDamage += effectiveDamage;
+                            else row.normalDamage += effectiveDamage;
+                        }
+                        if (FinalBossArena.Instance != null && IsBossEncounter) metrics.finalBossDamage += effectiveDamage;
+                    }
                 }
                 CombatVfx.PlayEnemyHit(this, appliedDamage, stats.IsDead);
             }
@@ -291,7 +310,7 @@ namespace Necrocis
                 if (!suppressKillCredit && PlayerController.Instance != null)
                 {
                     PlayerItemCombatEffects itemEffects = PlayerController.Instance.GetComponent<PlayerItemCombatEffects>();
-                    itemEffects?.NotifyEnemyDefeatedByPlayer(this);
+                    itemEffects?.NotifyEnemyDefeatedByPlayer(this, allowHostSpawn);
                 }
 
                 RaiseDefeated();
@@ -307,12 +326,33 @@ namespace Necrocis
         {
             if (config == null || experienceGranted) return;
             experienceGranted = true;
-            if (SuppressExperienceReward || suppressKillCredit) return;
+            // Region rewards belong to the arena, including the two-body lung encounter.
+            if (SuppressExperienceReward || suppressKillCredit || IsBossEncounter) return;
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
             if (Balance != null) LevelUpManager.AddResolvedEnemyKillExp(Balance.Current.Experience);
             else LevelUpManager.AddEnemyKillExp(config.expReward, multiplier);
+
+            int experience = Balance != null ? Balance.Current.Experience : config.expReward;
+            var biome = BiomeManager.Active;
+            if (biome != null && experience > 0)
+            {
+                var itemSpawner = biome.GetComponent<WorldItemSpawner>();
+                if (itemSpawner == null) itemSpawner = biome.gameObject.AddComponent<WorldItemSpawner>();
+                itemSpawner.TrySpawnEnemyReward(this);
+            }
+            if (biome != null && experience > 0)
+            {
+                var row = SaveService.BalanceMetrics?.Region(biome.BiomeType);
+                if (row != null)
+                {
+                    if (IsElite) row.eliteKills++; else row.normalKills++;
+                    row.experience += experience;
+                }
+                if (!IsElite)
+                    WorldRecoveryPickup.Spawn(SaveService.RegisterNormalKillForRecovery(biome.BiomeType, transform.position));
+            }
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !IsElite && !IsBossEncounter)

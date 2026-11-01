@@ -11,12 +11,13 @@ namespace Necrocis
         public GameDifficulty Difficulty { get; }
         public int Stage { get; }
         public float MaxHealth { get; }
-        public float HealthUnits => Mathf.Max(1f, CharacterStats.ToHealthUnits(MaxHealth));
+        public float HealthUnits => Mathf.Max(1f, MaxHealth);
         public float AttackPower { get; }
         public float MoveSpeed { get; }
         public int Experience { get; }
         public float ContactDamage { get; }
         public float CooldownMultiplier { get; }
+        public bool UsesFixedHitDamage { get; }
 
         internal MonsterBalanceSnapshot(MonsterDefinition definition, MonsterStatSet set,
             DifficultyBalanceProfile difficulty, int stage, float health, float attack,
@@ -33,6 +34,7 @@ namespace Necrocis
             Experience = experience;
             ContactDamage = contact;
             CooldownMultiplier = cooldown;
+            UsesFixedHitDamage = MonsterBalanceResolver.GetTierBalance(difficulty, definition.tier).fixedHitDamage > 0f;
         }
 
         public float GetPatternDamage(float coefficient)
@@ -40,7 +42,7 @@ namespace Necrocis
             if (!MonsterBalanceNumbers.NonNegative(coefficient)
                 || !MonsterBalanceNumbers.NonNegative(AttackPower * coefficient))
                 throw new ArgumentOutOfRangeException(nameof(coefficient));
-            return AttackPower * coefficient;
+            return UsesFixedHitDamage && coefficient > 0f ? AttackPower : AttackPower * coefficient;
         }
 
         internal MonsterBalanceSnapshot ForEncounter(float health, float damage, float speed, float experience, float cooldown)
@@ -91,6 +93,7 @@ namespace Necrocis
                 || !MonsterBalanceNumbers.Positive(balance.moveSpeed)
                 || !MonsterBalanceNumbers.Positive(balance.attackCooldown)
                 || !MonsterBalanceNumbers.NonNegative(balance.outgoingDamage)
+                || !MonsterBalanceNumbers.NonNegative(balance.fixedHitDamage)
                 || !MonsterBalanceNumbers.NonNegative(balance.experienceReward))
                 return "난이도 배율에 음수, 0 이하 체력/속도/대기 배율 또는 NaN/Infinity가 있습니다.";
             return null;
@@ -123,11 +126,24 @@ namespace Necrocis
             error = GetDifficultyValidationError(balance);
             if (error != null) return false;
 
-            float health = set.maxHealth * balance.maxHealth * progress.maxHealth;
-            float attack = set.attackPower * balance.outgoingDamage * progress.attackPower;
+            float healthMultiplier = definition.tier == MonsterTier.Boss && progress.bossHealth > 0f
+                ? progress.bossHealth : progress.maxHealth;
+            float health = set.maxHealth * balance.maxHealth * healthMultiplier;
+            float attack = balance.fixedHitDamage > 0f ? balance.fixedHitDamage
+                : set.attackPower * balance.outgoingDamage * progress.attackPower;
             float speed = set.moveSpeed * balance.moveSpeed;
-            float contact = definition.contact.enabled ? attack * definition.contact.damageCoefficient : 0f;
+            float contact = definition.contact.enabled ? attack * (balance.fixedHitDamage > 0f
+                && definition.contact.damageCoefficient > 0f ? 1f : definition.contact.damageCoefficient) : 0f;
             double rawExperience = (double)definition.reward.baseExperience * balance.experienceReward * progress.experience;
+            if (definition.reward.baseExperience > 0)
+            {
+                if (definition.tier == MonsterTier.Boss && progress.bossExperience > 0)
+                    rawExperience = progress.bossExperience * (double)balance.experienceReward;
+                else if (definition.tier == MonsterTier.Elite
+                    && definition.monsterId.StartsWith("elite.", StringComparison.Ordinal)
+                    && progress.fieldEliteExperience > 0)
+                    rawExperience = progress.fieldEliteExperience * (double)balance.experienceReward;
+            }
             if (!MonsterBalanceNumbers.Positive(health) || !MonsterBalanceNumbers.NonNegative(attack)
                 || !MonsterBalanceNumbers.NonNegative(speed) || !MonsterBalanceNumbers.NonNegative(contact)
                 || double.IsNaN(rawExperience) || double.IsInfinity(rawExperience) || rawExperience > int.MaxValue)

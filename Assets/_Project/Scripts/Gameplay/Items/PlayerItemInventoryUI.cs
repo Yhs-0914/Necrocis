@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 namespace Necrocis
 {
@@ -38,8 +39,35 @@ namespace Necrocis
         private bool isOpen;
         private bool ownsPause;
         private float previousTimeScale = 1f;
+        private string replacementItemId;
+        private Action replacementCollected;
+        private Text replacementHint;
+        private List<string> rewardOptions;
+        private Action<string> rewardSelected;
+        private ScrollRect itemScroll;
+
+        public bool RequestReward(IReadOnlyList<string> options, Action<string> onSelected)
+        {
+            if (isOpen || itemManager == null || options == null || Time.timeScale <= 0f) return false;
+            var valid = new List<string>();
+            foreach (string id in options)
+                if (itemManager.CanAcquireItem(id) && !valid.Contains(id)) valid.Add(id);
+            if (valid.Count == 0) return false;
+            rewardOptions = valid;
+            rewardSelected = onSelected;
+            SetOpen(true);
+            return true;
+        }
 
         public bool IsOpen => isOpen;
+
+        public void RequestReplacement(string itemId, Action onCollected)
+        {
+            if (isOpen || itemManager == null || itemManager.ContainsItem(itemId)) return;
+            replacementItemId = itemId;
+            replacementCollected = onCollected;
+            SetOpen(true);
+        }
 
         private void Awake()
         {
@@ -49,6 +77,7 @@ namespace Necrocis
 
         private void OnEnable()
         {
+            SceneManager.activeSceneChanged += HandleSceneChanged;
             if (itemManager == null)
             {
                 itemManager = GetComponent<PlayerItemManager>();
@@ -63,6 +92,7 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            SceneManager.activeSceneChanged -= HandleSceneChanged;
             if (itemManager != null)
             {
                 itemManager.ItemAcquired -= HandleInventoryChanged;
@@ -78,6 +108,11 @@ namespace Necrocis
         private void OnDestroy()
         {
             RestoreTimeScale();
+        }
+
+        private void HandleSceneChanged(Scene previous, Scene next)
+        {
+            if (isOpen) SetOpen(false);
         }
 
         private void Update()
@@ -106,6 +141,10 @@ namespace Necrocis
             }
             else
             {
+                replacementItemId = null;
+                replacementCollected = null;
+                rewardOptions = null;
+                rewardSelected = null;
                 if (canvasObject != null)
                 {
                     canvasObject.SetActive(false);
@@ -130,10 +169,30 @@ namespace Necrocis
                 return;
             }
 
+            if (!string.IsNullOrEmpty(replacementItemId))
+            {
+                if (!itemManager.TryReplaceItem(itemId, replacementItemId)) return;
+                Action collected = replacementCollected;
+                SetOpen(false);
+                collected?.Invoke();
+                AudioManager.Instance?.PlaySFX("ItemPickup");
+                return;
+            }
+
             if (itemManager.RemoveItem(itemId))
             {
                 Debug.Log($"[PlayerItemInventoryUI] 아이템 버림: {itemId}");
             }
+        }
+
+        private void SelectReward(string itemId)
+        {
+            if (rewardOptions == null || !rewardOptions.Contains(itemId)) return;
+            Action<string> selected = rewardSelected;
+            if (!itemManager.TryAcquireItem(itemId, out _)) return;
+            SetOpen(false);
+            selected?.Invoke(itemId);
+            AudioManager.Instance?.PlaySFX("ItemPickup");
         }
 
         private void PauseGame()
@@ -223,9 +282,26 @@ namespace Necrocis
                 new Color(0.32f, 0.085f, 0.12f, 0.96f));
             closeButton.onClick.AddListener(() => SetOpen(false));
 
-            GameObject cards = CreateUiObject("ItemCards", panel.transform);
+            GameObject scrollObject = CreateUiObject("ItemScroll", panel.transform);
+            SetRect(scrollObject.GetComponent<RectTransform>(), new Vector2(0f, -22f), new Vector2(1190f, 520f));
+            itemScroll = scrollObject.AddComponent<ScrollRect>();
+            itemScroll.horizontal = true;
+            itemScroll.vertical = false;
+            itemScroll.movementType = ScrollRect.MovementType.Clamped;
+            itemScroll.scrollSensitivity = 55f;
+            GameObject viewport = CreateUiObject("Viewport", scrollObject.transform);
+            StretchToParent(viewport.GetComponent<RectTransform>());
+            viewport.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.01f);
+            viewport.AddComponent<Mask>().showMaskGraphic = false;
+            itemScroll.viewport = viewport.GetComponent<RectTransform>();
+
+            GameObject cards = CreateUiObject("ItemCards", viewport.transform);
             RectTransform cardsRect = cards.GetComponent<RectTransform>();
-            SetRect(cardsRect, new Vector2(0f, -22f), new Vector2(1190f, 520f));
+            cardsRect.anchorMin = new Vector2(0f, 0f);
+            cardsRect.anchorMax = new Vector2(0f, 1f);
+            cardsRect.pivot = new Vector2(0f, 0.5f);
+            cardsRect.sizeDelta = Vector2.zero;
+            itemScroll.content = cardsRect;
             HorizontalLayoutGroup layout = cards.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 34f;
             layout.childAlignment = TextAnchor.MiddleCenter;
@@ -233,12 +309,17 @@ namespace Necrocis
             layout.childControlHeight = false;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
+            cards.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             cardContainer = cards.transform;
 
             Text hint = CreateText("Hint", panel.transform, 22, FontStyle.Normal, TextAnchor.MiddleCenter);
             SetRect(hint.rectTransform, new Vector2(0f, -326f), new Vector2(1100f, 40f));
-            hint.text = "I 키로 닫기  ·  아이템을 버리면 빈 슬롯에 새로운 아이템을 획득할 수 있습니다.";
+            hint.text = "I 키로 닫기  ·  휠 / 드래그로 전체 보기  ·  보유 개수 제한 없음";
             hint.color = MutedTextColor;
+
+            replacementHint = CreateText("ReplacementHint", panel.transform, 22, FontStyle.Normal, TextAnchor.MiddleCenter);
+            SetRect(replacementHint.rectTransform, new Vector2(0f, 312f), new Vector2(1250f, 88f));
+            replacementHint.color = MainTextColor;
 
             canvasObject.SetActive(false);
         }
@@ -250,16 +331,33 @@ namespace Necrocis
                 return;
             }
 
+            replacementHint.text = !string.IsNullOrEmpty(replacementItemId)
+                && itemManager.TryGetItemEntry(replacementItemId, out var incoming)
+                ? $"{incoming.DisplayName}\n{incoming.Description}\n교체할 아이템을 선택하세요. I 키로 취소할 수 있습니다."
+                : string.Empty;
+            if (rewardOptions != null) replacementHint.text = "아이템 3개 중 1개를 선택하세요.\nI 키로 닫으면 상자에 다시 접근해 선택할 수 있습니다.";
+            else if (string.IsNullOrEmpty(replacementItemId)) replacementHint.text = $"보유 아이템 {itemManager.ItemCount}개 · 개수 제한 없음";
+
             for (int i = cardContainer.childCount - 1; i >= 0; i--)
             {
                 GameObject child = cardContainer.GetChild(i).gameObject;
                 child.SetActive(false);
                 Destroy(child);
             }
+            itemScroll.StopMovement();
+            itemScroll.horizontalNormalizedPosition = 0f;
+
+            if (rewardOptions != null)
+            {
+                for (int i = 0; i < rewardOptions.Count; i++)
+                    if (itemManager.TryGetItemEntry(rewardOptions[i], out var entry))
+                        CreateItemCard(new PlayerItemManager.AcquiredPlayerItem(entry), i, 360f, true);
+                return;
+            }
 
             IReadOnlyList<PlayerItemManager.AcquiredPlayerItem> items = itemManager.AcquiredItems;
-            int slotCount = Mathf.Max(1, itemManager.MaxItemSlots);
-            float cardWidth = Mathf.Clamp((1190f - 34f * (slotCount - 1)) / slotCount, 285f, 360f);
+            int slotCount = Mathf.Max(1, items.Count);
+            const float cardWidth = 360f;
 
             for (int i = 0; i < slotCount; i++)
             {
@@ -274,7 +372,7 @@ namespace Necrocis
             }
         }
 
-        private void CreateItemCard(PlayerItemManager.AcquiredPlayerItem item, int slotIndex, float width)
+        private void CreateItemCard(PlayerItemManager.AcquiredPlayerItem item, int slotIndex, float width, bool offer = false)
         {
             GameObject card = CreateCardRoot($"Item_{slotIndex + 1}", width, CardColor);
 
@@ -311,8 +409,8 @@ namespace Necrocis
                 noIcon.color = MutedTextColor;
             }
 
-            Text description = CreateText("Description", card.transform, 21, FontStyle.Normal, TextAnchor.UpperCenter);
-            SetRect(description.rectTransform, new Vector2(0f, -78f), new Vector2(width - 62f, 100f));
+            Text description = CreateText("Description", card.transform, 20, FontStyle.Normal, TextAnchor.UpperCenter);
+            SetRect(description.rectTransform, new Vector2(0f, -94f), new Vector2(width - 52f, 140f));
             description.text = string.IsNullOrWhiteSpace(item.Description) ? "아이템 설명이 없습니다." : item.Description;
             description.color = MainTextColor;
 
@@ -322,9 +420,9 @@ namespace Necrocis
                 card.transform,
                 new Vector2(0f, -194f),
                 new Vector2(width - 92f, 48f),
-                "버리기",
+                offer ? "선택" : string.IsNullOrEmpty(replacementItemId) ? "버리기" : "이 아이템과 교체",
                 AccentColor);
-            discardButton.onClick.AddListener(() => DiscardItem(itemId));
+            discardButton.onClick.AddListener(() => { if (offer) SelectReward(itemId); else DiscardItem(itemId); });
         }
 
         private void CreateEmptyCard(int slotIndex, float width)
@@ -333,7 +431,7 @@ namespace Necrocis
 
             Text empty = CreateText("Empty", card.transform, 27, FontStyle.Normal, TextAnchor.MiddleCenter);
             SetRect(empty.rectTransform, Vector2.zero, new Vector2(width - 40f, 120f));
-            empty.text = "+\n빈 슬롯";
+            empty.text = "보유 아이템 없음";
             empty.color = MutedTextColor;
         }
 

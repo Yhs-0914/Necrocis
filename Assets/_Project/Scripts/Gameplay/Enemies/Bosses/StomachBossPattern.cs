@@ -11,7 +11,7 @@ namespace Necrocis
         [Range(0.1f, 0.9f)] public float phase2HealthRatio = 0.65f;
 
         [Header("Stats")]
-        [HideInInspector] public float phase1AttackDamage = 3f;
+        [HideInInspector] public float phase1AttackDamage = 2f;
         [HideInInspector] public float phase1MoveSpeed = 0.5f;
         [HideInInspector] public float phase2AttackDamage = 3f;
         [HideInInspector] public float phase2MoveSpeed = 1f;
@@ -23,7 +23,7 @@ namespace Necrocis
         [Header("Charge")]
         public float chargeSpeed = 4f;
         public float chargeCooldown = 5f;
-        [HideInInspector] public float chargeDamage = 4f;
+        [HideInInspector] public float chargeDamage = 3f;
         public float chargeKnockbackDistance = 2f;
         public float chargeWindup = 0.35f;
         public float chargeDuration = 1.2f;
@@ -51,7 +51,7 @@ namespace Necrocis
         public float suctionStopDistance = 1f;
         public float spitDelay = 0.35f;
         public float spitReturnDuration = 0.18f;
-        [HideInInspector] public float shortRangeDamage = 5f;
+        [HideInInspector] public float shortRangeDamage = 3f;
         public float shortRangeRadius = 2.2f;
         public Sprite[] suctionAttackSprites;
         public float suctionAttackAnimationSpeed = 0.08f;
@@ -92,7 +92,7 @@ namespace Necrocis
         [SerializeField, Range(0.1f, 0.9f)] private float phase2HealthRatio = 0.65f;
 
         [Header("Stats")]
-        [SerializeField, HideInInspector] private float phase1AttackDamage = 3f;
+        [SerializeField, HideInInspector] private float phase1AttackDamage = 2f;
         [SerializeField, HideInInspector] private float phase1MoveSpeed = 0.5f;
         [SerializeField, HideInInspector] private float phase2AttackDamage = 3f;
         [SerializeField, HideInInspector] private float phase2MoveSpeed = 1f;
@@ -104,7 +104,7 @@ namespace Necrocis
         [Header("Charge")]
         [SerializeField] private float chargeSpeed = 4f;
         [SerializeField] private float chargeCooldown = 5f;
-        [SerializeField, HideInInspector] private float chargeDamage = 4f;
+        [SerializeField, HideInInspector] private float chargeDamage = 3f;
         [SerializeField] private float chargeKnockbackDistance = 2f;
         [SerializeField] private float chargeWindup = 0.35f;
         [SerializeField] private float chargeDuration = 1.2f;
@@ -132,7 +132,7 @@ namespace Necrocis
         [SerializeField] private float suctionStopDistance = 1f;
         [SerializeField] private float spitDelay = 0.35f;
         [SerializeField] private float spitReturnDuration = 0.18f;
-        [SerializeField, HideInInspector] private float shortRangeDamage = 5f;
+        [SerializeField, HideInInspector] private float shortRangeDamage = 3f;
         [SerializeField] private float shortRangeRadius = 2.2f;
         [SerializeField] private Sprite[] suctionAttackSprites;
         [SerializeField] private float suctionAttackAnimationSpeed = 0.08f;
@@ -393,6 +393,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
+            if (boss != null && boss.StatusEffects != null && boss.StatusEffects.IsStunned) return;
             if (!encounterActive || boss == null || boss.IsDead || actionRunning || phase == BossPhase.Transition || PlayerController.Instance == null)
             {
                 return;

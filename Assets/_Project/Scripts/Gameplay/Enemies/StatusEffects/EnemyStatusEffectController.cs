@@ -25,15 +25,11 @@ namespace Necrocis
         private float poisonEndTime;
         private float poisonTickInterval;
         private float poisonTickDamage;
-        private WaitForSeconds poisonWaitInstruction;
-        private float poisonWaitDuration = -1f;
 
         private Coroutine bleedCoroutine;
         private float bleedEndTime;
         private float bleedTickInterval;
         private float bleedTickDamage;
-        private WaitForSeconds bleedWaitInstruction;
-        private float bleedWaitDuration = -1f;
 
         private float freezeVisualEndTime;
         private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
@@ -106,6 +102,7 @@ namespace Necrocis
 
         public void ApplyStun(float duration)
         {
+            if (enemy != null && enemy.IsBossEncounter) duration *= 0.25f;
             if (duration <= 0f)
             {
                 return;
@@ -223,24 +220,16 @@ namespace Necrocis
 
         private IEnumerator PoisonRoutine()
         {
+            float nextTick = Time.time;
             while (Time.time < poisonEndTime)
             {
                 float interval = Mathf.Max(0.05f, poisonTickInterval);
-                if (poisonWaitInstruction == null || !Mathf.Approximately(poisonWaitDuration, interval))
-                {
-                    poisonWaitDuration = interval;
-                    poisonWaitInstruction = new WaitForSeconds(interval);
-                }
-                yield return poisonWaitInstruction;
-
-                if (enemy == null || enemy.IsDead)
-                {
-                    break;
-                }
-
+                nextTick += interval;
+                if (nextTick > poisonEndTime + 0.001f) break;
+                yield return new WaitForSeconds(Mathf.Max(0f, nextTick - Time.time));
+                if (enemy == null || enemy.IsDead) break;
                 enemy.TakeDamage(poisonTickDamage);
             }
-
             poisonCoroutine = null;
             poisonEndTime = 0f;
             RefreshStatusVisuals();
@@ -248,24 +237,16 @@ namespace Necrocis
 
         private IEnumerator BleedRoutine()
         {
+            float nextTick = Time.time;
             while (Time.time < bleedEndTime)
             {
                 float interval = Mathf.Max(0.05f, bleedTickInterval);
-                if (bleedWaitInstruction == null || !Mathf.Approximately(bleedWaitDuration, interval))
-                {
-                    bleedWaitDuration = interval;
-                    bleedWaitInstruction = new WaitForSeconds(interval);
-                }
-                yield return bleedWaitInstruction;
-
-                if (enemy == null || enemy.IsDead)
-                {
-                    break;
-                }
-
+                nextTick += interval;
+                if (nextTick > bleedEndTime + 0.001f) break;
+                yield return new WaitForSeconds(Mathf.Max(0f, nextTick - Time.time));
+                if (enemy == null || enemy.IsDead) break;
                 enemy.TakeDamage(bleedTickDamage);
             }
-
             bleedCoroutine = null;
             bleedEndTime = 0f;
             RefreshStatusVisuals();

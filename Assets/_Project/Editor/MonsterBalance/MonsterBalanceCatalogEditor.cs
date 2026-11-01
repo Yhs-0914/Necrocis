@@ -343,20 +343,29 @@ namespace NecrocisEditor
             definition.TryGetStatSet(id, out MonsterStatSet basis);
             Catalog.progression.TryGetStage(previewStage, out MonsterProgressionStage progression);
             EnemyDifficultyBalance difficulty = MonsterBalanceResolver.GetTierBalance(GetProfile(), definition.tier);
+            float healthProgression = definition.tier == MonsterTier.Boss && progression.bossHealth > 0f
+                ? progression.bossHealth : progression.maxHealth;
+            float experienceBasis = definition.reward.baseExperience * progression.experience;
+            if (definition.reward.baseExperience > 0)
+            {
+                if (definition.tier == MonsterTier.Boss && progression.bossExperience > 0) experienceBasis = progression.bossExperience;
+                else if (definition.monsterId.StartsWith("elite.", StringComparison.Ordinal) && progression.fieldEliteExperience > 0)
+                    experienceBasis = progression.fieldEliteExperience;
+            }
             Result("최종값 · 읽기 전용", "아래 결과는 원본 에셋에 역저장되지 않습니다.");
-            Result("최대 체력", $"{basis.maxHealth:0.###} × {difficulty.maxHealth:0.###} × {progression.maxHealth:0.###} = {snapshot.MaxHealth:0.###}");
+            Result("최대 체력", $"{basis.maxHealth:0.###} × {difficulty.maxHealth:0.###} × {healthProgression:0.###} = {snapshot.MaxHealth:0.###}");
             Result("공격력", $"{basis.attackPower:0.###} × {difficulty.outgoingDamage:0.###} × {progression.attackPower:0.###} = {snapshot.AttackPower:0.###}");
-            Result("처치 경험치", $"Round({definition.reward.baseExperience} × {difficulty.experienceReward:0.###} × {progression.experience:0.###}) = {snapshot.Experience}");
+            Result("처치 경험치", $"Round(진행도 보상 {experienceBasis:0.###} × 난이도 {difficulty.experienceReward:0.###}) = {snapshot.Experience}");
             Result("이동속도", $"{basis.moveSpeed:0.###} × {difficulty.moveSpeed:0.###} = {snapshot.MoveSpeed:0.###} (진행도 미적용)");
             Result("테스트 패턴 피해", $"{snapshot.AttackPower:0.###} × {patternCoefficient:0.###} = {damage:0.###}");
             Result("접촉 피해", definition.contact.enabled ? $"{snapshot.AttackPower:0.###} × {definition.contact.damageCoefficient:0.###} = {snapshot.ContactDamage:0.###}" : "사용 안 함 = 0");
             Result("재사용 대기", $"{rearmSeconds:0.###} × {snapshot.CooldownMultiplier:0.###} = {cooldown:0.###}초 (예고/회복/진행도 미적용)");
-            Result("게임 체력 단위", $"HP {snapshot.HealthUnits:0} / 테스트 패턴 1회 피해 {CharacterStats.ToHealthDeltaUnits(damage):0} / 접촉 {CharacterStats.ToHealthDeltaUnits(snapshot.ContactDamage):0}");
-            Result("체력 반올림", "기존 게임 규칙: HP·피해는 정수, 양수 피해 최소 1. 플레이어 피격 효과/무적 전 기준이며 경험치 반올림과 별개입니다.");
+            Result("게임 체력 단위", $"몬스터 HP {snapshot.MaxHealth:0.###} / 패턴 피해 {damage:0.###} / 접촉 {snapshot.ContactDamage:0.###}");
+            Result("플레이어 체력", "HP 1 = 하트 반 칸. 소수 피해는 잔여량을 누적하여 정수 단위로 반영하며, 방어·무적에 따라 결과가 달라집니다.");
             foreach (MonsterPatternDamage pattern in definition.patternDamage)
             {
                 float patternDamage = snapshot.GetPatternDamage(pattern.coefficient);
-                Result("패턴 · " + pattern.id, $"{snapshot.AttackPower:0.###} × {pattern.coefficient:0.###} = {patternDamage:0.###} (1회 HP 피해 {CharacterStats.ToHealthDeltaUnits(patternDamage):0})");
+                Result("패턴 · " + pattern.id, $"{snapshot.AttackPower:0.###} × {pattern.coefficient:0.###} = {patternDamage:0.###} (소수 잔여량 누적)");
             }
         }
 

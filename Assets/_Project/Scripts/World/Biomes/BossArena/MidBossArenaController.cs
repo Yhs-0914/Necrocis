@@ -649,6 +649,13 @@ namespace Necrocis
                 : returnPortalPosition;
             EnemyController defeatedBoss = activeBoss;
 
+            if (biome != null)
+            {
+                int reward = defeatedBoss != null && defeatedBoss.Balance != null
+                    ? defeatedBoss.Balance.Current.Experience : 240;
+                SaveService.TryRewardRegionBoss(biome.BiomeType, reward);
+            }
+
             if (defeatedBoss != null)
             {
                 EnemyProjectile.ReturnProjectilesOwnedBy(defeatedBoss);
@@ -813,7 +820,7 @@ namespace Necrocis
                 spawner = biome.gameObject.AddComponent<WorldItemSpawner>();
             }
 
-            bool spawnedItem = spawner.TrySpawnSingleRandomItemAt(bossDeathPos);
+            bool spawnedItem = spawner.TrySpawnBossRewardAt(bossDeathPos);
             if (!spawnedItem)
             {
                 Debug.Log("[MidBossArena] 보스 보너스 아이템 드랍 위치를 찾지 못했습니다.");

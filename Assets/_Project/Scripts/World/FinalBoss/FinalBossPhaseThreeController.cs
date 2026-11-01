@@ -275,6 +275,7 @@ namespace Necrocis
                 return;
             }
             UpdateCollapse();
+            if (damageTarget.StatusEffects != null && damageTarget.StatusEffects.IsStunned) return;
             if (attacking) return;
             Vector3 position = mobileRoot.position;
             Vector3 step = CalculatePursuitStep(position, player.transform.position,

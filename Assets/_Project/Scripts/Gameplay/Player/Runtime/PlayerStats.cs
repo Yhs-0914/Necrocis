@@ -61,6 +61,7 @@ namespace Necrocis
                     if (runtimeStats == null)
                         runtimeStats = gameObject.AddComponent<CharacterStats>();
                 }
+                runtimeStats.UseWholeHealthUnits();
                 return runtimeStats;
             }
         }
@@ -162,18 +163,22 @@ namespace Necrocis
             EnsureInitialized();
             LevelUpStatEffect effect = LevelUpStatCatalog.GetStatEffect(choice);
             float previousMaxHealth = RuntimeStats.MaxHealth;
+            PlayerItemManager inventory = GetComponent<PlayerItemManager>();
+            int growthMultiplier = LevelUpManager.Config.bioGambleEnabled && inventory != null
+                && inventory.ContainsItem(PlayerItemCombatEffects.BioGambleId)
+                ? LevelUpManager.Config.RollGrowthMultiplier() : 1;
 
             // 고정값 모디파이어 적용 (예: 공격력 +3)
             foreach (var stat in effect.flatStats)
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value,
+                    stat.Value * growthMultiplier,
                     CharacterStatModifierMode.Flat,
                     choice); // source를 choice로 설정하여 추적 가능
                 LevelUpManager.RecordResolvedModifier(
                     stat.Key,
-                    stat.Value,
+                    stat.Value * growthMultiplier,
                     CharacterStatModifierMode.Flat);
             }
 
@@ -182,12 +187,12 @@ namespace Necrocis
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value / 100f, // UI에선 3%로 표시, 내부적으론 0.03
+                    stat.Value * growthMultiplier / 100f,
                     CharacterStatModifierMode.PercentAdd,
                     choice);
                 LevelUpManager.RecordResolvedModifier(
                     stat.Key,
-                    stat.Value / 100f,
+                    stat.Value * growthMultiplier / 100f,
                     CharacterStatModifierMode.PercentAdd);
             }
 

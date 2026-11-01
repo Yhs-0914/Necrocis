@@ -46,6 +46,7 @@ public class ClassChoiceUI : MonoBehaviour
         LevelUpManager.OnJobSelect += HandleJobSelectionRequested;
         LevelUpManager.OnLevelUp += HandleLevelChanged;
         LevelUpManager.OnJobChanged += HandleJobChanged;
+        LevelUpManager.OnExpGained += HandleProgressRestored;
         SceneManager.sceneLoaded += HandleSceneLoaded;
     }
 
@@ -54,6 +55,7 @@ public class ClassChoiceUI : MonoBehaviour
         LevelUpManager.OnJobSelect -= HandleJobSelectionRequested;
         LevelUpManager.OnLevelUp -= HandleLevelChanged;
         LevelUpManager.OnJobChanged -= HandleJobChanged;
+        LevelUpManager.OnExpGained -= HandleProgressRestored;
         SceneManager.sceneLoaded -= HandleSceneLoaded;
         HideUI();
     }
@@ -62,6 +64,18 @@ public class ClassChoiceUI : MonoBehaviour
     {
         RefreshUIContext();
         EvaluateVisibility();
+    }
+
+    private bool waitingForRestore;
+
+    private void Update()
+    {
+        if (SaveService.IsRestorePending) waitingForRestore = true;
+        else if (waitingForRestore)
+        {
+            waitingForRestore = false;
+            EvaluateVisibility();
+        }
     }
 
     public void ChooseWarrior() => SelectJob(JobType.Warrior);
@@ -78,6 +92,8 @@ public class ClassChoiceUI : MonoBehaviour
         EvaluateVisibility();
     }
 
+    private void HandleProgressRestored(int _) => EvaluateVisibility();
+
     private void HandleJobSelectionRequested()
     {
         EvaluateVisibility(forceShow: true);
@@ -90,6 +106,12 @@ public class ClassChoiceUI : MonoBehaviour
 
     private void EvaluateVisibility(bool forceShow = false)
     {
+        if (SaveService.IsRestorePending)
+        {
+            waitingForRestore = true;
+            HideUI();
+            return;
+        }
         if (LevelUpManager.GetCurrentJob() != JobType.None)
         {
             HideUI();

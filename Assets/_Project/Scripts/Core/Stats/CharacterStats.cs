@@ -136,11 +136,31 @@ namespace Necrocis
         private readonly HashSet<CharacterStatType> recalculationStatTypes = new HashSet<CharacterStatType>();
 
         private float currentHealth; // 현재 HP (최대HP와 별도 관리)
+        private bool wholeHealthUnits;
+        private float damageRemainder;
+        private float healingRemainder;
+
+        public float DamageRemainder => damageRemainder;
+        public float HealingRemainder => healingRemainder;
+
+        // Players retain half-heart units; enemies retain fractional damage/HP.
+        public void UseWholeHealthUnits()
+        {
+            wholeHealthUnits = true;
+        }
+
+        public void RestoreHealthRemainders(float damage, float healing)
+        {
+            damageRemainder = float.IsNaN(damage) || float.IsInfinity(damage) ? 0f : Mathf.Clamp(damage, 0f, 0.9999f);
+            healingRemainder = float.IsNaN(healing) || float.IsInfinity(healing) ? 0f : Mathf.Clamp(healing, 0f, 0.9999f);
+        }
 
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged;   // 스탯 변경 이벤트
         public event Action<CharacterStats, CharacterHealthChangedEventArgs> HealthChanged; // HP 변경 이벤트
 
-        public float MaxHealth => ToHealthUnits(GetValue(CharacterStatType.MaxHealth));
+        public float MaxHealth => wholeHealthUnits
+            ? ToHealthUnits(GetValue(CharacterStatType.MaxHealth))
+            : Mathf.Max(0f, GetValue(CharacterStatType.MaxHealth));
         public float MoveSpeed => GetValue(CharacterStatType.MoveSpeed);
         public float AttackPower => GetValue(CharacterStatType.AttackPower);
         public float AttackSpeed => GetValue(CharacterStatType.AttackSpeed);
@@ -177,6 +197,7 @@ namespace Necrocis
             if (resetCurrentHealth)
             {
                 currentHealth = MaxHealth;
+                damageRemainder = healingRemainder = 0f;
             }
             else
             {
@@ -307,13 +328,21 @@ namespace Necrocis
         // 데미지 적용 (HP 감소, 실제 받은 데미지 반환)
         public float ApplyDamage(float damage)
         {
-            if (damage <= 0f || MaxHealth <= 0f)
+            if (damage <= 0f || float.IsNaN(damage) || float.IsInfinity(damage) || MaxHealth <= 0f)
             {
                 return 0f;
             }
 
-            float damageUnits = ToHealthDeltaUnits(damage);
-            float previousCurrentHealth = ToHealthUnits(currentHealth);
+            float damageUnits = damage;
+            if (wholeHealthUnits)
+            {
+                float canceledHealing = Mathf.Min(damage, healingRemainder);
+                healingRemainder -= canceledHealing;
+                float total = damageRemainder + damage - canceledHealing;
+                damageUnits = Mathf.Floor(total + HealthUnitEpsilon);
+                damageRemainder = Mathf.Max(0f, total - damageUnits);
+            }
+            float previousCurrentHealth = currentHealth;
             currentHealth = Mathf.Max(0f, previousCurrentHealth - damageUnits);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
             return previousCurrentHealth - currentHealth;
@@ -322,14 +351,24 @@ namespace Necrocis
         // HP 회복 (최대HP 초과 불가, 실제 회복량 반환)
         public float RestoreHealth(float amount)
         {
-            if (amount <= 0f || MaxHealth <= 0f)
+            if (amount <= 0f || float.IsNaN(amount) || float.IsInfinity(amount) || MaxHealth <= 0f)
             {
                 return 0f;
             }
 
-            float healUnits = ToHealthDeltaUnits(amount);
-            float previousCurrentHealth = ToHealthUnits(currentHealth);
+            float healUnits = amount;
+            if (wholeHealthUnits)
+            {
+                float canceledDamage = Mathf.Min(amount, damageRemainder);
+                damageRemainder -= canceledDamage;
+                float total = healingRemainder + amount - canceledDamage;
+                healUnits = Mathf.Floor(total + HealthUnitEpsilon);
+                healingRemainder = Mathf.Max(0f, total - healUnits);
+            }
+            float previousCurrentHealth = currentHealth;
             currentHealth = Mathf.Min(MaxHealth, previousCurrentHealth + healUnits);
+            if (currentHealth >= MaxHealth) healingRemainder = 0f;
+            if (wholeHealthUnits) SaveService.RecordPlayerHealing(currentHealth - previousCurrentHealth);
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, false);
             return currentHealth - previousCurrentHealth;
         }
@@ -339,14 +378,16 @@ namespace Necrocis
         {
             float previousCurrentHealth = currentHealth;
             currentHealth = MaxHealth;
+            damageRemainder = healingRemainder = 0f;
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, true);
         }
 
         public void SetCurrentHealth(float value)
         {
             float previousCurrentHealth = currentHealth;
-            float minimumAliveHealth = MaxHealth > 0f ? Mathf.Min(1f, MaxHealth) : 0f;
-            currentHealth = Mathf.Clamp(ToHealthUnits(value), minimumAliveHealth, MaxHealth);
+            float minimumAliveHealth = wholeHealthUnits && MaxHealth > 0f ? Mathf.Min(1f, MaxHealth) : 0f;
+            currentHealth = Mathf.Clamp(wholeHealthUnits ? ToHealthUnits(value) : value, minimumAliveHealth, MaxHealth);
+            damageRemainder = healingRemainder = 0f;
             NotifyHealthChanged(previousCurrentHealth, MaxHealth, true);
         }
 
@@ -359,7 +400,7 @@ namespace Necrocis
 
         private float ClampHealthUnits(float value)
         {
-            return Mathf.Clamp(ToHealthUnits(value), 0f, MaxHealth);
+            return Mathf.Clamp(wholeHealthUnits ? ToHealthUnits(value) : value, 0f, MaxHealth);
         }
 
         public static float ToHealthUnits(float value)

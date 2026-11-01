@@ -414,7 +414,7 @@ MonoBehaviour:
   warningDuration: 0.6
   impactRadius: 0.45
   damage: 1
-  hitCooldown: 0.8
+  hitCooldown: 1
   minimumDropSpacing: 1.6
   fallHeight: 9
   fallSpeed: 10

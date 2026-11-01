@@ -114,7 +114,7 @@ namespace NecrocisEditor
                     Require(biome.MonsterVisit.Stage == stage && biome.MonsterVisit.Difficulty == difficulty, "B actual difficulty/visit stage");
                     origin = FindPatch(0); Spawn(); enemy.ApplyBalancePhase("Default", true);
                     var source = definition.statSets[0]; var multi = catalog.difficultyCatalog.Get(difficulty).elites; Require(catalog.progression.TryGetStage(stage, out var progression), "stage source");
-                    Equal(CharacterStats.ToHealthUnits(source.maxHealth * multi.maxHealth * progression.maxHealth), enemy.Stats.MaxHealth, "B HP once");
+                    Equal((source.maxHealth * multi.maxHealth * progression.maxHealth), enemy.Stats.MaxHealth, "B HP once");
                     Equal(source.moveSpeed * multi.moveSpeed, enemy.Stats.MoveSpeed, "B move once"); enemy.Stats.SetBaseStat(CharacterStatType.MoveSpeed, 0);
                     float raw = source.attackPower * multi.outgoingDamage * progression.attackPower * definition.patternDamage.Single(p => p.id == PollenInvaderPatternSettings.FollowupDamageId).coefficient;
                     Equal(raw, enemy.CreatePatternDamage(PollenInvaderPatternSettings.FollowupDamageId, 0).Amount, "B damage once");
@@ -122,16 +122,16 @@ namespace NecrocisEditor
                     yield return Wait(() => pattern.CycleVolleyCount == 2, 2, "B stage second"); yield return new WaitForSeconds(.5f);
                     var second = pattern.SecondWavePellets[1]; Move(second.transform.position + second.Direction * 1.6f); health.ResetHealth(); float hp = health.CurrentHealth;
                     yield return Wait(() => pattern.SecondVolley.WaveDamageApplications == 1, 1, "B stage actual second hit");
-                    Equal(CharacterStats.ToHealthUnits(raw), hp - health.CurrentHealth, "B actual second damage"); Require(pattern.FirstVolley.WaveDamageApplications == 0, "stage second-only hit");
+                    Equal(Mathf.Floor(raw + 0.0001f), hp - health.CurrentHealth, "B actual second damage"); Require(pattern.FirstVolley.WaveDamageApplications == 0, "stage second-only hit");
                     Move(origin - Vector3.right * 3); yield return Wait(() => pattern.Phase == PollenInvaderPhase.Ready, 2, "B stage recovery");
                     Require(Mathf.Abs(pattern.NextReadyTime - Time.time - settings.followup.rearmSeconds * multi.attackCooldown) < .07f, "B cooldown multiplier once");
                     Equal(.8f, pattern.RotationDuration, "stage does not shorten rotation"); Equal(.16f, pattern.PelletRadius, "stage radius unchanged");
                     xp = 0; enemy.SuppressExperienceReward = false; callback = LevelUpManager.OnLevelUp; LevelUpManager.OnLevelUp = null; LevelUpManager.OnExpGained += observe;
                     try { enemy.TakeDamage(10000); enemy.TakeDamage(10000); enemy.GrantExp(); }
                     finally { LevelUpManager.OnLevelUp = callback; LevelUpManager.OnExpGained -= observe; }
-                    int expectedXp = (int)Math.Round((double)definition.reward.baseExperience * multi.experienceReward * progression.experience, MidpointRounding.ToEven);
+                    int expectedXp = (int)Math.Round((double)(progression.fieldEliteExperience > 0 ? progression.fieldEliteExperience : definition.reward.baseExperience * progression.experience) * multi.experienceReward, MidpointRounding.ToEven);
                     Equal(expectedXp, xp, "B reward once"); yield return Wait(() => !enemy.gameObject.activeSelf, 2, "B stage death");
-                    Pass($"BALANCE B {difficulty}/stage{stage}: second actual damage{CharacterStats.ToHealthUnits(raw)}, XP{xp} once, HP/move/rearm multipliers once and stable cue/radius");
+                    Pass($"BALANCE B {difficulty}/stage{stage}: second actual damage{Mathf.Floor(raw + 0.0001f)}, XP{xp} once, HP/move/rearm multipliers once and stable cue/radius");
                     if (stage == 4) continue;
                     foreach (var relic in new[] { BiomeType.Intestine, BiomeType.Liver, BiomeType.Stomach, BiomeType.Lung }) GameManager.Instance.CollectRelic(relic);
                     Require(biome.MonsterVisit.Stage == 0, "B visit remains frozen"); Spawn(); Require(enemy.Balance.Current.Stage == 0, "B respawn same frozen visit"); enemy.ReleaseToPool();

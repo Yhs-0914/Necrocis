@@ -31,10 +31,11 @@ namespace Necrocis
             }
             foreach (MonsterPatternDamage pattern in definition.patternDamage)
                 coefficients.Add(pattern.id, pattern.coefficient);
-            ContactEnabled = definition.contact.enabled;
-            ContactCoefficient = definition.contact.damageCoefficient;
-            ContactKnockback = definition.contact.knockbackDistance;
             SelectPhase("Default");
+            ContactEnabled = definition.contact.enabled;
+            ContactCoefficient = Current.UsesFixedHitDamage && definition.contact.damageCoefficient > 0f
+                ? 1f : definition.contact.damageCoefficient;
+            ContactKnockback = definition.contact.knockbackDistance;
         }
 
         public static MonsterBalanceRuntime Capture(MonsterDefinition definition)
@@ -68,7 +69,7 @@ namespace Necrocis
         {
             if (!coefficients.TryGetValue(id, out float value))
                 throw new InvalidOperationException(Current.MonsterId + ": 등록되지 않은 패턴 피해 " + id);
-            return value;
+            return Current.UsesFixedHitDamage && value > 0f ? 1f : value;
         }
     }
 

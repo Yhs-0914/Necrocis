@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 092be99e08c743a5bbb6e405e5f20f7d, type: 3}
   m_Name: LiverEnemySpawnConfig
   m_EditorClassIdentifier:
-  normalKillsPerElite: 10
+  normalKillsPerElite: 40
   enemySpawnRules:
   - monsterDefinition: {fileID: 11400000, guid: 83e58fda032b14a40b4a66d7631a4558, type: 2}
     name: LiverSutureCell

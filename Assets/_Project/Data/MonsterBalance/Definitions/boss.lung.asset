@@ -21,15 +21,15 @@ MonoBehaviour:
     \uC870\uC808."
   statSets:
   - id: Default
-    maxHealth: 40
+    maxHealth: 80
     attackPower: 2
     moveSpeed: 1
   - id: Phase2
-    maxHealth: 100
-    attackPower: 4
+    maxHealth: 200
+    attackPower: 2
     moveSpeed: 1.5
   reward:
-    baseExperience: 0
+    baseExperience: 240
   contact:
     enabled: 1
     damageCoefficient: 0.5

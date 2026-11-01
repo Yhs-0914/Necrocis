@@ -1,0 +1,464 @@
+[
+  {
+    "id": "dense_muscle",
+    "name": "응축 근육",
+    "description": "공격력 +1 (중복 획득 시 누적)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "hardened_muscle",
+    "name": "경화 근육",
+    "description": "공격력 +2 (중복 획득 시 누적)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "vital_cell",
+    "name": "생명 세포",
+    "description": "최대 체력 +1 (반 칸), 획득 시 체력 +1 회복 (중복 누적)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "vital_organ",
+    "name": "생명 장기",
+    "description": "최대 체력 +2 (한 칸), 획득 시 체력 +2 회복 (중복 누적)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "swift_cell",
+    "name": "신속 세포",
+    "description": "공격속도 +5% (중복 획득 시 합산)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "elastic_fiber",
+    "name": "탄성 섬유",
+    "description": "이동속도 +0.5 (중복 획득 시 누적)",
+    "repeatable": true,
+    "category": "기본 능력치"
+  },
+  {
+    "id": "double_core",
+    "name": "이중핵",
+    "description": "발사체 2개 발사 (각 70% 피해)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "triple_core",
+    "name": "삼중핵",
+    "description": "발사체 3개 발사 (각 50% 피해)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "homing_cell",
+    "name": "유도 세포",
+    "description": "적을 추적하는 유도 투사체",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "hypertrophy_cell",
+    "name": "비대 세포",
+    "description": "투사체 크기·충돌 범위 45%, 사거리 25% 증가",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "reflux_organ",
+    "name": "역류 장기",
+    "description": "왕복 경로마다 최대 3명 타격, 복귀 중 같은 적 재적중 시 60% 피해",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "piercing_mucus",
+    "name": "관통 점액",
+    "description": "최대 3명 관통, 관통할 때마다 피해 25% 감소",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "laryngeal_nerve",
+    "name": "후두 신경",
+    "description": "뒤쪽으로 75% 피해의 추가 투사체 발사",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "beam_organ",
+    "name": "광선 기관",
+    "description": "80% 피해의 관통 광선 공격 (다중핵·후방 발사·세포 증식 적용)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "split_tissue",
+    "name": "분열 조직",
+    "description": "적 명중 시 양옆으로 각각 35% 피해의 추가 투사체 생성 (추가 분열 없음)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "explosive_blood_cell",
+    "name": "폭발 혈구",
+    "description": "원거리 직접 피해 70%, 주변 적에게 같은 피해의 폭발 공격",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "acidic_rupture",
+    "name": "산성 파열",
+    "description": "적중 위치에 4초간 1초마다 0.5 피해를 주는 산성 장판 생성 (동시에 최대 2개)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "cell_proliferation",
+    "name": "세포 증식",
+    "description": "공격마다 25% 확률로 0.5초 후 70% 피해의 추가 공격",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "pulse_bullet",
+    "name": "맥동 탄환",
+    "description": "투사체가 이동하며 크기와 실제 충돌 범위가 증가하거나 감소",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "vascular_reflection",
+    "name": "혈관 반사",
+    "description": "벽에 튕기는 반사 투사체",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "toxic_mucosa",
+    "name": "독성 점막",
+    "description": "적중 시 4초간 1초마다 적중 피해의 15% 중독 피해 (지속 갱신)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "freezing_nerve",
+    "name": "빙결 신경",
+    "description": "공격 적중 시 2초간 적 이동속도 30% 감소",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "hemorrhage_organ",
+    "name": "출혈 기관",
+    "description": "적중 시 3.2초간 0.8초마다 적중 피해의 15% 출혈 피해 (지속 갱신)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "overheated_organ",
+    "name": "과열 기관",
+    "description": "연속 공격마다 공격속도 +6% (10중첩 시 주변 150% 피해, 자신 1 피해)",
+    "repeatable": false,
+    "category": "투사체·상태"
+  },
+  {
+    "id": "mutant_eye",
+    "name": "돌연변이 안구",
+    "description": "발사 방향이 좌우 40도 내에서 무작위 변화, 기본 공격 피해 +0.75",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "organ_tentacle",
+    "name": "장기 촉수",
+    "description": "주변 적 최대 2명을 1.2초마다 30% 피해로 공격, 기본 공격 피해 20% 감소",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "rampage_bloodflow",
+    "name": "폭주 혈류",
+    "description": "이동 8초마다 기본 공격 피해 +0.25 (최대 +0.75), 정지 시 4초마다 감소",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "muscle_spasm",
+    "name": "근육 경련",
+    "description": "근접 공격 범위 1.7배, 공격속도 20% 감소",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "unstable_core",
+    "name": "불안정 핵",
+    "description": "5초마다 기본 공격 피해가 70~150% 사이에서 변경",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "bio_resonance",
+    "name": "생체 공명",
+    "description": "3초 내 같은 적 연속 공격 시 피해 +10% (최대 +30%)",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "blood_pressure_burst",
+    "name": "혈압 폭발",
+    "description": "잃은 체력 10%당 공격속도 +6% (최대 +54%)",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "void_cell",
+    "name": "공허 세포",
+    "description": "공격 시 20% 확률로 적 주변에서 70% 피해의 추가 탄환 생성",
+    "repeatable": false,
+    "category": "공격 변형"
+  },
+  {
+    "id": "forbidden_growth",
+    "name": "금단 성장",
+    "description": "최대 체력 -3, 공격력 +0.75",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "overclock_nerve",
+    "name": "과속 신경",
+    "description": "체력 -2, 이동속도 +2 증가",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "blood_contract",
+    "name": "피의 계약",
+    "description": "적 20명 처치 시 최대 체력 +1 (최대 +4), 받는 피해 1.25배",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "hyperplasia_heart",
+    "name": "과증식 심장",
+    "description": "잃은 체력에 비례해 기본 공격 피해 증가 (최대 +0.75)",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "decay_organ",
+    "name": "부패 장기",
+    "description": "전투 시간 3분마다 기본 공격 피해 +0.25 (최대 +0.75)",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "rupture_muscle",
+    "name": "파열 근육",
+    "description": "공격 2회마다 기본 공격 피해 +0.2·이동속도 -0.25 (최대 3중첩)",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "imperfect_regeneration",
+    "name": "불완전 재생",
+    "description": "최대 체력 -2, 피격 2초 후 체력 +1 회복 (15초 쿨타임)",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "severance_reflex",
+    "name": "절단 반사",
+    "description": "피격 후 3초간 기본 공격 피해 +0.75",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "bio_gamble",
+    "name": "생체 도박",
+    "description": "성장량이 0배·1배·2배로 결정 (확률 20%·60%·20%)",
+    "repeatable": false,
+    "category": "위험·성장"
+  },
+  {
+    "id": "exoskeleton",
+    "name": "외골격",
+    "description": "받는 피해 25% 감소, 대신 이동속도 -1.5",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "platelet_membrane",
+    "name": "혈소판 막",
+    "description": "20초마다 피해 1을 막는 보호막 생성",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "recovery_factor",
+    "name": "회복 인자",
+    "description": "전투 시간 45초마다 체력 +1 회복",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "reflective_skin",
+    "name": "반사 피부",
+    "description": "피격 시 실제 받은 피해의 75% 반사",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "bio_barrier",
+    "name": "생체 장막",
+    "description": "정지 1.5초마다 받는 피해 10% 감소 (최대 30%)",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "split_regeneration",
+    "name": "분열 재생",
+    "description": "한 런에 한 번, 체력이 0이 되기 직전 체력 4로 부활하고 1.5초 무적",
+    "repeatable": false,
+    "category": "생존·방어"
+  },
+  {
+    "id": "infected_host",
+    "name": "감염 숙주",
+    "description": "잡몹 처치 시 15% 확률로 6초간 30% 피해의 아군 생성 (최대 2명)",
+    "repeatable": false,
+    "category": "소환"
+  },
+  {
+    "id": "spore_colony",
+    "name": "포자 군집",
+    "description": "일정 시간마다 적에게 달려드는 작은 포자 생명체 소환",
+    "repeatable": false,
+    "category": "소환"
+  },
+  {
+    "id": "blood_drone",
+    "name": "혈액 드론",
+    "description": "1초마다 가까운 적에게 공격력의 25% 피해",
+    "repeatable": false,
+    "category": "소환"
+  },
+  {
+    "id": "guardian_organ",
+    "name": "수호 장기",
+    "description": "플레이어 주변을 맴돌며 4초마다 적 투사체 하나 방어",
+    "repeatable": false,
+    "category": "소환"
+  },
+  {
+    "id": "tentacle_colony",
+    "name": "촉수 군체",
+    "description": "3초마다 적 2명에게 1.2초간 50% 둔화와 10% 피해",
+    "repeatable": false,
+    "category": "소환"
+  },
+  {
+    "id": "electric_neural_network",
+    "name": "전기 신경망",
+    "description": "적 처치 시 최대 3명에게 피해 1의 연쇄 전류 (5초 쿨타임)",
+    "repeatable": false,
+    "category": "처치 연계"
+  },
+  {
+    "id": "infection_transference",
+    "name": "감염 전이",
+    "description": "적 처치 시 주변 3명에게 3초간 초당 0.5 감염 피해 (5초 쿨타임)",
+    "repeatable": false,
+    "category": "처치 연계"
+  },
+  {
+    "id": "macrophage",
+    "name": "대식 세포",
+    "description": "적 처치 시 5초간 공격력 +0.2 (최대 3중첩)",
+    "repeatable": false,
+    "category": "처치 연계"
+  },
+  {
+    "id": "gluttonous_organ",
+    "name": "폭식 장기",
+    "description": "적 처치 시 3초 동안 이동속도 증가 (최대 4스택)",
+    "repeatable": false,
+    "category": "처치 연계"
+  },
+  {
+    "id": "heart_sniper",
+    "name": "심장 저격",
+    "description": "체력 60% 이상인 적에게 직접 공격 피해 25% 증가",
+    "repeatable": false,
+    "category": "보스·조건"
+  },
+  {
+    "id": "bloodflow_acceleration",
+    "name": "혈류 가속",
+    "description": "보스·엘리트 근처에서 공격속도 25% 증가",
+    "repeatable": false,
+    "category": "보스·조건"
+  },
+  {
+    "id": "focused_nerve",
+    "name": "집중 신경",
+    "description": "주변 적 1명 이하일 때 기본 공격 피해 +0.5, 2~3명일 때 +0.25",
+    "repeatable": false,
+    "category": "보스·조건"
+  },
+  {
+    "id": "execution_instinct",
+    "name": "처형 본능",
+    "description": "체력 20% 미만 적을 20% 확률로 처형 (보스·엘리트는 추가 피해 50%)",
+    "repeatable": false,
+    "category": "보스·조건"
+  },
+  {
+    "id": "berserk_cell",
+    "name": "광폭 세포",
+    "description": "보스전 진입 시 15초간 공격력 +0.5, 이동속도 +0.5, 공격속도 +25%",
+    "repeatable": false,
+    "category": "보스·조건"
+  },
+  {
+    "id": "unstable_cell",
+    "name": "불안정 세포",
+    "description": "투사체 속도 50~150%, 80% 이하의 느린 탄은 피해 130%",
+    "repeatable": false,
+    "category": "변이·확률"
+  },
+  {
+    "id": "grotesque_growth",
+    "name": "기괴 성장",
+    "description": "10초마다 소형화·이동속도 +1 또는 대형화·공격력 +0.5·이동속도 -0.5",
+    "repeatable": false,
+    "category": "변이·확률"
+  },
+  {
+    "id": "mutation_rampage",
+    "name": "돌연변이 폭주",
+    "description": "15초마다 7초간 무작위 스탯 버프 또는 디버프",
+    "repeatable": false,
+    "category": "변이·확률"
+  },
+  {
+    "id": "parasitic_bomb",
+    "name": "기생 폭탄",
+    "description": "적 처치 시 20% 확률로 반경 4에 공격력 100% 폭발",
+    "repeatable": false,
+    "category": "변이·확률"
+  },
+  {
+    "id": "frenzy_hormone",
+    "name": "광란 호르몬",
+    "description": "피격 시 공격력 +0.5·이동속도 +1·공격속도 +20% 중 하나 (3초 지속, 8초 쿨타임)",
+    "repeatable": false,
+    "category": "변이·확률"
+  }
+]

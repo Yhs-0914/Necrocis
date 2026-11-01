@@ -25,10 +25,31 @@ namespace Necrocis
         private int enemyPoolArchetypeId;        // 풀 분류 ID
         private float nextEvaluationTime;
         private float activationRadiusOverride = -1f;
+        private int cachedNormalMinCount = -1;
+        private int cachedNormalMaxCount = -1;
+        private int normalTargetCount;
 
-        private int GetDifficultyMaxAlive(WorldDifficultyBalance balance)
+        private int GetMaxAlive(WorldDifficultyBalance balance)
         {
             float multiplier = balance != null ? balance.enemyMaxAlive : 1f;
+            if (config.maxAlive <= 0 || multiplier <= 0f) return 0;
+
+            bool isNormal = !config.isElite && (config.monsterDefinition == null
+                || config.monsterDefinition.tier == MonsterTier.Normal);
+            if (isNormal)
+            {
+                LevelUpManager.Config.GetNormalEnemySpawnCountRange(
+                    LevelUpManager.GetCurrentLevel(), out int minCount, out int maxCount);
+                if (cachedNormalMinCount != minCount || cachedNormalMaxCount != maxCount)
+                {
+                    // Keep a stable population within each band; never reroll every Update/refill.
+                    normalTargetCount = Random.Range(minCount, maxCount + 1);
+                    cachedNormalMinCount = minCount;
+                    cachedNormalMaxCount = maxCount;
+                }
+                return normalTargetCount;
+            }
+
             return Mathf.Max(0, Mathf.RoundToInt(config.maxAlive * Mathf.Max(0f, multiplier)));
         }
 
@@ -61,6 +82,9 @@ namespace Necrocis
             spawnParent = transform.parent;
             nextSpawnTime = 0f;
             initializedWave = false;
+            cachedNormalMinCount = -1;
+            cachedNormalMaxCount = -1;
+            normalTargetCount = 0;
             enemyPoolArchetypeId = EnemyController.GetPoolArchetypeId(config);
             int staggerSlot = Mathf.Abs(GetInstanceID() % EvaluationStaggerSlots);
             nextEvaluationTime = Time.time + staggerSlot * (EvaluationInterval / EvaluationStaggerSlots);
@@ -91,7 +115,7 @@ namespace Necrocis
             }
 
             WorldDifficultyBalance worldBalance = GetActiveWorldBalance();
-            int maxAlive = GetDifficultyMaxAlive(worldBalance);
+            int maxAlive = GetMaxAlive(worldBalance);
             float respawnCooldown = GetDifficultyRespawnCooldown(worldBalance);
 
             // 활성화 범위 밖이면 모든 적 해제
@@ -182,7 +206,8 @@ namespace Necrocis
         {
             activeEnemies.Remove(enemy);
             WorldDifficultyBalance worldBalance = GetActiveWorldBalance();
-            int maxAlive = GetDifficultyMaxAlive(worldBalance);
+            if (config == null) return;
+            int maxAlive = GetMaxAlive(worldBalance);
             if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < maxAlive)
             {
                 nextSpawnTime = Time.time + GetDifficultyRespawnCooldown(worldBalance);

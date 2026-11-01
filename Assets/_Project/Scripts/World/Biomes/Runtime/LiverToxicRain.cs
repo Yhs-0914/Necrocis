@@ -22,7 +22,7 @@ namespace Necrocis
         [SerializeField, Min(0.2f)] private float warningDuration = 0.6f;
         [SerializeField, Min(0.1f)] private float impactRadius = 0.45f;
         [SerializeField, Min(0f)] private float damage = 1f;
-        [SerializeField, Min(0.1f)] private float hitCooldown = 0.8f;
+        [SerializeField, Min(1f)] private float hitCooldown = 1f;
         [SerializeField, Min(0f)] private float minimumDropSpacing = 1.6f;
         [Header("Appearance")]
         [SerializeField, Min(1f)] private float fallHeight = 9f;

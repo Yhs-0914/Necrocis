@@ -24,8 +24,11 @@ namespace Necrocis
         private bool opening;
         private bool readyToPickup;
         private bool collected;
-        private bool slotsFullLogged;
+        private bool rewardRequested;
         private bool boxHideScheduled;
+        private WorldRewardSaveData reward;
+
+        public void BindReward(WorldRewardSaveData state) { reward = state; }
 
         public void Initialize(
             string itemId,
@@ -163,32 +166,25 @@ namespace Necrocis
                 return;
             }
 
-            if (itemManager.TryAcquireItem(itemId, out PlayerItemAcquireFailureReason failure))
+            if (rewardRequested) return;
+            reward = WorldItemRewardChoice.Prepare(reward, itemManager, this, itemId);
+            if (reward.collected) { collected = true; Destroy(gameObject); return; }
+            var ui = player.GetComponent<PlayerItemInventoryUI>();
+            if (ui == null) ui = player.gameObject.AddComponent<PlayerItemInventoryUI>();
+            rewardRequested = ui.RequestReward(reward.itemChoices, selected =>
             {
-                PlayerItemCategory category = PlayerItemCategory.BasicProjectile;
-                AudioManager.Instance?.PlaySFX("ItemPickup");
-                if (itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry))
-                {
-                    category = entry.Category;
-                    AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
-                }
-                Vector3 effectPosition = itemVisual != null
-                    ? itemVisual.position
-                    : transform.position + Vector3.up * itemRestHeight;
-                CombatVfx.PlayItemPickup(
-                    effectPosition,
-                    player.transform,
-                    category);
+                if (this == null || reward.collected) return;
+                WorldItemRewardChoice.PlayPickup(player, selected,
+                    itemVisual != null ? itemVisual.position : transform.position + Vector3.up * itemRestHeight);
+                SaveService.CompleteWorldReward(reward);
                 collected = true;
                 Destroy(gameObject);
-                return;
-            }
+            });
+        }
 
-            if (failure == PlayerItemAcquireFailureReason.SlotsFull && !slotsFullLogged)
-            {
-                slotsFullLogged = true;
-                Debug.Log($"[WorldItemBoxPickup] Pickup failed because item slots are full: {displayName} ({itemId})");
-            }
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.GetComponentInParent<PlayerController>() != null) rewardRequested = false;
         }
 
         private void EnsureSetup(int boxSortingOrder)

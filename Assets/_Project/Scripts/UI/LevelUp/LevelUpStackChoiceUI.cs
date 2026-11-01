@@ -281,7 +281,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         {
             int minDelta = config.bioGambleMinDelta;
             int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
-            int randomDelta = Random.Range(minDelta, maxDelta + 1);
+            int randomDelta = config.RollGrowthMultiplier();
             ApplyBioGambleStat(playerStats, statType, randomDelta, source);
             return randomDelta;
         }
@@ -332,39 +332,16 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         AudioManager.Instance?.PlaySFX(soundKey);
     }
 
-    private static void ApplyBioGambleStat(PlayerStats playerStats, StackStatType statType, int randomDelta, string source)
+    private static void ApplyBioGambleStat(PlayerStats playerStats, StackStatType statType, int multiplier, string source)
     {
-        switch (statType)
-        {
-            case StackStatType.AttackPower:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackPower, randomDelta, CharacterStatModifierMode.Flat, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackPower, randomDelta, CharacterStatModifierMode.Flat);
-                break;
-            case StackStatType.AttackRange:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackRange, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackRange, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
-                break;
-            case StackStatType.AttackSpeed:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.AttackSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.AttackSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
-                break;
-            case StackStatType.Magic:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.Magic, randomDelta, CharacterStatModifierMode.Flat, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.Magic, randomDelta, CharacterStatModifierMode.Flat);
-                break;
-            case StackStatType.MoveSpeed:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MoveSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.MoveSpeed, randomDelta / 100f, CharacterStatModifierMode.PercentAdd);
-                break;
-            case StackStatType.MaxHealth:
-                playerStats.ApplyModifier(new CharacterStatModifier(CharacterStatType.MaxHealth, randomDelta, CharacterStatModifierMode.Flat, source));
-                LevelUpManager.RecordResolvedModifier(CharacterStatType.MaxHealth, randomDelta, CharacterStatModifierMode.Flat);
-                if (randomDelta > 0)
-                {
-                    playerStats.Heal(randomDelta);
-                }
-                break;
-        }
+        var type = ToCharacterStatType(statType);
+        var config = LevelUpManager.Config;
+        if (!config.TryGetLevelUpStatValue(type, out var value)) return;
+        float amount = config.GetRuntimeModifierValue(value) * multiplier;
+        playerStats.ApplyModifier(new CharacterStatModifier(type, amount, value.mode, source));
+        LevelUpManager.RecordResolvedModifier(type, amount, value.mode);
+        if (value.healWhenPositive && type == CharacterStatType.MaxHealth && amount > 0f)
+            playerStats.Heal(amount);
     }
 
     private void EnsureStatValueUI()
@@ -501,20 +478,22 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             badge.color = BioGambleBadgeColor;
             valueText.text = "?";
             valueText.color = UnknownValueColor;
-            rangeText.text = $"{FormatSignedValue(minDelta)}~{FormatSignedValue(maxDelta)}";
+            rangeText.text = "0 / x1 / x2";
             rangeText.color = NormalValueColor;
             return;
         }
 
         float displayedValue = 1f;
+        bool isPercent = false;
         CharacterStatType characterStatType = ToCharacterStatType(statType);
         if (config != null && config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
         {
             displayedValue = valueConfig.value;
+            isPercent = valueConfig.mode == CharacterStatModifierMode.PercentAdd;
         }
 
         badge.color = NormalBadgeColor;
-        valueText.text = FormatSignedValue(displayedValue);
+        valueText.text = FormatSignedValue(displayedValue) + (isPercent ? "%" : string.Empty);
         valueText.color = NormalValueColor;
         rangeText.text = string.Empty;
     }
@@ -527,7 +506,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         badge.color = BioGambleBadgeColor;
-        valueText.text = FormatSignedValue(result);
+        valueText.text = $"x{result}";
         valueText.color = result > 0
             ? PositiveValueColor
             : result < 0

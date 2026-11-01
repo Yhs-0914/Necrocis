@@ -33,24 +33,24 @@ namespace NecrocisEditor
                     origin=FindPatch(0,7);Spawn();enemy.ApplyBalancePhase("Default",true);
                     var basis=definition.statSets.Single(s=>s.id=="Default");var multi=catalog.difficultyCatalog.Get(difficulty).elites;
                     Require(catalog.progression.TryGetStage(stage,out var progress),"progression row");
-                    Equal(CharacterStats.ToHealthUnits(basis.maxHealth*multi.maxHealth*progress.maxHealth),enemy.Stats.MaxHealth,"HP once");
+                    Equal((basis.maxHealth*multi.maxHealth*progress.maxHealth),enemy.Stats.MaxHealth,"HP once");
                     Equal(basis.moveSpeed*multi.moveSpeed,enemy.Stats.MoveSpeed,"move speed no progression");float maxHp=enemy.Stats.MaxHealth;
                     float raw=basis.attackPower*multi.outgoingDamage*progress.attackPower*definition.patternDamage.Single(p=>p.id==HelicoSpiralPatternSettings.DamageId).coefficient;
                     Equal(raw,enemy.CreatePatternDamage(HelicoSpiralPatternSettings.DamageId,0).Amount,"attack once");
                     enemy.Stats.SetBaseStat(CharacterStatType.MoveSpeed,0);Move(origin+Vector3.right*2.6f);
-                    yield return Wait(()=>pattern.DamageApplications==1,3,"progress actual dash hit");Equal(CharacterStats.ToHealthUnits(raw),100-health.CurrentHealth,"progress actual HP damage");
+                    yield return Wait(()=>pattern.DamageApplications==1,3,"progress actual dash hit");Equal(Mathf.Floor(raw + 0.0001f),100-health.CurrentHealth,"progress actual HP damage");
                     Move(origin+Vector3.forward*4);yield return Wait(()=>pattern.Phase==HelicoSpiralPhase.Ready,2,"progress recovery");
                     Require(Mathf.Abs(pattern.NextReadyTime-Time.time-settings.rearmSeconds*multi.attackCooldown)<.07f,"one difficulty cooldown multiplier");
                     Equal(.7f,pattern.WindupDuration,"warning not compressed");Equal(.25f,pattern.DashDuration,"dash time unchanged");Equal(.4f,pattern.BodyRadius,"width unchanged");Equal(3.5f,pattern.Travelled,"distance unchanged");
-                    var home=enemy.GetComponent<Rigidbody>().position;Move(home+Vector3.forward*1.6f);health.ResetHealth();float expectedContact=CharacterStats.ToHealthUnits(enemy.CreateContactDamage(0).Amount);
+                    var home=enemy.GetComponent<Rigidbody>().position;Move(home+Vector3.forward*1.6f);health.ResetHealth();float expectedContact=Mathf.Floor(enemy.CreateContactDamage(0).Amount + 0.0001f);
                     for(int n=0;n<35&&health.CurrentHealth==100;n++){player.TryMoveByWorld(Vector3.back*.035f);yield return new WaitForFixedUpdate();}
                     Equal(expectedContact,100-health.CurrentHealth,"scaled actual contact");Move(home+Vector3.forward*4);
-                    int xp=0,expected=(int)Math.Round((double)definition.reward.baseExperience*multi.experienceReward*progress.experience,MidpointRounding.ToEven);
+                    int xp=0,expected=(int)Math.Round((double)(progress.fieldEliteExperience > 0 ? progress.fieldEliteExperience : definition.reward.baseExperience * progress.experience) * multi.experienceReward,MidpointRounding.ToEven);
                     enemy.SuppressExperienceReward=false;Action<int> observe=n=>xp+=n;var callback=LevelUpManager.OnLevelUp;LevelUpManager.OnLevelUp=null;LevelUpManager.OnExpGained+=observe;
                     try{enemy.TakeDamage(10000);enemy.TakeDamage(10000);enemy.GrantExp();}
                     finally{LevelUpManager.OnExpGained-=observe;LevelUpManager.OnLevelUp=callback;}
                     Equal(expected,xp,"reward once");yield return Wait(()=>!enemy.gameObject.activeSelf,2,"progress death");
-                    Pass($"BALANCE {difficulty}/stage{stage}: actual HP{maxHp}, dash{CharacterStats.ToHealthUnits(raw)}, contact{expectedContact}, XP{xp} once; tell/width/distance/speed fixed, rearm multiplier once");
+                    Pass($"BALANCE {difficulty}/stage{stage}: actual HP{maxHp}, dash{Mathf.Floor(raw + 0.0001f)}, contact{expectedContact}, XP{xp} once; tell/width/distance/speed fixed, rearm multiplier once");
                     if(stage==4)continue;
                     GameManager.Instance.CollectRelic(new[]{BiomeType.Intestine,BiomeType.Liver,BiomeType.Stomach,BiomeType.Lung}[stage]);
                     Require(biome.MonsterVisit.Stage==stage,"visit progress frozen");Spawn();Require(enemy.Balance.Current.Stage==stage,"same visit spawn frozen");enemy.ReleaseToPool();

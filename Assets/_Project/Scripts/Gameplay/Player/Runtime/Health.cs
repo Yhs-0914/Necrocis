@@ -12,7 +12,7 @@ namespace Necrocis
     public class Health : MonoBehaviour
     {
         [Tooltip("피격 후 무적 시간(초)")]
-        [SerializeField] private float invincibilityDuration = 0.5f;
+        [SerializeField] private float invincibilityDuration = 0.6f;
         [SerializeField] private float hitFlashInterval = 0.08f;
         [SerializeField] private Color hitFlashColor = new Color(1f, 0.18f, 0.12f, 1f);
 
@@ -111,8 +111,8 @@ namespace Necrocis
                 return false;
             }
 
-            Stats.RestoreHealth(reviveHealth);
-            StartInvincibility(invincibilityDuration, true);
+            Stats.SetCurrentHealth(reviveHealth);
+            StartInvincibility(1.5f, true);
             return true;
         }
 
@@ -140,31 +140,25 @@ namespace Necrocis
             {
                 return;
             }
+            effects?.NotifyCombatInteraction();
 
             if (effects != null)
             {
                 float currentHealth = Stats.CurrentHealth;
                 float maxHealth = Stats.MaxHealth;
-                if (actualDamage >= currentHealth
+                if (actualDamage + Stats.DamageRemainder >= currentHealth
                     && effects.TryConsumeSplitRegeneration(currentHealth, maxHealth, out float reviveHealth))
                 {
                     float targetHealth = Mathf.Clamp(reviveHealth, 0f, maxHealth);
-                    if (currentHealth > targetHealth)
-                    {
-                        Stats.ApplyDamage(currentHealth - targetHealth);
-                    }
-                    else if (targetHealth > currentHealth)
-                    {
-                        Stats.RestoreHealth(targetHealth - currentHealth);
-                    }
-
-                    StartInvincibility(invincibilityDuration, true);
+                    Stats.SetCurrentHealth(targetHealth);
+                    StartInvincibility(1.5f, true);
                     return;
                 }
             }
 
             AudioManager.Instance?.PlaySFX("PlayerHit"); // [Sound] 피격
             float appliedDamage = Stats.ApplyDamage(actualDamage);
+            SaveService.RecordPlayerHit(appliedDamage, IsDead);
             if (appliedDamage > 0f)
             {
                 Vector3 sourcePosition = sourceEnemy != null

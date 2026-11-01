@@ -181,16 +181,16 @@ namespace NecrocisEditor
             var stats = definition.statSets.Single(s => s.id == "Default"); var snapshot = actor.Balance.Current;
             if (directionalMap) Require(actor.HasPatternDirections, "real field/visit actor binds approved directional presentation");
             Require(snapshot.Difficulty == difficulty && snapshot.Stage == stage, "correct visit difficulty and stage");
-            Equal(Mathf.Max(1, CharacterStats.ToHealthUnits(stats.maxHealth * multipliers.maxHealth * progression.maxHealth)), actor.Stats.MaxHealth, "actual HP single multiplication");
+            Equal(Mathf.Max(1, (stats.maxHealth * multipliers.maxHealth * progression.maxHealth)), actor.Stats.MaxHealth, "actual HP single multiplication");
             Equal(stats.moveSpeed * multipliers.moveSpeed, actor.Stats.MoveSpeed, "movement has no progression multiplier");
-            Equal((int)Math.Round((double)definition.reward.baseExperience * multipliers.experienceReward * progression.experience, MidpointRounding.ToEven), snapshot.Experience, "reward multiplier once");
+            Equal((int)Math.Round((double)(progression.fieldEliteExperience > 0 ? progression.fieldEliteExperience : definition.reward.baseExperience * progression.experience) * multipliers.experienceReward, MidpointRounding.ToEven), snapshot.Experience, "reward multiplier once");
             foreach (var attack in definition.patternDamage)
             {
                 float expected = stats.attackPower * multipliers.outgoingDamage * progression.attackPower * attack.coefficient;
                 Equal(expected, actor.CreatePatternDamage(attack.id, 0).Amount, "pattern damage once");
                 health.ResetHealth(); float hp = health.CurrentHealth;
                 player.TakeDamage(actor.CreatePatternDamage(attack.id, 0));
-                Equal(CharacterStats.ToHealthUnits(expected), hp - health.CurrentHealth, "real health applies final pattern damage once");
+                Equal(Mathf.Floor(expected + 0.0001f), hp - health.CurrentHealth, "real health applies final pattern damage once");
             }
             if (definition == gasDefinition)
             {

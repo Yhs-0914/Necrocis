@@ -764,7 +764,7 @@ namespace Necrocis
                 if (player != null && Time.time >= nextReflectionHitTime)
                 {
                     nextReflectionHitTime = Time.time + .45f;
-                    player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(damage * reflectedDamageRatio, 1f, 2f)));
+                    player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(damage * reflectedDamageRatio, 0f, 2f)));
                 }
             }
             else
@@ -868,6 +868,13 @@ namespace Necrocis
                 healthBar.transform.SetParent(transform, false);
                 healthBar.SetValue(0f, 0f, MaxHealth);
                 healthBar.SetPattern("CEREBRUM SILENCED", new Color(.55f, .86f, 1f), "FINAL BOSS DEFEATED", 3f);
+            }
+            var rewardBiome = BiomeManager.Active;
+            if (rewardBiome != null)
+            {
+                var itemSpawner = rewardBiome.GetComponent<WorldItemSpawner>();
+                if (itemSpawner == null) itemSpawner = rewardBiome.gameObject.AddComponent<WorldItemSpawner>();
+                itemSpawner.TrySpawnBossRewardAt(defeated.transform.position);
             }
             SaveService.MarkFinalBossDefeated();
             StopAllCoroutines();

@@ -37,6 +37,7 @@ MonoBehaviour:
     attackCooldown: 1
     experienceReward: 1
   elites:
+    fixedHitDamage: 3
     maxHealth: 1
     moveSpeed: 1
     outgoingDamage: 1

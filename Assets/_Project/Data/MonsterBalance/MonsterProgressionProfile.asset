@@ -17,19 +17,34 @@ MonoBehaviour:
     maxHealth: 1
     attackPower: 1
     experience: 1
+    bossHealth: 1.00000000
+    fieldEliteExperience: 100
+    bossExperience: 240
   - stage: 1
     maxHealth: 1.15
     attackPower: 1.08
     experience: 1.1
+    bossHealth: 1.19444444
+    fieldEliteExperience: 120
+    bossExperience: 300
   - stage: 2
     maxHealth: 1.35
     attackPower: 1.2
     experience: 1.25
+    bossHealth: 1.38888889
+    fieldEliteExperience: 125
+    bossExperience: 300
   - stage: 3
     maxHealth: 1.6
     attackPower: 1.35
     experience: 1.4
+    bossHealth: 1.61111111
+    fieldEliteExperience: 140
+    bossExperience: 350
   - stage: 4
     maxHealth: 1.85
     attackPower: 1.5
     experience: 1.6
+    bossHealth: 1.83333333
+    fieldEliteExperience: 160
+    bossExperience: 400

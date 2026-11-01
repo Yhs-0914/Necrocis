@@ -8,8 +8,9 @@ namespace Necrocis
     {
         [SerializeField] private string itemId;
         [SerializeField] private string displayName;
-        private bool slotsFullLogged;
+        private bool rewardRequested;
         private bool collected;
+        private WorldRewardSaveData reward;
 
         public void Initialize(string itemId, string displayName)
         {
@@ -40,7 +41,7 @@ namespace Necrocis
         {
             if (other.GetComponentInParent<PlayerController>() != null)
             {
-                slotsFullLogged = false;
+                rewardRequested = false;
             }
         }
 
@@ -63,29 +64,19 @@ namespace Necrocis
                 return;
             }
 
-            if (itemManager.TryAcquireItem(itemId, out PlayerItemAcquireFailureReason failure))
+            if (rewardRequested) return;
+            reward = WorldItemRewardChoice.Prepare(reward, itemManager, this, itemId);
+            if (reward.collected) { collected = true; Destroy(gameObject); return; }
+            var ui = player.GetComponent<PlayerItemInventoryUI>();
+            if (ui == null) ui = player.gameObject.AddComponent<PlayerItemInventoryUI>();
+            rewardRequested = ui.RequestReward(reward.itemChoices, selected =>
             {
-                PlayerItemCategory category = PlayerItemCategory.BasicProjectile;
-                AudioManager.Instance?.PlaySFX("ItemPickup");
-                if (itemManager.TryGetItemEntry(itemId, out PlayerItemManager.PlayerItemEntry entry))
-                {
-                    category = entry.Category;
-                    AudioManager.Instance?.PlayItemCategorySFX(entry.Category);
-                }
-                CombatVfx.PlayItemPickup(
-                    transform.position + Vector3.up * 0.45f,
-                    player.transform,
-                    category);
+                if (this == null || reward.collected) return;
+                WorldItemRewardChoice.PlayPickup(player, selected, transform.position + Vector3.up * 0.45f);
+                SaveService.CompleteWorldReward(reward);
                 collected = true;
                 Destroy(gameObject);
-                return;
-            }
-
-            if (failure == PlayerItemAcquireFailureReason.SlotsFull && !slotsFullLogged)
-            {
-                slotsFullLogged = true;
-                Debug.Log($"[WorldItemPickup] 아이템 슬롯이 가득 참: {displayName} ({itemId}). I 키로 인벤토리를 열어 아이템을 버릴 수 있습니다.");
-            }
+            });
         }
     }
 }

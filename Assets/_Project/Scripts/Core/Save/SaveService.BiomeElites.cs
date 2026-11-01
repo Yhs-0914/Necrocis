@@ -11,6 +11,26 @@ namespace Necrocis
         public static string ActiveRunId => HasActiveSession ? activeRun.saveId : null;
         public static int RunMonsterStage => HasActiveSession ? Math.Min(4, activeRun.bosses?.DefeatedCount ?? 0) : 0;
 
+        public static bool TryRewardRegionBoss(BiomeType biome, int experience)
+        {
+            if (HasActiveSession)
+            {
+                activeRun.world.rewardedRegionBosses ??= new List<BiomeType>();
+                if (activeRun.world.rewardedRegionBosses.Contains(biome)
+                    || activeRun.bosses.IsDefeated(biome)) return false;
+                activeRun.world.rewardedRegionBosses.Add(biome);
+            }
+            LevelUpManager.AddResolvedEnemyKillExp(experience);
+            PlayerStats.Instance?.Heal(4f);
+            if (BalanceMetrics != null)
+            {
+                BalanceMetrics.Region(biome).bossClears++;
+                BalanceMetrics.Region(biome).experience += experience;
+                BalanceMetrics.Record("region_clear", biome.ToString());
+            }
+            return true;
+        }
+
         // Called once per loaded biome scene, before that scene spawns any enemy.
         public static MonsterVisitContext EnterLoadedBiome(BiomeType biome, int sceneHandle)
         {

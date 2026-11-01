@@ -96,6 +96,7 @@ namespace Necrocis
             DifficultyBalanceProfile profile = ScriptableObject.CreateInstance<DifficultyBalanceProfile>();
             profile.hideFlags = HideFlags.HideAndDontSave;
             profile.difficulty = difficulty;
+            profile.elites.fixedHitDamage = difficulty == GameDifficulty.Hard ? 4f : 3f;
             profile.displayName = difficulty.ToString();
             profile.progression = Resources.Load<LevelProgressionConfig>(
                 LevelProgressionConfig.DefaultResourcePath);

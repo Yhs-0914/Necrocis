@@ -23,10 +23,16 @@ MonoBehaviour:
   midLevelUpperBound: 20
   midExpGainMultiplier: 1
   lateExpGainMultiplier: 0.8
-  jobSelectionLevel: 10
-  jobBasedChoiceStartLevel: 11
-  skill1UnlockLevel: 10
-  skill2UnlockLevel: 20
+  jobSelectionLevel: 5
+  jobBasedChoiceStartLevel: 6
+  skill1UnlockLevel: 5
+  skill2UnlockLevel: 10
+  normalEnemySpawnLevelInterval: 5
+  normalEnemySpawnMinCount: 1
+  normalEnemySpawnMaxCount: 2
+  enemyHealthLevelInterval: 5
+  normalEnemyHealthIncreasePerBand: 0.15
+  eliteEnemyHealthIncreasePerBand: 0.12
   playerBaseStats:
   - statType: 0
     value: 10
@@ -49,24 +55,24 @@ MonoBehaviour:
     healWhenPositive: 0
   - statType: 5
     mode: 1
-    value: 1
+    value: 10
     healWhenPositive: 0
   - statType: 4
     mode: 1
-    value: 1
+    value: 20
     healWhenPositive: 0
   - statType: 6
     mode: 0
-    value: 1
+    value: 25
     healWhenPositive: 0
   - statType: 1
     mode: 1
-    value: 1
+    value: 5
     healWhenPositive: 0
   - statType: 0
     mode: 0
-    value: 1
+    value: 2
     healWhenPositive: 1
   bioGambleEnabled: 1
-  bioGambleMinDelta: -1
-  bioGambleMaxDelta: 3
+  bioGambleMinDelta: 0
+  bioGambleMaxDelta: 2

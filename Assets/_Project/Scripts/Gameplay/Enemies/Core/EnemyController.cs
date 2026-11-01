@@ -93,12 +93,16 @@ namespace Necrocis
         public bool IsCharging => isCharging;
         public bool CanCharge => IsCharger && chargeCooldownTimer <= 0f;
         public bool IsBossEncounter => ignoreMidBossArenaRestriction;
+        public bool IsEngagedWithPlayer => currentState == EnemyChaseState.Instance
+            || currentState == EnemyAttackState.Instance || currentState == EnemyChargeState.Instance;
         public event System.Action<EnemyController> Defeated;
         public event System.Action<EnemyController, float> DamageTaken;
 
         private void Update()
         {
             if (config == null) return;
+
+            RefreshPlayerLevelHealth();
 
             EnsurePlayerTransform();
 

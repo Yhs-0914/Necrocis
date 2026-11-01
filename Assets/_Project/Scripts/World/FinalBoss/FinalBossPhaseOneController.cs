@@ -418,6 +418,7 @@ namespace Necrocis
         private void BeginPhaseTwo()
         {
             CurrentPhase = 2;
+            SaveService.BalanceMetrics?.Record("final_phase", "2");
             if (pillars != null)
                 foreach (FinalBossPillar pillar in pillars)
                     pillar?.HideBrokenRemnant();
@@ -437,7 +438,11 @@ namespace Necrocis
 
         public void NotifyPhaseThreeStarted()
         {
-            if (CurrentPhase == 2) CurrentPhase = 3;
+            if (CurrentPhase == 2)
+            {
+                CurrentPhase = 3;
+                SaveService.BalanceMetrics?.Record("final_phase", "3");
+            }
         }
 
         private void ReleasePhaseOneCombatants()

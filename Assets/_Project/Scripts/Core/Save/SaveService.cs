@@ -206,8 +206,10 @@ namespace Necrocis
             }
 
             itemManager.RestoreSavedItems(progress.items);
+            itemManager.SplitRegenerationUsedForRun |= progress.splitRegenerationUsed;
             playerStats.RuntimeStats.SetCurrentHealth(
                 progress.currentHealth < 0f ? playerStats.MaxHealth : progress.currentHealth);
+            playerStats.RuntimeStats.RestoreHealthRemainders(progress.damageRemainder, progress.healingRemainder);
             player.ReviveRuntimeStateAfterLoad();
 
             GameManager.Instance?.RestoreFromSave(activeRun);
@@ -266,6 +268,9 @@ namespace Necrocis
             activeRun.bosses ??= new BossProgressSaveData();
             activeRun.bosses.finalBossDefeated = true;
             activeRun.campaignCompleted = true;
+            BalanceMetrics.clearSeconds = BalanceMetrics.activeSeconds;
+            BalanceMetrics.clearSessionSeconds = BalanceMetrics.sessionSeconds;
+            BalanceMetrics.Record("campaign_clear", activeRun.difficulty.ToString());
             if (activeRun.difficulty == GameDifficulty.Normal)
             {
                 profile.normalCampaignCompleted = true;
@@ -324,6 +329,7 @@ namespace Necrocis
             CaptureRuntimeState(activeRun);
             activeRun.player ??= new PlayerProgressSaveData();
             activeRun.player.currentHealth = -1f;
+            activeRun.player.damageRemainder = activeRun.player.healingRemainder = 0f;
             activeRun.checkpoint ??= new ResumeCheckpointSaveData();
             activeRun.checkpoint.sceneName = SceneLoader.SCENE_HUB;
             activeRun.checkpoint.biome = BiomeType.None;
@@ -552,12 +558,15 @@ namespace Necrocis
             if (playerStats != null)
             {
                 run.player.currentHealth = playerStats.CurrentHealth;
+                run.player.damageRemainder = playerStats.RuntimeStats.DamageRemainder;
+                run.player.healingRemainder = playerStats.RuntimeStats.HealingRemainder;
             }
 
             PlayerItemManager itemManager = PlayerItemManager.Instance ?? UnityEngine.Object.FindFirstObjectByType<PlayerItemManager>();
             if (itemManager != null)
             {
                 run.player.items = itemManager.CaptureSavedItems();
+                run.player.splitRegenerationUsed = itemManager.SplitRegenerationUsedForRun;
             }
 
             GameManager.Instance?.CaptureToSave(run);

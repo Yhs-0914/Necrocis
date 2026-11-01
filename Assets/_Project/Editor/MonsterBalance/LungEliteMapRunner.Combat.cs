@@ -131,7 +131,7 @@ namespace NecrocisEditor
                 var home = actor.GetComponent<Rigidbody>().position; var away = isPollen ? Vector3.forward : Vector3.left;
                 Move(home + away * 2.2f); health.ResetHealth(); float hp = health.CurrentHealth;
                 for (int n = 0; n < 60 && health.CurrentHealth == hp; n++) { player.TryMoveByWorld(-away * .05f); yield return new WaitForFixedUpdate(); }
-                Equal(CharacterStats.ToHealthUnits(actor.CreateContactDamage(0).Amount), hp - health.CurrentHealth, "actual body contact");
+                Equal(Mathf.Floor(actor.CreateContactDamage(0).Amount + 0.0001f), hp - health.CurrentHealth, "actual body contact");
                 Pass(difficulty + " CONTACT " + actor.Balance.Current.MonsterId + ": native walking collision damage once (attacks isolated)");
             }
             yield return CombinedVisibility();
@@ -193,7 +193,7 @@ namespace NecrocisEditor
             else
             {
                 yield return Wait(() => pollenPattern.SecondVolley != null && pollenPattern.SecondVolley.WaveDamageApplications == 1, 2, "old gap second hit");
-                Equal(CharacterStats.ToHealthUnits(pollen.CreatePatternDamage(PollenInvaderPatternSettings.FollowupDamageId, 0).Amount), hp - health.CurrentHealth, "old gap only pollen damage");
+                Equal(Mathf.Floor(pollen.CreatePatternDamage(PollenInvaderPatternSettings.FollowupDamageId, 0).Amount + 0.0001f), hp - health.CurrentHealth, "old gap only pollen damage");
                 Require(dustPattern.ActiveCloud.HitAttempts == 0, "dust did not hit old gap");
             }
             Pass(difficulty + (move ? " MIXED GAP move: cloud blocks nearest new gap, native outside-circle route reaches another gap with damage0" : " MIXED GAP stay: first gap avoids cloud/first fan, second pollen wave alone hits it"));

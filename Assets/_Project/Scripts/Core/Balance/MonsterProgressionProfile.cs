@@ -11,6 +11,10 @@ namespace Necrocis
         [Min(0.01f)] public float maxHealth = 1f;
         [Min(0f)] public float attackPower = 1f;
         [Min(0f)] public float experience = 1f;
+        // Zero preserves the shared multiplier for older/custom profiles.
+        [Min(0f)] public float bossHealth;
+        [Min(0)] public int fieldEliteExperience;
+        [Min(0)] public int bossExperience;
     }
 
     [CreateAssetMenu(menuName = "Necrocis/Balance/Monster Progression Profile", fileName = "MonsterProgressionProfile")]
@@ -41,7 +45,9 @@ namespace Necrocis
                     return "진행도 단계가 누락/중복되었거나 범위를 벗어났습니다.";
                 if (!MonsterBalanceNumbers.Positive(value.maxHealth)
                     || !MonsterBalanceNumbers.NonNegative(value.attackPower)
-                    || !MonsterBalanceNumbers.NonNegative(value.experience))
+                    || !MonsterBalanceNumbers.NonNegative(value.experience)
+                    || !MonsterBalanceNumbers.NonNegative(value.bossHealth)
+                    || value.fieldEliteExperience < 0 || value.bossExperience < 0)
                     return "진행도 배율은 유한한 값이어야 하며 체력은 양수, 공격력/경험치는 0 이상이어야 합니다.";
             }
             return null;

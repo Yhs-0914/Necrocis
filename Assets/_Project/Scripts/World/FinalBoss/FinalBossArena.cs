@@ -132,6 +132,7 @@ namespace Necrocis
             float entrance = RoomArea.y + 7f;
             if (position.z >= entrance && IsWalkable(position, new Vector2(.55f, .42f)))
                 HasEnteredEncounter = true;
+                SaveService.BalanceMetrics?.Record("final_phase", "1");
         }
 
         public Vector3 UVToWorld(Vector2 uv) => new Vector3(

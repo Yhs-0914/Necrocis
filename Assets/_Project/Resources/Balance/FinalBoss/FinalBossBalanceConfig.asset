@@ -17,11 +17,11 @@ MonoBehaviour:
     commonMinionsPerWave: 4
     exclusiveTypesPerBiome: 2
     exclusiveCopiesPerType: 2
-    weakenedMidBossStatRatio: 0.33
+    weakenedMidBossStatRatio: 0.15
     weakenedMidBossScaleRatio: 1
-    pillarMaxHealth: 65
+    pillarMaxHealth: 180
   phaseTwo:
-    bossMaxHealth: 520
+    bossMaxHealth: 1600
     phaseStartDelay: 1.4
     patternCooldown: 1.8
     electricWarningDuration: 1.35
@@ -43,7 +43,7 @@ MonoBehaviour:
     sweepDamage: 2
     reflectionWarningDuration: 1.1
     reflectionActiveDuration: 3.2
-    reflectedDamageRatio: 0.55
+    reflectedDamageRatio: 0.3
     barrageWarningDuration: 1.2
     barrageCellsPerWave: 24
     barrageWaveCount: 3
@@ -55,7 +55,7 @@ MonoBehaviour:
     detachDuration: 1.8
     pursuitSpeed: 3.1
     stoppingDistance: 3.2
-    collapseDuration: 45
+    collapseDuration: 60
     patternRecovery: 1.8
     dashDamage: 2
     grabDamage: 2
@@ -70,10 +70,10 @@ MonoBehaviour:
     damage: 1
     summonMoveSpeed: 1
     summonCooldown: 1
-    summonExperience: 1
+    summonExperience: 0
   hard:
     health: 1
     damage: 1
     summonMoveSpeed: 1
     summonCooldown: 1
-    summonExperience: 1
+    summonExperience: 0

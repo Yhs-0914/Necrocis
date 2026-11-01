@@ -30,6 +30,7 @@ namespace Necrocis
         public BossProgressSaveData bosses = new BossProgressSaveData();
         public ResumeCheckpointSaveData checkpoint = new ResumeCheckpointSaveData();
         public WorldRunSaveData world = new WorldRunSaveData();
+        public CampaignBalanceMetrics balanceMetrics = new CampaignBalanceMetrics();
         public long playTimeSeconds;
         public long lastSavedUtcTicks;
     }
@@ -41,6 +42,9 @@ namespace Necrocis
         public int experience;
         public JobType job = JobType.None;
         public float currentHealth = -1f;
+        public float damageRemainder;
+        public float healingRemainder;
+        public bool splitRegenerationUsed;
         public List<LevelUpStatChoice> selectionHistory = new List<LevelUpStatChoice>();
         public List<SavedStatModifierData> levelUpModifiers = new List<SavedStatModifierData>();
         public List<SavedItemStateData> items = new List<SavedItemStateData>();
@@ -128,6 +132,10 @@ namespace Necrocis
         public MonsterVisitSaveData monsterVisit;
         public List<BiomeElitePlan> biomeElitePlans = new List<BiomeElitePlan>();
         public List<string> defeatedBiomeEliteIds = new List<string>();
+        public List<BiomeType> rewardedRegionBosses = new List<BiomeType>();
+        public List<WorldRewardSaveData> rewards = new List<WorldRewardSaveData>();
+        public List<RegionRecoverySaveData> recoveryProgress = new List<RegionRecoverySaveData>();
+        public List<string> berserkEncounters = new List<string>();
         public int intestineSeed;
         public int liverSeed;
         public int stomachSeed;
