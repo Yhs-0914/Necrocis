@@ -23,10 +23,10 @@ MonoBehaviour:
   midLevelUpperBound: 20
   midExpGainMultiplier: 1
   lateExpGainMultiplier: 0.8
-  jobSelectionLevel: 10
+  jobSelectionLevel: 5
   jobBasedChoiceStartLevel: 11
-  skill1UnlockLevel: 10
-  skill2UnlockLevel: 20
+  skill1UnlockLevel: 5
+  skill2UnlockLevel: 10
   playerBaseStats:
   - statType: 0
     value: 10

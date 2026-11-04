@@ -12,7 +12,8 @@ namespace Necrocis
         [SerializeField] private bool spawnOnlyInIntestine = false;
 
         [Header("Spawn")]
-        [SerializeField, Min(1)] private int spawnCount = 3;
+        [SerializeField, Min(0)] private int spawnCount = 3;
+        [SerializeField] private List<BiomeItemSpawnCount> biomeSpawnCounts = new List<BiomeItemSpawnCount>();
         [SerializeField, Min(1)] private int maxPositionAttemptsPerItem = 220;
         [SerializeField, Min(0)] private int edgePadding = 10;
         [SerializeField, Min(0f)] private float minDistanceBetweenItems = 14f;
@@ -38,6 +39,26 @@ namespace Necrocis
         private bool spawned;
         private readonly List<Vector3> spawnedPositions = new List<Vector3>();
         private WorldItemBoxSpriteConfig itemBoxSpriteConfig;
+
+        [System.Serializable]
+        public class BiomeItemSpawnCount
+        {
+            public BiomeType biome;
+            [Min(0)] public int count;
+        }
+
+        public int GetSpawnCount(BiomeType biome)
+        {
+            if (biomeSpawnCounts != null)
+            {
+                foreach (BiomeItemSpawnCount entry in biomeSpawnCounts)
+                {
+                    if (entry != null && entry.biome == biome) return Mathf.Max(0, entry.count);
+                }
+            }
+
+            return Mathf.Max(0, spawnCount);
+        }
 
         private void Start()
         {
@@ -116,7 +137,7 @@ namespace Necrocis
             }
 
             Shuffle(candidates);
-            int targetCount = Mathf.Min(spawnCount, candidates.Count);
+            int targetCount = Mathf.Min(GetSpawnCount(biome.BiomeType), candidates.Count);
             Transform playerTransform = PlayerController.Instance != null ? PlayerController.Instance.transform : null;
 
             List<Vector3> positions = null;

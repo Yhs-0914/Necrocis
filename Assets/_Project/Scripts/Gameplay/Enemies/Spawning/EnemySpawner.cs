@@ -30,7 +30,8 @@ namespace Necrocis
         {
             ClearSpawnedEnemies();
 
-            this.config = config;
+            GameManager gameManager = GameManager.Instance;
+            this.config = gameManager != null ? gameManager.CreateEnemyRuntimeRule(config) : config?.CreateRuntimeCopy();
             this.anchorPosition = anchorPosition;
             playerTransform = null;
             spawnParent = transform.parent;

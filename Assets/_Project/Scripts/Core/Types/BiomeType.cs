@@ -27,7 +27,8 @@ namespace Necrocis
 
     public enum GameDifficulty
     {
-        Normal = 0
+        Normal = 0,
+        Hard = 1
     }
 
     /// <summary>

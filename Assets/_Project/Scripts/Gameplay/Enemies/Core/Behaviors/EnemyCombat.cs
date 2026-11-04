@@ -37,13 +37,13 @@ namespace Necrocis
 
                 animatedSprite.enabled = true;
                 currentLoopFrames = null;
-                animatedSprite.PlayOneShot(attackFrames, config.attackAnimationSpeed, OnAttackAnimationComplete);
+                animatedSprite.PlayOneShot(attackFrames, config.EffectiveAttackFrameInterval, OnAttackAnimationComplete);
                 return true;
             }
 
             // 공격 애니메이션이 없으면 즉시 데미지 (기존 동작)
             ApplyDamageToPlayer();
-            attackTimer = config.attackCooldown;
+            attackTimer = config.EffectiveAttackCooldown;
             return false;
         }
 
@@ -104,7 +104,7 @@ namespace Necrocis
         private void OnAttackAnimationComplete()
         {
             attackAnimPlaying = false;
-            attackTimer = config.attackCooldown;
+            attackTimer = config.EffectiveAttackCooldown;
 
             // 공격 범위 내 플레이어에게 데미지
             ApplyDamageToPlayer();

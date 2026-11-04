@@ -30,6 +30,10 @@ namespace Necrocis
         [SerializeField] private GameDifficulty currentDifficulty = GameDifficulty.Normal;
         [SerializeField] private BiomeType currentBiome = BiomeType.None;
 
+        [Header("Difficulty Balance (1 = existing balance)")]
+        [SerializeField] private DifficultyBalanceSettings normalBalance = new DifficultyBalanceSettings();
+        [SerializeField] private DifficultyBalanceSettings hardBalance = new DifficultyBalanceSettings();
+
         [Header("성능")]
         [SerializeField, Min(-1)] private int targetFrameRate = 60;
 
@@ -54,6 +58,23 @@ namespace Necrocis
         public GameState CurrentState => currentState;
         public GameDifficulty CurrentDifficulty => currentDifficulty;
         public bool IsNormalDifficulty => currentDifficulty == GameDifficulty.Normal;
+
+        public bool TrySetDifficulty(GameDifficulty difficulty)
+        {
+            if (currentState != GameState.InHub
+                || (difficulty != GameDifficulty.Normal && difficulty != GameDifficulty.Hard)) return false;
+            currentDifficulty = difficulty;
+            return true;
+        }
+
+        // Called only by biome enemy spawners/splits. Boss rules bypass this API.
+        public EnemySpawnRuleConfig CreateEnemyRuntimeRule(EnemySpawnRuleConfig source)
+        {
+            if (source == null) return null;
+            DifficultyBalanceSettings settings = currentDifficulty == GameDifficulty.Hard ? hardBalance : normalBalance;
+            EnemyBalanceMultipliers multipliers = source.isElite ? settings?.eliteEnemies : settings?.normalEnemies;
+            return multipliers != null ? multipliers.CreateRuntimeRule(source) : source.CreateRuntimeCopy();
+        }
         public BiomeType CurrentBiome => currentBiome;
         public int CollectedRelicCount => (hasIntestineRelic ? 1 : 0) + (hasLiverRelic ? 1 : 0)
                                         + (hasStomachRelic ? 1 : 0) + (hasLungRelic ? 1 : 0);

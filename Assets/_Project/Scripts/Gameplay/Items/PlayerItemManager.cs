@@ -32,6 +32,7 @@ namespace Necrocis
             [TextArea]
             [SerializeField] private string description;
             [SerializeField] private PlayerItemCategory category;
+            [SerializeField, Range(0, 4)] private int tier;
             [SerializeField] private Sprite icon;
             [SerializeField] private PlayerItemBase implementation;
 
@@ -39,6 +40,7 @@ namespace Necrocis
             public string DisplayName => displayName;
             public string Description => description;
             public PlayerItemCategory Category => category;
+            public int Tier => Mathf.Clamp(tier, 0, 4);
             public Sprite Icon => icon;
             public PlayerItemBase Implementation => implementation;
             public bool HasIcon => icon != null;
@@ -53,7 +55,8 @@ namespace Necrocis
                 string description,
                 PlayerItemCategory category,
                 Sprite icon = null,
-                PlayerItemBase implementation = null)
+                PlayerItemBase implementation = null,
+                int tier = 0)
             {
                 this.itemId = itemId;
                 this.displayName = displayName;
@@ -61,6 +64,7 @@ namespace Necrocis
                 this.category = category;
                 this.icon = icon;
                 this.implementation = implementation;
+                this.tier = Mathf.Clamp(tier, 0, 4);
             }
 
             public void AssignIconIfMissing(Sprite fallbackIcon)
@@ -100,6 +104,7 @@ namespace Necrocis
             [SerializeField] private string displayName;
             [SerializeField] private string description;
             [SerializeField] private PlayerItemCategory category;
+            [SerializeField, Range(0, 4)] private int tier;
             [SerializeField] private Sprite icon;
             [SerializeField] private PlayerItemBase implementation;
 
@@ -107,6 +112,7 @@ namespace Necrocis
             public string DisplayName => displayName;
             public string Description => description;
             public PlayerItemCategory Category => category;
+            public int Tier => Mathf.Clamp(tier, 0, 4);
             public Sprite Icon => icon;
             public PlayerItemBase Implementation => implementation;
 
@@ -116,6 +122,7 @@ namespace Necrocis
                 displayName = entry.DisplayName;
                 description = entry.Description;
                 category = entry.Category;
+                tier = entry.Tier;
                 icon = entry.Icon;
                 implementation = entry.Implementation;
             }

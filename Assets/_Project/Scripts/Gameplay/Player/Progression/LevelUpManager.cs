@@ -5,13 +5,20 @@ using UnityEngine;
 
 namespace Necrocis
 {
-    // 직업 종류 (레벨 10에서 선택)
+    // 직업 종류 (기본 설정: 레벨 5에서 선택)
     public enum JobType
     {
         None,    // 미선택
         Warrior, // 전사: 공격력/방어력 특화
         Mage,    // 마법사: 마력/쿨타임 특화
         Archer   // 궁수: 공격속도/사거리 특화
+    }
+
+    public enum PlayerGrowthStage
+    {
+        BeforeJobSelection = 0,
+        First = 1,
+        Second = 2
     }
 
     /// <summary>
@@ -36,7 +43,7 @@ namespace Necrocis
         public static void AddExp(int baseAmount)
         {
             EnsureExpRequirementInitialized();
-            if (currentLevel >= Config.MaxLevel) return;
+            if (currentLevel >= Config.MaxLevel || IsWaitingForJobSelection()) return;
 
             float multiplier = GetExpMultiplier();                     // 레벨 구간별 경험치 배율
             int actualExp = Mathf.RoundToInt(baseAmount * multiplier); // 실제 획득 경험치
@@ -74,6 +81,7 @@ namespace Necrocis
             EnsureExpRequirementInitialized();
             while (currentExp >= expRequired && currentLevel < Config.MaxLevel)
             {
+                if (IsWaitingForJobSelection()) break;
                 currentExp -= expRequired;
                 currentLevel++;
                 CalculateExpRequired();
@@ -95,7 +103,7 @@ namespace Necrocis
 
         public static bool HasPendingLevelUp()
         {
-            return pendingLevelUps > 0;
+            return pendingLevelUps > 0 || CanProcessStoredExp();
         }
 
         public static void ProcessNextPendingLevelUp()
@@ -111,6 +119,16 @@ namespace Necrocis
                     OnLevelUp?.Invoke();
                 }
             }
+            else if (CanProcessStoredExp())
+            {
+                CheckLevelUp();
+            }
+        }
+
+        private static bool CanProcessStoredExp()
+        {
+            EnsureExpRequirementInitialized();
+            return !IsWaitingForJobSelection() && currentLevel < Config.MaxLevel && currentExp >= expRequired;
         }
 
         private static void CalculateExpRequired()
@@ -122,7 +140,7 @@ namespace Necrocis
         public static void DebugLevelUp()
         {
             EnsureExpRequirementInitialized();
-            if (currentLevel >= Config.MaxLevel) return;
+            if (currentLevel >= Config.MaxLevel || IsWaitingForJobSelection()) return;
             currentLevel++;
             CalculateExpRequired();
             if (IsWaitingForJobSelection())
@@ -147,10 +165,14 @@ namespace Necrocis
             return (float)currentExp / expRequired;
         }
         public static int GetJobSelectionLevel() => Config.JobSelectionLevel;
+        // The second stage keeps the chosen job and unlocks its existing second skill.
+        public static PlayerGrowthStage GetGrowthStage() => currentJob == JobType.None
+            ? PlayerGrowthStage.BeforeJobSelection
+            : currentLevel >= Config.Skill2UnlockLevel ? PlayerGrowthStage.Second : PlayerGrowthStage.First;
         public static int GetSkillUnlockLevel(int skillSlotIndex) => Config.GetSkillUnlockLevel(skillSlotIndex);
         public static bool IsSkillUnlocked(int skillSlotIndex)
         {
-            return currentJob != JobType.None
+            return (skillSlotIndex == 1 || skillSlotIndex == 2) && currentJob != JobType.None
                 && currentLevel >= GetSkillUnlockLevel(skillSlotIndex);
         }
 
@@ -161,7 +183,7 @@ namespace Necrocis
         private static JobType currentJob = JobType.None;                        // 현재 선택한 직업
         private static List<LevelUpStatChoice> selectionHistory = new List<LevelUpStatChoice>(); // 지금까지 선택한 스탯 기록
 
-        // 직업별 고유 스탯 매핑 (레벨 11+ 선택지에서 1번째로 고정 등장)
+        // 직업별 고유 스탯 매핑 (jobBasedChoiceStartLevel부터 첫 선택지로 등장)
         private static Dictionary<JobType, LevelUpStatChoice> jobStatMap = new Dictionary<JobType, LevelUpStatChoice>
         {
             [JobType.Warrior] = LevelUpStatChoice.AttackPowerUp,     // 전사 → 공격력
@@ -268,7 +290,8 @@ namespace Necrocis
         public static void RecordSelection(LevelUpStatChoice choice) => selectionHistory.Add(choice);
         public static void SetJob(JobType job)
         {
-            if (job == JobType.None || currentJob == job)
+            if (job == JobType.None || !Enum.IsDefined(typeof(JobType), job)
+                || currentJob != JobType.None || currentLevel < Config.JobSelectionLevel)
             {
                 return;
             }
@@ -310,7 +333,7 @@ namespace Necrocis
 
         private static bool IsWaitingForJobSelection()
         {
-            return currentLevel == Config.JobSelectionLevel && currentJob == JobType.None;
+            return currentLevel >= Config.JobSelectionLevel && currentJob == JobType.None;
         }
     }
 }

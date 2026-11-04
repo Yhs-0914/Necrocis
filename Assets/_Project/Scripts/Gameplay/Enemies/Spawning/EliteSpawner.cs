@@ -81,6 +81,9 @@ namespace Necrocis
         {
             if (config == null || !config.isElite) return;
 
+            GameManager gameManager = GameManager.Instance;
+            config = gameManager != null ? gameManager.CreateEnemyRuntimeRule(config) : config.CreateRuntimeCopy();
+
             eliteConfigs.Add(new EliteEntry
             {
                 config = config,

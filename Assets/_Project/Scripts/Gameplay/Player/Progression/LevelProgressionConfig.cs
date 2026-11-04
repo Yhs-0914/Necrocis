@@ -25,10 +25,10 @@ namespace Necrocis
         [Min(0f)] public float lateExpGainMultiplier = 0.8f;
 
         [Header("Unlock Levels")]
-        [Min(1)] public int jobSelectionLevel = 10;
+        [Min(1)] public int jobSelectionLevel = 5;
         [Min(1)] public int jobBasedChoiceStartLevel = 11;
-        [Min(1)] public int skill1UnlockLevel = 10;
-        [Min(1)] public int skill2UnlockLevel = 20;
+        [Min(1)] public int skill1UnlockLevel = 5;
+        [Min(1)] public int skill2UnlockLevel = 10;
 
         [Header("Player Base Stats")]
         public List<CharacterStatValue> playerBaseStats = CreateDefaultPlayerBaseStats();
@@ -58,9 +58,10 @@ namespace Necrocis
 
         public float GetExpGainMultiplier(int currentLevel, JobType currentJob)
         {
-            if (currentLevel <= Mathf.Max(1, earlyLevelUpperBound))
+            // Selection must take precedence even when its level is in the early XP band.
+            if (currentLevel >= JobSelectionLevel && currentJob == JobType.None)
             {
-                return Mathf.Max(0f, earlyExpGainMultiplier);
+                return Mathf.Max(0f, jobSelectionBlockedExpMultiplier);
             }
 
             if (currentLevel == JobSelectionLevel)
@@ -68,6 +69,11 @@ namespace Necrocis
                 return currentJob == JobType.None
                     ? Mathf.Max(0f, jobSelectionBlockedExpMultiplier)
                     : Mathf.Max(0f, jobSelectionSelectedExpMultiplier);
+            }
+
+            if (currentLevel <= Mathf.Max(1, earlyLevelUpperBound))
+            {
+                return Mathf.Max(0f, earlyExpGainMultiplier);
             }
 
             if (currentLevel <= Mathf.Max(JobSelectionLevel, midLevelUpperBound))

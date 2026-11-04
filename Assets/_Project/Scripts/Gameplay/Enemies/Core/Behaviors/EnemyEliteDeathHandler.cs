@@ -279,7 +279,10 @@ namespace Necrocis
             foreach (EnemySpawnRuleConfig rule in enemySpawnRules)
             {
                 if (rule != null && rule.name == enemyName)
-                    return rule;
+                {
+                    GameManager gameManager = GameManager.Instance;
+                    return gameManager != null ? gameManager.CreateEnemyRuntimeRule(rule) : rule.CreateRuntimeCopy();
+                }
             }
             Debug.LogWarning($"[EliteDeath] FindEnemyConfigByName: '{enemyName}'을 찾을 수 없음! 등록된 적: {enemySpawnRules.Count}개");
             return null;

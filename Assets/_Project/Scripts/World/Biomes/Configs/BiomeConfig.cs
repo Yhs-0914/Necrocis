@@ -180,6 +180,15 @@ namespace Necrocis
     [System.Serializable]
     public class EnemySpawnRuleConfig
     {
+        // Mutable runtime values (e.g. aggro radius) must not change the authored asset.
+        public EnemySpawnRuleConfig CreateRuntimeCopy()
+        {
+            var copy = (EnemySpawnRuleConfig)MemberwiseClone();
+            copy.allowedRegions = allowedRegions != null ? new List<int>(allowedRegions) : null;
+            copy.additionalBaseStats = additionalBaseStats != null ? new List<CharacterStatValue>(additionalBaseStats) : null;
+            return copy;
+        }
+
         public string name = "Enemy";
 
         [Header("Poisson")]
@@ -208,7 +217,7 @@ namespace Necrocis
         public float maxHealth = 30f;
         public float attackDamage = 1f;
         public float attackRange = 1.5f;
-        public float attackCooldown = 1f;
+        [Min(0f)] public float attackCooldown = 1f;
         public int expReward = 10;
 
         [Header("Additional Stats")]
@@ -244,7 +253,8 @@ namespace Necrocis
         public Sprite[] attackSprites;         // 기본 공격 (좌우는 flipX로 처리)
         public Sprite[] attackSpritesUp;       // 상방 공격 (NK세포 등 방향별 공격용)
         public Sprite[] attackSpritesDown;     // 하방 공격
-        public float attackAnimationSpeed = 0.12f;
+        [Tooltip("Seconds per attack frame. Smaller values play faster (not a speed multiplier).")]
+        [Min(0.01f)] public float attackAnimationSpeed = 0.12f;
 
         [Header("Ranged Attack (원거리 공격)")]
         public bool isRanged = false;
@@ -267,6 +277,16 @@ namespace Necrocis
         public bool isElite = false;
         public Color tintColor = Color.white;
 
+        [Tooltip("Seconds after an elite attack completes. Negative inherits attackCooldown.")]
+        public float eliteAttackCooldown = -1f;
+        [Tooltip("Seconds per elite attack frame. Negative inherits attackAnimationSpeed.")]
+        public float eliteAttackFrameInterval = -1f;
+
+        public float EffectiveAttackCooldown => isElite && eliteAttackCooldown >= 0f
+            ? eliteAttackCooldown : attackCooldown;
+        public float EffectiveAttackFrameInterval => isElite && eliteAttackFrameInterval >= 0f
+            ? Mathf.Max(0.01f, eliteAttackFrameInterval) : attackAnimationSpeed;
+
         [Tooltip("이 엘리트를 소환하기 위해 잡아야 하는 일반 적 이름")]
         public string killTriggerEnemyName = "";
         [Tooltip("소환에 필요한 킬 수")]
@@ -287,6 +307,7 @@ namespace Necrocis
         public bool chargesAtPlayer = false;
         public float chargeSpeed = 6f;
         public float chargeAccelTime = 0.3f;
+        [Min(0f)] public float chargeCooldown = 3f;
 
         [Header("Elite - Aggro Debris (항체 잔해)")]
         public bool leavesDebrisOnDeath = false;
