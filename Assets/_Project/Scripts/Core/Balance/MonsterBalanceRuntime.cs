@@ -16,7 +16,8 @@ namespace Necrocis
         public float ContactKnockback { get; }
 
         public MonsterBalanceRuntime(MonsterDefinition definition, DifficultyBalanceProfile difficulty,
-            MonsterProgressionProfile progression, int stage)
+            MonsterProgressionProfile progression, int stage, int playerLevel = 1,
+            float healthPerLevel = 0f, float experiencePerLevel = 0f, int maxLevel = 30)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             string validation = definition.GetBalanceValidationError();
@@ -26,6 +27,9 @@ namespace Necrocis
                 if (!MonsterBalanceResolver.TryResolve(definition, set?.id, difficulty, progression, stage,
                     out MonsterBalanceSnapshot snapshot, out string error))
                     throw new InvalidOperationException(definition.name + ": " + error);
+                snapshot = snapshot.ForEncounter(
+                    TempoBalanceRules.LevelMultiplier(playerLevel, healthPerLevel, maxLevel), 1f, 1f,
+                    TempoBalanceRules.LevelMultiplier(playerLevel, experiencePerLevel, maxLevel), 1f);
                 phases.Add(set.id, snapshot);
             }
             foreach (MonsterPatternDamage pattern in definition.patternDamage)

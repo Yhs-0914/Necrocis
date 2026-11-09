@@ -37,6 +37,8 @@ namespace Necrocis
     [Serializable]
     public sealed class PlayerProgressSaveData
     {
+        public ItemRewardState itemRewards = new ItemRewardState();
+        public bool growthChoicePending;
         public int level = 1;
         public int experience;
         public JobType job = JobType.None;

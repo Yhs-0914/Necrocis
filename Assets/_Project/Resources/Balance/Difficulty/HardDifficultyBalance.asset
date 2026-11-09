@@ -31,12 +31,14 @@ MonoBehaviour:
     skillDamage: 1
     skillCooldown: 1
   enemies:
+    baseHitDamage: 2
     maxHealth: 1
     moveSpeed: 1
     outgoingDamage: 1
     attackCooldown: 1
     experienceReward: 1
   elites:
+    baseHitDamage: 4
     maxHealth: 1
     moveSpeed: 1
     outgoingDamage: 1

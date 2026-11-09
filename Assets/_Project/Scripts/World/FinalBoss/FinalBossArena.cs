@@ -60,7 +60,9 @@ namespace Necrocis
                 summonProgression.hideFlags = HideFlags.HideAndDontSave;
             }
             // This encounter has its own multipliers and no biome visit progression.
-            var result = new MonsterBalanceRuntime(definition, summonDifficulty, summonProgression, 0);
+            LevelProgressionConfig tempo = LevelUpManager.Config;
+            var result = new MonsterBalanceRuntime(definition, summonDifficulty, summonProgression, 0,
+                LevelUpManager.GetCurrentLevel(), tempo.monsterHealthPerLevel, tempo.monsterExperiencePerLevel, tempo.MaxLevel);
             FinalBossDifficultyBalance difficulty = Balance.GetDifficulty(summonDifficulty.difficulty);
             float ratio = weakened ? Balance.phaseOne.weakenedMidBossStatRatio : 1f;
             result.ApplyEncounterMultipliers(difficulty.health * ratio, difficulty.damage * ratio,

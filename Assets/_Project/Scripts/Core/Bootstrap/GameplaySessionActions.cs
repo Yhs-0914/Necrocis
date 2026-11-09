@@ -52,8 +52,12 @@ namespace Necrocis
             {
                 var load=SceneManager.LoadSceneAsync(SceneNames.Hub);while(load!=null && !load.isDone)yield return null;
             }
-            if(plan.RestoreNormalProgress && !SaveService.TryRestorePendingSession(out _,out var error))
-            {Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 복원 실패: {error}");AudioManager.Instance?.PlaySFX("UIInvalid");}
+            if (plan.RestoreNormalProgress)
+            {
+                if (!SaveService.TryRestorePendingSession(out _, out var error))
+                { Debug.LogError($"[PlayerDeathScreen] Normal 사망 진행도 복원 실패: {error}"); AudioManager.Instance?.PlaySFX("UIInvalid"); }
+                else LevelUpManager.ResumePendingChoices();
+            }
         }
         public bool TryPrepareVictoryReturn(ref string clearSaveError,out string status)
         {

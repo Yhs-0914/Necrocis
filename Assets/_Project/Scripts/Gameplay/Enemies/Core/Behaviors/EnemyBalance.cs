@@ -32,9 +32,13 @@ namespace Necrocis
                 Balance != null ? Balance.ContactKnockback : config.contactKnockbackDistance);
         }
 
-        public float GetRearmCooldown(float seconds) => Balance != null
-            ? Balance.Current.GetRearmCooldown(seconds)
-            : seconds * Mathf.Max(0.01f, DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown);
+        public float GetRearmCooldown(float seconds)
+        {
+            float cooldown = Balance != null ? Balance.Current.GetRearmCooldown(seconds)
+                : seconds * Mathf.Max(0.01f, DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown);
+            return IsElite && !IsBossEncounter
+                ? cooldown * Mathf.Max(1f, LevelUpManager.Config.eliteAttackIntervalMultiplier) : cooldown;
+        }
 
         public EnemyDamageRequest CreateAttackDamage(float amount) => new EnemyDamageRequest(
             Balance != null ? amount : amount * DifficultyBalanceService.GetIncomingDamageMultiplier(this), this, GetHealthEffectSource("attack"));
@@ -47,8 +51,18 @@ namespace Necrocis
             return new EnemyDamageRequest(amount, this, GetHealthEffectSource("pattern/" + id));
         }
 
-        public EnemyDamageRequest CreateContactDamage(float legacyDamage) => new EnemyDamageRequest(
-            Balance != null ? (Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f)
-                : legacyDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(this), this, GetHealthEffectSource("contact"));
+        public EnemyDamageRequest CreateContactDamage(float legacyDamage)
+        {
+            float amount = Balance != null ? (Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f)
+                : legacyDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(this);
+            if (!IsBossEncounter && amount > 0f)
+            {
+                var profile = DifficultyBalanceService.ActiveProfile;
+                float configured = (IsElite ? profile.elites : profile.enemies).baseHitDamage;
+                amount = configured >= 0f ? configured
+                    : TempoBalanceRules.FieldHitDamage(IsElite, DifficultyBalanceService.ActiveDifficulty == GameDifficulty.Hard);
+            }
+            return new EnemyDamageRequest(amount, this, GetHealthEffectSource("contact"));
+        }
     }
 }

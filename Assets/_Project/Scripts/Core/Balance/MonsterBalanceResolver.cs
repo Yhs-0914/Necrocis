@@ -124,7 +124,9 @@ namespace Necrocis
             if (error != null) return false;
 
             float health = set.maxHealth * balance.maxHealth * progress.maxHealth;
-            float attack = set.attackPower * balance.outgoingDamage * progress.attackPower;
+            float attack = definition.tier != MonsterTier.Boss && balance.baseHitDamage >= 0f
+                ? balance.baseHitDamage
+                : set.attackPower * balance.outgoingDamage * progress.attackPower;
             float speed = set.moveSpeed * balance.moveSpeed;
             float contact = definition.contact.enabled ? attack * definition.contact.damageCoefficient : 0f;
             double rawExperience = (double)definition.reward.baseExperience * balance.experienceReward * progress.experience;

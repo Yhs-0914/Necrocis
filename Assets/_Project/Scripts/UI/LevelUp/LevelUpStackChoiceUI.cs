@@ -183,10 +183,27 @@ public class LevelUpStackChoiceUI : MonoBehaviour
                 image.sprite = sprite;
             }
             image.preserveAspect = true;
+            var content = button.transform.Find("LocalizedStatContent") as RectTransform;
+            if (content != null) SetCardContentBounds(content, image);
 
             UpdateStatValueDisplay(i, currentChoices[i], config, hasBioGamble);
         }
 
+        foreach (TMP_Text label in stackChoicePanel.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (label.text != "[선택]" && label.text != "Choice"
+                && label.text != "숫자 1~5 또는 클릭으로 선택") continue;
+            label.text = "숫자 1~5 또는 클릭으로 선택";
+            label.enableAutoSizing = true; label.fontSizeMin = 7f; label.fontSizeMax = 10f;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.overflowMode = TextOverflowModes.Truncate;
+            if (label.transform.parent == stackChoicePanel.transform)
+            {
+                label.rectTransform.anchorMin = new Vector2(.15f, .01f);
+                label.rectTransform.anchorMax = new Vector2(.85f, .12f);
+                label.rectTransform.anchoredPosition = label.rectTransform.sizeDelta = Vector2.zero;
+            }
+        }
         ShowUI();
     }
 
@@ -250,6 +267,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
     {
         yield return null;
         LevelUpManager.ProcessNextPendingLevelUp();
+        if (!LevelUpManager.HasPendingLevelUp()) GrantPostLevelUpInvincibility();
         selectionInProgress = false;
     }
 
@@ -300,7 +318,9 @@ public class LevelUpStackChoiceUI : MonoBehaviour
                 continue;
             }
 
-            Transform existingBadge = button.transform.Find("DynamicStatValueBadge");
+            RectTransform content = EnsureStatContent(button);
+            Transform existingBadge = content.Find("DynamicStatValueBadge")
+                ?? button.transform.Find("DynamicStatValueBadge");
             GameObject badgeObject;
             if (existingBadge != null)
             {
@@ -314,12 +334,13 @@ public class LevelUpStackChoiceUI : MonoBehaviour
                     typeof(CanvasRenderer),
                     typeof(Image));
                 badgeObject.layer = button.gameObject.layer;
-                badgeObject.transform.SetParent(button.transform, false);
+                badgeObject.transform.SetParent(content, false);
             }
 
+            badgeObject.transform.SetParent(content, false);
             RectTransform badgeRect = badgeObject.GetComponent<RectTransform>();
-            badgeRect.anchorMin = new Vector2(0.26f, 0.39f);
-            badgeRect.anchorMax = new Vector2(0.74f, 0.54f);
+            badgeRect.anchorMin = new Vector2(0.18f, 0.38f);
+            badgeRect.anchorMax = new Vector2(0.82f, 0.62f);
             badgeRect.anchoredPosition = Vector2.zero;
             badgeRect.sizeDelta = Vector2.zero;
             badgeRect.localScale = Vector3.one;
@@ -340,10 +361,10 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             TMP_Text valueText = FindOrCreateBadgeText(
                 badgeRect,
                 "Value",
-                new Vector2(0f, 0.30f),
+                Vector2.zero,
                 Vector2.one,
-                22f,
-                12f);
+                15f,
+                9f);
             TMP_Text rangeText = FindOrCreateBadgeText(
                 badgeRect,
                 "Range",
@@ -357,6 +378,96 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             statValueTexts[i] = valueText;
             statRangeTexts[i] = rangeText;
         }
+    }
+
+    private static RectTransform EnsureStatContent(Button button)
+    {
+        Transform existing = button.transform.Find("LocalizedStatContent");
+        GameObject owner = existing != null ? existing.gameObject : new GameObject(
+            "LocalizedStatContent", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        owner.layer = button.gameObject.layer;
+        owner.transform.SetParent(button.transform, false);
+        RectTransform rect = owner.GetComponent<RectTransform>();
+        // The authored card contains labels and a fixed +1. Cover its text area as one inset panel.
+        SetCardContentBounds(rect, button.GetComponent<UnityEngine.UI.Image>());
+        rect.anchoredPosition = rect.sizeDelta = Vector2.zero;
+        rect.localScale = Vector3.one;
+        var background = owner.GetComponent<UnityEngine.UI.Image>();
+        background.color = new Color32(60, 32, 39, 255);
+        background.raycastTarget = false;
+        owner.transform.SetAsLastSibling();
+        EnsureCardLabel(rect, "StatName", new Vector2(.02f, .70f), new Vector2(.98f, .98f), 13, 9);
+        EnsureCardLabel(rect, "StatDescription", new Vector2(.05f, .06f), new Vector2(.95f, .32f), 9, 7);
+        return rect;
+    }
+
+    private static void SetCardContentBounds(RectTransform content, UnityEngine.UI.Image image)
+    {
+        Vector2 min = new Vector2(.115f, .13f);
+        Vector2 max = new Vector2(.89f, .66f);
+        if (image != null && image.preserveAspect && image.sprite != null)
+        {
+            Rect bounds = image.rectTransform.rect;
+            if (bounds.width > 0f && bounds.height > 0f && image.sprite.rect.height > 0f)
+            {
+                float spriteAspect = image.sprite.rect.width / image.sprite.rect.height;
+                Vector2 fit = Vector2.one;
+                if (spriteAspect > bounds.width / bounds.height)
+                    fit.y = bounds.width / spriteAspect / bounds.height;
+                else fit.x = bounds.height * spriteAspect / bounds.width;
+                Vector2 inset = Vector2.Scale(Vector2.one - fit, image.rectTransform.pivot);
+                min = inset + Vector2.Scale(min, fit);
+                max = inset + Vector2.Scale(max, fit);
+            }
+        }
+        content.anchorMin = min; content.anchorMax = max;
+    }
+
+    private static UnityEngine.UI.Text EnsureCardLabel(RectTransform parent, string name,
+        Vector2 anchorMin, Vector2 anchorMax, int maxSize, int minSize)
+    {
+        Transform existing = parent.Find(name);
+        GameObject owner = existing != null ? existing.gameObject
+            : new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Text));
+        owner.layer = parent.gameObject.layer;
+        owner.transform.SetParent(parent, false);
+        var rect = owner.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin; rect.anchorMax = anchorMax;
+        rect.anchoredPosition = rect.sizeDelta = Vector2.zero; rect.localScale = Vector3.one;
+        var label = owner.GetComponent<UnityEngine.UI.Text>();
+        label.font = GameUiTheme.LoadFont(); label.fontSize = maxSize;
+        label.resizeTextForBestFit = true; label.resizeTextMinSize = minSize; label.resizeTextMaxSize = maxSize;
+        label.alignment = TextAnchor.MiddleCenter; label.color = new Color32(242, 216, 203, 255);
+        label.horizontalOverflow = HorizontalWrapMode.Wrap; label.verticalOverflow = VerticalWrapMode.Truncate;
+        label.raycastTarget = false;
+        return label;
+    }
+
+    private static string GetStatLabel(StackStatType type) => type switch
+    {
+        StackStatType.AttackPower => "공격력",
+        StackStatType.AttackRange => "공격 사거리",
+        StackStatType.AttackSpeed => "공격 속도",
+        StackStatType.Magic => "마력",
+        StackStatType.MoveSpeed => "이동 속도",
+        _ => "체력"
+    };
+
+    private static string GetStatDescription(StackStatType type) => type switch
+    {
+        StackStatType.AttackPower => "기본 공격 피해 증가",
+        StackStatType.AttackRange => "기본 공격 사거리 증가",
+        StackStatType.AttackSpeed => "기본 공격 속도 증가",
+        StackStatType.Magic => "스킬 피해 증가",
+        StackStatType.MoveSpeed => "이동 속도 증가",
+        _ => "최대 체력 증가"
+    };
+
+    private static bool UsesPercentUnits(StackStatType type, LevelProgressionConfig config)
+    {
+        if (config != null && config.TryGetLevelUpStatValue(ToCharacterStatType(type), out var value))
+            return value.mode == CharacterStatModifierMode.PercentAdd;
+        return type == StackStatType.AttackRange || type == StackStatType.AttackSpeed || type == StackStatType.MoveSpeed;
     }
 
     private static TMP_Text FindOrCreateBadgeText(
@@ -394,7 +505,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         text.fontSizeMin = minFontSize;
         text.fontSizeMax = maxFontSize;
         text.textWrappingMode = TextWrappingModes.NoWrap;
-        text.overflowMode = TextOverflowModes.Overflow;
+        text.overflowMode = TextOverflowModes.Truncate;
         text.raycastTarget = false;
         text.outlineColor = new Color32(30, 13, 18, 255);
         text.outlineWidth = 0.18f;
@@ -412,14 +523,25 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             return;
         }
 
+        RectTransform content = badge.transform.parent as RectTransform;
+        if (content != null)
+        {
+            content.Find("StatName").GetComponent<UnityEngine.UI.Text>().text = GetStatLabel(statType);
+            content.Find("StatDescription").GetComponent<UnityEngine.UI.Text>().text = GetStatDescription(statType);
+        }
+        string unit = UsesPercentUnits(statType, config) ? "%" : string.Empty;
+        valueText.rectTransform.anchorMin = hasBioGamble ? new Vector2(0f, .32f) : Vector2.zero;
+        valueText.rectTransform.anchorMax = Vector2.one;
+        rangeText.gameObject.SetActive(hasBioGamble);
+
         if (hasBioGamble)
         {
             int minDelta = config.bioGambleMinDelta;
             int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
             badge.color = BioGambleBadgeColor;
-            valueText.text = "?";
+            valueText.text = "?" + unit;
             valueText.color = UnknownValueColor;
-            rangeText.text = $"{FormatSignedValue(minDelta)}~{FormatSignedValue(maxDelta)}";
+            rangeText.text = $"{FormatSignedValue(minDelta)} ~ {FormatSignedValue(maxDelta)}{unit}";
             rangeText.color = NormalValueColor;
             return;
         }
@@ -432,7 +554,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         badge.color = NormalBadgeColor;
-        valueText.text = FormatSignedValue(displayedValue);
+        valueText.text = FormatSignedValue(displayedValue) + unit;
         valueText.color = NormalValueColor;
         rangeText.text = string.Empty;
     }
@@ -445,7 +567,10 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         badge.color = BioGambleBadgeColor;
-        valueText.text = FormatSignedValue(result);
+        valueText.text = FormatSignedValue(result)
+            + (UsesPercentUnits(currentChoices[selectedIndex], LevelUpManager.Config) ? "%" : string.Empty);
+        valueText.rectTransform.anchorMin = Vector2.zero;
+        rangeText.gameObject.SetActive(false);
         valueText.color = result > 0
             ? PositiveValueColor
             : result < 0

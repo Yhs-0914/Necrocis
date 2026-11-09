@@ -165,6 +165,7 @@ namespace Necrocis
 
             if (LevelUpManager.HasPendingLevelUp())
             {
+                HideUI();
                 LevelUpManager.ProcessNextPendingLevelUp(); // 다음 대기 레벨업 처리
             }
             else
@@ -207,7 +208,7 @@ namespace Necrocis
 
             Text text = textObj.AddComponent<Text>();
             text.text = $"[{index}] {GetJobDescription(job)}";
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = GameUiTheme.LoadFont();
             text.fontSize = fontSize;
             text.color = Color.white;
             text.alignment = TextAnchor.MiddleCenter;
@@ -222,9 +223,9 @@ namespace Necrocis
         {
             switch (job)
             {
-                case JobType.Warrior: return "전사 - 공격력/방어력 특화";
-                case JobType.Mage:    return "마법사 - 마력/쿨타임 특화";
-                case JobType.Archer:  return "궁수 - 공격속도/사거리 특화";
+                case JobType.Warrior: return "침투 - 근접 물어뜯기·출혈";
+                case JobType.Mage:    return "조종 - 광역 제어·유전 조작";
+                case JobType.Archer:  return "증식 - 세포 연사·집중포화";
                 default:              return job.ToString();
             }
         }
@@ -251,6 +252,7 @@ namespace Necrocis
             // 대기 중인 레벨업이 있으면 다음 선택지 표시
             if (LevelUpManager.HasPendingLevelUp())
             {
+                HideUI();
                 LevelUpManager.ProcessNextPendingLevelUp();
             }
             else
@@ -309,7 +311,7 @@ namespace Necrocis
 
             Text text = textObj.AddComponent<Text>();
             text.text = $"[{index}] {GetChoiceDescription(choice)}";
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = GameUiTheme.LoadFont();
             text.fontSize = fontSize;
             text.color = Color.white;
             text.alignment = TextAnchor.MiddleCenter;
@@ -347,9 +349,9 @@ namespace Necrocis
             switch (type)
             {
                 case CharacterStatType.MaxHealth:    return "체력";
-                case CharacterStatType.MoveSpeed:    return "이동속도";
+                case CharacterStatType.MoveSpeed:    return "이동 속도";
                 case CharacterStatType.AttackPower:  return "공격력";
-                case CharacterStatType.AttackSpeed:  return "공격속도";
+                case CharacterStatType.AttackSpeed:  return "공격 속도";
                 case CharacterStatType.AttackRange:  return "공격 사거리";
                 case CharacterStatType.Magic:        return "마력";
                 case CharacterStatType.SkillCooldownReduction: return "스킬 쿨타임 감소";
@@ -408,7 +410,7 @@ namespace Necrocis
             titleLayout.preferredHeight = 50;
             titleText = titleObj.AddComponent<Text>();
             titleText.text = "LEVEL UP!";
-            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.font = GameUiTheme.LoadFont();
             titleText.fontSize = 36;
             titleText.fontStyle = FontStyle.Bold;
             titleText.color = new Color(1f, 0.85f, 0.2f);
@@ -420,7 +422,7 @@ namespace Necrocis
             levelLayout.preferredHeight = 35;
             levelText = levelObj.AddComponent<Text>();
             levelText.text = "Lv.1";
-            levelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            levelText.font = GameUiTheme.LoadFont();
             levelText.fontSize = 24;
             levelText.color = Color.white;
             levelText.alignment = TextAnchor.MiddleCenter;
@@ -431,7 +433,7 @@ namespace Necrocis
             guideLayout.preferredHeight = 30;
             guideText = guideObj.AddComponent<Text>();
             guideText.text = "숫자키(1~4)로 능력을 선택하세요";
-            guideText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            guideText.font = GameUiTheme.LoadFont();
             guideText.fontSize = 18;
             guideText.color = new Color(0.8f, 0.8f, 0.8f);
             guideText.alignment = TextAnchor.MiddleCenter;

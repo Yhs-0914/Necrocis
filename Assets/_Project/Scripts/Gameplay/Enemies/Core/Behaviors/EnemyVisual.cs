@@ -300,15 +300,20 @@ namespace Necrocis
                 return;
             }
 
-            EnemyDifficultyBalance balance = DifficultyBalanceService.GetEnemyBalance(IsBossEncounter);
+            EnemyDifficultyBalance balance = IsElite && !IsBossEncounter
+                ? DifficultyBalanceService.ActiveProfile.elites : DifficultyBalanceService.GetEnemyBalance(IsBossEncounter);
+            LevelProgressionConfig tempo = LevelUpManager.Config;
+            float legacyHealthScale = TempoBalanceRules.LevelMultiplier(LevelUpManager.GetCurrentLevel(),
+                tempo.monsterHealthPerLevel, tempo.MaxLevel);
             statConfigurationBuffer.Clear();
             statConfigurationBuffer.Add(new CharacterStatValue(
                 CharacterStatType.MoveSpeed,
                 Balance != null ? Balance.Current.MoveSpeed : config.moveSpeed * Mathf.Max(0.01f, balance.moveSpeed)));
             statConfigurationBuffer.Add(new CharacterStatValue(
                 CharacterStatType.MaxHealth,
-                Balance != null ? Mathf.Max(1f, Balance.Current.MaxHealth) : config.maxHealth * Mathf.Max(0.01f, balance.maxHealth)));
-            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, Balance != null ? Balance.Current.AttackPower : config.attackDamage));
+                Balance != null ? Mathf.Max(1f, Balance.Current.MaxHealth) : config.maxHealth * Mathf.Max(0.01f, balance.maxHealth) * legacyHealthScale));
+            statConfigurationBuffer.Add(new CharacterStatValue(CharacterStatType.AttackPower, Balance != null ? Balance.Current.AttackPower : IsBossEncounter ? config.attackDamage
+                    : TempoBalanceRules.FieldHitDamage(IsElite, DifficultyBalanceService.ActiveDifficulty == GameDifficulty.Hard)));
 
             List<CharacterStatValue> additionalStats = config.additionalBaseStats;
             if (additionalStats != null)

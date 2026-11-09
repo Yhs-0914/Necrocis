@@ -23,10 +23,19 @@ MonoBehaviour:
   midLevelUpperBound: 20
   midExpGainMultiplier: 1
   lateExpGainMultiplier: 0.8
-  jobSelectionLevel: 10
-  jobBasedChoiceStartLevel: 11
-  skill1UnlockLevel: 10
-  skill2UnlockLevel: 20
+  jobSelectionLevel: 5
+  jobBasedChoiceStartLevel: 6
+  skill1UnlockLevel: 5
+  skill2UnlockLevel: 10
+  starterItemChoiceEnabled: 1
+  midgameItemChoiceLevel: 15
+  normalItemDropChance: 0.02
+  eliteItemDropChance: 0.25
+  monsterHealthPerLevel: 0.03
+  monsterExperiencePerLevel: 0.02
+  eliteAttackIntervalMultiplier: 1.25
+  fasterRespawnStartLevel: 15
+  midgameRespawnMultiplier: 0.8
   playerBaseStats:
   - statType: 0
     value: 10

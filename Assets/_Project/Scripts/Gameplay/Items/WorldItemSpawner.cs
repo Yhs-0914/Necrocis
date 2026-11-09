@@ -317,6 +317,20 @@ namespace Necrocis
             return true;
         }
 
+        // Death rewards are independent of the authored biome-only scattering policy.
+        public bool TrySpawnRandomRewardAt(Vector3 worldPosition)
+        {
+            PlayerItemManager manager = PlayerItemManager.Instance;
+            if (manager == null) return false;
+            var candidates = new List<PlayerItemManager.PlayerItemEntry>();
+            foreach (var entry in manager.ItemEntries)
+                if (entry != null && !string.IsNullOrWhiteSpace(entry.ItemId)
+                    && (manager.AllowsDuplicateItems || !manager.ContainsItem(entry.ItemId))) candidates.Add(entry);
+            if (candidates.Count == 0) return false;
+            var selected = candidates[Random.Range(0, candidates.Count)];
+            return TrySpawnItemAt(selected.ItemId, worldPosition, ignoreBiomeScope: true);
+        }
+
         public void SetAutoSpawnOnStart(bool enabled)
         {
             autoSpawnOnStart = enabled;

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Necrocis
 {
-    // 직업 종류 (레벨 10에서 선택)
+    // 5레벨 1차 진화에서 계열 선택, 10레벨 2차 진화에서 두 번째 스킬 해금.
 
 
     /// <summary>
@@ -14,6 +14,9 @@ namespace Necrocis
     /// </summary>
     public static class LevelUpManager
     {
+        public static ItemRewardState ItemRewards { get; private set; } = ItemRewardState.ForNewRun();
+        public static event Action<int> OnEvolution;
+
         private static int currentLevel = 1;   // 현재 레벨
         private static int currentExp = 0;     // 현재 누적 경험치
         private static int expRequired = 100;  // 다음 레벨까지 필요 경험치
@@ -78,23 +81,30 @@ namespace Necrocis
             return Config.GetExpGainMultiplier(currentLevel, currentJob);
         }
 
+        private static bool levelUpChoicePending;
+        // Presentation can outlive the committed choice (e.g. BioGamble reveal).
+        // Only the unresolved choice is persisted; new XP waits until the view closes.
+        private static bool levelUpPresentationOpen;
         private static int pendingLevelUps; // 대기 중인 레벨업 수 (한번에 여러 레벨 오를 때)
 
-        // 레벨업 가능 여부 확인 (한번에 여러 레벨 오를 수 있으므로 while 사용)
+        // 큰 경험치 보상도 진화/성장 선택을 건너뛰지 않도록 한 레벨씩 처리한다.
         private static void CheckLevelUp()
         {
             EnsureExpRequirementInitialized();
-            while (currentExp >= expRequired && currentLevel < Config.MaxLevel)
+            if (levelUpChoicePending || levelUpPresentationOpen || pendingLevelUps > 0 || IsWaitingForJobSelection()) return;
+            if (currentExp >= expRequired && currentLevel < Config.MaxLevel)
             {
                 currentExp -= expRequired;
                 currentLevel++;
                 CalculateExpRequired();
                 pendingLevelUps++;
+                NotifySecondEvolution();
             }
 
             if (pendingLevelUps > 0)
             {
                 pendingLevelUps--;
+                levelUpChoicePending = levelUpPresentationOpen = true;
                 if (IsWaitingForJobSelection())
                     OnJobSelect?.Invoke();
                 else
@@ -107,11 +117,15 @@ namespace Necrocis
 
         public static bool HasPendingLevelUp()
         {
-            return pendingLevelUps > 0;
+            EnsureExpRequirementInitialized();
+            return levelUpPresentationOpen || levelUpChoicePending || pendingLevelUps > 0 || (!IsWaitingForJobSelection()
+                && currentLevel < Config.MaxLevel && currentExp >= expRequired);
         }
 
         public static void ProcessNextPendingLevelUp()
         {
+            levelUpChoicePending = levelUpPresentationOpen = false;
+            if (pendingLevelUps == 0) { CheckLevelUp(); return; }
             if (pendingLevelUps > 0)
             {
                 pendingLevelUps--;
@@ -138,6 +152,8 @@ namespace Necrocis
             if (currentLevel >= Config.MaxLevel) return;
             currentLevel++;
             CalculateExpRequired();
+            NotifySecondEvolution();
+            levelUpChoicePending = levelUpPresentationOpen = true;
             if (IsWaitingForJobSelection())
                 OnJobSelect?.Invoke();
             else
@@ -281,7 +297,11 @@ namespace Necrocis
             }
         }
 
-        public static void RecordSelection(LevelUpStatChoice choice) => selectionHistory.Add(choice);
+        public static void RecordSelection(LevelUpStatChoice choice)
+        {
+            selectionHistory.Add(choice);
+            levelUpChoicePending = false;
+        }
         public static void RecordResolvedModifier(
             CharacterStatType statType,
             float value,
@@ -302,6 +322,8 @@ namespace Necrocis
                 return;
             }
 
+            target.itemRewards = ItemRewards.Copy();
+            target.growthChoicePending = levelUpChoicePending;
             target.level = Mathf.Clamp(currentLevel, 1, Config.MaxLevel);
             target.experience = Mathf.Max(0, currentExp);
             target.job = currentJob;
@@ -322,13 +344,17 @@ namespace Necrocis
         public static void RestoreProgress(PlayerProgressSaveData source)
         {
             source ??= new PlayerProgressSaveData();
+            ItemRewards = (source.itemRewards ?? new ItemRewardState()).Copy();
+            ItemRewards.MigrateLegacy(source.level, Config.midgameItemChoiceLevel);
             currentLevel = Mathf.Clamp(source.level, 1, Config.MaxLevel);
             currentExp = Mathf.Max(0, source.experience);
             pendingLevelUps = 0;
+            levelUpChoicePending = source.growthChoicePending;
+            levelUpPresentationOpen = false;
             CalculateExpRequired();
             if (currentLevel < Config.MaxLevel)
             {
-                currentExp = Mathf.Min(currentExp, Mathf.Max(0, expRequired - 1));
+                currentExp = Mathf.Max(0, currentExp);
             }
             else
             {
@@ -371,9 +397,24 @@ namespace Necrocis
             OnExpGained?.Invoke(0);
         }
 
+        public static void ResumePendingChoices()
+        {
+            if (IsWaitingForJobSelection())
+            {
+                levelUpChoicePending = levelUpPresentationOpen = true;
+                OnJobSelect?.Invoke();
+            }
+            else if (levelUpChoicePending)
+            {
+                levelUpPresentationOpen = true;
+                OnLevelUp?.Invoke();
+            }
+            else CheckLevelUp();
+        }
+
         public static void ResetProgress()
         {
-            RestoreProgress(new PlayerProgressSaveData());
+            RestoreProgress(new PlayerProgressSaveData { itemRewards = ItemRewardState.ForNewRun() });
         }
 
         public static void SetJob(JobType job)
@@ -384,8 +425,16 @@ namespace Necrocis
             }
 
             currentJob = job;
+            levelUpChoicePending = false;
             AudioManager.Instance?.PlaySFX("JobSelect");
             OnJobChanged?.Invoke(currentJob);
+            OnEvolution?.Invoke(currentLevel >= Config.Skill2UnlockLevel ? 2 : 1);
+        }
+
+        private static void NotifySecondEvolution()
+        {
+            if (currentLevel == Config.Skill2UnlockLevel && currentJob != JobType.None)
+                OnEvolution?.Invoke(2);
         }
         public static void ResetSelectionHistory() => selectionHistory.Clear();
         public static JobType GetCurrentJob() => currentJob;
@@ -427,7 +476,7 @@ namespace Necrocis
 
         private static bool IsWaitingForJobSelection()
         {
-            return currentLevel == Config.JobSelectionLevel && currentJob == JobType.None;
+            return currentLevel >= Config.JobSelectionLevel && currentJob == JobType.None;
         }
     }
 }

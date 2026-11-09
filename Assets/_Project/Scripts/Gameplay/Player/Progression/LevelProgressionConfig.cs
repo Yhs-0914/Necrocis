@@ -25,10 +25,21 @@ namespace Necrocis
         [Min(0f)] public float lateExpGainMultiplier = 0.8f;
 
         [Header("Unlock Levels")]
-        [Min(1)] public int jobSelectionLevel = 10;
-        [Min(1)] public int jobBasedChoiceStartLevel = 11;
-        [Min(1)] public int skill1UnlockLevel = 10;
-        [Min(1)] public int skill2UnlockLevel = 20;
+        [Min(1)] public int jobSelectionLevel = 5;
+        [Min(1)] public int jobBasedChoiceStartLevel = 6;
+        [Min(1)] public int skill1UnlockLevel = 5;
+        [Min(1)] public int skill2UnlockLevel = 10;
+
+        [Header("Combat Tempo")]
+        public bool starterItemChoiceEnabled = true;
+        [Min(0)] public int midgameItemChoiceLevel = 15;
+        [Range(0f, 1f)] public float normalItemDropChance = 0.02f;
+        [Range(0f, 1f)] public float eliteItemDropChance = 0.25f;
+        [Min(0f)] public float monsterHealthPerLevel = 0.03f;
+        [Min(0f)] public float monsterExperiencePerLevel = 0.02f;
+        [Min(1f)] public float eliteAttackIntervalMultiplier = 1.25f;
+        [Min(1)] public int fasterRespawnStartLevel = 15;
+        [Range(0.1f, 1f)] public float midgameRespawnMultiplier = 0.8f;
 
         [Header("Player Base Stats")]
         public List<CharacterStatValue> playerBaseStats = CreateDefaultPlayerBaseStats();

@@ -114,6 +114,8 @@ namespace Necrocis
     [Serializable]
     public sealed class EnemyDifficultyBalance
     {
+        [Tooltip("기본 피격 HP. 음수이면 몬스터 정의의 공격력을 사용합니다.")]
+        public float baseHitDamage = -1f;
         [Min(0.01f)] public float maxHealth = 1f;
         [Min(0.01f)] public float moveSpeed = 1f;
         [Min(0f)] public float outgoingDamage = 1f;

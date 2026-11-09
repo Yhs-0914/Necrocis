@@ -41,6 +41,7 @@ namespace Necrocis
         {
             InGameAudioSettings.EnsureCreated();
             yield return null;
+            ItemRewardChoiceUI.EnsureOn(PlayerController.Instance != null ? PlayerController.Instance.gameObject : gameObject);
 
             if (!SaveService.IsRestorePending)
             {
@@ -52,6 +53,9 @@ namespace Necrocis
                 Debug.LogError($"[GameplaySaveCoordinator] 저장 복원 실패: {error}");
                 yield break;
             }
+
+            yield return null;
+            LevelUpManager.ResumePendingChoices();
 
             if (resumeBiome == BiomeType.None)
             {

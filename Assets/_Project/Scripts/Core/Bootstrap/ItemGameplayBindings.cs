@@ -32,6 +32,23 @@ namespace Necrocis
                 var items=PlayerItemManager.Instance??UnityEngine.Object.FindFirstObjectByType<PlayerItemManager>();
                 return items!=null && items.ContainsItem(PlayerItemIds.BioGambleId);
             };
+            EnemyDefeatBindings.FieldItemDrop = enemy =>
+            {
+                if (enemy == null || enemy.IsBossEncounter
+                    || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == SceneLoader.SCENE_FINAL_BOSS) return;
+                LevelProgressionConfig tempo = LevelUpManager.Config;
+                float chance = enemy.IsElite ? tempo.eliteItemDropChance : tempo.normalItemDropChance;
+                if (!TempoBalanceRules.RollDrop(UnityEngine.Random.value, chance)) return;
+                var biome = BiomeManager.Active;
+                if (biome == null) return;
+                var spawner = biome.GetComponent<WorldItemSpawner>();
+                if (spawner == null)
+                {
+                    spawner = biome.gameObject.AddComponent<WorldItemSpawner>();
+                    spawner.SetAutoSpawnOnStart(false);
+                }
+                spawner.TrySpawnRandomRewardAt(enemy.transform.position);
+            };
             EnemyDefeatBindings.PlayerKillReaction=enemy=>{
                 var player=PlayerController.Instance;
                 if(player!=null)player.GetComponent<PlayerItemCombatEffects>()?.NotifyEnemyDefeatedByPlayer(enemy);

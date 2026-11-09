@@ -164,6 +164,7 @@ namespace Necrocis
 
         public int MaxItemSlots => maxItemSlots;
         public int ItemCount => acquiredItems.Count;
+        public bool AllowsDuplicateItems => allowDuplicateItems;
         public bool IsFull => acquiredItems.Count >= maxItemSlots;
         public IReadOnlyList<PlayerItemEntry> ItemEntries => itemEntries;
         public IReadOnlyList<AcquiredPlayerItem> AcquiredItems => acquiredItems;

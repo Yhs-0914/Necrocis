@@ -135,6 +135,9 @@ public class ClassChoiceUI : MonoBehaviour
             return;
         }
 
+        SetEvolutionCaption(warriorButton, "침투 · 1차 진화");
+        SetEvolutionCaption(mageButton, "조종 · 1차 진화");
+        SetEvolutionCaption(archerButton, "증식 · 1차 진화");
         EnsureOverlayBlocker();
         if (overlayBlocker != null && !overlayBlocker.activeSelf)
         {
@@ -150,6 +153,22 @@ public class ClassChoiceUI : MonoBehaviour
 
         inputScope ??= new ModalInputScope(this,
             classCanvasRoot != null ? classCanvasRoot.gameObject : classChoiceUI, pauseGameWhileOpen);
+    }
+
+    private static void SetEvolutionCaption(Button button, string caption)
+    {
+        if (button == null || button.transform.Find("EvolutionCaption") != null) return;
+        var owner = new GameObject("EvolutionCaption", typeof(RectTransform), typeof(Text));
+        owner.transform.SetParent(button.transform, false);
+        var rect = owner.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 0f); rect.anchorMax = new Vector2(1f, 0f);
+        rect.pivot = new Vector2(.5f, 0f); rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(0f, 26f);
+        var label = owner.GetComponent<Text>();
+        label.text = caption; label.font = GameUiTheme.LoadFont(); label.fontSize = 10;
+        label.resizeTextForBestFit = true; label.resizeTextMinSize = 7; label.resizeTextMaxSize = 10;
+        label.alignment = TextAnchor.MiddleCenter; label.color = new Color(1f, .88f, .65f);
+        label.raycastTarget = false;
     }
 
     private void HideUI(bool forceRestoreTimeScale = true)

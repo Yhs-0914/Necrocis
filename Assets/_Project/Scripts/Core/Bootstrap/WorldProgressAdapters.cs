@@ -92,8 +92,12 @@ namespace Necrocis
             public bool TrySpawnBonus(GameObject owner, Vector3 position)
             {
                 var spawner = owner.GetComponent<WorldItemSpawner>();
-                if (spawner == null) spawner = owner.AddComponent<WorldItemSpawner>();
-                return spawner.TrySpawnSingleRandomItemAt(position);
+                if (spawner == null)
+                {
+                    spawner = owner.AddComponent<WorldItemSpawner>();
+                    spawner.SetAutoSpawnOnStart(false);
+                }
+                return spawner.TrySpawnRandomRewardAt(position);
             }
         }
 

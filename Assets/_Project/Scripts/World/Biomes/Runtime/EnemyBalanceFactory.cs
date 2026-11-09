@@ -14,9 +14,11 @@ namespace Necrocis
             string validation = definition != null ? definition.GetValidationError() : "몬스터 정의가 없습니다.";
             if (validation != null) throw new InvalidOperationException(validation);
             bool inVisit = visit.Biome != BiomeType.None && visit.RunId == activeRunId;
+            LevelProgressionConfig tempo = LevelUpManager.Config;
             return new MonsterBalanceRuntime(definition,
                 catalog.difficultyCatalog.Get(inVisit ? visit.Difficulty : fallbackDifficulty),
-                catalog.progression, inVisit ? visit.Stage : 0);
+                catalog.progression, inVisit ? visit.Stage : 0, LevelUpManager.GetCurrentLevel(),
+                tempo.monsterHealthPerLevel, tempo.monsterExperiencePerLevel, tempo.MaxLevel);
         }
     }
 

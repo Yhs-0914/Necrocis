@@ -104,6 +104,15 @@ namespace Necrocis
             EnsureInitialized();
         }
 
+        private void OnEnable() => LevelUpManager.OnEvolution += HandleEvolution;
+        private void OnDisable() => LevelUpManager.OnEvolution -= HandleEvolution;
+        private void HandleEvolution(int stage)
+        {
+            RuntimeStats.SetCurrentHealth(MaxHealth);
+            AudioManager.Instance?.PlaySFX("JobSelect");
+            Debug.Log($"[Evolution] {stage}차 진화 완료 — 체력 전체 회복");
+        }
+
         private void OnDestroy()
         {
             if (instance == this)

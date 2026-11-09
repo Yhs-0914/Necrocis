@@ -78,6 +78,7 @@ namespace Necrocis
             var items = GetComponent<PlayerItemManager>();
             if (forcePickupNotifier || items.PickupNotificationsEnabled) Ensure<PlayerItemPickupNotifier>();
             Ensure<PlayerItemInventoryUI>();
+            Ensure<ItemRewardChoiceUI>();
             Ensure<ExpBarUI>(); Ensure<PlayerHeartUI>();
             deathScreen = Ensure<PlayerDeathScreen>();
             Ensure<global::LevelUpStackChoiceUI>(); Ensure<LevelUpUI>(); Ensure<StatUI>();

@@ -38,6 +38,9 @@ namespace Necrocis
         private float GetDifficultyRespawnCooldown(WorldDifficultyBalance balance)
         {
             float multiplier = balance != null ? balance.enemyRespawnCooldown : 1f;
+            LevelProgressionConfig tempo = LevelUpManager.Config;
+            if (config != null && !config.isElite && LevelUpManager.GetCurrentLevel() >= tempo.fasterRespawnStartLevel)
+                multiplier *= Mathf.Clamp(tempo.midgameRespawnMultiplier, 0.1f, 1f);
             return config.respawnCooldown * Mathf.Max(0.01f, multiplier);
         }
 

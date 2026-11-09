@@ -367,7 +367,7 @@ namespace Necrocis
                 isActive = true,
                 campaignStarted = true,
                 campaignCompleted = false,
-                player = new PlayerProgressSaveData(),
+                player = new PlayerProgressSaveData { itemRewards = ItemRewardState.ForNewRun() },
                 bosses = new BossProgressSaveData(),
                 checkpoint = new ResumeCheckpointSaveData(),
                 world = CreateWorldRunSaveData(previousWorld),

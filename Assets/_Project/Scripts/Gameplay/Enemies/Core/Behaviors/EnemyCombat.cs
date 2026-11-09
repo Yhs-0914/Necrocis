@@ -300,6 +300,7 @@ namespace Necrocis
             if (config == null || experienceGranted) return;
             experienceGranted = true;
             if (SuppressExperienceReward || suppressKillCredit) return;
+            if (!IsBossEncounter) EnemyDefeatBindings.FieldItemDrop?.Invoke(this);
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
