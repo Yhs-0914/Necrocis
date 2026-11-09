@@ -108,6 +108,16 @@ namespace Necrocis
         [Tooltip("소환에 필요한 킬 수")]
         public int killTriggerCount = 10;
 
+        [Tooltip("Seconds after an elite attack. Negative inherits attackCooldown.")]
+        public float eliteAttackCooldown = -1f;
+        [Tooltip("Seconds per elite attack frame. Negative inherits attackAnimationSpeed.")]
+        public float eliteAttackFrameInterval = -1f;
+
+        public float EffectiveAttackCooldown => isElite && eliteAttackCooldown >= 0f
+            ? eliteAttackCooldown : attackCooldown;
+        public float EffectiveAttackFrameInterval => isElite && eliteAttackFrameInterval >= 0f
+            ? Mathf.Max(0.01f, eliteAttackFrameInterval) : attackAnimationSpeed;
+
         [Header("Elite - Split on Death (육아종)")]
         public bool splitsOnDeath = false;
         public int splitCount = 2;
@@ -123,6 +133,7 @@ namespace Necrocis
         public bool chargesAtPlayer = false;
         public float chargeSpeed = 6f;
         public float chargeAccelTime = 0.3f;
+        [Min(0f)] public float chargeCooldown = 3f;
 
         [Header("Elite - Aggro Debris (항체 잔해)")]
         public bool leavesDebrisOnDeath = false;

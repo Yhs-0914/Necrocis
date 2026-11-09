@@ -34,6 +34,7 @@ namespace Necrocis
             [SerializeField] private ItemDescriptionMode descriptionMode;
             [NonSerialized] private Func<PlayerItemEntry, string> readDescription;
             [SerializeField] private PlayerItemCategory category;
+            [SerializeField, Range(0, 4)] private int tier;
             [SerializeField] private Sprite icon;
             [SerializeField] private PlayerItemBase implementation;
 
@@ -44,6 +45,7 @@ namespace Necrocis
             public ItemDescriptionMode DescriptionMode { get => descriptionMode; set => descriptionMode = value; }
             internal void BindDescription(Func<PlayerItemEntry, string> resolver) => readDescription = resolver;
             public PlayerItemCategory Category => category;
+            public int Tier => Mathf.Clamp(tier, 0, 4);
             public Sprite Icon => icon;
             public PlayerItemBase Implementation => implementation;
             public bool HasIcon => icon != null;
@@ -58,7 +60,8 @@ namespace Necrocis
                 string description,
                 PlayerItemCategory category,
                 Sprite icon = null,
-                PlayerItemBase implementation = null)
+                PlayerItemBase implementation = null,
+                int tier = 0)
             {
                 this.itemId = itemId;
                 this.displayName = displayName;
@@ -66,6 +69,7 @@ namespace Necrocis
                 this.category = category;
                 this.icon = icon;
                 this.implementation = implementation;
+                this.tier = Mathf.Clamp(tier, 0, 4);
             }
 
             public void AssignIconIfMissing(Sprite fallbackIcon)
@@ -104,6 +108,7 @@ namespace Necrocis
             [SerializeField] private string description;
             [NonSerialized] private PlayerItemEntry definition;
             [SerializeField] private PlayerItemCategory category;
+            [SerializeField, Range(0, 4)] private int tier;
             [SerializeField] private Sprite icon;
             [SerializeField] private PlayerItemBase implementation;
 
@@ -111,6 +116,7 @@ namespace Necrocis
             public string DisplayName => displayName;
             public string Description => definition != null ? definition.Description : description;
             public PlayerItemCategory Category => category;
+            public int Tier => Mathf.Clamp(tier, 0, 4);
             public Sprite Icon => icon;
             public PlayerItemBase Implementation => implementation;
 
@@ -121,6 +127,7 @@ namespace Necrocis
                 displayName = entry.DisplayName;
                 description = entry.Description;
                 category = entry.Category;
+                tier = entry.Tier;
                 icon = entry.Icon;
                 implementation = entry.Implementation;
             }

@@ -5,7 +5,12 @@ using UnityEngine;
 
 namespace Necrocis
 {
-    // 5레벨 1차 진화에서 계열 선택, 10레벨 2차 진화에서 두 번째 스킬 해금.
+    public enum PlayerGrowthStage
+    {
+        BeforeJobSelection = 0,
+        First = 1,
+        Second = 2
+    }
 
 
     /// <summary>
@@ -176,6 +181,10 @@ namespace Necrocis
             return (float)currentExp / expRequired;
         }
         public static int GetJobSelectionLevel() => Config.JobSelectionLevel;
+        public static PlayerGrowthStage GetGrowthStage() => currentJob == JobType.None
+            ? PlayerGrowthStage.BeforeJobSelection
+            : currentLevel >= Config.Skill2UnlockLevel ? PlayerGrowthStage.Second : PlayerGrowthStage.First;
+
         public static int GetSkillUnlockLevel(int skillSlotIndex) => Config.GetSkillUnlockLevel(skillSlotIndex);
         public static bool IsSkillUnlocked(int skillSlotIndex)
         {

@@ -17,7 +17,7 @@ namespace Necrocis
             ApplyIncomingDamage(damage, false, source);
         }
 
-        private float DifficultyAttackCooldown => config != null ? GetRearmCooldown(config.attackCooldown) : 0f;
+        private float DifficultyAttackCooldown => config != null ? GetRearmCooldown(config.EffectiveAttackCooldown) : 0f;
 
         public bool TryPerformAttack(float deltaTime)
         {
@@ -49,7 +49,7 @@ namespace Necrocis
 
                 animatedSprite.enabled = true;
                 currentLoopFrames = null;
-                animatedSprite.PlayOneShot(attackFrames, config.attackAnimationSpeed, OnAttackAnimationComplete);
+                animatedSprite.PlayOneShot(attackFrames, config.EffectiveAttackFrameInterval, OnAttackAnimationComplete);
                 return true;
             }
 

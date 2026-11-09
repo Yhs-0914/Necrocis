@@ -313,7 +313,7 @@ namespace Necrocis
         {
             isCharging = false;
             chargeCurrentSpeed = 0f;
-            chargeCooldownTimer = GetRearmCooldown(3f);
+            chargeCooldownTimer = GetRearmCooldown(config != null ? Mathf.Max(0f, config.chargeCooldown) : 3f);
         }
 
         public void ApplyAggroBoost(float percentBoost)

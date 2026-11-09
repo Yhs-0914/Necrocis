@@ -69,16 +69,20 @@ namespace Necrocis
 
         public float GetExpGainMultiplier(int currentLevel, JobType currentJob)
         {
-            if (currentLevel <= Mathf.Max(1, earlyLevelUpperBound))
+            // Selection must take precedence even when its level is in the early XP band.
+            if (currentLevel >= JobSelectionLevel && currentJob == JobType.None)
             {
-                return Mathf.Max(0f, earlyExpGainMultiplier);
+                return Mathf.Max(0f, jobSelectionBlockedExpMultiplier);
             }
 
             if (currentLevel == JobSelectionLevel)
             {
-                return currentJob == JobType.None
-                    ? Mathf.Max(0f, jobSelectionBlockedExpMultiplier)
-                    : Mathf.Max(0f, jobSelectionSelectedExpMultiplier);
+                return Mathf.Max(0f, jobSelectionSelectedExpMultiplier);
+            }
+
+            if (currentLevel <= Mathf.Max(1, earlyLevelUpperBound))
+            {
+                return Mathf.Max(0f, earlyExpGainMultiplier);
             }
 
             if (currentLevel <= Mathf.Max(JobSelectionLevel, midLevelUpperBound))
