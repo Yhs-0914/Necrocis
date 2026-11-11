@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -45,8 +46,11 @@ namespace Necrocis
         private List<string> rewardOptions;
         private Action<string> rewardSelected;
         private ScrollRect itemScroll;
+        private Button closeButton;
+        private Text inventoryHint;
+        private bool requiresRewardSelection;
 
-        public bool RequestReward(IReadOnlyList<string> options, Action<string> onSelected)
+        public bool RequestReward(IReadOnlyList<string> options, Action<string> onSelected, bool requireSelection = false)
         {
             if (isOpen || itemManager == null || options == null || Time.timeScale <= 0f) return false;
             var valid = new List<string>();
@@ -55,6 +59,7 @@ namespace Necrocis
             if (valid.Count == 0) return false;
             rewardOptions = valid;
             rewardSelected = onSelected;
+            requiresRewardSelection = requireSelection;
             SetOpen(true);
             return true;
         }
@@ -101,6 +106,7 @@ namespace Necrocis
 
             if (isOpen)
             {
+                requiresRewardSelection = false;
                 SetOpen(false);
             }
         }
@@ -112,20 +118,57 @@ namespace Necrocis
 
         private void HandleSceneChanged(Scene previous, Scene next)
         {
-            if (isOpen) SetOpen(false);
+            if (isOpen)
+            {
+                requiresRewardSelection = false;
+                SetOpen(false);
+            }
         }
 
         private void Update()
         {
+            TryOpenStartingReward();
             InputManager input = InputManager.Instance;
-            if (input != null && input.InventoryAction.WasPressedThisFrame())
+            if (!requiresRewardSelection && input != null && input.InventoryAction.WasPressedThisFrame())
             {
                 SetOpen(!isOpen);
             }
         }
 
+        private void TryOpenStartingReward()
+        {
+            if (isOpen || itemManager == null || SaveService.IsRestorePending || Time.timeScale <= 0f
+                || SceneManager.GetActiveScene().name != SceneLoader.SCENE_HUB
+                || (SceneLoader.Instance != null && SceneLoader.Instance.IsLoading)) return;
+
+            var reward = SaveService.FindWorldReward(CampaignRewardRules.StarterRewardId);
+            // Older saves may still have an unopened starter box in a biome.
+            if (reward == null || reward.collected || reward.biome != BiomeType.None) return;
+
+            var catalog = itemManager.ItemEntries.Where(item => item != null).Select(item => item.ItemId);
+            var owned = itemManager.AcquiredItems.Select(item => item.ItemId);
+            var offers = reward.itemChoices == null || reward.itemChoices.Count == 0
+                ? CampaignRewardRules.ChooseStarterOffers(catalog, owned, UnityEngine.Random.Range(1, int.MaxValue))
+                : CampaignRewardRules.RefreshOffers(reward.itemChoices, catalog, owned, null, 0);
+            if (offers.Count == 0) return;
+            if (reward.itemChoices == null || !reward.itemChoices.SequenceEqual(offers))
+            {
+                reward.itemChoices = offers;
+                SaveService.TrySaveActiveRun(out _);
+            }
+
+            RequestReward(offers, selected =>
+            {
+                var player = GetComponent<PlayerController>();
+                if (player != null)
+                    WorldItemRewardChoice.PlayPickup(player, selected, transform.position + Vector3.up * 0.45f);
+                SaveService.CompleteWorldReward(reward);
+            }, requireSelection: true);
+        }
+
         public void SetOpen(bool open)
         {
+            if (!open && requiresRewardSelection) return;
             if (isOpen == open)
             {
                 return;
@@ -190,6 +233,7 @@ namespace Necrocis
             if (rewardOptions == null || !rewardOptions.Contains(itemId)) return;
             Action<string> selected = rewardSelected;
             if (!itemManager.TryAcquireItem(itemId, out _)) return;
+            requiresRewardSelection = false;
             SetOpen(false);
             selected?.Invoke(itemId);
             AudioManager.Instance?.PlaySFX("ItemPickup");
@@ -273,7 +317,7 @@ namespace Necrocis
                 fallbackTitle.color = MainTextColor;
             }
 
-            Button closeButton = CreateButton(
+            closeButton = CreateButton(
                 "CloseButton",
                 panel.transform,
                 new Vector2(650f, 270f),
@@ -313,6 +357,7 @@ namespace Necrocis
             cardContainer = cards.transform;
 
             Text hint = CreateText("Hint", panel.transform, 22, FontStyle.Normal, TextAnchor.MiddleCenter);
+            inventoryHint = hint;
             SetRect(hint.rectTransform, new Vector2(0f, -326f), new Vector2(1100f, 40f));
             hint.text = "I 키로 닫기  ·  휠 / 드래그로 전체 보기  ·  보유 개수 제한 없음";
             hint.color = MutedTextColor;
@@ -335,8 +380,14 @@ namespace Necrocis
                 && itemManager.TryGetItemEntry(replacementItemId, out var incoming)
                 ? $"{incoming.DisplayName}\n{incoming.Description}\n교체할 아이템을 선택하세요. I 키로 취소할 수 있습니다."
                 : string.Empty;
-            if (rewardOptions != null) replacementHint.text = "아이템 3개 중 1개를 선택하세요.\nI 키로 닫으면 상자에 다시 접근해 선택할 수 있습니다.";
+            if (rewardOptions != null) replacementHint.text = requiresRewardSelection
+                ? $"시작 아이템 선택\n아이템 {rewardOptions.Count}개 중 1개를 선택하고 모험을 시작하세요."
+                : $"아이템 {rewardOptions.Count}개 중 1개를 선택하세요.\nI 키로 닫으면 상자에 다시 접근해 선택할 수 있습니다.";
             else if (string.IsNullOrEmpty(replacementItemId)) replacementHint.text = $"보유 아이템 {itemManager.ItemCount}개 · 개수 제한 없음";
+            closeButton.gameObject.SetActive(!requiresRewardSelection);
+            inventoryHint.text = requiresRewardSelection
+                ? "선택한 아이템을 즉시 획득합니다. · 이번 모험에서 1회만 선택할 수 있습니다."
+                : "I 키로 닫기  ·  휠 / 드래그로 전체 보기  ·  보유 개수 제한 없음";
 
             for (int i = cardContainer.childCount - 1; i >= 0; i--)
             {

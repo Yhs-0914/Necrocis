@@ -343,8 +343,6 @@ namespace NecrocisEditor
             definition.TryGetStatSet(id, out MonsterStatSet basis);
             Catalog.progression.TryGetStage(previewStage, out MonsterProgressionStage progression);
             EnemyDifficultyBalance difficulty = MonsterBalanceResolver.GetTierBalance(GetProfile(), definition.tier);
-            float healthProgression = definition.tier == MonsterTier.Boss && progression.bossHealth > 0f
-                ? progression.bossHealth : progression.maxHealth;
             float experienceBasis = definition.reward.baseExperience * progression.experience;
             if (definition.reward.baseExperience > 0)
             {
@@ -353,7 +351,7 @@ namespace NecrocisEditor
                     experienceBasis = progression.fieldEliteExperience;
             }
             Result("최종값 · 읽기 전용", "아래 결과는 원본 에셋에 역저장되지 않습니다.");
-            Result("최대 체력", $"{basis.maxHealth:0.###} × {difficulty.maxHealth:0.###} × {healthProgression:0.###} = {snapshot.MaxHealth:0.###}");
+            Result("최대 체력", $"{basis.maxHealth:0.###} × {difficulty.maxHealth:0.###} = {snapshot.MaxHealth:0.###} (보스 처치 진행도 미적용)");
             Result("공격력", $"{basis.attackPower:0.###} × {difficulty.outgoingDamage:0.###} × {progression.attackPower:0.###} = {snapshot.AttackPower:0.###}");
             Result("처치 경험치", $"Round(진행도 보상 {experienceBasis:0.###} × 난이도 {difficulty.experienceReward:0.###}) = {snapshot.Experience}");
             Result("이동속도", $"{basis.moveSpeed:0.###} × {difficulty.moveSpeed:0.###} = {snapshot.MoveSpeed:0.###} (진행도 미적용)");

@@ -139,14 +139,13 @@ namespace NecrocisEditor
             int[] eliteXP = { 100, 120, 125, 140, 160 }, bossXP = { 240, 300, 300, 350, 400 };
             var elite = LoadDefinition("I-01");
             var boss = LoadDefinition("boss.intestine");
-            float[] bossHP = { 360, 430, 500, 580, 660 };
             for (int i = 0; i <= 4; i++)
             {
                 Require(MonsterBalanceResolver.TryResolve(elite, "Default", normal, progression, i, out var e, out _), "resolve elite");
                 Require(MonsterBalanceResolver.TryResolve(boss, "Default", normal, progression, i, out var b, out _), "resolve boss");
                 Equal(eliteXP[i], e.Experience, "field elite XP stage " + i);
                 Equal(bossXP[i], b.Experience, "region boss XP stage " + i);
-                Equal(bossHP[i], b.MaxHealth, "region boss HP stage " + i);
+                Equal(360, b.MaxHealth, "region boss HP independent of stage " + i);
             }
             // Every ordering of the four regions gets each stage once.
             foreach (var a in new[] { 0, 1, 2, 3 })

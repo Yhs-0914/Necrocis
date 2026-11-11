@@ -31,7 +31,7 @@ MonoBehaviour:
   normalEnemySpawnMinCount: 1
   normalEnemySpawnMaxCount: 2
   enemyHealthLevelInterval: 5
-  normalEnemyHealthIncreasePerBand: 0.15
+  normalEnemyHealthBonusPerBand: 2
   eliteEnemyHealthIncreasePerBand: 0.12
   playerBaseStats:
   - statType: 0
@@ -74,5 +74,5 @@ MonoBehaviour:
     value: 2
     healWhenPositive: 1
   bioGambleEnabled: 1
-  bioGambleMinDelta: 0
+  bioGambleMinDelta: 1
   bioGambleMaxDelta: 2

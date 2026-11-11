@@ -84,7 +84,7 @@ namespace NecrocisEditor
             Fixture(out var d, out var p, out var s);
             string before = JsonUtility.ToJson(d) + JsonUtility.ToJson(p) + JsonUtility.ToJson(s);
             MonsterBalanceSnapshot value = Resolve(d, p, s);
-            Equal(162f, value.MaxHealth); Equal(12f, value.AttackPower); Equal(2.2f, value.MoveSpeed);
+            Equal(120f, value.MaxHealth); Equal(12f, value.AttackPower); Equal(2.2f, value.MoveSpeed);
             Require(value.Experience == 55, "XP must be 55");
             Equal(18f, value.GetPatternDamage(1.5f)); Equal(6f, value.ContactDamage);
             Equal(2.4f, value.GetRearmCooldown(3f));
@@ -108,13 +108,13 @@ namespace NecrocisEditor
             Fixture(out var d, out var p, out var s);
             MonsterBalanceSnapshot frozen = Resolve(d,p,s);
             d.statSets.Add(new MonsterStatSet { id = "Phase2", maxHealth = 200f, attackPower = 12f, moveSpeed = 0f });
-            Equal(324f, Resolve(d,p,s,2,"Phase2").MaxHealth);
-            Equal(162f, Resolve(d,p,s,2,"Default").MaxHealth);
-            Equal(138f, Resolve(d,p,s,1).MaxHealth);
+            Equal(240f, Resolve(d,p,s,2,"Phase2").MaxHealth);
+            Equal(120f, Resolve(d,p,s,2,"Default").MaxHealth);
+            Equal(120f, Resolve(d,p,s,1).MaxHealth);
             d.statSets[0].maxHealth = 500f; p.elites.maxHealth = 4f; s.stages[2].maxHealth = 8f;
-            Equal(162f, frozen.MaxHealth);
+            Equal(120f, frozen.MaxHealth);
             Equal(18f, frozen.GetPatternDamage(1.5f));
-            Equal(16000f, Resolve(d,p,s).MaxHealth);
+            Equal(2000f, Resolve(d,p,s).MaxHealth);
         }
 
         private static void CheckZeroValues()
@@ -187,10 +187,10 @@ namespace NecrocisEditor
                 serialized.FindProperty("statSets").GetArrayElementAtIndex(0).FindPropertyRelative("maxHealth").floatValue = 80f;
                 serialized.ApplyModifiedProperties();
             }
-            Equal(129.6f,Resolve(d,p,s).MaxHealth);
+            Equal(96f,Resolve(d,p,s).MaxHealth);
             Undo.FlushUndoRecordObjects();
             Undo.PerformUndo();
-            Equal(162f,Resolve(d,p,s).MaxHealth);
+            Equal(120f,Resolve(d,p,s).MaxHealth);
             Undo.ClearUndo(d);
             Undo.IncrementCurrentGroup();
 

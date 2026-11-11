@@ -23,14 +23,22 @@ namespace Necrocis
         public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
         {
             PruneInactivePuddles();
+            // Refresh nearby acid without restarting its pending damage tick.
+            foreach (var active in ActivePuddles)
+            {
+                Vector3 delta = active.transform.position - position;
+                delta.y = 0f;
+                if (delta.sqrMagnitude > Mathf.Max(0.2f, radius) * Mathf.Max(0.2f, radius)) continue;
+                active.tickDamage = Mathf.Max(active.tickDamage, tickDamage);
+                active.remainingTicks = Mathf.Max(active.remainingTicks,
+                    Mathf.Max(1, Mathf.RoundToInt(duration / Mathf.Max(0.05f, active.tickInterval))));
+                active.startTime = Time.time;
+                return active;
+            }
             if (ActivePuddles.Count >= MaxActivePuddles)
             {
-                AcidPuddle oldestPuddle = ActivePuddles[0];
-                ActivePuddles.RemoveAt(0);
-                if (oldestPuddle != null && oldestPuddle.gameObject.activeInHierarchy)
-                {
-                    RuntimePool.Release(oldestPuddle.gameObject);
-                }
+                // Keep both existing areas alive long enough to deal their damage.
+                return null;
             }
 
             GameObject puddleObject = RuntimePool.Acquire(PoolName, CreateFunc);

@@ -126,9 +126,8 @@ namespace Necrocis
             error = GetDifficultyValidationError(balance);
             if (error != null) return false;
 
-            float healthMultiplier = definition.tier == MonsterTier.Boss && progress.bossHealth > 0f
-                ? progress.bossHealth : progress.maxHealth;
-            float health = set.maxHealth * balance.maxHealth * healthMultiplier;
+            // Boss-clear progression affects damage/rewards, never maximum health.
+            float health = set.maxHealth * balance.maxHealth;
             float attack = balance.fixedHitDamage > 0f ? balance.fixedHitDamage
                 : set.attackPower * balance.outgoingDamage * progress.attackPower;
             float speed = set.moveSpeed * balance.moveSpeed;

@@ -8,6 +8,7 @@ namespace UnityEngine
     public enum HideFlags { HideAndDontSave }
     public struct Vector2Int { public int x, y; public Vector2Int(int x, int y) { this.x = x; this.y = y; } }
     public class MinAttribute(float n) : Attribute { }
+    public class HideInInspector : Attribute { }
     public class RangeAttribute(float min, float max) : Attribute { }
     public class HeaderAttribute(string s) : Attribute { }
     public class TooltipAttribute(string s) : Attribute { }

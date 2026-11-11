@@ -129,7 +129,6 @@ foreach (var definition in definitions)
             foreach (var phase in definition.statSets)
                 Require(MonsterBalanceResolver.TryResolve(definition, phase.id, profile, stages, stage, out _, out var error), definition.monsterId + ": " + error);
 int[] eliteRewards = { 100, 120, 125, 140, 160 }, bossRewards = { 240, 300, 300, 350, 400 };
-float[] bossHealth = { 360, 430, 500, 580, 660 };
 for (int i = 0; i < 5; i++)
 {
     var elite = definitions.Single(x => x.monsterId == "elite.i-01");
@@ -138,7 +137,24 @@ for (int i = 0; i < 5; i++)
     MonsterBalanceResolver.TryResolve(boss, "Default", normal, stages, i, out var b, out _);
     Equal(eliteRewards[i], e.Experience, "elite reward " + i);
     Equal(bossRewards[i], b.Experience, "boss reward " + i);
-    Equal(bossHealth[i], b.MaxHealth, "boss health " + i);
+    Equal(360, b.MaxHealth, "boss health independent of stage " + i);
+}
+// Old/custom profiles must not restore boss-clear HP scaling for any tier or phase.
+var legacyHealthStages = new MonsterProgressionProfile();
+foreach (var stage in legacyHealthStages.stages)
+{
+    stage.maxHealth = 1f + stage.stage * .4f;
+    stage.bossHealth = 1f + stage.stage * .6f;
+}
+foreach (var profile in new[] { normal, hard })
+foreach (var definition in definitions)
+foreach (var phase in definition.statSets)
+foreach (int stage in Enumerable.Range(0, 5))
+{
+    Require(MonsterBalanceResolver.TryResolve(definition, phase.id, profile, legacyHealthStages, stage, out var result, out _),
+        "legacy progression resolves " + definition.monsterId);
+    Equal(phase.maxHealth * MonsterBalanceResolver.GetTierBalance(profile, definition.tier).maxHealth,
+        result.MaxHealth, "health independent of boss-clear stage " + definition.monsterId + "/" + phase.id + "/" + stage);
 }
 var noReward = definitions.Single(x => x.monsterId == "normal.intestine-parasite");
 MonsterBalanceResolver.TryResolve(noReward, "Default", normal, stages, 4, out var parasite, out _);
@@ -150,16 +166,28 @@ Equal(6, PlayerCombatCalculator.GetSkillCooldown(10, player), "cooldown capped a
 Equal(.625f, PlayerCombatCalculator.GetBasicAttackCooldown(.75f, player), "attack-speed scaling");
 int[] rolls = new int[3];
 for (int i = 0; i < 100000; i++) rolls[growth.RollGrowthMultiplier()]++;
-Require(Math.Abs(rolls[0] - 20000) < 1000 && Math.Abs(rolls[1] - 60000) < 1000 && Math.Abs(rolls[2] - 20000) < 1000, "growth gamble 20/60/20 distribution");
+Require(rolls[0] == 0 && Math.Abs(rolls[1] - 70000) < 1000 && Math.Abs(rolls[2] - 30000) < 1000, "growth gamble guarantees growth with 30 percent double growth");
 var catalog = Read<string[]>("itemIds");
-foreach (var job in new[] { JobType.Warrior, JobType.Mage, JobType.Archer })
+var starterCandidates = new HashSet<string>();
+var starterSelections = new HashSet<string>();
+for (int seed = 0; seed < 512; seed++)
 {
-    var starter = CampaignRewardRules.ChooseStarterOffers(catalog, Array.Empty<string>(), job);
+    var starter = CampaignRewardRules.ChooseStarterOffers(catalog, Array.Empty<string>(), seed);
     Require(starter.Count == 3 && starter.Distinct().Count() == 3, "three distinct starter mutations");
     Require(starter.All(catalog.Contains), "starter mutations exist in catalog");
-    Require(!CampaignRewardRules.ChooseStarterOffers(catalog, starter, job).Intersect(starter).Any(), "owned starter mutations excluded");
+    Require(starter.SequenceEqual(CampaignRewardRules.ChooseStarterOffers(catalog, Array.Empty<string>(), seed)), "starter seed reproduces choices");
+    Require(!CampaignRewardRules.ChooseStarterOffers(catalog, new[] { "double_core" }, seed).Contains("double_core"), "owned starter mutation excluded");
+    var savedStarter = new WorldRewardSaveData { id = CampaignRewardRules.StarterRewardId, itemChoices = starter };
+    var restoredStarter = JsonSerializer.Deserialize<WorldRewardSaveData>(JsonSerializer.Serialize(savedStarter, json), json);
+    Require(starter.SequenceEqual(CampaignRewardRules.RefreshOffers(restoredStarter.itemChoices, catalog, Array.Empty<string>(), null, seed + 1)), "saved starter choices survive reload without rerolling");
+    starterCandidates.UnionWith(starter);
+    starterSelections.Add(string.Join(",", starter));
 }
-Require(CampaignRewardRules.ChooseStarterOffers(null, null, JobType.Warrior).Count == 0, "empty starter catalog");
+Require(starterCandidates.SetEquals(catalog), "every catalog item can appear as a starter choice");
+Require(starterSelections.Count > 1, "new starter seeds produce different choices");
+Require(CampaignRewardRules.ChooseStarterOffers(null, null, 0).Count == 0, "empty starter catalog");
+Require(CampaignRewardRules.ChooseStarterOffers(new[] { "double_core", "DOUBLE_CORE", "triple_core", "", null }, null, 0).Count == 2, "small starter pool excludes duplicates and invalid IDs");
+Require(CampaignRewardRules.ChooseStarterOffers(new[] { "double_core", "triple_core", "blood_drone" }, null, 0).Count == 3, "starter choices have no role quotas");
 var owned = new[] { "double_core", "exoskeleton", "homing_cell" };
 for (int seed = 0; seed < 250; seed++)
 {
@@ -178,10 +206,19 @@ Require(CampaignRewardRules.ChooseOffers(new[] { "double_core" }, Array.Empty<st
 foreach (int level in new[] { 0, 1, 5, 6, 10, 11, 15, 16, 20, 21, 25, 26, 30, 100 })
 {
     int band = (Math.Clamp(level, 1, 30) - 1) / 5;
-    Equal(1f + band * .15f, growth.GetEnemyHealthMultiplier(level, MonsterTier.Normal), "normal health band " + level);
+    Equal(1f, growth.GetEnemyHealthMultiplier(level, MonsterTier.Normal), "normal health has no level percentage " + level);
+    Equal(band * 2f, growth.GetEnemyHealthBonus(level, MonsterTier.Normal), "normal flat health band " + level);
+    Equal(0f, growth.GetEnemyHealthBonus(level, MonsterTier.Elite), "elite excluded from flat health " + level);
+    Equal(0f, growth.GetEnemyHealthBonus(level, MonsterTier.Boss), "boss excluded from flat health " + level);
     Equal(1f + band * .12f, growth.GetEnemyHealthMultiplier(level, MonsterTier.Elite), "elite health band " + level);
     Equal(1f, growth.GetEnemyHealthMultiplier(level, MonsterTier.Boss), "boss excluded from level health " + level);
 }
+var healthTuning = new LevelProgressionConfig { enemyHealthLevelInterval = 3, normalEnemyHealthBonusPerBand = 4 };
+Equal(4f, healthTuning.GetEnemyHealthBonus(4, MonsterTier.Normal), "custom flat health interval and amount");
+healthTuning.enemyHealthLevelInterval = 0;
+healthTuning.normalEnemyHealthBonusPerBand = -2;
+Equal(0f, healthTuning.GetEnemyHealthBonus(6, MonsterTier.Normal), "invalid health tuning cannot reduce health or divide by zero");
+Equal(10f, new LevelProgressionConfig().GetEnemyHealthBonus(30, MonsterTier.Normal), "fallback flat health matches saved settings");
 foreach (var profile in new[] { normal, hard })
 foreach (var definition in definitions.Where(value => value.tier == MonsterTier.Elite))
 foreach (int stage in Enumerable.Range(0, 5))
@@ -202,10 +239,11 @@ for (int seed = 0; seed < 250; seed++)
     Require(refreshed.Contains("double_core") && refreshed.Contains("exoskeleton") && !refreshed.Contains("triple_core"), "saved eligible offers remain stable");
     Require(refreshed.SequenceEqual(CampaignRewardRules.RefreshOffers(refreshed, catalog, new[] { "triple_core" }, null, seed + 1)), "reopening cannot reroll offers");
 }
-Require(CampaignRewardRules.ShouldDropItem(MonsterTier.Normal, 0f), "normal drop lower boundary");
+Require(!CampaignRewardRules.ShouldDropItem(MonsterTier.Normal, 0f), "normal cannot drop even at zero roll");
 Require(!CampaignRewardRules.ShouldDropItem(MonsterTier.Normal, .01f), "normal drop upper boundary");
-Require(CampaignRewardRules.ShouldDropItem(MonsterTier.Elite, .0999f), "elite drop lower boundary");
-Require(!CampaignRewardRules.ShouldDropItem(MonsterTier.Elite, .1f), "elite drop upper boundary");
+Require(CampaignRewardRules.ShouldDropItem(MonsterTier.Elite, 0f), "elite drop lower boundary");
+Require(CampaignRewardRules.ShouldDropItem(MonsterTier.Elite, .1499f), "elite drops below fifteen percent");
+Require(!CampaignRewardRules.ShouldDropItem(MonsterTier.Elite, .15f), "elite drop upper boundary");
 Require(CampaignRewardRules.ShouldDropItem(MonsterTier.Boss, 1f), "boss always drops");
 Require(!CampaignRewardRules.ShouldDropItem(MonsterTier.Normal, float.NaN), "invalid drop roll rejected");
 foreach (int kills in new[] { 29, 30, 59, 60, 80, 90, 120, 5000 })

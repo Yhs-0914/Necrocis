@@ -34,7 +34,7 @@ namespace NecrocisEditor
                 var inventory = go.AddComponent<PlayerItemManager>();
                 Invoke(inventory, "Awake");
                 inventory.PopulateBasicProjectileTemplateItems();
-                Equal(66, inventory.ItemEntries.Count, "catalog contains 66 items");
+                Equal(68, inventory.ItemEntries.Count, "catalog contains 68 items");
                 float baseAttack = player.AttackPower, baseHealth = player.MaxHealth;
                 for (int i = 0; i < 12; i++) Require(inventory.TryAcquireItem("dense_muscle", out _), "repeatable pickup " + i);
                 Require(!inventory.IsFull && inventory.ItemCount == 12, "inventory exceeds old three-slot cap");
@@ -47,7 +47,7 @@ namespace NecrocisEditor
                 float baseSpeed = player.AttackSpeed, baseMove = player.MoveSpeed;
                 Require(inventory.TryAcquireItem("swift_cell", out _), "attack speed pickup");
                 Require(inventory.TryAcquireItem("elastic_fiber", out _), "move speed pickup");
-                Equal(baseSpeed * 1.05f, player.AttackSpeed, "attack speed +5 percent");
+                Equal(baseSpeed * 1.15f, player.AttackSpeed, "attack speed +15 percent");
                 Equal(baseMove + .5f, player.MoveSpeed, "move speed +0.5");
                 Require(inventory.TryAcquireItem("double_core", out _), "unique pickup");
                 Require(!inventory.TryAcquireItem("double_core", out var reason) && reason == PlayerItemAcquireFailureReason.DuplicateNotAllowed,

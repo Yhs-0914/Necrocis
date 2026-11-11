@@ -28,8 +28,10 @@ namespace Necrocis
             new Definition("hardened_muscle", "경화 근육", "공격력 +2 (중복 획득 시 누적)", CharacterStatType.AttackPower, 2f),
             new Definition("vital_cell", "생명 세포", "최대 체력 +1 (반 칸), 획득 시 체력 +1 회복 (중복 누적)", CharacterStatType.MaxHealth, 1f),
             new Definition("vital_organ", "생명 장기", "최대 체력 +2 (한 칸), 획득 시 체력 +2 회복 (중복 누적)", CharacterStatType.MaxHealth, 2f),
-            new Definition("swift_cell", "신속 세포", "공격속도 +5% (중복 획득 시 합산)", CharacterStatType.AttackSpeed, 0.05f, CharacterStatModifierMode.PercentAdd),
-            new Definition("elastic_fiber", "탄성 섬유", "이동속도 +0.5 (중복 획득 시 누적)", CharacterStatType.MoveSpeed, 0.5f)
+            new Definition("swift_cell", "신속 세포", "공격속도 +15% (중복 획득 시 합산)", CharacterStatType.AttackSpeed, 0.15f, CharacterStatModifierMode.PercentAdd),
+            new Definition("elastic_fiber", "탄성 섬유", "이동속도 +0.5 (중복 획득 시 누적)", CharacterStatType.MoveSpeed, 0.5f),
+            new Definition("elongated_fiber", "신장 섬유", "공격 범위 +10% (중복 획득 시 합산)", CharacterStatType.AttackRange, 0.1f, CharacterStatModifierMode.PercentAdd),
+            new Definition("active_fiber", "활성 섬유", "이동속도 +1 (중복 획득 시 누적)", CharacterStatType.MoveSpeed, 1f)
         });
 
         public static bool TryGet(string id, out Definition definition)

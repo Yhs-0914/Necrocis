@@ -12,11 +12,13 @@ namespace Necrocis
         private readonly object playerLevelHealthSource = new object();
         private int healthScalingPlayerLevel = -1;
         private float playerLevelHealthMultiplier = 1f;
+        private float playerLevelHealthBonus;
 
         private void InitializePlayerLevelHealthScaling()
         {
             healthScalingPlayerLevel = -1;
             playerLevelHealthMultiplier = 1f;
+            playerLevelHealthBonus = 0f;
             RefreshPlayerLevelHealth();
         }
 
@@ -31,13 +33,19 @@ namespace Necrocis
             MonsterTier tier = IsBossEncounter ? MonsterTier.Boss
                 : Balance != null ? Balance.Current.Tier : IsElite ? MonsterTier.Elite : MonsterTier.Normal;
             float multiplier = LevelUpManager.Config.GetEnemyHealthMultiplier(level, tier);
-            if (Mathf.Approximately(multiplier, playerLevelHealthMultiplier)) return;
+            float bonus = LevelUpManager.Config.GetEnemyHealthBonus(level, tier);
+            if (Mathf.Approximately(multiplier, playerLevelHealthMultiplier)
+                && Mathf.Approximately(bonus, playerLevelHealthBonus)) return;
             float fraction = stats.MaxHealth > 0f ? stats.CurrentHealth / stats.MaxHealth : 1f;
             stats.RemoveModifiersFromSource(playerLevelHealthSource);
+            if (bonus > 0f)
+                stats.AddModifier(CharacterStatType.MaxHealth, bonus,
+                    CharacterStatModifierMode.Flat, playerLevelHealthSource);
             if (multiplier > 1f)
                 stats.AddModifier(CharacterStatType.MaxHealth, multiplier - 1f,
                     CharacterStatModifierMode.PercentMultiply, playerLevelHealthSource);
             playerLevelHealthMultiplier = multiplier;
+            playerLevelHealthBonus = bonus;
             stats.SetCurrentHealth(stats.MaxHealth * fraction);
         }
 

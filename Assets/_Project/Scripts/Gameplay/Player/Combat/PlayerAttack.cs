@@ -147,7 +147,7 @@ namespace Necrocis
                 float effectiveMeleeCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(meleeCooldown, stats);
                 if (itemEffects != null)
                 {
-                    effectiveMeleeCooldown *= itemEffects.GetAttackCooldownMultiplier();
+                    effectiveMeleeCooldown *= itemEffects.GetAttackCooldownMultiplier(meleeAttack: true);
                 }
 
                 if (Time.time < lastMeleeTime + effectiveMeleeCooldown) return;
@@ -413,7 +413,7 @@ namespace Necrocis
                 FireBeamVolley(
                     direction,
                     damage * itemEffects.BeamDamageMultiplier,
-                    effectiveProjectileRange,
+                    effectiveProjectileRange * itemEffects.GetRangeMultiplier(),
                     true);
                 return;
             }
@@ -499,6 +499,13 @@ namespace Necrocis
 
         private void FireBeamVolley(Vector3 direction, float damage, float range, bool allowExtraVolley)
         {
+            float volleyDamage = damage;
+            if (itemEffects != null)
+            {
+                direction = itemEffects.ResolveBeamDirection(direction, range);
+                itemEffects.RollUnstableCellProjectileSpeedMultiplier(out float beamRollDamage);
+                volleyDamage *= beamRollDamage;
+            }
             int beamCount = itemEffects != null ? itemEffects.GetForwardProjectileCount() : 1;
             float spread = itemEffects != null ? itemEffects.GetSpreadAngleForCount(beamCount) : 0f;
             float accuracyPenalty = itemEffects != null ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
@@ -506,7 +513,7 @@ namespace Necrocis
             float forwardDamageMultiplier = itemEffects != null
                 ? itemEffects.GetForwardProjectileDamageMultiplier(beamCount)
                 : 1f;
-            float forwardDamage = damage * forwardDamageMultiplier;
+            float forwardDamage = volleyDamage * forwardDamageMultiplier;
 
             if (beamCount <= 1)
             {
@@ -527,7 +534,7 @@ namespace Necrocis
             {
                 FireBeam(
                     -firingDirection,
-                    damage * itemEffects.GetBackShotDamageMultiplier(),
+                    volleyDamage * itemEffects.GetBackShotDamageMultiplier(),
                     range);
             }
 
@@ -601,6 +608,7 @@ namespace Necrocis
         {
             EnsureBeamOverlapBuffer();
             beamHitEnemies.Clear();
+            bool splitTriggered = false;
 
             Vector3 forward = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             Vector3 origin = firePoint != null ? firePoint.position : transform.position;
@@ -643,6 +651,16 @@ namespace Necrocis
                 enemy.TakeDamage(appliedDamage);
                 itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, enemy.transform.position);
+                if (itemEffects != null)
+                {
+                    if (itemEffects.HasSplitTissue && !splitTriggered)
+                    {
+                        splitTriggered = true;
+                        itemEffects.SpawnSplitProjectiles(enemy.transform.position, forward, damage,
+                            rangedTargetMask, range);
+                    }
+                    itemEffects.ApplyBeamExplosion(enemy, damage);
+                }
             }
         }
 

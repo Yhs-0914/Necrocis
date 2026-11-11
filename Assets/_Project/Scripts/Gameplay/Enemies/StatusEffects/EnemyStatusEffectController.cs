@@ -148,8 +148,11 @@ namespace Necrocis
                 return;
             }
 
-            bleedTickInterval = tickInterval;
-            bleedTickDamage = tickDamage;
+            if (Time.time >= bleedEndTime || tickDamage / tickInterval >= bleedTickDamage / Mathf.Max(0.05f, bleedTickInterval))
+            {
+                bleedTickInterval = tickInterval;
+                bleedTickDamage = tickDamage;
+            }
             bleedEndTime = Mathf.Max(bleedEndTime, Time.time + duration);
 
             if (bleedCoroutine == null)
@@ -172,8 +175,11 @@ namespace Necrocis
                 return;
             }
 
-            poisonTickInterval = tickInterval;
-            poisonTickDamage = tickDamage;
+            if (Time.time >= poisonEndTime || tickDamage / tickInterval >= poisonTickDamage / Mathf.Max(0.05f, poisonTickInterval))
+            {
+                poisonTickInterval = tickInterval;
+                poisonTickDamage = tickDamage;
+            }
             poisonEndTime = Mathf.Max(poisonEndTime, Time.time + duration);
 
             if (poisonCoroutine == null)

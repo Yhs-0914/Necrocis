@@ -12,7 +12,7 @@ namespace Necrocis
         private void Update()
         {
             if (!spawned || starterRewardHandled || SaveService.IsRestorePending) return;
-            const string rewardId = "campaign.starter-mutation";
+            const string rewardId = CampaignRewardRules.StarterRewardId;
             if (SaveService.FindWorldReward(rewardId) != null)
             {
                 starterRewardHandled = true;
@@ -29,7 +29,7 @@ namespace Necrocis
             if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y)) return;
             var offers = CampaignRewardRules.ChooseStarterOffers(
                 inventory.ItemEntries.Where(item => item != null).Select(item => item.ItemId),
-                inventory.AcquiredItems.Select(item => item.ItemId), job);
+                inventory.AcquiredItems.Select(item => item.ItemId), Random.Range(1, int.MaxValue));
             if (offers.Count == 0) { starterRewardHandled = true; return; }
             var position = biome.GridToWorld(grid.x, grid.y);
             position.y = biome.GetGroundHeight(grid.x, grid.y) + itemGroundOffset;

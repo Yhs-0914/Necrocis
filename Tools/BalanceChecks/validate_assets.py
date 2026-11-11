@@ -42,7 +42,8 @@ for mode, progression in [('Normal', growth), ('Hard', hard_growth)]:
     require(progression['normalEnemySpawnMinCount'] == 1, mode + ' initial minimum population')
     require(progression['normalEnemySpawnMaxCount'] == 2, mode + ' initial maximum population')
     require(progression['enemyHealthLevelInterval'] == 5, mode + ' five-level health interval')
-    require(progression['normalEnemyHealthIncreasePerBand'] == .15, mode + ' normal health growth')
+    require(progression['normalEnemyHealthBonusPerBand'] == 2, mode + ' normal health grows by a flat 2 per band')
+    require('normalEnemyHealthIncreasePerBand' not in progression, mode + ' old normal health percentage removed')
     require(progression['eliteEnemyHealthIncreasePerBand'] == .12, mode + ' elite health growth')
     expected_growth = {2: (0, 1), 5: (1, 10), 4: (1, 20), 6: (0, 25), 1: (1, 5), 0: (0, 2)}
     for stat, (modifier_mode, amount) in expected_growth.items():
@@ -79,7 +80,9 @@ for path in ['Assets/_Project/Scenes/Hub.unity', 'Assets/_Project/Art/Generated/
         effects = components['Necrocis.PlayerItemCombatEffects']
         for key, value in {'doubleShotDamageMultiplier': .7, 'tripleShotDamageMultiplier': .5,
                            'recoveryFactorInterval': 45, 'splitRegenerationReviveHealth': 4,
-                           'rampageMaxAttackBonus': 3, 'decayOrganMaxAttackBonus': 3}.items():
+                           'rampageMaxAttackBonus': 3, 'decayOrganMaxAttackBonus': 6,
+                           'forbiddenGrowthMaxHealthPenalty': 2, 'forbiddenGrowthFlatAttackBonus': 3,
+                           'decayOrganSecondsPerAttackBonus': 90, 'decayOrganAttackBonusPerStack': .5}.items():
             require(effects.get(key, effect_defaults.get(key)) == value, path + '/' + key)
 
 for region in ['Intestine', 'Liver', 'Stomach', 'Lung']:
@@ -106,7 +109,7 @@ manager_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerItemManag
 inputs['itemIds'] = re.findall(r'new PlayerItemEntry\(\s*"([^"]+)"', manager_source)
 stat_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerStatItemCatalog.cs').read_text(encoding='utf-8-sig')
 inputs['itemIds'] += re.findall(r'new Definition\(\s*"([^"]+)"', stat_source)
-require(len(inputs['itemIds']) == 66 and len(set(inputs['itemIds'])) == 66, 'all 66 offer candidates')
+require(len(inputs['itemIds']) == 68 and len(set(inputs['itemIds'])) == 68, 'all 68 offer candidates')
 require(inputs['normal']['elites']['fixedHitDamage'] == 3, 'normal elite damage is 1.5 hearts')
 require(inputs['hard']['elites']['fixedHitDamage'] == 4, 'hard elite damage is 2 hearts')
 output = ROOT / 'output/balance'

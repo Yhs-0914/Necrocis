@@ -40,8 +40,9 @@ namespace Necrocis
 
         [Header("Enemy Health by Player Level")]
         [Min(1)] public int enemyHealthLevelInterval = 5;
-        [Tooltip("구간마다 기본 체력에 더하는 비율입니다. 복리로 증가하지 않습니다.")]
-        [Min(0f)] public float normalEnemyHealthIncreasePerBand = 0.15f;
+        [Tooltip("잡몹은 첫 구간 이후 구간마다 최대 체력에 이 고정값을 누적해서 더합니다. 2이면 +0/+2/+4/+6/+8/+10입니다.")]
+        [Min(0)] public int normalEnemyHealthBonusPerBand = 2;
+        [Tooltip("엘리트는 구간마다 기본 체력에 이 비율을 더합니다. 복리로 증가하지 않습니다.")]
         [Min(0f)] public float eliteEnemyHealthIncreasePerBand = 0.12f;
 
         [Header("Player Base Stats")]
@@ -52,13 +53,13 @@ namespace Necrocis
 
         [Header("Bio Gamble")]
         public bool bioGambleEnabled = true;
-        public int bioGambleMinDelta = 0;
+        public int bioGambleMinDelta = 1;
         public int bioGambleMaxDelta = 2;
 
         public int RollGrowthMultiplier()
         {
             float roll = UnityEngine.Random.value;
-            return roll < 0.2f ? 0 : roll < 0.8f ? 1 : 2;
+            return roll < 0.7f ? 1 : 2;
         }
 
         public int MaxLevel => Mathf.Max(1, maxLevel);
@@ -86,10 +87,16 @@ namespace Necrocis
 
         public float GetEnemyHealthMultiplier(int currentLevel, MonsterTier tier)
         {
-            if (tier == MonsterTier.Boss) return 1f;
+            if (tier != MonsterTier.Elite) return 1f;
             int band = (Mathf.Clamp(currentLevel, 1, MaxLevel) - 1) / Mathf.Max(1, enemyHealthLevelInterval);
-            float increase = tier == MonsterTier.Elite ? eliteEnemyHealthIncreasePerBand : normalEnemyHealthIncreasePerBand;
-            return 1f + band * Mathf.Max(0f, increase);
+            return 1f + band * Mathf.Max(0f, eliteEnemyHealthIncreasePerBand);
+        }
+
+        public float GetEnemyHealthBonus(int currentLevel, MonsterTier tier)
+        {
+            if (tier != MonsterTier.Normal) return 0f;
+            int band = (Mathf.Clamp(currentLevel, 1, MaxLevel) - 1) / Mathf.Max(1, enemyHealthLevelInterval);
+            return band * (float)Mathf.Max(0, normalEnemyHealthBonusPerBand);
         }
 
         public float GetExpGainMultiplier(int currentLevel, JobType currentJob)

@@ -1239,22 +1239,21 @@ MonoBehaviour:
   overheatStackWindow: 1.4
   overheatPerStackAttackSpeedBonus: 0.06
   overheatDecayInterval: 5
-  overheatExplosionRadius: 2.5
+  overheatExplosionRadius: 4
   overheatExplosionDamageMultiplier: 1.5
-  overheatExplosionSelfDamage: 1
-  mutantEyeAccuracyPenaltyAngle: 40
-  mutantEyeFlatDamageBonus: 0.75
+  mutantEyeAccuracyPenaltyAngle: 20
+  mutantEyeFlatDamageBonus: 2.5
   organTentacleAutoAttackInterval: 1.2
   organTentacleAutoAttackRadius: 4.5
   organTentacleAutoAttackDamageMultiplier: 0.3
   organTentacleMaxTargets: 2
-  organTentacleBaseAttackPenaltyMultiplier: 0.8
-  rampageMoveSecondsPerBonus: 8
+  organTentacleBaseAttackPenaltyMultiplier: 1
+  rampageMoveSecondsPerBonus: 6
   rampageMaxAttackBonus: 3
   rampageIdleSecondsPerDecay: 4
   muscleSpasmMeleeRangeMultiplier: 1.7
   muscleSpasmAttackSpeedMultiplier: 0.8
-  unstableCoreMinAttackRatio: 0.7
+  unstableCoreMinAttackRatio: 0.9
   unstableCoreMaxAttackRatio: 1.5
   unstableCoreRerollInterval: 5
   bioResonanceStackDamageBonus: 0.1
@@ -1265,27 +1264,27 @@ MonoBehaviour:
   voidCellChance: 0.2
   voidCellDamageMultiplier: 0.7
   voidCellSpawnRadius: 2.2
-  forbiddenGrowthMaxHealthPenalty: 3
-  forbiddenGrowthFlatAttackBonus: 0.75
+  forbiddenGrowthMaxHealthPenalty: 2
+  forbiddenGrowthFlatAttackBonus: 3
   overclockNerveMaxHealthPenalty: 2
   overclockNerveFlatMoveSpeedBonus: 2
   bloodContractIncomingDamageMultiplier: 1.25
   bloodContractKillsPerHeal: 20
   bloodContractHealthGainAmount: 1
   bloodContractMaxHealthGainCount: 4
-  hyperplasiaMissingHealthAttackBonusMax: 0.75
-  decayOrganSecondsPerAttackBonus: 180
-  decayOrganMaxAttackBonus: 3
-  ruptureMuscleAttackBonusPerStack: 0.2
-  ruptureMuscleMovePenaltyPerStack: 0.25
+  hyperplasiaMissingHealthAttackBonusMax: 3
+  decayOrganSecondsPerAttackBonus: 90
+  decayOrganMaxAttackBonus: 6
+  ruptureMuscleAttackBonusPerStack: 1
+  ruptureMuscleMovePenaltyPerStack: 0.15
   ruptureMuscleMaxStacks: 3
   ruptureMuscleDecayDelay: 3
   imperfectRegenMaxHealthPenalty: 2
   imperfectRegenDelay: 2
   imperfectRegenHealPerTrigger: 1
   imperfectRegenCooldownDuration: 15
-  severanceReflexDuration: 3
-  severanceReflexFlatAttackBonus: 0.75
+  severanceReflexDuration: 5
+  severanceReflexFlatAttackBonus: 3
   exoskeletonDamageReductionRatio: 0.25
   exoskeletonMoveSpeedPenalty: 1.5
   plateletMembraneInterval: 20
@@ -1293,7 +1292,7 @@ MonoBehaviour:
   recoveryFactorInterval: 45
   recoveryFactorHealAmount: 1
   reflectiveSkinDamageRatio: 0.75
-  bioBarrierIdleSecondsPerStep: 1.5
+  bioBarrierIdleSecondsPerStep: 0.5
   bioBarrierReductionPerStep: 0.1
   bioBarrierMaxReduction: 0.3
   splitRegenerationReviveHealth: 4
@@ -1333,7 +1332,7 @@ MonoBehaviour:
   infectionTransferTickDamage: 0.5
   infectionTransferCooldown: 5
   macrophageDuration: 5
-  macrophageAttackBonusPerStack: 0.2
+  macrophageAttackBonusPerStack: 0.75
   macrophageMaxStacks: 3
   gluttonousOrganDuration: 3
   gluttonousOrganMoveBonusPerStack: 0.5
@@ -1343,11 +1342,11 @@ MonoBehaviour:
   bloodflowAccelerationRadius: 9
   bloodflowAccelerationAttackSpeedBonus: 0.25
   focusedNerveRadius: 6
-  focusedNerveHighAttackBonus: 0.5
-  focusedNerveLowAttackBonus: 0.25
-  executionInstinctHealthThreshold: 0.2
-  executionInstinctChance: 0.2
-  executionInstinctBossDamageMultiplier: 1.5
+  focusedNerveHighAttackBonus: 2.5
+  focusedNerveLowAttackBonus: 1.25
+  executionInstinctHealthThreshold: 0.3
+  executionInstinctChance: 0.35
+  executionInstinctBossDamageMultiplier: 2
   berserkCellDuration: 15
   berserkCellAttackBonus: 0.5
   berserkCellMoveBonus: 0.5
@@ -1361,25 +1360,21 @@ MonoBehaviour:
   grotesqueGrowthSmallScale: 0.75
   grotesqueGrowthLargeScale: 1.35
   grotesqueGrowthSmallMoveBonus: 1
-  grotesqueGrowthLargeAttackBonus: 0.5
-  grotesqueGrowthLargeMovePenalty: 0.5
+  grotesqueGrowthLargeAttackBonus: 2
+  grotesqueGrowthLargeMovePenalty: 0.25
   mutationRampageInterval: 15
-  mutationRampageDuration: 7
-  mutationRampageBuffChance: 0.6
-  mutationRampageAttackBuff: 0.5
-  mutationRampageMoveBuff: 1
+  mutationRampageDuration: 10
+  mutationRampageAttackBuff: 2
+  mutationRampageMoveBuff: 1.5
   mutationRampageAttackSpeedBuff: 0.3
-  mutationRampageAttackDebuff: 0.5
-  mutationRampageMoveDebuff: 0.75
-  mutationRampageAttackSpeedDebuff: 0.15
   parasiticBombChance: 0.2
   parasiticBombRadius: 4
   parasiticBombDamageMultiplier: 1
-  frenzyHormoneDuration: 3
+  frenzyHormoneDuration: 5
   frenzyHormoneCooldown: 8
-  frenzyHormoneAttackBonus: 0.5
-  frenzyHormoneMoveBonus: 1
-  frenzyHormoneAttackSpeedBonus: 0.2
+  frenzyHormoneAttackBonus: 2
+  frenzyHormoneMoveBonus: 1.5
+  frenzyHormoneAttackSpeedBonus: 0.3
 --- !u!1 &8992798731400703747
 GameObject:
   m_ObjectHideFlags: 0

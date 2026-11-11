@@ -443,6 +443,12 @@ namespace Necrocis
         private static WorldRunSaveData CreateWorldRunSaveData(WorldRunSaveData previousWorld)
         {
             var world = new WorldRunSaveData();
+            // Persist the opening choice before loading Hub, including an interrupted start.
+            world.rewards.Add(new WorldRewardSaveData
+            {
+                id = CampaignRewardRules.StarterRewardId,
+                biome = BiomeType.None
+            });
             world.SetSeed(BiomeType.Intestine, CreateBiomeSeed(BiomeType.Intestine, previousWorld));
             world.SetSeed(BiomeType.Liver, CreateBiomeSeed(BiomeType.Liver, previousWorld));
             world.SetSeed(BiomeType.Stomach, CreateBiomeSeed(BiomeType.Stomach, previousWorld));

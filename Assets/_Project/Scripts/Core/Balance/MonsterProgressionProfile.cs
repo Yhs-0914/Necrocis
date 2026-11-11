@@ -8,11 +8,11 @@ namespace Necrocis
     public sealed class MonsterProgressionStage
     {
         [Range(0, 4)] public int stage;
-        [Min(0.01f)] public float maxHealth = 1f;
+        // Legacy serialized fields; boss-clear health scaling is no longer applied.
+        [HideInInspector, Min(0.01f)] public float maxHealth = 1f;
         [Min(0f)] public float attackPower = 1f;
         [Min(0f)] public float experience = 1f;
-        // Zero preserves the shared multiplier for older/custom profiles.
-        [Min(0f)] public float bossHealth;
+        [HideInInspector, Min(0f)] public float bossHealth;
         [Min(0)] public int fieldEliteExperience;
         [Min(0)] public int bossExperience;
     }
@@ -28,10 +28,10 @@ namespace Necrocis
             return new List<MonsterProgressionStage>
             {
                 new MonsterProgressionStage { stage = 0 },
-                new MonsterProgressionStage { stage = 1, maxHealth = 1.15f, attackPower = 1.08f, experience = 1.10f },
-                new MonsterProgressionStage { stage = 2, maxHealth = 1.35f, attackPower = 1.20f, experience = 1.25f },
-                new MonsterProgressionStage { stage = 3, maxHealth = 1.60f, attackPower = 1.35f, experience = 1.40f },
-                new MonsterProgressionStage { stage = 4, maxHealth = 1.85f, attackPower = 1.50f, experience = 1.60f }
+                new MonsterProgressionStage { stage = 1, attackPower = 1.08f, experience = 1.10f },
+                new MonsterProgressionStage { stage = 2, attackPower = 1.20f, experience = 1.25f },
+                new MonsterProgressionStage { stage = 3, attackPower = 1.35f, experience = 1.40f },
+                new MonsterProgressionStage { stage = 4, attackPower = 1.50f, experience = 1.60f }
             };
         }
 
