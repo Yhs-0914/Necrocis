@@ -57,7 +57,7 @@ namespace Necrocis
             var player = other.GetComponentInParent<PlayerController>();
             var stats = player != null ? player.Stats : null;
             if (reward == null || reward.collected || stats == null || stats.IsDead
-                || (stats.CurrentHealth >= stats.MaxHealth && stats.RuntimeStats.DamageRemainder <= 0f)) return;
+                || stats.CurrentHealth >= stats.MaxHealth) return;
             stats.Heal(CampaignRewardRules.RecoveryHealth);
             SaveService.CompleteWorldReward(reward);
             AudioManager.Instance?.PlaySFX("ItemPickup");

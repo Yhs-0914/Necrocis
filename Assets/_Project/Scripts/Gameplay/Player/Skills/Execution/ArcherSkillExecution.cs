@@ -42,7 +42,7 @@ namespace Necrocis
                     projectileLifeTime,
                     shotDirection,
                     debuff,
-                    false);
+                    false, GetSkillHealthEffectSource("archer/E"));
             }
 
             if (archerSkill1.shootEffectPrefab != null)
@@ -71,6 +71,11 @@ namespace Necrocis
             if (aimDuration > 0f)
             {
                 yield return new WaitForSeconds(aimDuration);
+            }
+
+            while (IsSkillExecutionPaused)
+            {
+                yield return null;
             }
 
             FireArcherSkill2Projectile(direction);
@@ -137,6 +142,7 @@ namespace Necrocis
                 skillHitHeightOffset,
                 skillHitVerticalHalfHeight);
 
+            HealthEffectSource source = GetSkillHealthEffectSource("archer/R");
             projectile.Launch(
                 moveDirection,
                 PlayerCombatCalculator.GetSkillDamage(archerSkill2.projectileDamage, CurrentPlayerStats),
@@ -145,7 +151,7 @@ namespace Necrocis
                 enemyMask,
                 false,
                 default(SkillProjectileDebuff),
-                HandleArcherSkill2EnemyHit);
+                (enemy, position) => HandleArcherSkill2HitFromSource(enemy, position, source), source);
         }
 
 
@@ -287,6 +293,11 @@ namespace Necrocis
 
         private void HandleArcherSkill2EnemyHit(EnemyController enemy, Vector3 hitPosition)
         {
+            HandleArcherSkill2HitFromSource(enemy, hitPosition, GetSkillHealthEffectSource("archer/R"));
+        }
+
+        private void HandleArcherSkill2HitFromSource(EnemyController enemy, Vector3 hitPosition, HealthEffectSource source)
+        {
             if (enemy == null)
             {
                 return;
@@ -298,11 +309,16 @@ namespace Necrocis
                 return;
             }
 
-            TriggerArcherSkill2VirusExplosion(enemy, hitPosition);
+            TriggerArcherSkill2VirusExplosionFromSource(enemy, hitPosition, source);
         }
 
 
         private void TriggerArcherSkill2VirusExplosion(EnemyController target, Vector3 fallbackCenter)
+        {
+            TriggerArcherSkill2VirusExplosionFromSource(target, fallbackCenter, GetSkillHealthEffectSource("archer/R"));
+        }
+
+        private void TriggerArcherSkill2VirusExplosionFromSource(EnemyController target, Vector3 fallbackCenter, HealthEffectSource source)
         {
             Vector3 center = target != null ? GetTargetEffectPosition(target) : fallbackCenter;
             float effectScaleMultiplier = target != null ? GetTargetEffectScaleMultiplier(target) : 1f;
@@ -311,7 +327,7 @@ namespace Necrocis
             int explosionHit = ApplyAreaSkill(
                 center,
                 archerSkill2.virusExplosionRadius,
-                enemy => enemy.TakeDamage(damage), damage);
+                enemy => enemy.TakeDamage(damage, source.WithEffect("virus-explosion")), damage);
 
             SpawnSkillEffect(
                 archerSkill2.virusExplosionEffectPrefab,
@@ -337,12 +353,10 @@ namespace Necrocis
             Vector3 origin = transform.position;
             origin.y += skillHitHeightOffset;
 
-            int count = Physics.OverlapSphereNonAlloc(
-                origin,
-                Mathf.Max(0.1f, maxDistance),
-                overlapBuffer,
-                enemyMask,
-                QueryTriggerInteraction.Collide);
+            var hits=EnemyHitSnapshot.Sphere(origin,Mathf.Max(.1f,maxDistance),
+                enemyMask,QueryTriggerInteraction.Collide,ref overlapBuffer);
+            var hitData=hits;
+            int count=hits.Length;
 
             EnemyController bestEnemy = null;
             float bestScore = float.NegativeInfinity;
@@ -350,13 +364,14 @@ namespace Necrocis
 
             for (int i = 0; i < count; i++)
             {
-                Collider collider = overlapBuffer[i];
+                if(!hitData[i].IsCurrent)continue;
+                Collider collider = hitData[i].Collider;
                 if (collider == null)
                 {
                     continue;
                 }
 
-                EnemyController enemy = collider.GetComponentInParent<EnemyController>();
+                EnemyController enemy = hitData[i].Enemy;
                 if (enemy == null || enemy.IsDead)
                 {
                     continue;

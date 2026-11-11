@@ -59,9 +59,10 @@ namespace NecrocisEditor
             try
             {
                 var go = new GameObject("ItemReviewPlayer");
-                var stats = go.AddComponent<PlayerStats>();
+                PlayerCompositionRoot.EnsureGameplay(go);
+                var stats = go.GetComponent<PlayerStats>();
                 stats.EnsureInitialized();
-                var inventory = go.AddComponent<PlayerItemManager>();
+                var inventory = go.GetComponent<PlayerItemManager>();
                 inventory.PopulateBasicProjectileTemplateItems();
                 var effects = go.GetComponent<PlayerItemCombatEffects>();
                 Require(inventory.ItemEntries.Count == 68, "catalog contains 68 items");
@@ -132,7 +133,11 @@ namespace NecrocisEditor
                 inventory.ClearAllItems();
 
                 Acquire(inventory, "decay_organ");
-                Set(effects, "decayOrganStartTime", Time.time - 540.1f);
+                var timed = effects.GetType().GetProperty("Timed", Private).GetValue(effects);
+                var decay = timed.GetType().GetField("decayRuntime", Private).GetValue(timed);
+                decay.GetType().GetMethod("Restore").Invoke(decay, new object[] {
+                    new SavedItemStateData { decayOrganElapsedSeconds = 540.1f }, Time.time,
+                    timed.GetType().GetProperty("PersistentSettings").GetValue(timed) });
                 Invoke(effects, "UpdateDecayOrganState");
                 Equal(3, effects.GetOutgoingBasicDamageFlatBonus(), "decay rewards sustained combat with attack +3");
                 inventory.ClearAllItems();
@@ -148,7 +153,7 @@ namespace NecrocisEditor
                 var target = Enemy(new Vector3(0, 0, 4));
                 var nearby = Enemy(new Vector3(1, 0, 4));
                 Acquire(inventory, "explosive_blood_cell");
-                effects.ApplyBeamExplosion(target, 7);
+                effects.ApplyBeamExplosion(target.transform.position, target, 7);
                 Equal(93, nearby.Stats.CurrentHealth, "beam explosion damages adjacent target");
                 Equal(100, target.Stats.CurrentHealth, "beam explosion does not double-hit primary");
                 Acquire(inventory, "beam_organ");
@@ -159,7 +164,7 @@ namespace NecrocisEditor
                 Equal(.8f * 1.45f * 1.2f, effects.BeamRadius, "beam inherits size effects");
                 inventory.ClearAllItems();
 
-                var status = target.gameObject.AddComponent<EnemyStatusEffectController>();
+                var status = target.GetComponent<EnemyStatusEffectController>();
                 status.Initialize(target);
                 status.ApplyPoison(4, 1, 10); status.ApplyPoison(3, 1, .5f);
                 Equal(10, Get<float>(status, "poisonTickDamage"), "weak infection cannot replace strong poison");
@@ -176,7 +181,40 @@ namespace NecrocisEditor
                 Require(AcidPuddle.Spawn(new Vector3(60, 0, 0), .5f, 4, 2, 1) == null, "third area cannot evict unticked acid");
                 Set(puddle, "nextTickTime", Time.time - 1);
                 Invoke(puddle, "Update");
-                Equal(99.5f, target.Stats.CurrentHealth, "acid still deals damage after rapid hits and overflow");
+                Equal(100f, target.Stats.CurrentHealth, "main health ledger retains the first half-damage tick");
+                Set(puddle, "nextTickTime", Time.time - 1);
+                Invoke(puddle, "Update");
+                Equal(99f, target.Stats.CurrentHealth, "acid ticks accumulate through main health accounting");
+                bool? companionAllowsHost = null;
+                var originalReaction = EnemyDefeatBindings.PlayerKillReaction;
+                try
+                {
+                    EnemyDefeatBindings.PlayerKillReaction = (enemy, allowHost) => companionAllowsHost = allowHost;
+                    var victim = Enemy(new Vector3(0, 0, 8));
+                    victim.TakeCompanionDamage(100, HealthEffectSource.Legacy);
+                    Require(companionAllowsHost == false, "companion kill keeps credit without host-chain spawning");
+                }
+                finally { EnemyDefeatBindings.PlayerKillReaction = originalReaction; }
+                inventory.ClearAllItems();
+                Acquire(inventory, "reflux_organ");
+                var returnTarget = Enemy(new Vector3(0, 0, 10));
+                var projectileObject = new GameObject("ReviewReturningProjectile");
+                projectileObject.transform.position = returnTarget.transform.position;
+                var projectile = projectileObject.AddComponent<Projectile>();
+                projectile.Launch(Vector3.forward, 3, ~0, 20, effects);
+                var handleHit = typeof(Projectile).GetMethod("HandleHit", Private);
+                var targetCollider = returnTarget.GetComponent<Collider>();
+                handleHit.Invoke(projectile, new object[] { targetCollider });
+                Equal(97, returnTarget.Stats.CurrentHealth, "outbound projectile hits normally");
+                Get<HashSet<long>>(projectile, "hitEnemyIds").Clear();
+                Set(projectile, "returning", true);
+                handleHit.Invoke(projectile, new object[] { targetCollider });
+                Equal(97, returnTarget.Stats.CurrentHealth, "return pass cannot re-hit within 0.2 seconds");
+                var hitTimes = Get<Dictionary<long, float>>(projectile, "lastEnemyHitTimes");
+                foreach (long key in new List<long>(hitTimes.Keys)) hitTimes[key] = Time.time - .21f;
+                handleHit.Invoke(projectile, new object[] { targetCollider });
+                Equal(96, returnTarget.Stats.CurrentHealth, "return hit resumes after cooldown using main health accounting");
+                UnityEngine.Object.Destroy(projectileObject);
                 passed = true;
             }
             catch (Exception error)
@@ -191,13 +229,8 @@ namespace NecrocisEditor
         {
             var go = new GameObject("ItemReviewEnemy");
             go.transform.position = position;
-            var stats = go.AddComponent<CharacterStats>();
-            stats.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 100));
             var enemy = go.AddComponent<EnemyController>();
-            Set(enemy, "stats", stats);
-            Set(enemy, "config", new EnemySpawnRuleConfig { name = "Review", maxHealth = 100, expReward = 0 });
-            var active = (List<EnemyController>)typeof(EnemyController).GetField("ActiveEnemies", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-            active.Add(enemy);
+            enemy.Configure(null, new EnemySpawnRuleConfig { name = "Review", maxHealth = 100, expReward = 0 }, position, position);
             return enemy;
         }
 

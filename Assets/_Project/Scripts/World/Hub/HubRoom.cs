@@ -182,7 +182,7 @@ namespace Necrocis
             for (int i = 0; i < 4; i++)
             {
                 if (portals[i] == null) continue;
-                bool cleared = GameManager.Instance != null && GameManager.Instance.HasRelic(biomes[i]);
+                bool cleared = WorldProgressBindings.Relics.IsAvailable && WorldProgressBindings.Relics.HasRelic(biomes[i]);
                 portals[i].SetCleared(cleared);
             }
         }

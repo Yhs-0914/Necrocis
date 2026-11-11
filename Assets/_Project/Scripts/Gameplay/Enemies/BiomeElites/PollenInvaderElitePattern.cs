@@ -93,7 +93,7 @@ namespace Necrocis
             if (player == null || player.IsDead || enemy.IsOutOfLeash() || !enemy.IsPlayerInChaseRange()) return false;
             Vector3 target = player.transform.position, delta = target - transform.position; delta.y = 0;
             if (delta.sqrMagnitude < .0001f || delta.sqrMagnitude > trigger * trigger
-                || !GasSacOrb.IsVisible(target) || !GasSacOrb.HasClearPath(transform.position, target)) return false;
+                || !EnemyWorldBindings.Attacks.IsVisible(target) || !EnemyWorldBindings.Attacks.HasClearPath(transform.position, target)) return false;
             enemy.SetPatternFacing(delta, false);
             if (!PollenPellet.TryGetLaunchPosition(enemy, radius, out var start)) return false;
             delta = target - start; delta.y = 0; if (delta.sqrMagnitude < .0001f) return false;
@@ -185,7 +185,7 @@ namespace Necrocis
         private void LateUpdate()
         {
             if (shadow == null || !shadow.activeSelf) return;
-            var p = transform.position; if (BiomeManager.Active != null) p.y = BiomeManager.Active.GetGroundHeight(p);
+            var p = transform.position; if (EnemyWorldBindings.Surface != null) p.y = EnemyWorldBindings.Surface.GetGroundHeight(p);
             shadow.transform.position = p + Vector3.up * .035f;
         }
         public override void EndSpawn()

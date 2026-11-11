@@ -31,6 +31,7 @@ namespace Necrocis
         private float phase;
         private Palette palette;
         private bool usesCustomGateSprite;
+        private BossEntranceGeometry entranceGeometry;
 
         public BossArenaPresentationState State => state;
         public Vector3 EntranceWorldPosition => transform.TransformPoint(entranceLocalPosition);
@@ -71,17 +72,14 @@ namespace Necrocis
             phase = Mathf.Abs(((int)ownerBiome.BiomeType * 1.731f) % Mathf.PI);
 
             float tileSize = Mathf.Max(0.01f, ownerBiome.TileSize);
-            int lockInset = Mathf.Max(0, arenaConfig.lockBoundaryInsetInCells);
-            int thickness = Mathf.Max(1, arenaConfig.wallThicknessInCells);
-            float playableWidth = Mathf.Max(tileSize * 4f, (arenaSize.x - lockInset * 2) * tileSize);
-            float playableDepth = Mathf.Max(tileSize * 4f, (arenaSize.y - lockInset * 2) * tileSize);
+            entranceGeometry = BossEntranceGeometry.Create(arenaSize, tileSize, arenaConfig.lockBoundaryInsetInCells,
+                arenaConfig.wallThicknessInCells, config.entranceSide, config.entranceWidthInCells);
+            float playableWidth = (entranceGeometry.MaxX - entranceGeometry.MinX + 1) * tileSize;
+            float playableDepth = (entranceGeometry.MaxY - entranceGeometry.MinY + 1) * tileSize;
 
             CreateBiomeWallTiles(playableWidth, playableDepth, tileSize);
 
-            Vector2 outward = GetOutwardDirection(config.entranceSide);
-            float halfExtent = Mathf.Abs(outward.x) > 0f ? playableWidth * 0.5f : playableDepth * 0.5f;
-            float boundaryOffset = Mathf.Max(tileSize, halfExtent - thickness * tileSize * 0.5f);
-            entranceLocalPosition = new Vector3(outward.x * boundaryOffset, 0f, outward.y * boundaryOffset);
+            entranceLocalPosition = entranceGeometry.GateLocalGroundPosition;
 
             CreateGate(tileSize);
             if (wallTileVisuals.Count == 0)
@@ -202,15 +200,12 @@ namespace Necrocis
                 return;
             }
 
-            int widthInCells = Mathf.Max(8, Mathf.RoundToInt(width / tileSize));
-            int depthInCells = Mathf.Max(8, Mathf.RoundToInt(depth / tileSize));
+            int widthInCells = entranceGeometry.MaxX - entranceGeometry.MinX + 1;
+            int depthInCells = entranceGeometry.MaxY - entranceGeometry.MinY + 1;
             int cornerSpan = Mathf.Clamp(
                 config.wallCornerSpanInCells,
                 1,
                 Mathf.Max(1, Mathf.Min(widthInCells, depthInCells) / 2 - 1));
-            int entranceWidth = Mathf.Clamp(config.entranceWidthInCells, 2, widthInCells - 2);
-            int openingStart = (widthInCells - entranceWidth) / 2;
-            int openingEnd = openingStart + entranceWidth - 1;
             float lowCornerCell = (cornerSpan - 1) * 0.5f;
             float highCornerXCell = widthInCells - 1 - lowCornerCell;
             float highCornerZCell = depthInCells - 1 - lowCornerCell;
@@ -271,8 +266,9 @@ namespace Necrocis
 
             for (int x = cornerSpan; x < widthInCells - cornerSpan; x++)
             {
+                bool isDoorClosure = entranceGeometry.IsOpeningCell(x + entranceGeometry.MinX, entranceGeometry.MaxY);
                 CreateBoundaryCell(
-                    $"Boundary_North_{x:D2}",
+                    isDoorClosure ? $"Boundary_DoorClosure_North_{x:D2}" : $"Boundary_North_{x:D2}",
                     GetStraightSprite(x - cornerSpan),
                     x,
                     depthInCells - 1,
@@ -281,13 +277,15 @@ namespace Necrocis
                     tileSize,
                     tileSize,
                     0f,
-                    false);
+                    isDoorClosure);
             }
 
             for (int z = cornerSpan; z < depthInCells - cornerSpan; z++)
             {
+                bool westDoor = entranceGeometry.IsOpeningCell(entranceGeometry.MinX, z + entranceGeometry.MinY);
+                bool eastDoor = entranceGeometry.IsOpeningCell(entranceGeometry.MaxX, z + entranceGeometry.MinY);
                 CreateBoundaryCell(
-                    $"Boundary_West_{z:D2}",
+                    westDoor ? $"Boundary_DoorClosure_West_{z:D2}" : $"Boundary_West_{z:D2}",
                     GetStraightSprite(z - cornerSpan),
                     0,
                     z,
@@ -296,9 +294,9 @@ namespace Necrocis
                     tileSize,
                     tileSize,
                     270f,
-                    false);
+                    westDoor);
                 CreateBoundaryCell(
-                    $"Boundary_East_{z:D2}",
+                    eastDoor ? $"Boundary_DoorClosure_East_{z:D2}" : $"Boundary_East_{z:D2}",
                     GetStraightSprite(cornerSpan - 1 - z),
                     widthInCells - 1,
                     z,
@@ -307,12 +305,12 @@ namespace Necrocis
                     tileSize,
                     tileSize,
                     90f,
-                    false);
+                    eastDoor);
             }
 
             for (int x = cornerSpan; x < widthInCells - cornerSpan; x++)
             {
-                bool isDoorClosure = x >= openingStart && x <= openingEnd;
+                bool isDoorClosure = entranceGeometry.IsOpeningCell(x + entranceGeometry.MinX, entranceGeometry.MinY);
                 CreateBoundaryCell(
                     isDoorClosure ? $"Boundary_DoorClosure_{x:D2}" : $"Boundary_South_{x:D2}",
                     GetStraightSprite(cornerSpan - 1 - x),

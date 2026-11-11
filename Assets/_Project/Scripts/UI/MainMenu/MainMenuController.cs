@@ -56,6 +56,7 @@ namespace Necrocis
         private Button cancelButton;
         private Text confirmationBody;
         private Text menuStatusText;
+        private UnityEngine.UI.Button storageRecoveryButton;
         private Image fadeImage;
         private RectTransform playerRect;
         private Vector3 playerBaseScale = Vector3.one;
@@ -76,7 +77,7 @@ namespace Necrocis
 
         private void Awake()
         {
-            Time.timeScale = 1f;
+            InputManager.ResetSessionClock();
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
             SaveService.EnsureInitialized();
@@ -270,6 +271,9 @@ namespace Necrocis
                 new Color(1f, 0.63f, 0.29f, 1f));
             SetRect(menuStatusText.rectTransform, new Vector2(0.5f, 0f), new Vector2(500f, 38f), new Vector2(0f, 18f));
             menuStatusText.alignment = TextAnchor.MiddleCenter;
+            storageRecoveryButton = menuStatusText.gameObject.AddComponent<UnityEngine.UI.Button>();
+            storageRecoveryButton.targetGraphic = menuStatusText;
+            storageRecoveryButton.onClick.AddListener(RetryStorageRecovery);
         }
 
         private void CreateSettingsOverlay(Transform canvas)
@@ -449,11 +453,29 @@ namespace Necrocis
         {
             IReadOnlyList<ContinueSaveSummary> summaries = SaveService.GetContinueSummaries();
             bool hasContinueSave = summaries.Count > 0;
-            continueButton.gameObject.SetActive(hasContinueSave);
-            continueButton.interactable = hasContinueSave;
-            menuStatusText.gameObject.SetActive(hasContinueSave);
-            menuStatusText.text = hasContinueSave ? BuildLatestSummary(summaries) : string.Empty;
-            ApplyMainMenuLayout(hasContinueSave);
+            bool showRecovery = !hasContinueSave && SaveService.HasStorageRecoveryIssue;
+            continueButton.GetComponentInChildren<Text>().text = showRecovery ? "저장 복구 재시도" : "계속하기";
+            continueButton.gameObject.SetActive(hasContinueSave || showRecovery);
+            continueButton.interactable = hasContinueSave || showRecovery;
+            string storageError = SaveService.LastStorageError;
+            menuStatusText.gameObject.SetActive(hasContinueSave || !string.IsNullOrEmpty(storageError));
+            bool recoveryAvailable = SaveService.HasStorageRecoveryIssue;
+            menuStatusText.text = !string.IsNullOrEmpty(storageError) ? "[복구 재시도] " + storageError
+                : hasContinueSave ? BuildLatestSummary(summaries) : string.Empty;
+            storageRecoveryButton.interactable = recoveryAvailable;
+            menuStatusText.raycastTarget = recoveryAvailable;
+            ApplyMainMenuLayout(hasContinueSave || showRecovery);
+            if (recoveryAvailable)
+            {
+                UnityEngine.UI.Button first = hasContinueSave || showRecovery ? continueButton : newGameButton;
+                SetVerticalNavigation(storageRecoveryButton, quitButton, first);
+                Navigation quitNavigation = quitButton.navigation;
+                quitNavigation.selectOnDown = storageRecoveryButton;
+                quitButton.navigation = quitNavigation;
+                Navigation firstNavigation = first.navigation;
+                firstNavigation.selectOnUp = storageRecoveryButton;
+                first.navigation = firstNavigation;
+            }
         }
 
         private void ApplyMainMenuLayout(bool showContinue)
@@ -554,6 +576,12 @@ namespace Necrocis
                 return;
             }
 
+            if (SaveService.GetContinueSummaries().Count == 0 && SaveService.HasStorageRecoveryIssue)
+            {
+                RetryStorageRecovery();
+                return;
+            }
+
             IReadOnlyList<ContinueSaveSummary> summaries = SaveService.GetContinueSummaries();
             if (summaries.Count == 0)
             {
@@ -600,6 +628,14 @@ namespace Necrocis
 
         private void RequestNewGame(GameDifficulty difficulty)
         {
+            if (SaveService.HasBlockingStorageIssue)
+            {
+                // Recover first, then require a fresh choice so the restored slot gets
+                // its existing overwrite confirmation before a new game can replace it.
+                RetryStorageRecovery();
+                return;
+            }
+
             if (difficulty == GameDifficulty.Hard && !SaveService.IsHardUnlocked)
             {
                 AudioManager.Instance?.PlaySFX("UIInvalid");
@@ -668,12 +704,21 @@ namespace Necrocis
             StartCoroutine(StartGameRoutine());
         }
 
+        private void RetryStorageRecovery()
+        {
+            if (isStarting || !SaveService.HasStorageRecoveryIssue) return;
+            bool recovered = SaveService.TryRecoverStorage(out string error);
+            RefreshContinueState();
+            if (!recovered) ShowMenuError("[복구 재시도] " + error);
+        }
+
         private void ShowMenuError(string error)
         {
             difficultyOverlay.SetActive(false);
             continueOverlay.SetActive(false);
             confirmationOverlay.SetActive(false);
             SetMainMenuEnabled(true);
+            menuStatusText.gameObject.SetActive(true);
             menuStatusText.text = string.IsNullOrWhiteSpace(error) ? "작업을 완료하지 못했습니다" : error;
             AudioManager.Instance?.PlaySFX("UIInvalid");
         }

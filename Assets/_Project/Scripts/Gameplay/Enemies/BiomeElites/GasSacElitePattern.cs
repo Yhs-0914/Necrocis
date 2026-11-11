@@ -166,10 +166,10 @@ namespace Necrocis
         private void ApplyBurst(EnemyDamageRequest damage)
         {
             PlayerController player = PlayerController.Instance;
-            if (player == null || player.IsDead || MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)) return;
+            if (player == null || player.IsDead || EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)) return;
             Vector3 delta = player.transform.position - TelegraphCenter; delta.y = 0;
             if (delta.sqrMagnitude > radius * radius) return;
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             if (biome != null)
             {
                 Vector2Int origin = biome.WorldToGrid(TelegraphCenter);
@@ -215,7 +215,7 @@ namespace Necrocis
         {
             if (marker == null) return;
             Vector3 center = enemy.transform.position;
-            center.y = (BiomeManager.Active != null ? BiomeManager.Active.GetGroundHeight(center) : center.y) + .08f;
+            center.y = (EnemyWorldBindings.Surface != null ? EnemyWorldBindings.Surface.GetGroundHeight(center) : center.y) + .08f;
             marker.transform.position = center;
         }
 
@@ -255,7 +255,7 @@ namespace Necrocis
         {
             if (groundShadow == null || !groundShadow.activeSelf || enemy == null) return;
             Vector3 position = enemy.transform.position;
-            position.y = (BiomeManager.Active != null ? BiomeManager.Active.GetGroundHeight(position) : position.y) + .035f;
+            position.y = (EnemyWorldBindings.Surface != null ? EnemyWorldBindings.Surface.GetGroundHeight(position) : position.y) + .035f;
             groundShadow.transform.position = position;
             groundShadow.transform.rotation = Quaternion.Euler(90, 0, 0);
             groundShadow.transform.localScale = new Vector3(shadowSize.x * .5f, shadowSize.y * .5f, 1) * shadowPoseScale;

@@ -479,10 +479,9 @@ namespace Necrocis
             GameObject obj = AcquireObject(poolKey, $"{baseName}_Spawner_{record.x}_{record.y}");
             obj.transform.position = GridToWorldWithHeight(record.x, record.y, rule.heightOffset);
 
-            RegisterObject(chunk, obj, id, poolKey, false);
-
             EnemySpawner spawner = GetOrAddComponent<EnemySpawner>(obj);
-            spawner.Configure(rule, obj.transform.position);
+            spawner.ConfigureForWorld(rule, obj.transform.position);
+            RegisterObject(chunk, obj, id, poolKey, false);
             ActivateSpawnedObject(obj);
         }
 

@@ -8,6 +8,9 @@ namespace Necrocis
     public partial class PlayerController : MonoBehaviour
     {
         public static event System.Action OnPlayerDied;
+        public event System.Action DeathPresentationRequested;
+        internal static PlayerController ExistingInstance => instance;
+        internal SpriteRenderer AuthoredSpriteRenderer => spriteRenderer;
 
         private static PlayerController instance;
 
@@ -141,6 +144,8 @@ namespace Necrocis
 
         // ?몃? ?묎렐???꾨줈?쇳떚 (PlayerStats媛 ?놁쑝硫??덉쟾??湲곕낯媛?諛섑솚)
         public PlayerStats Stats => playerStats;
+        public HealthEffectSource GetHealthEffectSource(string effectId)
+            => playerStats != null ? playerStats.GetHealthEffectSource(effectId) : HealthEffectSource.ForOwner(this, effectId);
         public CharacterStats RuntimeStats => playerStats != null ? playerStats.RuntimeStats : null;
         public float MoveSpeed => playerStats != null ? playerStats.MoveSpeed : 0f;
         public float CurrentHealth => playerStats != null ? playerStats.CurrentHealth : 0f;
@@ -230,48 +235,7 @@ namespace Necrocis
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // ?ㅽ봽?쇱씠???뚮뜑??李얘린
-            if (spriteRenderer == null)
-            {
-                spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-                if (spriteRenderer == null)
-                {
-                    GameObject spriteObj = new GameObject("Sprite");
-                    spriteObj.transform.SetParent(transform);
-                    spriteObj.transform.localPosition = Vector3.zero;
-                    spriteRenderer = spriteObj.AddComponent<SpriteRenderer>();
-                }
-            }
-
-            // ?ㅽ봽?쇱씠??湲곕낯 ?ㅼ젙
-            spriteRenderer.color = Color.white;
-
-            Billboard billboard = spriteRenderer.GetComponent<Billboard>();
-            if (billboard == null)
-            {
-                billboard = spriteRenderer.gameObject.AddComponent<Billboard>();
-            }
-            billboard.SetUpdateMode(Billboard.UpdateMode.Once);
-
-            SpriteYSort ySort = spriteRenderer.GetComponent<SpriteYSort>();
-            if (ySort == null)
-            {
-                ySort = spriteRenderer.gameObject.AddComponent<SpriteYSort>();
-            }
-            ySort.Configure(SpriteYSort.WorldDynamicBaseSortingOrder, true, SpriteYSort.WorldDynamicMinSortingOrder);
-            ySort.SetUpdateMode(SpriteYSort.UpdateMode.Continuous);
-
-            // 臾쇰━ 而댄룷?뚰듃 ?뺤씤
-            rb = GetComponent<Rigidbody>();
-            characterController = GetComponent<CharacterController>();
-            proceduralTerrainMotor = GetComponent<ProceduralTerrainMotor>();
-            if (proceduralTerrainMotor == null)
-            {
-                proceduralTerrainMotor = gameObject.AddComponent<ProceduralTerrainMotor>();
-            }
-            EnsurePlayerStats();
-            EnsureClassSkillController();
-            EnsureDeathScreen();
+            PlayerGameplayInstaller.Ensure(gameObject);
             lastMoveDirection = DirectionToVector(currentDirection);
             ApplyLockedRotation();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -279,7 +243,10 @@ namespace Necrocis
 
         private void OnDestroy()
         {
+            MovementExecutions.CancelAll();
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+            if (playerStatsEventsBound && playerStats != null) playerStats.HealthChanged -= HandlePlayerHealthChanged;
+            playerStatsEventsBound = false;
             if (instance == this)
             {
                 instance = null;
@@ -310,6 +277,8 @@ namespace Necrocis
         }
         // ?좊땲???앸챸二쇨린: 留??꾨젅??寃뚯엫?뚮젅??濡쒖쭅???ㅽ뻾?⑸땲??
 
+        public MovementExecutionGate MovementExecutions { get; } = new MovementExecutionGate();
+
         private void Update()
         {
             SyncDeathState();
@@ -334,7 +303,14 @@ namespace Necrocis
         private void HandleInput()
         {
             // ?ъ빱???녾굅??寃뚯엫 ?쒖옉 吏곹썑硫??낅젰 臾댁떆
-            if (!Application.isFocused || Time.timeSinceLevelLoad < 0.5f)
+            if (!InputManager.Instance.Gameplay.CanReadGameplay || Time.timeSinceLevelLoad < 0.5f)
+            {
+                movement = Vector3.zero;
+                isMoving = false;
+                return;
+            }
+
+            if (MovementExecutions.BlocksOrdinaryInput)
             {
                 movement = Vector3.zero;
                 isMoving = false;
@@ -350,7 +326,7 @@ namespace Necrocis
             // InputManager 湲곕컲 ?낅젰
             var input = InputManager.Instance;
 
-            Vector2 moveInput = input.MoveAction.ReadValue<Vector2>();
+            Vector2 moveInput = input.Gameplay.Move;
             if (AreMovementControlsReversed)
             {
                 moveInput = -moveInput;
@@ -363,7 +339,7 @@ namespace Necrocis
             }
 
             // 諛⑺뼢 寃곗젙 (留덉?留??낅젰 諛⑺뼢 ?좎?)
-            // 대시 입력 (Shift)
+            // 대시 입력 (Space)
             if (input.DashAction.WasPressedThisFrame() && !isDashing && Time.time >= lastDashTime + dashCooldown)
             {
                 StartCoroutine(DashCoroutine());
@@ -499,6 +475,13 @@ namespace Necrocis
         /// </summary>
         private void Move()
         {
+            if (MovementExecutions.BlocksOrdinaryInput)
+            {
+                movement = Vector3.zero;
+                isMoving = false;
+                return;
+            }
+
             if (IsControlBlocked())
             {
                 StopMotion();
@@ -585,7 +568,7 @@ namespace Necrocis
                 return false;
             }
 
-            BiomeManager biome = BiomeManager.Active;
+            IPlayerWorldSurface biome = PlayerWorldBindings.ResolveSurface();
             if (biome == null)
             {
                 ApplyMove(moveVector);
@@ -636,7 +619,7 @@ namespace Necrocis
             return false;
         }
 
-        private bool CanMoveInBiome(BiomeManager biome, Vector3 currentPosition, Vector3 targetPosition)
+        private bool CanMoveInBiome(IPlayerWorldSurface biome, Vector3 currentPosition, Vector3 targetPosition)
         {
             bool clearsBossArenaBoundary = proceduralTerrainMotor == null
                 || proceduralTerrainMotor.CanMove(currentPosition, targetPosition);
@@ -653,7 +636,7 @@ namespace Necrocis
                 return true;
             }
 
-            BiomeManager biome = BiomeManager.Active;
+            IPlayerWorldSurface biome = PlayerWorldBindings.ResolveSurface();
             float maxStep = biome != null
                 ? Mathf.Max(0.05f, biome.TileSize * 0.45f)
                 : distance;
@@ -696,9 +679,7 @@ namespace Necrocis
 
         public bool BeginBossDisplacement()
         {
-            Health health = GetComponent<Health>();
-            if (IsDead || IsDashInvincible || IsBossDisplaced
-                || (health != null && health.IsInvincible)
+            if (IsDead || IsBossDisplaced
                 || (proceduralTerrainMotor != null && proceduralTerrainMotor.IsTraversing)) return false;
             IsBossDisplaced = true;
             isDashing = false;
@@ -725,14 +706,14 @@ namespace Necrocis
             return IsBossDisplaced || deathHandled
                 || IsDead
                 || Time.timeScale <= Mathf.Epsilon
-                || (proceduralTerrainMotor != null && proceduralTerrainMotor.IsTraversing);
+                || !InputManager.Instance.Gameplay.CanReadGameplay;
         }
 
         private void SyncDeathState()
         {
             if (!deathHandled && IsDead)
             {
-                HandleDeath();
+                GetComponent<PlayerDamageCoordinator>()?.ResolveRawDeath();
             }
         }
 
@@ -799,12 +780,14 @@ namespace Necrocis
 
         public void ReviveRuntimeStateAfterLoad()
         {
+            GetComponent<PlayerDamageCoordinator>()?.BeginLifetime(false);
             ResetRuntimeAfterDeath();
             RestoreRuntimeControls();
         }
 
         private void ResetRuntimeAfterDeath()
         {
+            MovementExecutions.CancelAll();
             IsBossDisplaced = false;
             deathHandled = false;
             movement = Vector3.zero;
@@ -858,7 +841,7 @@ namespace Necrocis
             if (!lockYPosition || IsBossDisplaced) return;
 
             float desiredY = lockedY;
-            BiomeManager biome = BiomeManager.Active;
+            IPlayerWorldSurface biome = PlayerWorldBindings.ResolveSurface();
             if (useDynamicGroundHeight && biome != null)
             {
                 desiredY = biome.GetGroundHeight(transform.position) + groundOffsetY;
@@ -945,33 +928,18 @@ namespace Necrocis
         }
         // TakeDamage: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
-        public void TakeDamage(EnemyDamageRequest damage)
+        public void TakeDamage(EnemyDamageRequest damage) => TryTakeDamage(damage);
+
+        public DamageResult TryTakeDamage(EnemyDamageRequest damage)
         {
-            if (deathHandled || (isDashing && invincibleDuringDash)) return;
-            HealthComponent?.TakeDamage(damage);
+            if (deathHandled || IsDead) return DamageResult.Invalid;
+            return HealthComponent != null ? HealthComponent.TryTakeDamage(damage) : DamageResult.Invalid;
         }
 
         public void TakeDamage(float damage)
         {
-            if (deathHandled) return;
-            if (isDashing && invincibleDuringDash) return;
-
-            Health health = GetComponent<Health>();
-            if (health != null)
-            {
-                health.TakeDamage(damage);
-            }
-            else
-            {
-                float finalDamage = Mathf.Max(0f, damage);
-                PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
-                if (itemEffects != null)
-                {
-                    finalDamage *= itemEffects.GetIncomingDamageMultiplier();
-                }
-
-                playerStats?.TakeDamage(finalDamage);
-            }
+            Health health = HealthComponent;
+            if (!deathHandled && health != null) health.TakeDamage(damage);
         }
         // Heal: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
@@ -1105,57 +1073,46 @@ namespace Necrocis
         // EnsurePlayerStats: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         // PlayerStats 而댄룷?뚰듃 蹂댁옣: ?놁쑝硫??앹꽦, 誘몄꽕?뺤씠硫?湲곕낯媛믪쑝濡?珥덇린?? ?대깽??援щ룆
+        internal void BindRuntime(PlayerStats stats, ProceduralTerrainMotor terrain, SpriteRenderer renderer)
+        {
+            if (playerStatsEventsBound && playerStats != null) playerStats.HealthChanged -= HandlePlayerHealthChanged;
+            playerStats = stats;
+            proceduralTerrainMotor = terrain;
+            spriteRenderer = renderer;
+            rb = GetComponent<Rigidbody>();
+            characterController = GetComponent<CharacterController>();
+            cachedHealth = GetComponent<Health>();
+            playerStatsConfigured = stats != null;
+            playerStatsEventsBound = stats != null && isActiveAndEnabled;
+            if (playerStatsEventsBound) stats.HealthChanged += HandlePlayerHealthChanged;
+        }
+
         private void EnsurePlayerStats()
         {
-            if (playerStats == null)
-            {
-                playerStats = GetComponent<PlayerStats>();
-                if (playerStats == null)
-                {
-                    playerStats = gameObject.AddComponent<PlayerStats>();
-                }
-            }
-
-            if (!playerStatsConfigured)
+            if (playerStats == null) playerStats = GetComponent<PlayerStats>();
+            if (!playerStatsConfigured && playerStats != null)
             {
                 playerStats.EnsureInitialized();
                 playerStatsConfigured = true;
             }
-
-            if (!playerStatsEventsBound)
-            {
-                playerStats.HealthChanged += HandlePlayerHealthChanged;
-                playerStatsEventsBound = true;
-            }
-        }
-
-        private void EnsureClassSkillController()
-        {
-            if (GetComponent<PlayerClassSkillController>() == null)
-            {
-                gameObject.AddComponent<PlayerClassSkillController>();
-            }
-        }
-
-        private PlayerDeathScreen EnsureDeathScreen()
-        {
-            PlayerDeathScreen deathScreen = GetComponent<PlayerDeathScreen>();
-            if (deathScreen == null)
-            {
-                deathScreen = gameObject.AddComponent<PlayerDeathScreen>();
-            }
-
-            return deathScreen;
         }
 
         private void OnEnable()
         {
+            if (!playerStatsEventsBound && playerStats != null)
+            {
+                playerStats.HealthChanged += HandlePlayerHealthChanged;
+                playerStatsEventsBound = true;
+            }
             LevelUpManager.OnJobChanged += HandleJobChanged;
             LevelUpManager.OnLevelUp += HandleLevelUpVfx;
         }
 
         private void OnDisable()
         {
+            MovementExecutions.CancelAll();
+            if (playerStatsEventsBound && playerStats != null) playerStats.HealthChanged -= HandlePlayerHealthChanged;
+            playerStatsEventsBound = false;
             if (IsBossDisplaced) EndBossDisplacement();
             LevelUpManager.OnJobChanged -= HandleJobChanged;
             LevelUpManager.OnLevelUp -= HandleLevelUpVfx;
@@ -1163,6 +1120,7 @@ namespace Necrocis
 
         private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            MovementExecutions.CancelAll();
             if (IsBossDisplaced) EndBossDisplacement();
             movementControlsReversedUntil = float.NegativeInfinity;
             if (!deathHandled) return;
@@ -1242,14 +1200,6 @@ namespace Necrocis
         // HP 蹂寃?肄쒕갚: ?곕?吏/?뚮났 濡쒓렇 異쒕젰 + HP 0?대㈃ ?щ쭩 泥섎━
         private void HandlePlayerHealthChanged(CharacterStats _, CharacterHealthChangedEventArgs args)
         {
-            if (args.CurrentValue <= 0f && args.PreviousValue > 0f)
-            {
-                if (TryReviveFromSplitRegeneration(args.MaxValue))
-                {
-                    return;
-                }
-            }
-
             if (enableDebugLogs && args.CurrentValue < args.PreviousValue)
             {
                 float damageTaken = args.PreviousValue - args.CurrentValue;
@@ -1261,40 +1211,7 @@ namespace Necrocis
                 Debug.Log($"[Player] 회복 {healed} | HP {args.CurrentValue}/{args.MaxValue}");
             }
 
-            if (!deathHandled && args.CurrentValue <= 0f)
-            {
-                HandleDeath();
-            }
         }
-
-        private bool TryReviveFromSplitRegeneration(float maxHealth)
-        {
-            if (playerStats != null && playerStats.CurrentHealth > 0f)
-            {
-                return true;
-            }
-
-            PlayerItemCombatEffects itemEffects = GetComponent<PlayerItemCombatEffects>();
-            if (itemEffects == null || playerStats == null)
-            {
-                return false;
-            }
-
-            if (!itemEffects.TryConsumeSplitRegeneration(0f, maxHealth, out float reviveHealth))
-            {
-                return false;
-            }
-
-            playerStats.RuntimeStats.RestoreHealth(reviveHealth);
-            Health health = GetComponent<Health>();
-            health?.GrantTemporaryInvincibility(0.5f);
-            if (enableDebugLogs)
-            {
-                Debug.Log($"[Player] 분열 재생 발동 | HP {playerStats.CurrentHealth}/{playerStats.MaxHealth}");
-            }
-            return true;
-        }
-        // Die: ??而댄룷?뚰듃???듭떖 濡쒖쭅???ㅽ뻾?⑸땲??
 
         public void HandleDeath()
         {
@@ -1309,6 +1226,7 @@ namespace Necrocis
         // ?щ쭩 泥섎━: ?대룞/怨듦꺽 鍮꾪솢?깊솕, ?湲??좊땲硫붿씠???꾪솚
         private void Die()
         {
+            MovementExecutions.CancelAll();
             deathHandled = true;
             StopMotion();
             isDashing = false;
@@ -1357,7 +1275,7 @@ namespace Necrocis
             }
 
             isPlayingDeathAnimation = false;
-            EnsureDeathScreen().ShowDeath();
+            DeathPresentationRequested?.Invoke();
             OnPlayerDied?.Invoke();
             deathRoutine = null;
         }

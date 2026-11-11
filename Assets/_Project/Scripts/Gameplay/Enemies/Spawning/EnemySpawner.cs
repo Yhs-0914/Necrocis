@@ -6,7 +6,7 @@ namespace Necrocis
     /// <summary>
     /// 플레이어 근처에서만 적을 활성화하고 리스폰을 관리하는 스포너.
     /// </summary>
-    public class EnemySpawner : MonoBehaviour, IEnemySpawnOwner
+    public partial class EnemySpawner : MonoBehaviour, IEnemySpawnOwner
     {
         private const int SpawnPositionAttempts = 10;       // 스폰 위치 탐색 최대 시도 횟수
         private const float MinSpawnSpacing = 0.75f;       // 적 간 최소 거리 (겹침 방지)
@@ -24,6 +24,9 @@ namespace Necrocis
         private bool initializedWave;            // 초기 웨이브 생성 완료 여부
         private int enemyPoolArchetypeId;        // 풀 분류 ID
         private float nextEvaluationTime;
+        private SpawnPositionRandom spawnRandom;
+        private uint configurationVersion;
+        public EnemySpawnerIdentity Identity { get; private set; }
         private float activationRadiusOverride = -1f;
         private int cachedNormalMinCount = -1;
         private int cachedNormalMaxCount = -1;
@@ -61,8 +64,8 @@ namespace Necrocis
 
         private static WorldDifficultyBalance GetActiveWorldBalance()
         {
-            BiomeType biome = BiomeManager.Active != null
-                ? BiomeManager.Active.BiomeType
+            BiomeType biome = EnemyWorldBindings.Surface != null
+                ? EnemyWorldBindings.Surface.BiomeType
                 : BiomeType.None;
             return DifficultyBalanceService.GetWorldBalance(biome);
         }
@@ -72,10 +75,28 @@ namespace Necrocis
             EnemySpawnRuleConfig config,
             Vector3 anchorPosition,
             float activationRadiusOverride = -1f)
+            => ConfigureWithIdentity(config, anchorPosition, EnemySpawnBindings.CaptureIdentity(config, anchorPosition), activationRadiusOverride);
+
+        public void ConfigureWithIdentity(EnemySpawnRuleConfig config, Vector3 anchorPosition,
+            EnemySpawnerIdentity identity, float activationRadiusOverride = -1f)
+            => ConfigurePlacement(config, anchorPosition, identity, activationRadiusOverride, true);
+
+        public void ConfigureForWorld(EnemySpawnRuleConfig config, Vector3 anchorPosition, float activationRadiusOverride = -1f)
+            => ConfigurePlacement(config, anchorPosition, EnemySpawnBindings.CaptureIdentity(config,anchorPosition), activationRadiusOverride, false);
+
+        private void ConfigurePlacement(EnemySpawnRuleConfig config, Vector3 anchorPosition,
+            EnemySpawnerIdentity identity, float activationRadiusOverride, bool standalone)
         {
+            uint version=++configurationVersion;
+            BindSchedule(null);
             ClearSpawnedEnemies();
+            if(version!=configurationVersion)return;
+            stateStore=null;
+            Identity = identity;
+            spawnRandom = new SpawnPositionRandom(identity.StableHash);
 
             this.config = config;
+            standaloneSchedule=standalone;
             this.anchorPosition = anchorPosition;
             this.activationRadiusOverride = activationRadiusOverride;
             playerTransform = null;
@@ -86,21 +107,21 @@ namespace Necrocis
             cachedNormalMaxCount = -1;
             normalTargetCount = 0;
             enemyPoolArchetypeId = EnemyController.GetPoolArchetypeId(config);
-            int staggerSlot = Mathf.Abs(GetInstanceID() % EvaluationStaggerSlots);
+            int staggerSlot = identity.EvaluationSlot;
             nextEvaluationTime = Time.time + staggerSlot * (EvaluationInterval / EvaluationStaggerSlots);
             enabled = config != null;
+            if(standalone&&config!=null&&schedule==null)BindSchedule(EnemySpawnerClock.Default);
         }
 
         // 매 프레임: 플레이어 거리 확인 → 활성화 범위 내면 스폰, 밖이면 정리
         // 리스폰은 카메라 시야 밖에서만 발생 (플레이어 눈앞에서 갑자기 나타나는 것 방지)
-        private void Update()
+        public void EvaluateSpawn(float now, Transform player)
         {
             if (config == null)
             {
                 return;
             }
 
-            float now = Time.time;
             if (now < nextEvaluationTime)
             {
                 return;
@@ -108,6 +129,7 @@ namespace Necrocis
             nextEvaluationTime = now + EvaluationInterval;
 
             CleanupReleasedEnemies();
+            playerTransform=player;
             EnsurePlayerTransform();
             if (playerTransform == null)
             {
@@ -126,13 +148,15 @@ namespace Necrocis
             float playerDistanceSqr = playerDelta.x * playerDelta.x + playerDelta.z * playerDelta.z;
             if (activationRadius < 0f || playerDistanceSqr > activationRadius * activationRadius)
             {
-                if (activeEnemies.Count > 0)
+                if(!SuspendSpawnedEnemies())
                 {
-                    ClearSpawnedEnemies();
+                    if(activeEnemies.Count>0)ClearSpawnedEnemies();
+                    initializedWave=false;
                 }
-                initializedWave = false;
                 return;
             }
+
+            if(TryResumeStoredGroup())return;
 
             if (!initializedWave)
             {
@@ -162,6 +186,7 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            schedule?.Unregister(this);
             if (ShouldAutoReleaseOnLifecycleEvent())
             {
                 ReleaseSpawnedEnemies();
@@ -170,6 +195,7 @@ namespace Necrocis
 
         private void OnDestroy()
         {
+            schedule?.Unregister(this);
             if (ShouldAutoReleaseOnLifecycleEvent())
             {
                 ReleaseSpawnedEnemies();
@@ -242,14 +268,15 @@ namespace Necrocis
 
             spawnParent = currentSpawnParent;
             EnemyController controller = EnemyController.Acquire(currentSpawnParent, $"{config.name}_{activeEnemies.Count}", enemyPoolArchetypeId);
-            controller.Configure(this, config, anchorPosition, spawnPosition);
+            controller.ConfigureWithContext(this, config, anchorPosition, spawnPosition,
+                EnemySpawnBindings.CaptureForSurface(EnemyWorldBindings.Surface, config, spawnPosition));
             activeEnemies.Add(controller);
             return true;
         }
 
         private bool TryGetSpawnPosition(out Vector3 spawnPosition)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             if (biome == null)
             {
                 spawnPosition = Vector3.zero;
@@ -258,7 +285,7 @@ namespace Necrocis
 
             for (int i = 0; i < SpawnPositionAttempts; i++)
             {
-                Vector2 offset2D = Random.insideUnitCircle * Mathf.Max(0f, config.spawnRadius);
+                Vector2 offset2D = spawnRandom.InsideUnitCircle() * Mathf.Max(0f, config.spawnRadius);
                 Vector3 candidate = anchorPosition + new Vector3(offset2D.x, 0f, offset2D.y);
                 Vector2Int grid = biome.WorldToGrid(candidate);
                 if (!biome.IsValidPosition(grid.x, grid.y) || !biome.IsWalkable(grid.x, grid.y))
@@ -328,12 +355,14 @@ namespace Necrocis
 
         private void ClearSpawnedEnemies()
         {
+            uint version=configurationVersion;
             for (int i = activeEnemies.Count - 1; i >= 0; i--)
             {
                 EnemyController enemy = activeEnemies[i];
                 if (enemy != null)
                 {
                     enemy.ReleaseToPool();
+                    if(this==null||version!=configurationVersion)return;
                 }
             }
 

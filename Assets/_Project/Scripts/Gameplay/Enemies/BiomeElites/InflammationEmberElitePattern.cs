@@ -47,7 +47,7 @@ namespace Necrocis
             if (PlayerController.Instance != null) source.SetPatternFacing(PlayerController.Instance.transform.position - transform.position, false);
             CreateShadow(art); Phase = InflammationEmberPhase.Ready; ShotCount = 0; ActiveThorn = null;
             nextReady = Time.time; hitUntil = 0; LockedDirection = Vector3.zero;
-            source.DamageTaken += OnDamaged; source.Defeated += OnDefeated; enabled = true;
+            source.DamageAccepted += OnDamaged; source.Defeated += OnDefeated; enabled = true;
         }
 
         private void Update()
@@ -65,9 +65,9 @@ namespace Necrocis
             enemy.SetPatternFrame(Time.time < hitUntil ? hit : frames[Mathf.FloorToInt(Time.time / seconds) % frames.Length]);
         }
 
-        private void OnDamaged(EnemyController source, float damage)
+        private void OnDamaged(EnemyController source)
         {
-            if (damage <= 0 || source.IsDead || lifetime == null || !lifetime.IsCurrent(generation)) return;
+            if (source.IsDead || lifetime == null || !lifetime.IsCurrent(generation)) return;
             if (Phase != InflammationEmberPhase.Ready) return; // Extra hits never change a committed pose, timer or direction.
             hitUntil = Time.time + .12f;
             var player = PlayerController.Instance;
@@ -84,9 +84,9 @@ namespace Necrocis
             if (player == null || player.IsDead || enemy.IsOutOfLeash()) return false;
             Vector3 delta = player.transform.position - transform.position; delta.y = 0;
             return delta.sqrMagnitude <= maxDistance * maxDistance
-                && GasSacOrb.IsVisible(transform.position + Vector3.up * .6f)
-                && GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(player.transform.position, thornRadius))
-                && GasSacOrb.HasClearPath(transform.position, player.transform.position);
+                && EnemyWorldBindings.Attacks.IsVisible(transform.position + Vector3.up * .6f)
+                && EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(player.transform.position, thornRadius))
+                && EnemyWorldBindings.Attacks.HasClearPath(transform.position, player.transform.position);
         }
 
         private IEnumerator CounterCycle()
@@ -140,12 +140,12 @@ namespace Necrocis
         {
             if (shadow == null || !shadow.activeSelf) return;
             Vector3 position = transform.position;
-            if (BiomeManager.Active != null) position.y = BiomeManager.Active.GetGroundHeight(position);
+            if (EnemyWorldBindings.Surface != null) position.y = EnemyWorldBindings.Surface.GetGroundHeight(position);
             shadow.transform.position = position + Vector3.up * .035f;
         }
         public override void EndSpawn()
         {
-            if (enemy != null) { enemy.DamageTaken -= OnDamaged; enemy.Defeated -= OnDefeated; enemy.ReleasePatternFacing(); }
+            if (enemy != null) { enemy.DamageAccepted -= OnDamaged; enemy.Defeated -= OnDefeated; enemy.ReleasePatternFacing(); }
             lifetime?.Cancel();
             if (shadow != null) shadow.SetActive(false);
             ActiveThorn = null; Phase = InflammationEmberPhase.Inactive; enabled = false;

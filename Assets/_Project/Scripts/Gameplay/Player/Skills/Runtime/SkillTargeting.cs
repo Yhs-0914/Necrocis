@@ -11,8 +11,9 @@ namespace Necrocis
         private int ApplyAreaSkill(Vector3 center, float radius, Action<EnemyController> apply, float propDamage = 0)
         {
             ResidueRubble.HitArea(center, Mathf.Max(0, radius), Vector3.forward, 180, propDamage, enemyMask, ResidueRubble.NextAttackToken());
-            CollectBodyTargets(center, radius, Vector3.forward, 180);
-            return ApplyBodyTargets(apply, maxAreaSkillHitTargets);
+            using var candidates = ListLease<AreaSkillCandidate>.Rent();
+            CollectBodyTargets(center, radius, Vector3.forward, 180, candidates.Items);
+            return ApplyBodyTargets(candidates.Items, apply, maxAreaSkillHitTargets);
         }
 
         private int ApplyForwardArcSkill(Vector3 center, float radius, float forwardAngle, int maxTargets,
@@ -21,11 +22,12 @@ namespace Necrocis
             Vector3 forward = GetFacingDirection();
             float halfAngle = Mathf.Clamp(forwardAngle * .5f, .5f, 180);
             ResidueRubble.HitArea(center, Mathf.Max(0, radius), forward, halfAngle, propDamage, enemyMask, ResidueRubble.NextAttackToken());
-            CollectBodyTargets(center, radius, forward, halfAngle);
-            return ApplyBodyTargets(apply, Mathf.Min(maxTargets, maxAreaSkillHitTargets));
+            using var candidates = ListLease<AreaSkillCandidate>.Rent();
+            CollectBodyTargets(center, radius, forward, halfAngle, candidates.Items);
+            return ApplyBodyTargets(candidates.Items, apply, Mathf.Min(maxTargets, maxAreaSkillHitTargets));
         }
 
-        private void CollectBodyTargets(Vector3 center, float radius, Vector3 forward, float halfAngle)
+        private void CollectBodyTargets(Vector3 center, float radius, Vector3 forward, float halfAngle, List<AreaSkillCandidate> areaSkillCandidates)
         {
             areaSkillCandidates.Clear();
             var enemies = EnemyController.ActiveEnemyControllers;
@@ -36,26 +38,31 @@ namespace Necrocis
                     || !PlayerAttackGeometry.InArc(center, forward, radius, halfAngle, enemy)) continue;
                 areaSkillCandidates.Add(new AreaSkillCandidate(enemy, PlayerAttackGeometry.DistanceSquared(center, enemy)));
             }
-            areaSkillCandidates.Sort(CompareAreaSkillCandidates);
+            areaSkillCandidates.Sort(AreaSkillComparison);
         }
 
-        private int ApplyBodyTargets(Action<EnemyController> apply, int limit)
+        private int ApplyBodyTargets(List<AreaSkillCandidate> areaSkillCandidates, Action<EnemyController> apply, int limit)
         {
             int count = Mathf.Min(Mathf.Max(1, limit), areaSkillCandidates.Count);
-            for (int i = 0; i < count; i++) apply?.Invoke(areaSkillCandidates[i].Enemy);
+            for (int i = 0; i < count; i++)
+                if (areaSkillCandidates[i].HasNotRespawned) apply?.Invoke(areaSkillCandidates[i].Enemy);
             return count;
         }
 
         private bool TryFindNearestEnemyInForwardArc(Vector3 center, float radius, float forwardAngle, out EnemyController nearestEnemy)
         {
-            CollectBodyTargets(center, radius, GetFacingDirection(), Mathf.Clamp(forwardAngle * .5f, .5f, 180));
+            using var candidates = ListLease<AreaSkillCandidate>.Rent();
+            var areaSkillCandidates = candidates.Items;
+            CollectBodyTargets(center, radius, GetFacingDirection(), Mathf.Clamp(forwardAngle * .5f, .5f, 180), areaSkillCandidates);
             nearestEnemy = areaSkillCandidates.Count > 0 ? areaSkillCandidates[0].Enemy : null;
             return nearestEnemy != null;
         }
 
         private bool TryFindNearestEnemyInRadius(Vector3 center, float radius, out EnemyController nearestEnemy)
         {
-            CollectBodyTargets(center, radius, Vector3.forward, 180);
+            using var candidates = ListLease<AreaSkillCandidate>.Rent();
+            var areaSkillCandidates = candidates.Items;
+            CollectBodyTargets(center, radius, Vector3.forward, 180, areaSkillCandidates);
             nearestEnemy = areaSkillCandidates.Count > 0 ? areaSkillCandidates[0].Enemy : null;
             return nearestEnemy != null;
         }

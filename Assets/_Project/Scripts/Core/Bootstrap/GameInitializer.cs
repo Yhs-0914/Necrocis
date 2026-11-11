@@ -115,23 +115,7 @@ namespace Necrocis
                 playerObj.transform.position = spawnPos;
                 playerObj.tag = "Player";
 
-                // 컴포넌트 추가
-                player = playerObj.AddComponent<PlayerController>();
-
-                // 콜라이더
-                CapsuleCollider col = playerObj.AddComponent<CapsuleCollider>();
-                col.height = 2f;
-                col.radius = 0.5f;
-                col.center = new Vector3(0, 1f, 0);
-
-                // Rigidbody (물리 드리프트 완전 방지)
-                Rigidbody rb = playerObj.AddComponent<Rigidbody>();
-                rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
-                rb.useGravity = false;
-                rb.linearDamping = 10f;        // 높은 감쇠로 드리프트 방지
-                rb.angularDamping = 10f;
-                rb.interpolation = RigidbodyInterpolation.Interpolate;
-                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                player = PlayerCompositionRoot.EnsureGameplay(playerObj).GetComponent<PlayerController>();
             }
 
             // 필수 컴포넌트 보장 (프리팹/기존 플레이어에도 적용)
@@ -145,44 +129,9 @@ namespace Necrocis
         /// </summary>
         private void EnsurePlayerComponents(GameObject playerObj)
         {
-            if (playerObj.GetComponent<PlayerAttack>() == null)
-                playerObj.AddComponent<PlayerAttack>();
-
-            if (playerObj.GetComponent<PlayerItemManager>() == null)
-                playerObj.AddComponent<PlayerItemManager>();
-
-            if (playerObj.GetComponent<PlayerItemPickupNotifier>() == null)
-                playerObj.AddComponent<PlayerItemPickupNotifier>();
-
-            if (playerObj.GetComponent<PlayerItemTestPanel>() == null)
-                playerObj.AddComponent<PlayerItemTestPanel>();
-
-            if (playerObj.GetComponent<PlayerClassSkillController>() == null)
-                playerObj.AddComponent<PlayerClassSkillController>();
-
-            if (playerObj.GetComponent<Health>() == null)
-                playerObj.AddComponent<Health>();
-
-            if (playerObj.GetComponent<PlayerStats>() == null)
-                playerObj.AddComponent<PlayerStats>();
-
-            if (playerObj.GetComponent<ExpBarUI>() == null)
-                playerObj.AddComponent<ExpBarUI>();
-
-            if (playerObj.GetComponent<PlayerHeartUI>() == null)
-                playerObj.AddComponent<PlayerHeartUI>();
-
-            if (playerObj.GetComponent<PlayerDeathScreen>() == null)
-                playerObj.AddComponent<PlayerDeathScreen>();
-
-            if (playerObj.GetComponent<global::LevelUpStackChoiceUI>() == null)
-                playerObj.AddComponent<global::LevelUpStackChoiceUI>();
-
-            if (playerObj.GetComponent<LevelUpUI>() == null)
-                playerObj.AddComponent<LevelUpUI>();
-
-            if (playerObj.GetComponent<StatUI>() == null)
-                playerObj.AddComponent<StatUI>();
+            var root = PlayerCompositionRoot.EnsureGameplay(playerObj);
+            root.InstallHud(true);
+            root.InstallDevelopmentTools();
         }
 
         /// <summary>
@@ -196,7 +145,7 @@ namespace Necrocis
             {
                 if (player != null)
                 {
-                    mainCamera.SetTarget(player.transform);
+                    PlayerCompositionRoot.EnsureGameplay(player.gameObject).BindCamera(mainCamera, false);
                 }
                 return;
             }
@@ -231,8 +180,7 @@ namespace Necrocis
             // 타겟 설정
             if (player != null)
             {
-                mainCamera.SetTarget(player.transform);
-                mainCamera.SnapToTarget();
+                PlayerCompositionRoot.EnsureGameplay(player.gameObject).BindCamera(mainCamera, true);
             }
 
             Debug.Log("[GameInitializer] 카메라 생성 완료");

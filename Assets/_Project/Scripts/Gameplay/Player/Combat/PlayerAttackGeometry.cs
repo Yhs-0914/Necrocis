@@ -20,15 +20,29 @@ namespace Necrocis
         public static bool Eligible(EnemyController enemy, LayerMask mask)
         {
             if (enemy == null || enemy.IsDead || !enemy.gameObject.activeInHierarchy) return false;
+            var receiving=enemy.GetComponent<EnemyReceivingShape>();
+            if(receiving!=null && receiving.HasCustom){int n=receiving.ShapeCount;for(int i=0;i<n;i++)if(receiving.IsEnabled(i,mask))return true;return false;}
             var collider = enemy.GetComponent<Collider>();
             return collider != null && collider.enabled && (mask.value & (1 << collider.gameObject.layer)) != 0;
         }
-        public static float DistanceSquared(Vector3 center, EnemyController enemy) => CombatHitGeometry.PointRectDistanceSquared(CombatHitGeometry.Flat(center), CombatHitGeometry.EnemyBodyBounds(enemy));
+        public static float DistanceSquared(Vector3 center, EnemyController enemy)
+        {
+            var receiving=enemy.GetComponent<EnemyReceivingShape>();
+            if(receiving==null || !receiving.HasCustom)return CombatHitGeometry.PointRectDistanceSquared(CombatHitGeometry.Flat(center),CombatHitGeometry.EnemyBodyBounds(enemy));
+            float distance=float.PositiveInfinity;int n=receiving.ShapeCount;
+            for(int i=0;i<n;i++)if(receiving.IsEnabled(i,~0))distance=Mathf.Min(distance,CombatHitGeometry.PointRectDistanceSquared(CombatHitGeometry.Flat(center),receiving.GetBounds(i)));
+            return distance;
+        }
         public static bool InCircle(Vector3 center, float radius, EnemyController enemy) => DistanceSquared(center, enemy) <= Mathf.Pow(Mathf.Max(0, radius) + Padding, 2);
         public static bool InArc(Vector3 center, Vector3 forward, float radius, float halfAngle, EnemyController enemy)
         {
             if (halfAngle >= 179.99f) return InCircle(center, radius, enemy);
-            Bounds body = CombatHitGeometry.EnemyBodyBounds(enemy);
+            var receiving=enemy.GetComponent<EnemyReceivingShape>();
+            if(receiving!=null && receiving.HasCustom){int n=receiving.ShapeCount;for(int i=0;i<n;i++)if(receiving.IsEnabled(i,~0) && InArcBounds(center,forward,radius,halfAngle,receiving.GetBounds(i)))return true;return false;}
+            return InArcBounds(center,forward,radius,halfAngle,CombatHitGeometry.EnemyBodyBounds(enemy));
+        }
+        private static bool InArcBounds(Vector3 center,Vector3 forward,float radius,float halfAngle,Bounds body)
+        {
             Vector2 origin = CombatHitGeometry.Flat(center), aim = CombatHitGeometry.Flat(forward).normalized;
             if (aim.sqrMagnitude < .0001f) aim = Vector2.up;
             float r = Mathf.Max(0, radius), cos = Mathf.Cos(Mathf.Clamp(halfAngle, .5f, 180) * Mathf.Deg2Rad);
@@ -47,7 +61,13 @@ namespace Necrocis
         }
         public static bool InBox(Vector3 center, Vector3 halfSize, Quaternion rotation, EnemyController enemy)
         {
-            Bounds b = CombatHitGeometry.EnemyBodyBounds(enemy); Vector2 delta = CombatHitGeometry.Flat(b.center - center);
+            var receiving=enemy.GetComponent<EnemyReceivingShape>();
+            if(receiving!=null && receiving.HasCustom){int n=receiving.ShapeCount;for(int i=0;i<n;i++)if(receiving.IsEnabled(i,~0) && InBoxBounds(center,halfSize,rotation,receiving.GetBounds(i)))return true;return false;}
+            return InBoxBounds(center,halfSize,rotation,CombatHitGeometry.EnemyBodyBounds(enemy));
+        }
+        private static bool InBoxBounds(Vector3 center,Vector3 halfSize,Quaternion rotation,Bounds b)
+        {
+            Vector2 delta = CombatHitGeometry.Flat(b.center - center);
             Vector2 right = CombatHitGeometry.Flat(rotation * Vector3.right).normalized, forward = CombatHitGeometry.Flat(rotation * Vector3.forward).normalized;
             float x = halfSize.x + Padding, z = halfSize.z + Padding;
             bool Separated(Vector2 axis) => Mathf.Abs(Vector2.Dot(delta, axis)) > x * Mathf.Abs(Vector2.Dot(right, axis)) + z * Mathf.Abs(Vector2.Dot(forward, axis))

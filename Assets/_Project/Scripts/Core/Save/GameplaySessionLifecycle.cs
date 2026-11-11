@@ -7,7 +7,8 @@ namespace Necrocis
     {
         public static void EndGameplaySession()
         {
-            Time.timeScale = 1f;
+            InputManager.ExistingInstance?.PrepareForSessionEnd();
+            InputManager.ResetSessionClock();
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 

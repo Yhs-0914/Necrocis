@@ -30,12 +30,12 @@ namespace Necrocis
             // Direction data adjusts the ground origin, never the thorn's low flight height.
             Vector3 origin = owner.GetPatternVisualOrigin(); origin.y = owner.transform.position.y;
             Vector3 launch = origin + direction * (bodyExtent + radius);
-            if (BiomeManager.Active != null) launch.y = BiomeManager.Active.GetGroundHeight(launch);
+            if (EnemyWorldBindings.Surface != null) launch.y = EnemyWorldBindings.Surface.GetGroundHeight(launch);
             Vector3 side = new Vector3(-direction.z, 0, direction.x) * radius;
             Vector3 tip = launch + direction * (length * .5f);
-            if (!GasSacOrb.HasClearPath(owner.transform.position, tip)
-                || !GasSacOrb.HasClearPath(owner.transform.position + side, tip + side)
-                || !GasSacOrb.HasClearPath(owner.transform.position - side, tip - side)) return null;
+            if (!EnemyWorldBindings.Attacks.HasClearPath(owner.transform.position, tip)
+                || !EnemyWorldBindings.Attacks.HasClearPath(owner.transform.position + side, tip + side)
+                || !EnemyWorldBindings.Attacks.HasClearPath(owner.transform.position - side, tip - side)) return null;
             var go = new GameObject("H02_CounterThorn"); go.transform.position = launch;
             var thorn = go.AddComponent<EmberThorn>();
             thorn.lifetime = lifetime; thorn.generation = generation; thorn.damage = damage;
@@ -67,13 +67,13 @@ namespace Necrocis
                 Vector3 point = Vector3.Lerp(start, end, i / (float)steps), previous = transform.position;
                 Vector3 rear = previous - direction * halfLine, tip = point + direction * halfLine;
                 Vector3 terrainRear = previous - direction * (length * .5f), terrainTip = point + direction * (length * .5f);
-                if (!GasSacOrb.HasClearPath(terrainRear, terrainTip) || !GasSacOrb.HasClearPath(terrainRear + side, terrainTip + side)
-                    || !GasSacOrb.HasClearPath(terrainRear - side, terrainTip - side) || !GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(point, FlightHeight)))
+                if (!EnemyWorldBindings.Attacks.HasClearPath(terrainRear, terrainTip) || !EnemyWorldBindings.Attacks.HasClearPath(terrainRear + side, terrainTip + side)
+                    || !EnemyWorldBindings.Attacks.HasClearPath(terrainRear - side, terrainTip - side) || !EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(point, FlightHeight)))
                 { Despawn(); return; }
                 transform.position = point;
-                if (player != null && !player.IsDead && !MidBossArenaController.IsPlayerInsideLockedArena(player.transform.position)
-                    && GasSacOrb.HasClearPath(point, player.transform.position)
-                    && GasSacOrb.SweepTouchesPlayer(rear, tip, radius, player))
+                if (player != null && !player.IsDead && !EnemyWorldBindings.Encounters.IsInsideLockedArena(player.transform.position)
+                    && EnemyWorldBindings.Attacks.HasClearPath(point, player.transform.position)
+                    && CombatHitGeometry.SweepTouchesPlayer(rear, tip, radius, player))
                 { player.TakeDamage(damage); Despawn(); return; }
             }
             UpdateVisual(); if (remaining <= 0) Despawn();
@@ -82,7 +82,7 @@ namespace Necrocis
         private void UpdateVisual()
         {
             body.sprite = frames[Mathf.FloorToInt(elapsed / frameSeconds) % frames.Length];
-            body.transform.position = GasSacOrb.GetFlightPosition(transform.position, FlightHeight);
+            body.transform.position = EnemyWorldBindings.Attacks.GetFlightPosition(transform.position, FlightHeight);
             Camera camera = DontStarveCamera.GetActiveCamera();
             // Keep the long axis on the actual flight plane. Rotating a full billboard lets long tips pierce the floor.
             Vector3 up = Vector3.Cross(camera != null ? camera.transform.forward : Vector3.down, direction);

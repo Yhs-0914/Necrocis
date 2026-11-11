@@ -5,26 +5,26 @@ using UnityEngine.UI;
 namespace Necrocis
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerItemManager))]
     public class PlayerItemPickupNotifier : MonoBehaviour
     {
         [SerializeField] private float messageDuration = 2.2f;
         [SerializeField] private int fontSize = 28;
 
-        private PlayerItemManager itemManager;
+        private IInventoryDisplay itemManager;
+        private bool HasItems=>itemManager?.Owner!=null;
         private GameObject canvasObject;
         private Text messageText;
         private Coroutine hideRoutine;
 
         private void Awake()
         {
-            itemManager = GetComponent<PlayerItemManager>();
+            itemManager = PlayerDisplayBindings.Inventory(gameObject);
             EnsureUi();
         }
 
         private void OnEnable()
         {
-            if (itemManager != null)
+            if (HasItems)
             {
                 itemManager.ItemAcquired += HandleItemAcquired;
             }
@@ -32,15 +32,15 @@ namespace Necrocis
 
         private void OnDisable()
         {
-            if (itemManager != null)
+            if (HasItems)
             {
                 itemManager.ItemAcquired -= HandleItemAcquired;
             }
         }
 
-        private void HandleItemAcquired(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem item)
+        private void HandleItemAcquired(IInventoryItemView item)
         {
-            if (item == null || (itemManager != null && itemManager.IsRestoringSavedItems))
+            if (item == null || (HasItems && itemManager.IsRestoringSavedItems))
             {
                 return;
             }

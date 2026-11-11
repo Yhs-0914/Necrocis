@@ -247,15 +247,15 @@ namespace Necrocis
         private void SyncHeight()
         {
             if (config == null) return;
-            BiomeManager biome = BiomeManager.Active;
-            if (biome == null) return;
+            IEnemyWorldQueries world = WorldQueries;
+            if (world == null || !world.HasTerrain) return;
 
             Vector3 position = GetCurrentPosition();
-            Vector2Int grid = biome.WorldToGrid(position);
+            Vector2Int grid = world.WorldToCell(position);
             if (!hasCachedGroundHeight || grid != cachedGroundGrid)
             {
                 cachedGroundGrid = grid;
-                cachedGroundHeight = biome.GetGroundHeight(grid.x, grid.y) + config.heightOffset;
+                cachedGroundHeight = world.GetGroundHeight(grid) + config.heightOffset;
                 hasCachedGroundHeight = true;
             }
 

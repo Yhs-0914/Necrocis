@@ -5,10 +5,14 @@ namespace Necrocis
     public partial class EnemyController
     {
         public MonsterBalanceRuntime Balance { get; private set; }
+        public EnemySpawnContext SpawnContext { get; private set; }
+        public EnemyEncounterRole EncounterRole { get; private set; }
+        public IEnemyWorldQueries WorldQueries => SpawnContext.WorldQueries;
         public uint SpawnGeneration { get; private set; }
         private bool experienceGranted;
         public bool PatternOwnsContact { get; set; }
         public bool SuppressExperienceReward { get; set; }
+
         private readonly object playerLevelHealthSource = new object();
         private int healthScalingPlayerLevel = -1;
         private float playerLevelHealthMultiplier = 1f;
@@ -75,7 +79,7 @@ namespace Necrocis
             : seconds * Mathf.Max(0.01f, DifficultyBalanceService.GetEnemyBalance(IsBossEncounter).attackCooldown);
 
         public EnemyDamageRequest CreateAttackDamage(float amount) => new EnemyDamageRequest(
-            Balance != null ? amount : ResolveLegacyDamage(amount), this);
+            Balance != null ? amount : ResolveLegacyDamage(amount), this, GetHealthEffectSource("attack"));
 
         private float ResolveLegacyDamage(float amount)
         {
@@ -90,11 +94,11 @@ namespace Necrocis
             float amount = Balance != null
                 ? stats.AttackPower * Balance.GetCoefficient(id)
                 : ResolveLegacyDamage(legacyDamage);
-            return new EnemyDamageRequest(amount, this);
+            return new EnemyDamageRequest(amount, this, GetHealthEffectSource("pattern/" + id));
         }
 
-        public EnemyDamageRequest CreateContactDamage(float legacyDamage) => Balance != null
-            ? new EnemyDamageRequest(Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f, this)
-            : CreateAttackDamage(legacyDamage);
+        public EnemyDamageRequest CreateContactDamage(float legacyDamage) => new EnemyDamageRequest(
+            Balance != null ? (Balance.ContactEnabled ? stats.AttackPower * Balance.ContactCoefficient : 0f)
+                : ResolveLegacyDamage(legacyDamage), this, GetHealthEffectSource("contact"));
     }
 }

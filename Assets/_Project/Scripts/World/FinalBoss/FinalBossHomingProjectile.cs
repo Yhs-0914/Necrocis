@@ -11,6 +11,7 @@ namespace Necrocis
 
         private Vector3 direction;
         private float damage;
+        private HealthEffectSource damageSource;
         private float speed;
         private float turnSpeed;
         private float lifeTime;
@@ -31,7 +32,8 @@ namespace Necrocis
             float moveSpeed,
             float turnRate,
             float duration,
-            string spriteResource = null)
+            string spriteResource = null,
+            string effectId = "homing-cell")
         {
             GameObject go = new GameObject("FinalBoss_HomingCell");
             go.transform.SetParent(parent, true);
@@ -52,6 +54,7 @@ namespace Necrocis
                 : Vector3.back;
             projectile.direction.y = 0f;
             projectile.damage = Mathf.Max(0f, hitDamage);
+            projectile.damageSource = FinalBossArena.CreateHealthEffectSource(effectId);
             projectile.speed = Mathf.Max(.1f, moveSpeed);
             projectile.turnSpeed = Mathf.Max(0f, turnRate);
             projectile.lifeTime = Mathf.Max(.1f, duration);
@@ -168,7 +171,7 @@ namespace Necrocis
             if (elapsed >= lifeTime - .45f
                 || RelativeSegmentDistanceSquared(relativeStart, relativeEnd) > .62f * .62f) return;
 
-            player.TakeDamage(FinalBossArena.CreateDamage(damage));
+            player.TakeDamage(FinalBossArena.CreateDamage(damage, damageSource));
             Destroy(gameObject);
         }
 

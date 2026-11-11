@@ -38,8 +38,7 @@ namespace Necrocis
         private Sprite panelSprite;
         private Sprite cardSprite;
         private bool isOpen;
-        private bool ownsPause;
-        private float previousTimeScale = 1f;
+        private ModalInputScope inputScope;
         private string replacementItemId;
         private Action replacementCollected;
         private Text replacementHint;
@@ -52,7 +51,8 @@ namespace Necrocis
 
         public bool RequestReward(IReadOnlyList<string> options, Action<string> onSelected, bool requireSelection = false)
         {
-            if (isOpen || itemManager == null || options == null || Time.timeScale <= 0f) return false;
+            if (isOpen || itemManager == null || options == null || Time.timeScale <= 0f
+                || InputManager.Instance?.Contexts.CanOpenAuxiliary != true) return false;
             var valid = new List<string>();
             foreach (string id in options)
                 if (itemManager.CanAcquireItem(id) && !valid.Contains(id)) valid.Add(id);
@@ -129,7 +129,8 @@ namespace Necrocis
         {
             TryOpenStartingReward();
             InputManager input = InputManager.Instance;
-            if (!requiresRewardSelection && input != null && input.InventoryAction.WasPressedThisFrame())
+            if (!requiresRewardSelection && input != null && input.InventoryAction.WasPressedThisFrame()
+                && (isOpen ? inputScope?.CanInteract == true : input.Contexts.CanOpenAuxiliary))
             {
                 SetOpen(!isOpen);
             }
@@ -169,7 +170,7 @@ namespace Necrocis
         public void SetOpen(bool open)
         {
             if (!open && requiresRewardSelection) return;
-            if (isOpen == open)
+            if (isOpen == open || open && InputManager.Instance?.Contexts.CanOpenAuxiliary != true)
             {
                 return;
             }
@@ -207,7 +208,7 @@ namespace Necrocis
 
         private void DiscardItem(string itemId)
         {
-            if (itemManager == null || string.IsNullOrWhiteSpace(itemId))
+            if (inputScope?.CanInteract != true || itemManager == null || string.IsNullOrWhiteSpace(itemId))
             {
                 return;
             }
@@ -230,7 +231,7 @@ namespace Necrocis
 
         private void SelectReward(string itemId)
         {
-            if (rewardOptions == null || !rewardOptions.Contains(itemId)) return;
+            if (inputScope?.CanInteract != true || rewardOptions == null || !rewardOptions.Contains(itemId)) return;
             Action<string> selected = rewardSelected;
             if (!itemManager.TryAcquireItem(itemId, out _)) return;
             requiresRewardSelection = false;
@@ -241,30 +242,12 @@ namespace Necrocis
 
         private void PauseGame()
         {
-            ownsPause = false;
-            if (!pauseGameWhileOpen || Time.timeScale <= Mathf.Epsilon)
-            {
-                return;
-            }
-
-            previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-            ownsPause = true;
+            inputScope ??= new ModalInputScope(this, canvasObject, pauseGameWhileOpen, () => SetOpen(false));
         }
 
         private void RestoreTimeScale()
         {
-            if (!ownsPause)
-            {
-                return;
-            }
-
-            if (Time.timeScale <= Mathf.Epsilon)
-            {
-                Time.timeScale = previousTimeScale;
-            }
-
-            ownsPause = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         private void BuildUi()
@@ -324,7 +307,7 @@ namespace Necrocis
                 new Vector2(52f, 46f),
                 "×",
                 new Color(0.32f, 0.085f, 0.12f, 0.96f));
-            closeButton.onClick.AddListener(() => SetOpen(false));
+            closeButton.onClick.AddListener(() => { if (inputScope?.CanInteract == true) SetOpen(false); });
 
             GameObject scrollObject = CreateUiObject("ItemScroll", panel.transform);
             SetRect(scrollObject.GetComponent<RectTransform>(), new Vector2(0f, -22f), new Vector2(1190f, 520f));

@@ -10,8 +10,9 @@ namespace Necrocis
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterStats))]
-    public class PlayerStats : MonoBehaviour
+    public class PlayerStats : MonoBehaviour, IPlayerGrowthRecipient, IItemStatRecipient
     {
+        public bool IsAvailable => this != null;
         private static PlayerStats instance;
 
         public static PlayerStats Instance
@@ -35,6 +36,29 @@ namespace Necrocis
 
         private CharacterStats runtimeStats; // 실제 스탯 데이터를 관리하는 CharacterStats 컴포넌트
         private bool initialized;             // 기본 스탯 초기화 완료 여부
+
+        private uint healthEffectGeneration;
+        public HealthEffectSource GetHealthEffectSource(string effectId, string persistenceKey = null)
+            => HealthEffectSource.ForOwner(this, effectId, healthEffectGeneration, persistenceKey);
+
+        internal void BeginHealthLifetime()
+        {
+            RuntimeStats.BeginHealthLifetime();
+            AdvanceHealthEffectGeneration();
+        }
+
+        internal void AdvanceHealthEffectGeneration() => healthEffectGeneration++;
+
+        public HealthEffectSource? ResolvePersistentHealthEffectSource(string key)
+        {
+            switch (key)
+            {
+                case "player:legacy-heal": return GetHealthEffectSource("legacy-heal", key);
+                case "player:legacy-damage": return GetHealthEffectSource("legacy-damage", key);
+                case "player:level-growth": return GetHealthEffectSource("level-growth", key);
+                default: return null;
+            }
+        }
 
         // CharacterStats의 이벤트를 외부에 전달 (중계 패턴)
         public event Action<CharacterStats, CharacterStatChangedEventArgs> StatChanged
@@ -61,7 +85,6 @@ namespace Necrocis
                     if (runtimeStats == null)
                         runtimeStats = gameObject.AddComponent<CharacterStats>();
                 }
-                runtimeStats.UseWholeHealthUnits();
                 return runtimeStats;
             }
         }
@@ -105,13 +128,7 @@ namespace Necrocis
 
         private void ApplyDefaultBaseStats(bool resetCurrentHealth)
         {
-            CharacterStatValue[] baseStats = LevelUpManager.Config.BuildPlayerBaseStats();
-            for (int index = 0; index < baseStats.Length; index++)
-            {
-                CharacterStatValue value = baseStats[index];
-                value.value *= DifficultyBalanceService.GetPlayerBaseStatMultiplier(value.statType);
-                baseStats[index] = value;
-            }
+            CharacterStatValue[] baseStats = ProgressionPolicyBindings.BuildPlayerBaseStats();
 
             RuntimeStats.ConfigureBaseStats(baseStats, resetCurrentHealth);
         }
@@ -163,10 +180,9 @@ namespace Necrocis
             EnsureInitialized();
             LevelUpStatEffect effect = LevelUpStatCatalog.GetStatEffect(choice);
             float previousMaxHealth = RuntimeStats.MaxHealth;
-            PlayerItemManager inventory = GetComponent<PlayerItemManager>();
+            var inventory = GetComponent<PlayerItemManager>();
             int growthMultiplier = LevelUpManager.Config.bioGambleEnabled && inventory != null
-                && inventory.ContainsItem(PlayerItemCombatEffects.BioGambleId)
-                ? LevelUpManager.Config.RollGrowthMultiplier() : 1;
+                && inventory.ContainsItem(PlayerItemIds.BioGambleId) ? LevelUpManager.Config.RollGrowthMultiplier() : 1;
 
             // 고정값 모디파이어 적용 (예: 공격력 +3)
             foreach (var stat in effect.flatStats)
@@ -187,7 +203,7 @@ namespace Necrocis
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value * growthMultiplier / 100f,
+                    stat.Value * growthMultiplier / 100f, // UI에선 3%로 표시, 내부적으론 0.03
                     CharacterStatModifierMode.PercentAdd,
                     choice);
                 LevelUpManager.RecordResolvedModifier(
@@ -199,7 +215,7 @@ namespace Necrocis
             float maxHealthIncrease = RuntimeStats.MaxHealth - previousMaxHealth;
             if (maxHealthIncrease > 0f)
             {
-                RuntimeStats.RestoreHealth(maxHealthIncrease);
+                RuntimeStats.RestoreHealth(maxHealthIncrease, GetHealthEffectSource("level-growth", "player:level-growth"));
             }
         }
 
@@ -240,8 +256,10 @@ namespace Necrocis
         // HP 위임
         // ─────────────────────────────────
 
-        public void TakeDamage(float damage) => RuntimeStats.ApplyDamage(damage);
-        public void Heal(float amount) => RuntimeStats.RestoreHealth(amount);
+        public void TakeDamage(float damage) => RuntimeStats.ApplyDamage(damage, GetHealthEffectSource("legacy-damage", "player:legacy-damage"));
+        public void TakeDamage(float damage, HealthEffectSource source) => RuntimeStats.ApplyDamage(damage, source);
+        public void Heal(float amount) => Heal(amount, GetHealthEffectSource("legacy-heal", "player:legacy-heal"));
+        public void Heal(float amount, HealthEffectSource source) => SaveService.RecordPlayerHealing(RuntimeStats.RestoreHealth(amount, source));
 
         // ─────────────────────────────────
         // 모디파이어 API (아이템/버프용)

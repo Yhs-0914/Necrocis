@@ -36,13 +36,7 @@ namespace Necrocis
         private Text statusText;
         private bool isOpen;
         private bool isBusy;
-        private float previousTimeScale = 1f;
-        private PlayerController pausedPlayer;
-        private PlayerAttack pausedAttack;
-        private PlayerClassSkillController pausedSkills;
-        private bool playerWasEnabled;
-        private bool attackWasEnabled;
-        private bool skillsWereEnabled;
+        private ModalInputScope inputScope;
 
         public bool IsOpen => isOpen;
         public GameObject PauseOverlay => pauseOverlay;
@@ -62,7 +56,7 @@ namespace Necrocis
         {
             if (string.Equals(
                     SceneManager.GetActiveScene().name,
-                    SceneLoader.SCENE_MAIN_MENU,
+                    SceneNames.MainMenu,
                     System.StringComparison.Ordinal)
                 || instance != null
                 || Object.FindFirstObjectByType<InGameAudioSettings>() != null)
@@ -98,41 +92,33 @@ namespace Necrocis
                 instance = null;
             }
 
-            if (isOpen)
-            {
-                Time.timeScale = previousTimeScale;
-                RestoreGameplayInput();
-            }
+            inputScope?.Dispose(); inputScope = null;
+        }
+
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+            HideMenu();
         }
 
         private void Update()
         {
-            if (isBusy || Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
-                return;
-            }
+            if (SceneManager.GetActiveScene().name == SceneNames.MainMenu) return;
+            InputManager input = InputManager.Instance;
+            if (!input.MenuBackAction.WasPressedThisFrame()) return;
+            if (!input.Contexts.DispatchEscape(Time.frameCount) && input.Contexts.CanOpenAuxiliary) OpenMenu();
+        }
 
-            if (settingsOverlay != null && settingsOverlay.activeSelf)
-            {
-                CloseSettings();
-                return;
-            }
-
-            if (isOpen)
-            {
-                CloseMenu();
-                return;
-            }
-
-            if (Time.timeScale > 0f)
-            {
-                OpenMenu();
-            }
+        private void HandleMenuBack()
+        {
+            if (isBusy) return;
+            if (settingsOverlay != null && settingsOverlay.activeSelf) CloseSettings();
+            else CloseMenu();
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (string.Equals(scene.name, SceneLoader.SCENE_MAIN_MENU, System.StringComparison.Ordinal))
+            if (string.Equals(scene.name, SceneNames.MainMenu, System.StringComparison.Ordinal))
             {
                 Destroy(gameObject);
             }
@@ -140,14 +126,11 @@ namespace Necrocis
 
         public void OpenMenu()
         {
-            if (isOpen || isBusy || pauseOverlay == null)
+            if (isOpen || isBusy || pauseOverlay == null || !InputManager.Instance.Contexts.CanOpenAuxiliary)
             {
                 return;
             }
 
-            previousTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-            CacheAndDisableGameplayInput();
             isOpen = true;
             statusText.text = string.Empty;
             settingsOverlay.SetActive(false);
@@ -156,27 +139,32 @@ namespace Necrocis
             pauseGroup.blocksRaycasts = true;
             AudioManager.Instance?.PlaySFX("SettingsOpen");
             continueButton?.Select();
+            inputScope = new ModalInputScope(this, canvasObject, true, HandleMenuBack);
         }
 
         public void CloseMenu()
         {
-            if (!isOpen || isBusy)
+            if (!isOpen || isBusy || inputScope?.CanInteract != true)
             {
                 return;
             }
 
-            GameSettings.Save();
-            pauseOverlay.SetActive(false);
-            settingsOverlay.SetActive(false);
-            isOpen = false;
-            Time.timeScale = previousTimeScale;
-            RestoreGameplayInput();
+            SessionActionBindings.Menu.SaveSettings();
+            HideMenu();
             AudioManager.Instance?.PlaySFX("UIClose");
+        }
+
+        private void HideMenu()
+        {
+            if (pauseOverlay != null) pauseOverlay.SetActive(false);
+            if (settingsOverlay != null) settingsOverlay.SetActive(false);
+            isOpen = false; isBusy = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         private void OpenSettings()
         {
-            if (!isOpen || isBusy)
+            if (!isOpen || isBusy || inputScope?.CanInteract != true)
             {
                 return;
             }
@@ -189,12 +177,12 @@ namespace Necrocis
 
         private void CloseSettings()
         {
-            if (!isOpen || isBusy || settingsOverlay == null || !settingsOverlay.activeSelf)
+            if (!isOpen || isBusy || inputScope?.CanInteract != true || settingsOverlay == null || !settingsOverlay.activeSelf)
             {
                 return;
             }
 
-            GameSettings.Save();
+            SessionActionBindings.Menu.SaveSettings();
             settingsOverlay.SetActive(false);
             pauseOverlay.SetActive(true);
             AudioManager.Instance?.PlaySFX("UIClose");
@@ -203,7 +191,7 @@ namespace Necrocis
 
         private void SaveAndReturnToMainMenu()
         {
-            if (!isBusy)
+            if (!isBusy && inputScope?.CanInteract == true)
             {
                 StartCoroutine(SaveAndReturnRoutine());
             }
@@ -214,45 +202,38 @@ namespace Necrocis
             SetBusy(true, "저장 중...");
             yield return null;
 
-            if (!SaveService.TrySaveActiveRun(out string error))
+            if (!SessionActionBindings.Menu.TrySaveBeforeExit(out string error))
             {
                 SetBusy(false, $"저장 실패: {error}");
                 AudioManager.Instance?.PlaySFX("UIInvalid");
                 yield break;
             }
 
-            GameSettings.Save();
+            SessionActionBindings.Menu.SaveSettings();
             statusText.text = "저장 완료";
             AudioManager.Instance?.PlaySFX("UISelect");
             yield return new WaitForSecondsRealtime(0.15f);
-            Time.timeScale = 1f;
-            GameplaySessionLifecycle.LoadMainMenu();
+            SessionActionBindings.Menu.LoadMainMenu();
         }
 
         private void SaveAndQuit()
         {
-            if (isBusy)
+            if (isBusy || inputScope?.CanInteract != true)
             {
                 return;
             }
 
             SetBusy(true, "저장 중...");
-            if (!SaveService.TrySaveActiveRun(out string error))
+            if (!SessionActionBindings.Menu.TrySaveBeforeExit(out string error))
             {
                 SetBusy(false, $"저장 실패: {error}");
                 AudioManager.Instance?.PlaySFX("UIInvalid");
                 return;
             }
 
-            GameSettings.Save();
+            SessionActionBindings.Menu.SaveSettings();
             statusText.text = "저장 완료";
-            Time.timeScale = 1f;
-            Debug.Log("[PauseMenu] 저장 후 게임 종료 요청");
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+            SessionActionBindings.Menu.Quit();
         }
 
         private void SetBusy(bool busy, string message)
@@ -487,53 +468,6 @@ namespace Necrocis
         private Text CreateText(string objectName, Transform parent, string value, int fontSize, Color color)
         {
             return RuntimeUiFactory.CreateText(objectName, parent, value, menuFont, fontSize, color);
-        }
-
-        private void CacheAndDisableGameplayInput()
-        {
-            pausedPlayer = PlayerController.Instance;
-            if (pausedPlayer == null)
-            {
-                return;
-            }
-
-            pausedAttack = pausedPlayer.GetComponent<PlayerAttack>();
-            pausedSkills = pausedPlayer.GetComponent<PlayerClassSkillController>();
-            playerWasEnabled = pausedPlayer.enabled;
-            attackWasEnabled = pausedAttack != null && pausedAttack.enabled;
-            skillsWereEnabled = pausedSkills != null && pausedSkills.enabled;
-            pausedPlayer.enabled = false;
-            if (pausedAttack != null)
-            {
-                pausedAttack.enabled = false;
-            }
-
-            if (pausedSkills != null)
-            {
-                pausedSkills.enabled = false;
-            }
-        }
-
-        private void RestoreGameplayInput()
-        {
-            if (pausedPlayer != null)
-            {
-                pausedPlayer.enabled = playerWasEnabled;
-            }
-
-            if (pausedAttack != null)
-            {
-                pausedAttack.enabled = attackWasEnabled;
-            }
-
-            if (pausedSkills != null)
-            {
-                pausedSkills.enabled = skillsWereEnabled;
-            }
-
-            pausedPlayer = null;
-            pausedAttack = null;
-            pausedSkills = null;
         }
 
     }

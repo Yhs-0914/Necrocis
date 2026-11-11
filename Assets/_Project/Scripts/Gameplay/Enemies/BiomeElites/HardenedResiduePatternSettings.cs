@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Hardened Residue A Pattern")]
-    public sealed class HardenedResiduePatternSettings : MonsterPatternSettings
+    public sealed class HardenedResiduePatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "residue-landing";
         [Header("Selection and Landing")]
@@ -39,7 +39,7 @@ namespace Necrocis
             return presentation != null ? presentation.GetValidationError() : "굳은 잔여체 표현 원본이 없습니다.";
         }
 
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<HardenedResidueElitePattern>() ?? enemy.gameObject.AddComponent<HardenedResidueElitePattern>();
             pattern.Initialize(enemy, this);

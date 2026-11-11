@@ -30,6 +30,7 @@ namespace Necrocis
         private List<GameObject> choiceButtons = new List<GameObject>();  // 생성된 버튼 목록 (정리용)
         private List<LevelUpStatChoice> currentChoices = new List<LevelUpStatChoice>(); // 현재 표시 중인 스탯 선택지
         private List<JobType> currentJobs = new List<JobType>();          // 현재 표시 중인 직업 선택지
+        private ModalInputScope inputScope;
         private bool isShowing;      // UI 표시 중 여부
         private bool isJobSelection; // 직업 선택 모드 여부 (스탯 선택과 구분)
 
@@ -55,13 +56,14 @@ namespace Necrocis
         {
             LevelUpManager.OnLevelUp -= ShowLevelUpChoices;
             LevelUpManager.OnJobSelect -= ShowJobSelection;
+            HideUI();
         }
 
         private void Start()
         {
             EnsureEventSystem(); // EventSystem이 없으면 UI 클릭이 안 되므로 보장
-            BuildUI();
-            uiRoot.SetActive(false);
+            if (uiRoot == null) BuildUI();
+            if (!isShowing) uiRoot.SetActive(false);
         }
 
         // UI 클릭 처리를 위한 EventSystem 보장
@@ -78,7 +80,7 @@ namespace Necrocis
         // 숫자키 입력으로 선택 처리 (직업 선택: 1~3, 스탯 선택: 1~4)
         private void Update()
         {
-            if (!isShowing) return;
+            if (!isShowing || inputScope?.CanInteract != true) return;
 
             var input = InputManager.Instance;
             if (input == null) return;
@@ -108,6 +110,7 @@ namespace Necrocis
         // 레벨업 시 호출: 랜덤 스탯 선택지 4개를 표시하고 게임 일시정지
         private void ShowLevelUpChoices()
         {
+            if (uiRoot == null) { EnsureEventSystem(); BuildUI(); }
             List<LevelUpStatChoice> choices = LevelUpManager.GetRandomChoices();
             if (choices == null || choices.Count == 0) return;
 
@@ -125,12 +128,13 @@ namespace Necrocis
 
             uiRoot.SetActive(true);
             isShowing = true;
-            Time.timeScale = 0f; // 게임 일시정지
+            inputScope ??= new ModalInputScope(this, uiRoot, true);
         }
 
         // 레벨 10 도달 시 호출: 직업 3종 (전사/마법사/궁수) 선택 UI 표시
         private void ShowJobSelection()
         {
+            if (uiRoot == null) { EnsureEventSystem(); BuildUI(); }
             currentJobs = new List<JobType> { JobType.Warrior, JobType.Mage, JobType.Archer };
             isJobSelection = true;
 
@@ -147,12 +151,13 @@ namespace Necrocis
 
             uiRoot.SetActive(true);
             isShowing = true;
-            Time.timeScale = 0f;
+            inputScope ??= new ModalInputScope(this, uiRoot, true);
         }
 
         // 직업 선택 처리: LevelUpManager에 직업 설정 → 대기 레벨업 있으면 계속 진행
         private void SelectJob(JobType job)
         {
+            if (inputScope?.CanInteract != true) return;
             AudioManager.Instance?.PlaySFX("UISelect");
             LevelUpManager.SetJob(job);
             isJobSelection = false;
@@ -164,9 +169,7 @@ namespace Necrocis
             }
             else
             {
-                uiRoot.SetActive(false);
-                isShowing = false;
-                Time.timeScale = 1f; // 게임 재개
+                HideUI();
                 GrantPostLevelUpInvincibility();
             }
         }
@@ -229,6 +232,7 @@ namespace Necrocis
         // 스탯 선택 처리: 실제 스탯 적용 → 선택 기록 → 대기 레벨업 확인
         private void SelectChoice(LevelUpStatChoice choice)
         {
+            if (inputScope?.CanInteract != true) return;
             string soundKey = choice switch
             {
                 LevelUpStatChoice.HealthUp => "StatHealthSelect",
@@ -251,11 +255,16 @@ namespace Necrocis
             }
             else
             {
-                uiRoot.SetActive(false);
-                isShowing = false;
-                Time.timeScale = 1f;
+                HideUI();
                 GrantPostLevelUpInvincibility(); // 레벨업 완료 후 1초 무적
             }
+        }
+
+        private void HideUI()
+        {
+            if (uiRoot != null) uiRoot.SetActive(false);
+            isShowing = false;
+            inputScope?.Dispose(); inputScope = null;
         }
 
         // 기존 버튼들 제거 (새 선택지 표시 전에 호출)

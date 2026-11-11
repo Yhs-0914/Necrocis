@@ -21,13 +21,13 @@ namespace Necrocis
                 pooledObjectCount--;
                 if (obj != null)
                 {
-                    Log($"[BiomePool] 재사용: type={poolKey.kind} archetype={poolKey.archetypeId} name={obj.name}");
+                    if(enableDebugLogs)Log($"[BiomePool] 재사용: type={poolKey.kind} archetype={poolKey.archetypeId} name={obj.name}");
                     return obj;
                 }
             }
 
             GameObject created = createFunc();
-            Log($"[BiomePool] 생성: type={poolKey.kind} archetype={poolKey.archetypeId} name={created.name}");
+            if(enableDebugLogs)Log($"[BiomePool] 생성: type={poolKey.kind} archetype={poolKey.archetypeId} name={created.name}");
             return created;
         }
 
@@ -55,11 +55,18 @@ namespace Necrocis
                 return;
             }
 
-            obj.SetActive(false);
+            bool retainPlacement=true;
+            if (retainPlacement && obj.TryGetComponent<EnemySpawner>(out var placement))
+            {
+                // A placement has no renderer, collider or Update. Detach its data/schedule
+                // while retaining the native node; activation callbacks need not be replayed.
+                if(!placement.ParkForReuse())return;
+            }
+            else obj.SetActive(false);
             obj.transform.SetParent(pooledObjectsParent, false);
             stack.Push(obj);
             pooledObjectCount++;
-            Log($"[BiomePool] 반환: type={poolKey.kind} archetype={poolKey.archetypeId} name={obj.name}");
+            if(enableDebugLogs)Log($"[BiomePool] 반환: type={poolKey.kind} archetype={poolKey.archetypeId} name={obj.name}");
         }
 
 

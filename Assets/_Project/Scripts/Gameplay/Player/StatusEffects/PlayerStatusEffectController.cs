@@ -22,6 +22,7 @@ namespace Necrocis
         private readonly List<MoveSpeedSlow> moveSpeedSlows = new List<MoveSpeedSlow>();
         private readonly List<AttackPowerReduction> attackPowerReductions = new List<AttackPowerReduction>();
         private readonly List<Coroutine> damageOverTimeRoutines = new List<Coroutine>();
+        private readonly Dictionary<HealthEffectSource, int> damageOverTimeSources = new Dictionary<HealthEffectSource, int>();
         private Coroutine statusRoutine;
 
         private PlayerStats playerStats;
@@ -56,7 +57,7 @@ namespace Necrocis
 
             RefreshTemporaryModifiers();
 
-            EnsureStatusRoutine();
+            RescheduleStatusRoutine();
         }
 
         public void ApplyAttackPowerReduction(float reductionRatio, float duration)
@@ -83,13 +84,14 @@ namespace Necrocis
             });
 
             RefreshTemporaryModifiers();
-            EnsureStatusRoutine();
+            RescheduleStatusRoutine();
         }
 
         public void ApplyDamageOverTime(float duration, float tickInterval, float tickDamage)
         {
             ApplyDamageOverTime(duration, tickInterval, new EnemyDamageRequest(
-                Mathf.Max(0f, tickDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)), null));
+                Mathf.Max(0f, tickDamage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)), null,
+                HealthEffectSource.ForOwner(this, "legacy-dot")));
         }
 
         public void ApplyDamageOverTime(float duration, float tickInterval, EnemyDamageRequest tickDamage)
@@ -99,12 +101,16 @@ namespace Necrocis
                 return;
             }
 
+            tickDamage = tickDamage.WithEffect("dot");
+            HealthEffectSource source = tickDamage.EffectSource;
+            damageOverTimeSources.TryGetValue(source, out int count);
+            damageOverTimeSources[source] = count + 1;
             Coroutine routine = null;
             routine = StartCoroutine(DamageOverTimeRoutine(
                 Mathf.Max(0.01f, duration),
                 Mathf.Max(0.01f, tickInterval),
                 tickDamage,
-                () => damageOverTimeRoutines.Remove(routine)));
+                () => { damageOverTimeRoutines.Remove(routine); ReleaseDamageOverTimeSource(source); }));
             damageOverTimeRoutines.Add(routine);
         }
 
@@ -127,12 +133,15 @@ namespace Necrocis
             playerStats?.RemoveModifiersFromSource(this);
         }
 
-        private void EnsureStatusRoutine()
+        private void RescheduleStatusRoutine()
         {
-            if (statusRoutine == null)
+            // A new effect may have an earlier expiry than the current wait.
+            // DoT routines are independent and must keep their tick schedules.
+            if (statusRoutine != null)
             {
-                statusRoutine = StartCoroutine(StatusRoutine());
+                StopCoroutine(statusRoutine);
             }
+            statusRoutine = StartCoroutine(StatusRoutine());
         }
 
         private IEnumerator StatusRoutine()
@@ -162,39 +171,51 @@ namespace Necrocis
         {
             PlayerController player = GetComponent<PlayerController>();
             float elapsed = 0f;
-            while (elapsed < duration)
+            try
             {
-                float waitTime = Mathf.Min(tickInterval, duration - elapsed);
-                yield return new WaitForSeconds(waitTime);
-                elapsed += waitTime;
-
-                if (!isActiveAndEnabled)
+                while (elapsed < duration)
                 {
-                    break;
+                    float waitTime = Mathf.Min(tickInterval, duration - elapsed);
+                    yield return new WaitForSeconds(waitTime);
+                    elapsed += waitTime;
+
+                    if (!isActiveAndEnabled)
+                    {
+                        break;
+                    }
+
+                    if (player == null)
+                    {
+                        player = GetComponent<PlayerController>();
+                    }
+
+                    player?.TakeDamage(tickDamage);
                 }
 
-                if (player == null)
-                {
-                    player = GetComponent<PlayerController>();
-                }
-
-                player?.TakeDamage(tickDamage);
             }
+            finally { onComplete?.Invoke(); }
+        }
 
-            onComplete?.Invoke();
+        private void ReleaseDamageOverTimeSource(HealthEffectSource source)
+        {
+            if (!damageOverTimeSources.TryGetValue(source, out int count)) return;
+            if (count > 1) { damageOverTimeSources[source] = count - 1; return; }
+            damageOverTimeSources.Remove(source);
+            playerStats?.RuntimeStats.RemoveHealthEffectSource(source);
         }
 
         private void StopDamageOverTimeRoutines()
         {
-            for (int i = 0; i < damageOverTimeRoutines.Count; i++)
+            while (damageOverTimeRoutines.Count > 0)
             {
-                if (damageOverTimeRoutines[i] != null)
-                {
-                    StopCoroutine(damageOverTimeRoutines[i]);
-                }
+                int last = damageOverTimeRoutines.Count - 1;
+                Coroutine routine = damageOverTimeRoutines[last];
+                damageOverTimeRoutines.RemoveAt(last);
+                if (routine != null) StopCoroutine(routine);
             }
-
-            damageOverTimeRoutines.Clear();
+            foreach (HealthEffectSource source in damageOverTimeSources.Keys)
+                playerStats?.RuntimeStats.RemoveHealthEffectSource(source);
+            damageOverTimeSources.Clear();
         }
 
         private void RefreshTemporaryModifiers()
@@ -256,6 +277,13 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            // Disabling a component does not stop its coroutines.
+            if (statusRoutine != null)
+            {
+                StopCoroutine(statusRoutine);
+                statusRoutine = null;
+            }
+
             if (playerStats != null)
             {
                 playerStats.RemoveModifiersFromSource(this);
@@ -264,7 +292,6 @@ namespace Necrocis
             moveSpeedSlows.Clear();
             attackPowerReductions.Clear();
             StopDamageOverTimeRoutines();
-            statusRoutine = null;
         }
     }
 }

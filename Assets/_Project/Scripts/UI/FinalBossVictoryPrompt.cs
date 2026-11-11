@@ -13,22 +13,22 @@ namespace Necrocis
         private bool scheduled, answered, leaving;
         private GameObject canvasObject;
         private Text status;
-        private float previousTimeScale;
+        private string clearSaveError;
+        private ModalInputScope inputScope;
         private bool previousCursorVisible;
         private CursorLockMode previousCursorLock;
         private GameObject previousSelection;
-        private PlayerController player;
-        private PlayerAttack attack;
-        private PlayerClassSkillController skills;
-        private bool playerEnabled, attackEnabled, skillsEnabled;
 
         public bool IsOpen { get; private set; }
         public Button YesButton { get; private set; }
         public Button NoButton { get; private set; }
         public Canvas PromptCanvas => canvasObject != null ? canvasObject.GetComponent<Canvas>() : null;
 
-        public void Schedule()
+        public void Schedule() => Schedule(true, string.Empty);
+
+        public void Schedule(bool clearSaved, string saveError)
         {
+            clearSaveError = clearSaved ? string.Empty : saveError;
             if (scheduled || answered) return;
             scheduled = true;
             StartCoroutine(ShowAfterVictory());
@@ -39,7 +39,7 @@ namespace Necrocis
             yield return new WaitForSecondsRealtime(5f);
             // Let any pause/level-up screen finish before taking ownership of input.
             while (Time.timeScale <= 0f) yield return null;
-            if (PlayerController.Instance != null && PlayerController.Instance.IsDead) yield break;
+            if (SessionActionBindings.Menu.IsPlayerDead) yield break;
             Show();
         }
 
@@ -49,33 +49,22 @@ namespace Necrocis
             EnsureEventSystem();
             BuildInterface();
             previousSelection = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-            previousTimeScale = Time.timeScale;
             previousCursorVisible = Cursor.visible;
             previousCursorLock = Cursor.lockState;
-            player = PlayerController.Instance;
-            if (player != null)
-            {
-                attack = player.GetComponent<PlayerAttack>();
-                skills = player.GetComponent<PlayerClassSkillController>();
-                playerEnabled = player.enabled;
-                attackEnabled = attack != null && attack.enabled;
-                skillsEnabled = skills != null && skills.enabled;
-                player.enabled = false;
-                if (attack != null) attack.enabled = false;
-                if (skills != null) skills.enabled = false;
-            }
             IsOpen = true;
-            Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             canvasObject.SetActive(true);
+            if (!string.IsNullOrEmpty(clearSaveError))
+                status.text = "클리어 저장 실패. Yes를 누르면 저장을 재시도합니다.";
             NoButton.Select();
+            inputScope = new ModalInputScope(this, canvasObject, true, allowAuxiliary: false);
             AudioManager.Instance?.PlaySFX("SettingsOpen");
         }
 
         public void Decline()
         {
-            if (!IsOpen || leaving) return;
+            if (!IsOpen || leaving || inputScope?.CanInteract != true) return;
             answered = true;
             canvasObject.SetActive(false);
             RestoreInput();
@@ -84,35 +73,31 @@ namespace Necrocis
 
         public void ReturnToMainMenu()
         {
-            if (!IsOpen || leaving) return;
-            if (!Application.CanStreamedLevelBeLoaded(SceneLoader.SCENE_MAIN_MENU))
+            if (!IsOpen || leaving || inputScope?.CanInteract != true) return;
+            if(!SessionActionBindings.Menu.TryPrepareVictoryReturn(ref clearSaveError,out var message))
             {
-                status.text = "메인메뉴를 불러올 수 없습니다.";
-                AudioManager.Instance?.PlaySFX("UIInvalid");
-                return;
+                status.text=message;AudioManager.Instance?.PlaySFX("UIInvalid");return;
             }
             leaving = true;
             answered = true;
             YesButton.interactable = NoButton.interactable = false;
-            GameSettings.Save();
+            SessionActionBindings.Menu.SaveSettings();
             AudioManager.Instance?.PlaySFX("UISelect");
             RestoreInput();
-            // MarkFinalBossDefeated already persisted the clear before this prompt was scheduled.
-            GameplaySessionLifecycle.LoadMainMenu();
+            // Leave only after the fixed clear operation has completed.
+            SessionActionBindings.Menu.LoadMainMenu();
         }
 
         private void RestoreInput()
         {
             if (!IsOpen) return;
             IsOpen = false;
-            Time.timeScale = previousTimeScale;
+            inputScope?.Dispose(); inputScope = null;
             Cursor.visible = previousCursorVisible;
             Cursor.lockState = previousCursorLock;
-            if (player != null) player.enabled = playerEnabled;
-            if (attack != null) attack.enabled = attackEnabled;
-            if (skills != null) skills.enabled = skillsEnabled;
-            if (EventSystem.current != null)
+            if (EventSystem.current != null && InputManager.ExistingInstance != null && InputManager.ExistingInstance.Contexts.Count == 0)
                 EventSystem.current.SetSelectedGameObject(previousSelection);
+
         }
 
         private void OnDisable()

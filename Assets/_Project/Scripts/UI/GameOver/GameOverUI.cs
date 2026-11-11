@@ -14,6 +14,7 @@ namespace Necrocis
 
         private Canvas canvas;
         private CanvasGroup canvasGroup;
+        private ModalInputScope inputScope;
 
         private void Awake()
         {
@@ -41,11 +42,15 @@ namespace Necrocis
         {
             PlayerController.OnPlayerDied -= HandlePlayerDied;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
+            StopAllCoroutines();
+            inputScope?.Dispose(); inputScope = null;
+            if (canvas != null) canvas.enabled = false;
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             StopAllCoroutines();
+            inputScope?.Dispose(); inputScope = null;
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
@@ -69,6 +74,7 @@ namespace Necrocis
             yield return new WaitForSeconds(delayBeforeShow);
 
             canvas.enabled = true;
+            inputScope ??= new ModalInputScope(this, gameObject, false, allowAuxiliary: false);
             float elapsed = 0f;
             while (elapsed < fadeInDuration)
             {
@@ -78,15 +84,16 @@ namespace Necrocis
             }
 
             canvasGroup.alpha = 1f;
-            canvasGroup.interactable = true;
-            canvasGroup.blocksRaycasts = true;
+            inputScope.SetViewInteraction(true, true);
         }
 
         private void Restart()
         {
+            if (inputScope?.CanInteract != true) return;
             AudioManager.Instance?.PlaySFX("ButtonClick");
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
+            inputScope?.Dispose(); inputScope = null;
 
             if (SceneLoader.Instance != null)
             {

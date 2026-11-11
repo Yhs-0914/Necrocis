@@ -19,6 +19,7 @@ namespace Necrocis
         [SerializeField] private int sortingOrder = 220;
 
         private PlayerItemManager itemManager;
+        private ModalInputScope inputScope;
         private GameObject canvasObject;
         private GameObject panelObject;
         private Transform catalogContent;
@@ -31,13 +32,27 @@ namespace Necrocis
         private string selectedCatalogItemId;
         private string selectedAcquiredItemId;
 
+        public static bool IsAvailable
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         private void Awake()
         {
+            if (!IsAvailable) { enabled = false; return; }
             itemManager = GetComponent<PlayerItemManager>();
         }
 
         private void OnEnable()
         {
+            if (!IsAvailable) { enabled = false; return; }
             if (itemManager == null)
             {
                 return;
@@ -49,6 +64,7 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            HidePanel();
             if (itemManager == null)
             {
                 return;
@@ -60,27 +76,36 @@ namespace Necrocis
 
         private void Update()
         {
-            if (!enablePanel || !IsTogglePressedThisFrame())
+            if (!IsAvailable || !enablePanel || !IsTogglePressedThisFrame())
             {
                 return;
             }
 
-            if (canvasObject == null)
+            if (canvasObject != null && canvasObject.activeSelf)
             {
-                EnsureUi();
-                canvasObject.SetActive(true);
-                RefreshLists();
-                UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
+                if (inputScope?.CanInteract == true) HidePanel();
                 return;
             }
-
-            bool visible = !canvasObject.activeSelf;
-            canvasObject.SetActive(visible);
-            if (visible)
-            {
-                RefreshLists();
-            }
+            ShowPanel();
         }
+
+        private void ShowPanel()
+        {
+            if (!IsAvailable || !isActiveAndEnabled || !enablePanel || canvasObject != null && canvasObject.activeSelf
+                || !InputManager.Instance.Contexts.CanOpenAuxiliary) return;
+            EnsureUi();
+            canvasObject.SetActive(true);
+            inputScope = new ModalInputScope(this, canvasObject, false, HidePanel);
+            RefreshLists();
+            UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
+        }
+
+        private void HidePanel()
+        {
+            inputScope?.Dispose(); inputScope = null;
+            if (canvasObject != null) canvasObject.SetActive(false);
+        }
+        private void OnDestroy() => inputScope?.Dispose();
 
         private void HandleItemChanged(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem __)
         {
@@ -92,6 +117,7 @@ namespace Necrocis
 
         private void EnsureUi()
         {
+            if (!IsAvailable) return;
             if (canvasObject != null)
             {
                 return;
@@ -316,6 +342,7 @@ namespace Necrocis
 
         private void AddSelectedCatalogItem()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             if (itemManager == null || string.IsNullOrWhiteSpace(selectedCatalogItemId))
             {
                 UpdateStatus("추가할 아이템을 먼저 선택하세요.");
@@ -334,6 +361,7 @@ namespace Necrocis
 
         private void SpawnSelectedCatalogItemAtPlayer()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             if (itemManager == null || string.IsNullOrWhiteSpace(selectedCatalogItemId))
             {
                 UpdateStatus("생성할 아이템을 먼저 선택하세요.");
@@ -367,6 +395,7 @@ namespace Necrocis
 
         private WorldItemSpawner ResolveWorldItemSpawner()
         {
+            if (!IsAvailable) return null;
             BiomeManager activeBiome = BiomeManager.Active;
             WorldItemSpawner spawner = activeBiome != null
                 ? activeBiome.GetComponent<WorldItemSpawner>()
@@ -395,6 +424,7 @@ namespace Necrocis
 
         private void RemoveSelectedAcquiredItem()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             if (itemManager == null)
             {
                 return;
@@ -423,6 +453,7 @@ namespace Necrocis
 
         private void ClearAllItems()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             if (itemManager == null)
             {
                 return;
@@ -436,6 +467,7 @@ namespace Necrocis
 
         private void CompleteBiomeBosses()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             GameManager game = GameManager.Instance;
             if (game == null)
             {
@@ -454,6 +486,7 @@ namespace Necrocis
 
         private void RestorePlayerHealth()
         {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
             PlayerStats playerStats = GetComponent<PlayerStats>();
             if (playerStats == null)
             {
@@ -492,7 +525,7 @@ namespace Necrocis
                 : new Color(0.14f, 0.17f, 0.21f, 0.9f);
 
             Button button = row.AddComponent<Button>();
-            button.onClick.AddListener(() => onClick?.Invoke());
+            button.onClick.AddListener(() => { if (inputScope?.CanInteract == true) onClick?.Invoke(); });
 
             Text rowText = CreateLabel("Text", row.transform, Vector2.zero, new Vector2(0f, 0f), 22, TextAnchor.MiddleLeft);
             rowText.text = label;
@@ -522,7 +555,7 @@ namespace Necrocis
             image.color = backgroundColor;
 
             Button button = buttonObject.AddComponent<Button>();
-            button.onClick.AddListener(() => onClick?.Invoke());
+            button.onClick.AddListener(() => { if (inputScope?.CanInteract == true) onClick?.Invoke(); });
 
             Text text = CreateLabel("Label", buttonObject.transform, Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleCenter);
             text.text = label;

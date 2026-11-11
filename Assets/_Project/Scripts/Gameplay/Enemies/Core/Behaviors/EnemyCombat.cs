@@ -8,18 +8,13 @@ namespace Necrocis
         [SerializeField] private bool logDamageToConsole;
         private bool hitByPlayer;
         private bool suppressKillCredit;
-        private float pendingFloodDamage;
 
-        public void TakeFloodDamage(float damage)
+        public void TakeFloodDamage(float damage) => TakeFloodDamage(damage, GetHealthEffectSource("legacy-flood"));
+
+        public void TakeFloodDamage(float damage, HealthEffectSource source)
         {
             if (IsDead || IsBossEncounter || stats == null || damage <= 0f) return;
-            // Health uses whole units and rounds every positive hit up to at least 1.
-            // Accumulate fractions so low-health enemies do not die every frame.
-            pendingFloodDamage += damage;
-            float wholeDamage = Mathf.Floor(pendingFloodDamage + 0.00001f);
-            if (wholeDamage < 1f) return;
-            pendingFloodDamage = Mathf.Max(0f, pendingFloodDamage - wholeDamage);
-            ApplyIncomingDamage(wholeDamage, false);
+            ApplyIncomingDamage(damage, false, source);
         }
 
         private float DifficultyAttackCooldown => config != null ? GetRearmCooldown(config.attackCooldown) : 0f;
@@ -123,8 +118,10 @@ namespace Necrocis
             attackAnimPlaying = false;
             attackTimer = DifficultyAttackCooldown;
 
-            // 공격 범위 내 플레이어에게 데미지
+            // A synchronous damage callback can retire/reuse this component.
+            uint generation=SpawnGeneration;
             ApplyDamageToPlayer();
+            if(generation!=SpawnGeneration||IsRetiringLifetime||!gameObject.activeInHierarchy)return;
 
             // 콜라이더 복원
             if (colliderExpanded)
@@ -169,7 +166,7 @@ namespace Necrocis
             Health playerHealth = player.HealthComponent;
             if (playerHealth == null) return;
 
-            if (!ignoreMidBossArenaRestriction)
+            if (!IsBossEncounter)
             {
                 AudioManager.Instance?.PlaySFX("EnemyAttack");
             }
@@ -235,45 +232,49 @@ namespace Necrocis
             }
 
             EnemyProjectile proj = EnemyProjectile.Acquire(spawnPos, projSprite, config.projectileScale);
-            if (!ignoreMidBossArenaRestriction)
+            if (!IsBossEncounter)
             {
                 AudioManager.Instance?.PlaySFX("EnemyAttack");
             }
             proj.Launch(dir, damage, config.projectileSpeed, config.projectileLifeTime, this);
         }
 
-        public void TakeDamage(float damage)
+        public void TakeCompanionDamage(float damage, HealthEffectSource source) => ApplyIncomingDamage(damage, true, source, false);
+
+        public void TakeDamage(float damage) => TryTakeDamage(damage, HealthEffectSource.Legacy);
+        public void TakeDamage(float damage, HealthEffectSource source) => TryTakeDamage(damage, source);
+        public DamageResult TryTakeDamage(float damage, HealthEffectSource source) => ApplyIncomingDamage(damage, true, source);
+
+        private DamageResult ApplyIncomingDamage(float damage, bool fromPlayer, HealthEffectSource source, bool allowHostSpawn = true)
         {
-            ApplyIncomingDamage(damage, true);
-        }
-
-        public void TakeCompanionDamage(float damage) => ApplyIncomingDamage(damage, true, false);
-
-        private void ApplyIncomingDamage(float damage, bool fromPlayer, bool allowHostSpawn = true)
-        {
-            if (IsDead) return;
-            if (stats == null)
+            if (IsDead || IsRetiringLifetime || stats == null || damage <= 0f) return DamageResult.Invalid;
+            uint expectedGeneration = SpawnGeneration;
+            float finalDamage = fromPlayer ? EnemyCombatCalculator.GetIncomingDamage(damage, statusEffectController) : damage;
+            if (finalDamage <= 0f) return DamageResult.Invalid;
+            HealthDeltaPreview preview = stats.PreviewDamage(finalDamage, source);
+            DamageBlockReason block = damageGate != null ? damageGate.EvaluateDamage(this, finalDamage, preview) : DamageBlockReason.None;
+            if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return DamageResult.Invalid;
+            if (block != DamageBlockReason.None)
             {
-                return;
-            }
-
-            float finalDamage = fromPlayer
-                ? EnemyCombatCalculator.GetIncomingDamage(damage, statusEffectController)
-                : damage;
-            if (finalDamage <= 0f)
-            {
-                return;
-            }
-
-            float previousHealth = stats.CurrentHealth;
-            float appliedDamage = stats.ApplyDamage(finalDamage);
-            if (appliedDamage > 0f)
-            {
+                var blocked = new DamageResult(true, 0f, block);
                 if (fromPlayer)
                 {
-                    PlayerController.Instance?.GetComponent<PlayerItemCombatEffects>()?.NotifyCombatInteraction();
                     hitByPlayer = true;
-                    DamageTaken?.Invoke(this, appliedDamage);
+                    DamageAccepted?.Invoke(this);
+                }
+                return blocked;
+            }
+            float previousHealth = stats.CurrentHealth;
+            if (!stats.TryApplyDamage(preview, out float appliedDamage)) return DamageResult.Invalid;
+            if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy)
+                return new DamageResult(true, appliedDamage);
+            var result = new DamageResult(true, appliedDamage);
+            if (fromPlayer)
+            {
+                hitByPlayer = true;
+                DamageAccepted?.Invoke(this);
+                if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
+                PlayerController.Instance?.GetComponent<PlayerItemCombatEffects>()?.NotifyCombatInteraction();
                     var metrics = SaveService.BalanceMetrics;
                     if (metrics != null)
                     {
@@ -289,50 +290,40 @@ namespace Necrocis
                         }
                         if (FinalBossArena.Instance != null && IsBossEncounter) metrics.finalBossDamage += effectiveDamage;
                     }
-                }
-                CombatVfx.PlayEnemyHit(this, appliedDamage, stats.IsDead);
+                if (appliedDamage > 0f) DamageTaken?.Invoke(this, appliedDamage);
+                if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
             }
-
+            if (appliedDamage > 0f) CombatVfx.PlayEnemyHit(this, appliedDamage, stats.IsDead);
             if (fromPlayer && logDamageToConsole && config != null && !config.isElite)
             {
                 string enemyName = string.IsNullOrWhiteSpace(config.name) ? gameObject.name : config.name;
                 Debug.Log($"[DamageLog] Player -> {enemyName} : {appliedDamage:0.##} (HP {stats.CurrentHealth:0.##}/{stats.MaxHealth:0.##})");
             }
-
-            if (stats.IsDead)
+            bool defeated = stats.IsDead;
+            if (defeated)
             {
+                if (defeatEventRaised) return new DamageResult(true, appliedDamage, died: true);
                 suppressKillCredit = !fromPlayer && !hitByPlayer;
-                if (!ignoreMidBossArenaRestriction)
-                {
-                    AudioManager.Instance?.PlaySFX("EnemyDeath");
-                }
-
-                if (!suppressKillCredit && PlayerController.Instance != null)
-                {
-                    PlayerItemCombatEffects itemEffects = PlayerController.Instance.GetComponent<PlayerItemCombatEffects>();
-                    itemEffects?.NotifyEnemyDefeatedByPlayer(this, allowHostSpawn);
-                }
-
+                if (!IsBossEncounter) AudioManager.Instance?.PlaySFX("EnemyDeath");
+                if (!suppressKillCredit) EnemyDefeatBindings.NotifyPlayerKill(this, allowHostSpawn);
+                if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
                 RaiseDefeated();
-                ChangeState(EnemyDeadState.Instance);
+                if (SpawnGeneration == expectedGeneration && gameObject.activeInHierarchy) ChangeState(EnemyDeadState.Instance);
             }
-            else if (appliedDamage > 0f && !ignoreMidBossArenaRestriction)
-            {
-                AudioManager.Instance?.PlaySFX("EnemyHit");
-            }
+            else if (appliedDamage > 0f && !IsBossEncounter) AudioManager.Instance?.PlaySFX("EnemyHit");
+            return new DamageResult(true, appliedDamage, died: defeated);
         }
 
         public void GrantExp()
         {
             if (config == null || experienceGranted) return;
             experienceGranted = true;
-            // Region rewards belong to the arena, including the two-body lung encounter.
             if (SuppressExperienceReward || suppressKillCredit || IsBossEncounter) return;
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
-            if (Balance != null) LevelUpManager.AddResolvedEnemyKillExp(Balance.Current.Experience);
-            else LevelUpManager.AddEnemyKillExp(config.expReward, multiplier);
+            if (Balance != null) EnemyDefeatBindings.ResolvedExperience?.Invoke(Balance.Current.Experience);
+            else EnemyDefeatBindings.LegacyExperience?.Invoke(config.expReward, multiplier);
 
             int experience = Balance != null ? Balance.Current.Experience : config.expReward;
             var biome = BiomeManager.Active;

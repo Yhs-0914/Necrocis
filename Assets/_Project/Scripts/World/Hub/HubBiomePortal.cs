@@ -12,7 +12,10 @@ namespace Necrocis
         [SerializeField] private BiomeType targetBiome = BiomeType.None;
         [SerializeField] private bool isActive = true;
         [SerializeField] private bool isCleared;
+#if UNITY_EDITOR
+        [Tooltip("편집기에서 범위를 표시하는 선의 반경입니다. 실제 진입 감지는 Trigger Collider 크기를 사용합니다.")]
         [SerializeField] private float interactionRadius = 2f;
+#endif
 
         [Header("시각 효과")]
         [SerializeField] private SpriteRenderer portalRenderer;
@@ -168,18 +171,14 @@ namespace Necrocis
             // 포털 진입 시 비활성화
             SetActive(false);
 
-            // GameManager에 바이옴 진입 알림
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.EnterBiome(targetBiome);
-            }
+            WorldProgressBindings.Travel.NotifyBiomeEntered(targetBiome);
 
             OnPortalEnter?.Invoke(targetBiome);
 
             // 씬 전환
-            if (SceneLoader.Instance != null)
+            if (WorldProgressBindings.Travel.HasLoader)
             {
-                SceneLoader.Instance.LoadBiome(targetBiome);
+                WorldProgressBindings.Travel.LoadBiome(targetBiome);
             }
             else
             {

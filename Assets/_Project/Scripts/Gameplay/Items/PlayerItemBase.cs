@@ -25,7 +25,7 @@ namespace Necrocis
                 return;
             }
 
-            playerStats.ApplyPlayerItemStatModifiers(statModifiers, this);
+            ApplyToRecipient(playerStats);
         }
 
         public virtual void RemoveFrom(PlayerStats playerStats)
@@ -35,7 +35,15 @@ namespace Necrocis
                 return;
             }
 
-            playerStats.RemoveModifiersFromSource(this);
+            RemoveFromRecipient(playerStats);
+        }
+        public virtual void ApplyToRecipient(IItemStatRecipient recipient)
+        {
+            if (recipient != null && recipient.IsAvailable) recipient.ApplyPlayerItemStatModifiers(statModifiers,this);
+        }
+        public virtual void RemoveFromRecipient(IItemStatRecipient recipient)
+        {
+            if (recipient != null && recipient.IsAvailable) recipient.RemoveModifiersFromSource(this);
         }
     }
 }

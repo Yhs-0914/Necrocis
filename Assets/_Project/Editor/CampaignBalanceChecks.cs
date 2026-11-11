@@ -57,37 +57,25 @@ namespace NecrocisEditor
             var go = new GameObject("CampaignBalance.Temp") { hideFlags = HideFlags.HideAndDontSave };
             try
             {
-                var enemy = go.AddComponent<CharacterStats>();
-                enemy.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 6.9f));
-                Equal(6.9f, enemy.MaxHealth, "enemy fractional max HP");
-                for (int i = 0; i < 3; i++) enemy.ApplyDamage(.5f);
-                Equal(5.4f, enemy.CurrentHealth, "three half-damage hits total 1.5");
-                enemy.AddModifier(CharacterStatType.MoveSpeed, .1f);
-                Equal(5.4f, enemy.CurrentHealth, "stat refresh cannot round enemy HP");
-                enemy.RestoreHealth(.25f);
-                Equal(5.65f, enemy.CurrentHealth, "fractional enemy healing");
-                enemy.SetCurrentHealth(.25f);
-                Equal(.25f, enemy.CurrentHealth, "low-HP restore cannot grant free health");
-
-                enemy.UseWholeHealthUnits();
-                enemy.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 10));
-                enemy.ApplyDamage(.75f);
-                Equal(10, enemy.CurrentHealth, "player keeps half-heart units");
-                Equal(.75f, enemy.DamageRemainder, "first reduced hit retained");
+                var stats = go.AddComponent<CharacterStats>();
+                stats.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 10));
+                var source = HealthEffectSource.ForOwner(go, "review", persistenceKey: "review:damage");
+                stats.ApplyDamage(.75f, source);
+                Equal(10, stats.CurrentHealth, "main whole-health accounting retained");
+                Equal(.75f, stats.DamageRemainder(source), "fractional damage retained by source");
                 var saved = JsonUtility.FromJson<PlayerProgressSaveData>(JsonUtility.ToJson(new PlayerProgressSaveData
-                { currentHealth = enemy.CurrentHealth, damageRemainder = enemy.DamageRemainder, splitRegenerationUsed = true }));
-                enemy.SetCurrentHealth(saved.currentHealth);
-                enemy.RestoreHealthRemainders(saved.damageRemainder, saved.healingRemainder);
+                { currentHealth = stats.CurrentHealth, healthDeltas = stats.CapturePersistentHealthDeltas(), splitRegenerationUsed = true }));
+                stats.BeginHealthLifetime();
+                stats.SetCurrentHealth(saved.currentHealth);
+                stats.RestorePersistentHealthDeltas(saved.healthDeltas, key => key == source.PersistenceKey ? source : (HealthEffectSource?)null);
                 Require(saved.splitRegenerationUsed, "run-wide revival flag survives JSON");
-                for (int i = 0; i < 3; i++) enemy.ApplyDamage(.75f);
-                Equal(7, enemy.CurrentHealth, "four reduced hits total exactly 3 HP across load");
-                enemy.ResetHealthToMax();
-                Equal(0, enemy.DamageRemainder, "full heal clears residual damage");
-                enemy.ApplyDamage(float.NaN);
-                Equal(10, enemy.CurrentHealth, "non-finite damage rejected");
-                enemy.ApplyDamage(1);
-                for (int i = 0; i < 4; i++) enemy.RestoreHealth(.25f);
-                Equal(10, enemy.CurrentHealth, "fractional player heals accumulate");
+                for (int i = 0; i < 3; i++) stats.ApplyDamage(.75f, source);
+                Equal(7, stats.CurrentHealth, "reduced hits accumulate across load through main ledger");
+                stats.ResetHealthToMax();
+                Equal(0, stats.DamageRemainder(source), "full heal clears residual damage");
+                stats.ApplyDamage(1);
+                for (int i = 0; i < 4; i++) stats.RestoreHealth(.25f);
+                Equal(10, stats.CurrentHealth, "main fractional healing accumulation retained");
             }
             finally { UnityEngine.Object.DestroyImmediate(go); }
         }

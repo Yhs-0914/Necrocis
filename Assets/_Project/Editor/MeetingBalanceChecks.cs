@@ -28,10 +28,11 @@ namespace NecrocisEditor
                 LevelUpManager.RestoreProgress(savedProgress);
                 var go = new GameObject("MeetingInventoryCheck");
                 temporary.Add(go);
-                var player = go.AddComponent<PlayerStats>();
+                PlayerCompositionRoot.EnsureGameplay(go);
+                var player = go.GetComponent<PlayerStats>();
                 player.EnsureInitialized();
                 CheckLevelUpGrowth(player, go);
-                var inventory = go.AddComponent<PlayerItemManager>();
+                var inventory = go.GetComponent<PlayerItemManager>();
                 Invoke(inventory, "Awake");
                 inventory.PopulateBasicProjectileTemplateItems();
                 Equal(68, inventory.ItemEntries.Count, "catalog contains 68 items");
@@ -73,25 +74,25 @@ namespace NecrocisEditor
                 stats.ApplyDamage(5);
                 LevelUpManager.RestoreProgress(new PlayerProgressSaveData { level = 6, job = JobType.Mage });
                 Invoke(enemy, "RefreshPlayerLevelHealth");
-                Equal(11.5f, stats.MaxHealth, "already-alive enemy gains health at level six");
-                Equal(5.75f, stats.CurrentHealth, "injured fraction preserved on level change");
+                Equal(12f, stats.MaxHealth, "already-alive enemy gains the latest flat health bonus at level six");
+                Equal(6f, stats.CurrentHealth, "injured fraction preserved on level change");
                 Invoke(enemy, "RefreshPlayerLevelHealth");
-                Equal(11.5f, stats.MaxHealth, "same band cannot compound");
+                Equal(12f, stats.MaxHealth, "same band cannot compound");
                 LevelUpManager.RestoreProgress(new PlayerProgressSaveData { level = 26, job = JobType.Mage });
                 Invoke(enemy, "RefreshPlayerLevelHealth");
-                Equal(17.5f, stats.MaxHealth, "multi-band level jump");
-                Equal(8.75f, stats.CurrentHealth, "multi-band injured fraction");
+                Equal(20f, stats.MaxHealth, "multi-band level jump");
+                Equal(10f, stats.CurrentHealth, "multi-band injured fraction");
                 stats.ClearModifiers();
                 stats.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 10));
                 Invoke(enemy, "InitializePlayerLevelHealthScaling");
-                Equal(17.5f, stats.CurrentHealth, "reused spawn initializes at current level with full health");
+                Equal(20f, stats.CurrentHealth, "reused spawn initializes at current level with full health");
                 typeof(EnemyController).GetField("config", Private).SetValue(enemy,
                     new EnemySpawnRuleConfig { name = "EliteCheck", maxHealth = 10, isElite = true });
                 stats.ClearModifiers();
                 stats.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 10));
                 Invoke(enemy, "InitializePlayerLevelHealthScaling");
                 Equal(16f, stats.MaxHealth, "elite uses its own health growth rate");
-                typeof(EnemyController).GetField("ignoreMidBossArenaRestriction", Private).SetValue(enemy, true);
+                enemy.SetEncounterRole(EnemyEncounterRole.Boss);
                 stats.ClearModifiers();
                 stats.ConfigureBaseStats(new CharacterStatValue(CharacterStatType.MaxHealth, 10));
                 Invoke(enemy, "InitializePlayerLevelHealthScaling");
@@ -110,6 +111,7 @@ namespace NecrocisEditor
                     if (runtime.ContactEnabled && definition.contact.damageCoefficient > 0)
                         Equal(damage, runtime.Current.AttackPower * runtime.ContactCoefficient, "runtime elite contact damage");
                 }
+                CheckRewardPersistence();
                 var export = inventory.ItemEntries.Select(entry => new ExportItem
                 { id = entry.ItemId, name = entry.DisplayName, description = entry.Description,
                     role = CampaignRewardRules.Role(entry.ItemId).ToString(), repeatable = PlayerStatItemCatalog.IsRepeatable(entry.ItemId) }).ToArray();
@@ -129,6 +131,33 @@ namespace NecrocisEditor
         }
 
         private static void Invoke(object target, string method) => target.GetType().GetMethod(method, Private).Invoke(target, null);
+        private static void CheckRewardPersistence()
+        {
+            string root = Path.GetFullPath("tmp/meeting-reward-saves-" + Guid.NewGuid().ToString("N"));
+            SaveService.UseStorageRootForTests(root);
+            SessionRuntimeBindings.Register();
+            Require(SaveService.TryBeginNewGame(GameDifficulty.Normal, out var error), "new campaign saves: " + error);
+            var starter = SaveService.FindWorldReward(CampaignRewardRules.StarterRewardId);
+            Require(starter != null && !starter.collected, "starter choice exists before scene load");
+            starter.itemChoices = new List<string> { "dense_muscle", "vital_cell", "active_fiber" };
+            SaveService.CompleteWorldReward(starter);
+            Require(SaveService.TryRewardRegionBoss(BiomeType.Intestine, 240), "region reward granted once");
+            Require(!SaveService.TryRewardRegionBoss(BiomeType.Intestine, 240), "region reward rejects repeat grant");
+            for (int i = 0; i < 29; i++)
+                Require(SaveService.RegisterNormalKillForRecovery(BiomeType.Intestine, Vector3.zero) == null, "recovery waits for kill milestone " + i);
+            var recovery = SaveService.RegisterNormalKillForRecovery(BiomeType.Intestine, Vector3.one);
+            Require(recovery != null && recovery.recovery, "thirtieth normal kill creates recovery reward");
+            Require(SaveService.TrySaveActiveRun(out error), "reward state saved: " + error);
+            SaveService.UseStorageRootForTests(root);
+            SessionRuntimeBindings.Register();
+            Require(SaveService.TryContinue(GameDifficulty.Normal, out error), "reward save continues: " + error);
+            starter = SaveService.FindWorldReward(CampaignRewardRules.StarterRewardId);
+            Require(starter != null && starter.collected && starter.itemChoices.SequenceEqual(new[] { "dense_muscle", "vital_cell", "active_fiber" }),
+                "starter choices and claimed flag survive disk reload");
+            Require(SaveService.FindWorldReward(recovery.id)?.recovery == true, "unclaimed recovery survives disk reload");
+            Require(!SaveService.TryRewardRegionBoss(BiomeType.Intestine, 240), "region reward remains consumed after reload");
+        }
+
         private static void CheckLevelUpGrowth(PlayerStats player, GameObject go)
         {
             var ui = go.AddComponent<LevelUpStackChoiceUI>();

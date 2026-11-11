@@ -252,13 +252,14 @@ namespace Necrocis
 
             EnemySpawnRuleConfig config = activeEliteConfigs[Random.Range(0, activeEliteConfigs.Count)];
             Transform player = PlayerController.Instance.transform;
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             Vector3 spawnPos = FindSpawnPosition(player.position, biome, config);
 
             Transform spawnParent = transform;
             int poolId = EnemyController.GetPoolArchetypeId(config);
             EnemyController elite = EnemyController.Acquire(spawnParent, $"{config.name}_Elite", poolId);
-            elite.Configure(null, config, spawnPos, spawnPos);
+            elite.ConfigureWithContext(null, config, spawnPos, spawnPos,
+                EnemySpawnBindings.CaptureForSurface(biome, config, spawnPos));
         }
 
         // ─────────────────────────────────
@@ -393,7 +394,7 @@ namespace Necrocis
             canvasObj.SetActive(false);
         }
 
-        private Vector3 FindSpawnPosition(Vector3 playerPos, BiomeManager biome, EnemySpawnRuleConfig config)
+        private Vector3 FindSpawnPosition(Vector3 playerPos, IEnemyTerrainSurface biome, EnemySpawnRuleConfig config)
         {
             for (int i = 0; i < 20; i++)
             {

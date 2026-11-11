@@ -852,7 +852,7 @@ namespace Necrocis
 
         private float GetGroundHeight(Vector3 position)
         {
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             return biome != null ? biome.GetGroundHeight(position) : position.y;
         }
 
@@ -905,7 +905,7 @@ namespace Necrocis
             Vector3 currentPosition = player.transform.position;
             Vector3 desiredPosition = currentPosition + displacement;
             float clampMargin = GetPlayerArenaClampMargin(player);
-            if (MidBossArenaController.TryClampPlayerMovementInsideLockedArena(
+            if (EnemyWorldBindings.Encounters.TryClampPlayerMovement(
                     currentPosition,
                     desiredPosition,
                     clampMargin,
@@ -954,7 +954,7 @@ namespace Necrocis
             }
 
             Vector3 currentPosition = player.transform.position;
-            if (!MidBossArenaController.TryClampPositionInsideLockedArena(currentPosition, margin, out Vector3 correctedPosition))
+            if (!EnemyWorldBindings.Encounters.TryClampPosition(currentPosition, margin, out Vector3 correctedPosition))
             {
                 return;
             }
@@ -995,7 +995,7 @@ namespace Necrocis
         private static bool TryClampPositionInsideActiveMap(Vector3 position, float margin, out Vector3 clampedPosition)
         {
             clampedPosition = position;
-            BiomeManager biome = BiomeManager.Active;
+            IEnemyTerrainSurface biome = EnemyWorldBindings.Surface;
             if (biome == null || biome.MapWidth <= 0 || biome.MapHeight <= 0)
             {
                 return false;

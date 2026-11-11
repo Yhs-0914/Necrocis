@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Necrocis
 {
     [CreateAssetMenu(menuName = "Necrocis/Biome Elites/Hangover Remnant Pattern")]
-    public sealed class HangoverRemnantPatternSettings : MonsterPatternSettings
+    public sealed class HangoverRemnantPatternSettings : MonsterPatternSettings, IEnemyPatternAttachment
     {
         public const string DamageId = "hangover-burst";
         [Min(.1f)] public float triggerDistance = 2.5f;
@@ -31,7 +31,7 @@ namespace Necrocis
             return presentation != null ? presentation.GetValidationError() : "숙취 잔재 표현 원본이 없습니다.";
         }
 
-        public override void Attach(EnemyController enemy)
+        public void Attach(EnemyController enemy)
         {
             var pattern = enemy.GetComponent<HangoverRemnantElitePattern>() ?? enemy.gameObject.AddComponent<HangoverRemnantElitePattern>();
             pattern.Initialize(enemy, this);

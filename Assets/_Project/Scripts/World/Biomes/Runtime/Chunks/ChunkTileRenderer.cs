@@ -9,6 +9,14 @@ namespace Necrocis
 
         private void EnsureChunkRoot(Chunk chunk)
         {
+            if (!CreatesChunkTilemaps)
+            {
+                chunk.tilemaps = System.Array.Empty<Tilemap>();
+                chunk.tilemapRenderers = System.Array.Empty<TilemapRenderer>();
+                chunk.cliffTilemaps = System.Array.Empty<Tilemap>();
+                chunk.cliffTilemapRenderers = System.Array.Empty<TilemapRenderer>();
+                return;
+            }
             if (chunk.root != null) return;
 
             int levelCount = GetHeightLevelCount();

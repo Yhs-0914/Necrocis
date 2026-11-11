@@ -203,12 +203,12 @@ namespace Necrocis
 
         private void TryHit(PlayerController player, float left, float right)
         {
-            if (Time.time < nextHit || player.IsDashInvincible || player.IsDead ||
-                (player.HealthComponent != null && player.HealthComponent.IsInvincible)) return;
+            if (Time.time < nextHit || player.IsDead) return;
             Bounds bounds = player.HitCollider != null ? player.HitCollider.bounds : new Bounds(player.transform.position, Vector3.one * 0.5f);
             if (!OverlapsLane(bounds, left, right)) return;
             nextHit = Time.time + hitCooldown;
-            player.TakeDamage(damage);
+            player.TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)),
+                null, HealthEffectSource.ForOwner(this, "convoy")));
             if (player.IsDead) return;
             PlayerStatusEffectController status = player.GetComponent<PlayerStatusEffectController>();
             if (status == null) status = player.gameObject.AddComponent<PlayerStatusEffectController>();

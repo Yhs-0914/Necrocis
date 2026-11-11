@@ -53,11 +53,11 @@ namespace Necrocis
         {
             float height = orbRadius;
             return player != null && !player.IsDead && enemy.IsPlayerInChaseRange() && !enemy.IsOutOfLeash()
-                && GasSacOrb.IsVisible(enemy.transform.position + Vector3.up * .6f)
-                && GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(enemy.transform.position, height))
-                && GasSacOrb.IsVisible(GasSacOrb.GetFlightPosition(player.transform.position, height))
+                && EnemyWorldBindings.Attacks.IsVisible(enemy.transform.position + Vector3.up * .6f)
+                && EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(enemy.transform.position, height))
+                && EnemyWorldBindings.Attacks.IsVisible(EnemyWorldBindings.Attacks.GetFlightPosition(player.transform.position, height))
                 && GasSacOrb.TryGetLaunchPosition(enemy, direction, orbRadius, out _)
-                && GasSacOrb.HasClearPath(enemy.transform.position, player.transform.position);
+                && EnemyWorldBindings.Attacks.HasClearPath(enemy.transform.position, player.transform.position);
         }
 
         private IEnumerator OrbCycle()

@@ -53,6 +53,12 @@ namespace Necrocis
 
         public string GetValidationError()
         {
+            string error = GetBalanceValidationError();
+            return error ?? (pattern != null ? pattern.GetValidationError(this) : null);
+        }
+
+        public string GetBalanceValidationError()
+        {
             if (string.IsNullOrWhiteSpace(monsterId)) return "Monster ID가 비어 있습니다.";
             if (!Enum.IsDefined(typeof(MonsterTier), tier)) return "몬스터 등급이 올바르지 않습니다.";
             if (statSets == null || statSets.Count == 0) return "StatSet이 필요합니다.";
@@ -78,7 +84,7 @@ namespace Necrocis
                     || !MonsterBalanceNumbers.NonNegative(pattern.coefficient))
                     return "패턴 피해 ID/계수가 잘못되었거나 중복되었습니다.";
             }
-            return pattern != null ? pattern.GetValidationError(this) : null;
+            return null;
         }
 
         public bool TryGetStatSet(string id, out MonsterStatSet result)

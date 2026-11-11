@@ -22,9 +22,10 @@ namespace Necrocis
             float scale,
             int sortingOrder,
             IBossPatternTempSpriteOwner owner,
-            List<GameObject> activeObjects)
+            List<GameObject> activeObjects,
+            string poolName = null)
         {
-            GameObject obj = RuntimePool.Acquire(PoolName, CreateFunc);
+            GameObject obj = RuntimePool.Acquire(string.IsNullOrEmpty(poolName) ? PoolName : poolName, CreateFunc);
             if (obj == null)
             {
                 return null;

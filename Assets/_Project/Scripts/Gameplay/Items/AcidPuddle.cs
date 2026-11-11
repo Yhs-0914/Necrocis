@@ -19,6 +19,9 @@ namespace Necrocis
         private float lifeDuration;
         private int remainingTicks;
         private SpriteRenderer visualRenderer;
+        private uint healthGeneration;
+        private HealthEffectSource damageSource;
+        private readonly HashSet<EnemyLogicalLife> healthRecipients = new HashSet<EnemyLogicalLife>();
 
         public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
         {
@@ -59,10 +62,15 @@ namespace Necrocis
         private void OnDisable()
         {
             ActivePuddles.Remove(this);
+            RetireHealthSource();
+            unchecked { healthGeneration++; }
         }
 
         public void Initialize(float damage, float duration, float areaRadius, float interval)
         {
+            RetireHealthSource();
+            unchecked { healthGeneration++; }
+            damageSource = HealthEffectSource.ForOwner(this, "acidic-rupture", healthGeneration);
             tickDamage = Mathf.Max(0.1f, damage);
             radius = Mathf.Max(0.2f, areaRadius);
             tickInterval = Mathf.Max(0.05f, interval);
@@ -91,14 +99,17 @@ namespace Necrocis
                 return;
             }
 
+            uint generation = healthGeneration;
             nextTickTime += tickInterval;
             ApplyTickDamage();
+            if (healthGeneration != generation || !isActiveAndEnabled) return;
             remainingTicks--;
             UpdateVisual();
         }
 
         private void ApplyTickDamage()
         {
+            uint generation = healthGeneration;
             var enemies = EnemyController.ActiveEnemyControllers;
             if (enemies == null || enemies.Count == 0)
             {
@@ -123,8 +134,16 @@ namespace Necrocis
                     continue;
                 }
 
-                enemy.TakeDamage(tickDamage);
+                if(enemy.LogicalLife!=null)healthRecipients.Add(enemy.LogicalLife);
+                enemy.TakeDamage(tickDamage, damageSource);
+                if (healthGeneration != generation || !isActiveAndEnabled) return;
             }
+        }
+
+        private void RetireHealthSource()
+        {
+            foreach (var recipient in healthRecipients)recipient.RemoveHealthSource(damageSource);
+            healthRecipients.Clear();
         }
 
         private void EnsureVisual()

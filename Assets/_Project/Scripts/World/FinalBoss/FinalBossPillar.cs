@@ -94,9 +94,9 @@ namespace Necrocis
             };
 
             damageTarget = EnemyController.Acquire(owner.transform, rule.name, EnemyController.GetPoolArchetypeId(rule));
-            damageTarget.Configure(null, rule, transform.position, transform.position);
-            damageTarget.SetIgnoreMidBossArenaRestriction(true);
-            maxHealth = owner.Balance.phaseOne.pillarMaxHealth * owner.Balance.GetDifficulty(SaveService.ActiveDifficulty).health;
+            damageTarget.ConfigureWithContext(null, rule, transform.position, transform.position,
+                EnemySpawnContextFactory.CaptureForBiome(BiomeManager.Active, rule, transform.position, EnemyEncounterRole.Boss, true));
+            maxHealth = owner.Balance.phaseOne.pillarMaxHealth * owner.Balance.GetDifficulty(WorldProgressBindings.Session.ActiveDifficulty).health;
             damageTarget.Stats.SetBaseStat(CharacterStatType.MaxHealth, maxHealth, true);
             damageTarget.SetAiSuppressed(true);
             damageTarget.DamageTaken += HandleDamageTaken;

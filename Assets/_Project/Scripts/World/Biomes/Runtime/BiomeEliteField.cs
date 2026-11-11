@@ -13,6 +13,12 @@ namespace Necrocis
         private readonly HashSet<string> localDefeated = new HashSet<string>();
         private readonly Dictionary<string, EnemySpawnRuleConfig> rules = new Dictionary<string, EnemySpawnRuleConfig>();
         private readonly Dictionary<string, BiomeEliteFieldSpawner> spawners = new Dictionary<string, BiomeEliteFieldSpawner>();
+        private readonly Dictionary<Vector2Int,List<int>> placementsByChunk = new Dictionary<Vector2Int,List<int>>();
+        private readonly Dictionary<string,int> placementIndices = new Dictionary<string,int>();
+        private readonly List<Vector2Int> loadedChunkBuffer = new List<Vector2Int>();
+        private readonly List<int> refreshIndices = new List<int>();
+        private int[] seenPlacements = System.Array.Empty<int>();
+        private int refreshStamp;
         public BiomeElitePlan Plan { get; private set; }
         public IReadOnlyCollection<BiomeEliteFieldSpawner> Spawners => spawners.Values;
 
@@ -28,12 +34,12 @@ namespace Necrocis
             Clear();
             biome = owner;
             settings = source;
-            runId = SaveService.ActiveRunId;
+            runId = WorldProgressBindings.Session.ActiveRunId;
             if (source == null || !source.enabled || source.monsters == null || source.monsters.Count == 0) return;
             string error = source.GetValidationError();
             if (error != null) { Debug.LogError("[BiomeElite] " + error); return; }
             foreach (EnemySpawnRuleConfig rule in source.monsters) rules.Add(rule.monsterDefinition.monsterId, rule);
-            Plan = SaveService.GetBiomeElitePlan(biome.BiomeType);
+            Plan = WorldProgressBindings.Visits.GetElitePlan(biome.BiomeType);
             if (Plan == null)
             {
                 Vector2Int center = arena != null && arena.useCustomCenter ? arena.centerGrid : new Vector2Int(biome.MapWidth / 2, biome.MapHeight / 2);
@@ -48,7 +54,7 @@ namespace Necrocis
                 Plan = BiomeElitePlacementService.Build(settings, biome.BiomeType, biome.Seed, biome.MapWidth, biome.MapHeight,
                     biome.WorldToGrid(biome.GetPlayerSpawnPosition()), p => biome.IsWalkable(p.x, p.y),
                     (a, b) => biome.CanMove(biome.GridToWorld(a.x, a.y), biome.GridToWorld(b.x, b.y)), Excluded);
-                if (SaveService.HasActiveSession && !SaveService.TryStoreBiomeElitePlan(Plan, out error))
+                if (WorldProgressBindings.Session.HasActiveSession && !WorldProgressBindings.Visits.TryStoreElitePlan(Plan, out error))
                 { Debug.LogError("[BiomeElite] 배치 저장 실패: " + error); Plan = null; return; }
             }
             if (Plan.mapSeed != biome.Seed) { Debug.LogError("[BiomeElite] 저장된 맵 시드와 배치가 다릅니다."); Plan = null; return; }
@@ -56,6 +62,7 @@ namespace Necrocis
                 Debug.LogWarning($"[BiomeElite] 유효 위치 부족: {Plan.requestedCount} 중 {Plan.placements.Count} 배치. 간격/안전 조건은 유지합니다.");
             foreach (BiomeElitePlacement point in Plan.placements)
                 if (!rules.ContainsKey(point.monsterId)) Debug.LogWarning("[BiomeElite] 저장된 정의가 현재 목록에 없습니다: " + point.monsterId);
+            BuildChunkIndex();
         }
 
         private void Update()
@@ -67,11 +74,13 @@ namespace Necrocis
 
         public void Refresh(Vector3 playerPosition)
         {
-            if (Plan == null || (runId != SaveService.ActiveRunId)) { ClearSpawners(); return; }
-            foreach (BiomeElitePlacement point in Plan.placements)
+            if (Plan == null || (runId != WorldProgressBindings.Session.ActiveRunId)) { ClearSpawners(); return; }
+            CollectRefreshIndices();
+            foreach (int index in refreshIndices)
             {
+                BiomeElitePlacement point=Plan.placements[index];
                 bool loaded = biome.IsChunkLoadedAt(point.x, point.y);
-                bool defeated = localDefeated.Contains(point.spawnId) || SaveService.IsBiomeEliteDefeated(point.spawnId);
+                bool defeated = localDefeated.Contains(point.spawnId) || WorldProgressBindings.Elites.IsDefeated(point.spawnId);
                 if (loaded && defeated && spawners.TryGetValue(point.spawnId, out BiomeEliteFieldSpawner dying)
                     && dying.ActiveEnemy != null && dying.ActiveEnemy.IsDeathAnimPlaying)
                 {
@@ -90,11 +99,41 @@ namespace Necrocis
                     node.transform.SetParent(transform, false);
                     node.transform.position = biome.GridToWorldWithHeight(point.x, point.y, rule.heightOffset);
                     spawner = node.AddComponent<BiomeEliteFieldSpawner>();
-                    spawner.Configure(point, rule, settings, runId, id => localDefeated.Add(id));
+                    spawner.ConfigureWithProgress(point, rule, settings, runId, id => localDefeated.Add(id), WorldProgressBindings.Elites);
                     spawners.Add(point.spawnId, spawner);
                 }
                 spawner.Refresh(playerPosition);
             }
+        }
+
+        private void BuildChunkIndex()
+        {
+            placementsByChunk.Clear(); placementIndices.Clear();
+            seenPlacements=new int[Plan.placements.Count]; refreshStamp=0;
+            for(int i=0;i<Plan.placements.Count;i++)
+            {
+                var point=Plan.placements[i];
+                Vector2Int chunk=biome.GridToChunk(point.x,point.y);
+                if(!placementsByChunk.TryGetValue(chunk,out var list))placementsByChunk.Add(chunk,list=new List<int>());
+                list.Add(i); placementIndices[point.spawnId]=i;
+            }
+        }
+
+        private void CollectRefreshIndices()
+        {
+            refreshIndices.Clear();
+            if(++refreshStamp==int.MaxValue){System.Array.Clear(seenPlacements,0,seenPlacements.Length);refreshStamp=1;}
+            void Include(int index)
+            {
+                if(seenPlacements[index]==refreshStamp)return;
+                seenPlacements[index]=refreshStamp; refreshIndices.Add(index);
+            }
+            biome.CopyLoadedChunkCoordinates(loadedChunkBuffer);
+            foreach(var coordinate in loadedChunkBuffer)
+                if(placementsByChunk.TryGetValue(coordinate,out var list))foreach(int index in list)Include(index);
+            // Existing actors outside loaded chunks still need the original release/death-animation rules.
+            foreach(var pair in spawners)if(placementIndices.TryGetValue(pair.Key,out int index))Include(index);
+            refreshIndices.Sort(); // Preserve the plan's original order and global pattern-random consumption.
         }
 
         private void ClearSpawners()
@@ -109,12 +148,12 @@ namespace Necrocis
             if (Plan == null || biome == null) return;
             foreach (BiomeElitePlacement point in Plan.placements)
             {
-                Gizmos.color = localDefeated.Contains(point.spawnId) || SaveService.IsBiomeEliteDefeated(point.spawnId) ? Color.gray : Color.cyan;
+                Gizmos.color = localDefeated.Contains(point.spawnId) || WorldProgressBindings.Elites.IsDefeated(point.spawnId) ? Color.gray : Color.cyan;
                 Gizmos.DrawWireSphere(biome.GridToWorldWithHeight(point.x, point.y), .8f);
             }
         }
 
-        private void Clear() { ClearSpawners(); rules.Clear(); localDefeated.Clear(); Plan = null; }
+        private void Clear() { ClearSpawners(); rules.Clear(); localDefeated.Clear(); placementsByChunk.Clear(); placementIndices.Clear(); loadedChunkBuffer.Clear(); refreshIndices.Clear(); seenPlacements=System.Array.Empty<int>(); Plan = null; }
         private void OnDisable() => ClearSpawners();
     }
 }

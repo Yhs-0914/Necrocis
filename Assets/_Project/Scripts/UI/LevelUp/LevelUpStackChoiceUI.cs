@@ -68,8 +68,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
     private readonly Image[] statValueBadges = new Image[VisibleChoiceCount];
 
     private Canvas levelUpCanvasRoot;
-    private bool pausedByThisUI;
-    private float previousTimeScale = 1f;
+    private ModalInputScope inputScope;
     private bool cachedAuthoredUIScale;
     private Vector3 authoredUIScale = Vector3.one;
     private bool selectionInProgress;
@@ -115,7 +114,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
     private void Update()
     {
-        if (stackChoicePanel == null || !stackChoicePanel.activeInHierarchy || selectionInProgress)
+        if (stackChoicePanel == null || !stackChoicePanel.activeInHierarchy || selectionInProgress || inputScope?.CanInteract != true)
         {
             return;
         }
@@ -144,18 +143,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         currentChoices.Clear();
-        List<StackStatType> allStats = new List<StackStatType>
-        {
-            StackStatType.AttackPower,
-            StackStatType.AttackRange,
-            StackStatType.AttackSpeed,
-            StackStatType.Magic,
-            StackStatType.MoveSpeed,
-            StackStatType.MaxHealth
-        };
-
-        Shuffle(allStats);
-        currentChoices.AddRange(allStats.Take(VisibleChoiceCount));
+        currentChoices.AddRange(LevelUpChoiceService.BuildChoices().Select(type=>(StackStatType)System.Enum.Parse(typeof(StackStatType),type.ToString())));
         selectionInProgress = false;
         EnsureStatValueUI();
 
@@ -204,6 +192,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
     private void SelectChoice(int index)
     {
+        if (inputScope?.CanInteract != true) return;
         Debug.Log($"[LevelUpStackChoiceUI] SelectChoice called. index={index}, currentChoices={currentChoices.Count}, panelActive={(stackChoicePanel != null && stackChoicePanel.activeInHierarchy)}");
 
         if (selectionInProgress)
@@ -225,7 +214,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         SetButtonsInteractable(false);
 
         int? bioGambleResult = ApplyStat(currentChoices[index]);
-        LevelUpManager.RecordSelection(MapToLegacyChoice(currentChoices[index]));
+        LevelUpChoiceService.RecordSelection(ToCharacterStatType(currentChoices[index]));
 
         if (bioGambleResult.HasValue)
         {
@@ -266,55 +255,19 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
     private int? ApplyStat(StackStatType statType)
     {
-        PlayerStats playerStats = PlayerStats.Instance ?? FindFirstObjectByType<PlayerStats>();
-        if (playerStats == null)
+        IPlayerGrowthRecipient recipient = GrowthChoiceBindings.ResolveRecipient?.Invoke();
+        if (recipient == null || !recipient.IsAvailable)
         {
             Debug.LogWarning("[LevelUpStackChoiceUI] PlayerStats instance not found.");
             return null;
         }
-
         string source = $"LevelUpStackChoiceUI_{statType}_{selectionSerial++}";
-        PlayerItemManager itemManager = PlayerItemManager.Instance ?? playerStats.GetComponent<PlayerItemManager>();
-        LevelProgressionConfig config = LevelUpManager.Config;
-        bool hasBioGamble = HasBioGamble(config, itemManager);
-        if (hasBioGamble)
-        {
-            int minDelta = config.bioGambleMinDelta;
-            int maxDelta = Mathf.Max(minDelta, config.bioGambleMaxDelta);
-            int randomDelta = config.RollGrowthMultiplier();
-            ApplyBioGambleStat(playerStats, statType, randomDelta, source);
-            return randomDelta;
-        }
-
-        CharacterStatType characterStatType = ToCharacterStatType(statType);
-        if (config == null || !config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
-        {
-            Debug.LogWarning($"[LevelUpStackChoiceUI] Missing level-up stat config for {characterStatType}.");
-            return null;
-        }
-
-        float modifierValue = config.GetRuntimeModifierValue(valueConfig);
-        playerStats.ApplyModifier(new CharacterStatModifier(characterStatType, modifierValue, valueConfig.mode, source));
-        LevelUpManager.RecordResolvedModifier(characterStatType, modifierValue, valueConfig.mode);
-        if (valueConfig.healWhenPositive
-            && characterStatType == CharacterStatType.MaxHealth
-            && valueConfig.mode == CharacterStatModifierMode.Flat
-            && valueConfig.value > 0f)
-        {
-            playerStats.Heal(valueConfig.value);
-        }
-
-        return null;
+        bool ownsBioGamble = GrowthChoiceBindings.OwnsBioGamble?.Invoke(recipient) ?? false;
+        return LevelUpChoiceService.ApplyChoiceTo(recipient,ownsBioGamble,LevelUpManager.Config,ToCharacterStatType(statType),source,LevelUpManager.RecordResolvedModifier);
     }
 
-    private static bool HasBioGamble(LevelProgressionConfig config, PlayerItemManager itemManager = null)
-    {
-        itemManager ??= PlayerItemManager.Instance ?? Object.FindFirstObjectByType<PlayerItemManager>();
-        return config != null
-            && config.bioGambleEnabled
-            && itemManager != null
-            && itemManager.ContainsItem(PlayerItemCombatEffects.BioGambleId);
-    }
+    private static bool HasBioGamble(LevelProgressionConfig config)
+        => config != null && config.bioGambleEnabled && (GrowthChoiceBindings.AnyPlayerOwnsBioGamble?.Invoke() ?? false);
 
     private static void PlayStatSelectionSfx(StackStatType statType)
     {
@@ -330,18 +283,6 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         };
 
         AudioManager.Instance?.PlaySFX(soundKey);
-    }
-
-    private static void ApplyBioGambleStat(PlayerStats playerStats, StackStatType statType, int multiplier, string source)
-    {
-        var type = ToCharacterStatType(statType);
-        var config = LevelUpManager.Config;
-        if (!config.TryGetLevelUpStatValue(type, out var value)) return;
-        float amount = config.GetRuntimeModifierValue(value) * multiplier;
-        playerStats.ApplyModifier(new CharacterStatModifier(type, amount, value.mode, source));
-        LevelUpManager.RecordResolvedModifier(type, amount, value.mode);
-        if (value.healWhenPositive && type == CharacterStatType.MaxHealth && amount > 0f)
-            playerStats.Heal(amount);
     }
 
     private void EnsureStatValueUI()
@@ -478,7 +419,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             badge.color = BioGambleBadgeColor;
             valueText.text = "?";
             valueText.color = UnknownValueColor;
-            rangeText.text = "0 / x1 / x2";
+            rangeText.text = "x1 / x2 (30%)";
             rangeText.color = NormalValueColor;
             return;
         }
@@ -725,7 +666,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         Transform playerTransform = player.transform;
-        if (attachScriptObjectToPlayer && transform.parent != playerTransform)
+        if (attachScriptObjectToPlayer && transform != playerTransform && transform.parent != playerTransform)
         {
             transform.SetParent(playerTransform, false);
         }
@@ -890,34 +831,14 @@ public class LevelUpStackChoiceUI : MonoBehaviour
 
         stackChoicePanel.transform.SetAsLastSibling();
 
-        if (!pauseGameWhileOpen || pausedByThisUI)
-        {
-            return;
-        }
-
-        previousTimeScale = Time.timeScale;
-        Time.timeScale = 0f;
-        pausedByThisUI = true;
+        inputScope ??= new ModalInputScope(this,
+            levelUpCanvasRoot != null ? levelUpCanvasRoot.gameObject : stackChoicePanel, pauseGameWhileOpen);
     }
 
     private void HideUI(bool forceRestoreTimeScale = true)
     {
-        if (stackChoicePanel != null && stackChoicePanel.activeSelf)
-        {
-            stackChoicePanel.SetActive(false);
-        }
-
-        if (!pausedByThisUI)
-        {
-            return;
-        }
-
-        if (forceRestoreTimeScale)
-        {
-            Time.timeScale = previousTimeScale;
-        }
-
-        pausedByThisUI = false;
+        if (stackChoicePanel != null && stackChoicePanel.activeSelf) stackChoicePanel.SetActive(false);
+        inputScope?.Dispose(); inputScope = null;
     }
 
     private void SetButtonsInteractable(bool interactable)
@@ -1014,29 +935,6 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         return null;
-    }
-
-    private static void Shuffle<T>(IList<T> list)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
-    }
-
-    private static LevelUpStatChoice MapToLegacyChoice(StackStatType statType)
-    {
-        return statType switch
-        {
-            StackStatType.AttackPower => LevelUpStatChoice.AttackPowerUp,
-            StackStatType.AttackRange => LevelUpStatChoice.AttackSpeedRangeUp,
-            StackStatType.AttackSpeed => LevelUpStatChoice.AttackSpeedRangeUp,
-            StackStatType.Magic => LevelUpStatChoice.MagicUp,
-            StackStatType.MoveSpeed => LevelUpStatChoice.SpeedUp,
-            StackStatType.MaxHealth => LevelUpStatChoice.HealthUp,
-            _ => LevelUpStatChoice.HealthUp
-        };
     }
 
     private static CharacterStatType ToCharacterStatType(StackStatType statType)

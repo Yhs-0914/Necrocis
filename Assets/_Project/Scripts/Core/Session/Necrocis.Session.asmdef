@@ -1,0 +1,9 @@
+{
+  "name": "Necrocis.Session",
+  "rootNamespace": "Necrocis",
+  "references": [
+    "Necrocis.Contracts",
+    "Necrocis.Persistence"
+  ],
+  "autoReferenced": true
+}
