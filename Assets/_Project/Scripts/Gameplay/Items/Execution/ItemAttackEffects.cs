@@ -29,16 +29,60 @@ namespace Necrocis
             public float LastHitTime;
         }
 
+        public Vector3 ResolveBeamDirection(Vector3 direction, float range)
+        {
+            if (!ownership.HasHomingCell) return direction;
+            EnemyController best = null;
+            float distance = range * range;
+            foreach (var enemy in EnemyController.ActiveEnemyControllers)
+            {
+                if (!ItemEnemyQueries.IsTargetable(enemy)) continue;
+                Vector3 delta = enemy.transform.position - host.Transform.position;
+                delta.y = 0f;
+                if (delta.sqrMagnitude <= 0.0001f || delta.sqrMagnitude > distance
+                    || Vector3.Dot(direction.normalized, delta.normalized) < 0.7071f) continue;
+                best = enemy;
+                distance = delta.sqrMagnitude;
+            }
+            if (best == null) return direction;
+            Vector3 aimed = best.transform.position - host.Transform.position;
+            aimed.y = 0f;
+            return aimed.normalized;
+        }
+
+        public void ApplyBeamExplosion(Vector3 center, EnemyController primary, float sourceDamage)
+        {
+            if (!ownership.HasExplosiveBloodCell) return;
+            float radius = GetExplosionRadius();
+            float damage = sourceDamage * GetExplosionDamageMultiplier();
+            HealthEffectSource source = host.GetItemHealthEffectSource(ExplosiveBloodCellId, "beam-explosion");
+            using var targets = EnemyHitLife.CaptureOwned(EnemyController.ActiveEnemyControllers);
+            for (int i = 0; i < targets.Length; i++)
+            {
+                var life = targets.Buffer[i];
+                EnemyController enemy = life.Enemy;
+                if (!life.IsActiveCandidate || enemy == primary || !ItemEnemyQueries.IsTargetable(enemy)) continue;
+                Vector3 delta = enemy.transform.position - center;
+                delta.y = 0f;
+                if (delta.sqrMagnitude > radius * radius) continue;
+                float applied = ApplyPerTargetDamageModifiers(enemy, damage);
+                enemy.TakeDamage(applied, source);
+                TryApplyPostDamageExecutionInstinct(enemy, applied, life.Generation);
+                ApplyCommonOnHitEffects(enemy, applied, center, life.Generation);
+            }
+        }
+
         public int BeamHitBufferSize => Mathf.Max(1, settings.beamHitBufferSize);
-        public float BeamRadius => Mathf.Max(0.05f, settings.beamRadius);
-        public float BeamDamageMultiplier => Mathf.Max(0.05f, settings.beamDamageMultiplier);
+        public float BeamRadius => Mathf.Max(0.05f, settings.beamRadius) * GetScaleMultiplier() * (ownership.HasPulseBullet ? 1.2f : 1f);
+        public float BeamDamageMultiplier => Mathf.Max(0.05f, settings.beamDamageMultiplier)
+            * (1f + (ownership.HasPiercingMucus ? 0.2f : 0f) + (ownership.HasRefluxOrgan ? 0.2f : 0f) + (ownership.HasVascularReflection ? 0.15f : 0f));
         public float CellProliferationDamageMultiplier => Mathf.Max(0.05f, settings.cellProliferationDamageMultiplier);
 
         public int GetForwardProjectileCount()
         {
             if (ownership.HasItem(TripleCoreId))
             {
-                return 3;
+                return ownership.HasItem(DoubleCoreId) ? 4 : 3;
             }
 
             if (ownership.HasItem(DoubleCoreId))
@@ -192,7 +236,7 @@ namespace Necrocis
                 : 1f;
         }
 
-        public float GetAttackCooldownMultiplier()
+        public float GetAttackCooldownMultiplier(bool meleeAttack = false)
         {
             float speedMultiplier = 1f;
 
@@ -205,7 +249,7 @@ namespace Necrocis
             if (ownership.HasBloodPressureBurst && host.HasStatsOwner && host.MaxHealth > 0f)
             {
                 float healthRatio = Mathf.Clamp01(host.CurrentHealth / host.MaxHealth);
-                int missingTenPercentSteps = Mathf.Clamp(Mathf.FloorToInt((1f - healthRatio) * 10f + 0.0001f), 0, 10);
+                int missingTenPercentSteps = Mathf.Clamp(Mathf.FloorToInt((1f - healthRatio) * 10f + 0.0001f), 0, 9);
                 float additiveAttackSpeed =
                     Mathf.Max(0f, settings.bloodPressureBaseAttackSpeedAdd)
                     + Mathf.Max(0f, settings.bloodPressurePerTenPercentMissingAdd) * missingTenPercentSteps;
@@ -213,7 +257,7 @@ namespace Necrocis
                 speedMultiplier *= burstMultiplier;
             }
 
-            if (ownership.HasMuscleSpasm)
+            if (ownership.HasMuscleSpasm && meleeAttack)
             {
                 speedMultiplier *= Mathf.Clamp(settings.muscleSpasmAttackSpeedMultiplier, 0.25f, 1f);
             }
@@ -253,7 +297,7 @@ namespace Necrocis
 
             if (ownership.HasRampageBloodFlow)
             {
-                bonus += Mathf.Max(0, timed.rampageAttackBonus);
+                bonus += Mathf.Max(0, timed.rampageAttackBonus) * settings.rampageAttackBonusPerStack;
             }
 
             if (ownership.HasHyperplasiaHeart && host.HasStatsOwner && host.MaxHealth > 0f)
@@ -264,7 +308,7 @@ namespace Necrocis
 
             if (ownership.HasDecayOrgan)
             {
-                bonus += Mathf.Max(0, timed.decayRuntime.AttackBonus);
+                bonus += Mathf.Max(0, timed.decayRuntime.AttackBonus) * settings.decayOrganAttackBonusPerStack;
             }
 
             if (ownership.HasRuptureMuscle && timed.ruptureMuscleStacks > 0)
@@ -361,7 +405,7 @@ namespace Necrocis
 
                 if (overheatStacks >= Mathf.Max(1, settings.overheatMaxStacks))
                 {
-                    TriggerOverheatExplosionSelfDamage(attackDamage);
+                    TriggerOverheatExplosion(attackDamage);
                     overheatStacks = 0;
                     overheatLastAttackTime = float.NegativeInfinity;
                     overheatNextDecayTime = float.PositiveInfinity;
@@ -669,13 +713,12 @@ namespace Necrocis
             }
         }
 
-        public void TriggerOverheatExplosionSelfDamage(float attackDamage)
+        public void TriggerOverheatExplosion(float attackDamage)
         {
             host.SpawnOverheatExplosionVisual();
 
             Vector3 center = host.Transform.position;
             HealthEffectSource explosionSource = host.GetItemHealthEffectSource(OverheatedOrganId, "explosion");
-            HealthEffectSource selfSource = host.GetItemHealthEffectSource(OverheatedOrganId, "self");
             float radius = Mathf.Max(0.1f, settings.overheatExplosionRadius);
             float radiusSqr = radius * radius;
             float explosionDamage = Mathf.Max(
@@ -709,11 +752,7 @@ namespace Necrocis
                 }
             }
 
-            float selfDamage = Mathf.Max(0.1f, settings.overheatExplosionSelfDamage);
-            if (host.HasStatsOwner)
-            {
-                host.ApplyBypassDamage(selfDamage,selfSource);
-            }
+
         }
 
         public void SpawnVoidCellProjectile(float attackDamage, LayerMask mask, float range, Vector3 fallbackDirection)

@@ -8,7 +8,7 @@ namespace Necrocis
     public class LungBossPatternSettings
     {
         [Header("Phase 1")]
-        [HideInInspector] public float phase1BrotherHealth = 40f;
+        [HideInInspector] public float phase1BrotherHealth = 80f;
         [HideInInspector] public float phase1AttackDamage = 2f;
         [HideInInspector] public float phase1MoveSpeed = 1f;
         [HideInInspector] public float windGustMoveSpeed = 3f;
@@ -23,8 +23,8 @@ namespace Necrocis
         public float phase1GasKnockback = 1f;
 
         [Header("Phase 2")]
-        [HideInInspector] public float phase2MaxHealth = 100f;
-        [HideInInspector] public float phase2AttackDamage = 4f;
+        [HideInInspector] public float phase2MaxHealth = 200f;
+        [HideInInspector] public float phase2AttackDamage = 2f;
         [HideInInspector] public float phase2MoveSpeed = 1.5f;
         public float phase2GasRange = 10f;
         public float phase2GasCooldown = 4f;
@@ -80,7 +80,7 @@ namespace Necrocis
         }
 
         [Header("Phase 1")]
-        [SerializeField, HideInInspector] private float phase1BrotherHealth = 40f;
+        [SerializeField, HideInInspector] private float phase1BrotherHealth = 80f;
         [SerializeField, HideInInspector] private float phase1AttackDamage = 2f;
         [SerializeField, HideInInspector] private float phase1MoveSpeed = 1f;
         [SerializeField, HideInInspector] private float windGustMoveSpeed = 3f;
@@ -94,8 +94,8 @@ namespace Necrocis
         [SerializeField] private float phase1GasKnockback = 1f;
 
         [Header("Phase 2")]
-        [SerializeField, HideInInspector] private float phase2MaxHealth = 100f;
-        [SerializeField, HideInInspector] private float phase2AttackDamage = 4f;
+        [SerializeField, HideInInspector] private float phase2MaxHealth = 200f;
+        [SerializeField, HideInInspector] private float phase2AttackDamage = 2f;
         [SerializeField, HideInInspector] private float phase2MoveSpeed = 1.5f;
         [SerializeField] private float phase2GasRange = 10f;
         [SerializeField] private float phase2GasCooldown = 4f;
@@ -476,12 +476,12 @@ namespace Necrocis
                         continue;
                     }
 
-                    MoveBrotherPhase1(i, brother);
+                    if (brother.StatusEffects == null || !brother.StatusEffects.IsStunned) MoveBrotherPhase1(i, brother);
                 }
             }
             else if (phase == BossPhase.Phase2 && survivor != null && !survivor.IsDead && !phase2ActionRunning)
             {
-                MoveSurvivorPhase2(survivor);
+                if (survivor.StatusEffects == null || !survivor.StatusEffects.IsStunned) MoveSurvivorPhase2(survivor);
             }
         }
 

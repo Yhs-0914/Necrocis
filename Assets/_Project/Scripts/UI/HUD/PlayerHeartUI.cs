@@ -24,6 +24,7 @@ namespace Necrocis
 
         [Header("Sprites")]
         [SerializeField] private Sprite fullHeartSprite;
+        public Sprite FullHeartSprite => fullHeartSprite;
         [SerializeField] private Sprite halfHeartSprite;
         [SerializeField] private Sprite emptyHeartSprite;
 

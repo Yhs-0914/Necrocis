@@ -337,7 +337,7 @@ namespace Necrocis
                 });
             }
 
-            summaryText.text = $"슬롯: {itemManager.ItemCount}/{itemManager.MaxItemSlots} | 카탈로그: {entries.Count}";
+            summaryText.text = $"보유: {itemManager.ItemCount}개 (제한 없음) | 카탈로그: {entries.Count}";
         }
 
         private void AddSelectedCatalogItem()

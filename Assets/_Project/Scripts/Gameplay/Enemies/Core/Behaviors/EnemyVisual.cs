@@ -323,6 +323,7 @@ namespace Necrocis
 
             stats.ClearModifiers();
             stats.ConfigureBaseStats(statConfigurationBuffer, true);
+            InitializePlayerLevelHealthScaling();
         }
 
 

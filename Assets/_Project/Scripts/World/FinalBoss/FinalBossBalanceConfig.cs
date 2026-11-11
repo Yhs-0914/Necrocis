@@ -51,7 +51,7 @@ namespace Necrocis
         [Min(0f)] public float damage = 1f;
         [Min(.01f)] public float summonMoveSpeed = 1f;
         [Min(.01f)] public float summonCooldown = 1f;
-        [Min(0f)] public float summonExperience = 1f;
+        [Min(0f)] public float summonExperience = 0f;
     }
 
     [Serializable]
@@ -61,15 +61,15 @@ namespace Necrocis
         [Range(1, 12)] public int commonMinionsPerWave = 4;
         [Range(1, 3)] public int exclusiveTypesPerBiome = 2;
         [Range(1, 4)] public int exclusiveCopiesPerType = 2;
-        [Range(.1f, 1f)] public float weakenedMidBossStatRatio = .33f;
+        [Range(.1f, 1f)] public float weakenedMidBossStatRatio = 0.15f;
         [Range(.1f, 1f)] public float weakenedMidBossScaleRatio = 1f;
-        [Min(1f)] public float pillarMaxHealth = 65f;
+        [Min(1f)] public float pillarMaxHealth = 180f;
     }
 
     [Serializable]
     public sealed class FinalBossPhaseTwoBalance
     {
-        [Min(1f)] public float bossMaxHealth = 520f;
+        [Min(1f)] public float bossMaxHealth = 1600f;
         [Min(.1f)] public float phaseStartDelay = 1.4f;
         [Min(.1f)] public float patternCooldown = 1.8f;
         [Min(.1f)] public float electricWarningDuration = 1.35f;
@@ -91,7 +91,7 @@ namespace Necrocis
         [Min(0f)] public float sweepDamage = 2f;
         [Min(.1f)] public float reflectionWarningDuration = 1.1f;
         [Min(.1f)] public float reflectionActiveDuration = 3.2f;
-        [Range(0f, 2f)] public float reflectedDamageRatio = .55f;
+        [Range(0f, 2f)] public float reflectedDamageRatio = 0.3f;
         [Min(.1f)] public float barrageWarningDuration = 1.2f;
         [Range(12, 36)] public int barrageCellsPerWave = 24;
         [Range(1, 5)] public int barrageWaveCount = 3;
@@ -107,7 +107,7 @@ namespace Necrocis
         [Min(.1f)] public float detachDuration = 1.8f;
         [Min(.1f)] public float pursuitSpeed = 3.1f;
         [Min(.1f)] public float stoppingDistance = 3.2f;
-        [Min(10f)] public float collapseDuration = 45f;
+        [Min(10f)] public float collapseDuration = 60f;
         [Min(.5f)] public float patternRecovery = 1.8f;
         [Min(0f)] public float dashDamage = 2f;
         [Min(0f)] public float grabDamage = 2f;

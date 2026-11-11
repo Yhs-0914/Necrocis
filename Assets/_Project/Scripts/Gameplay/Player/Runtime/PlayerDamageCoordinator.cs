@@ -59,6 +59,7 @@ namespace Necrocis
             if (stats == null || stats.IsDead || deathNotified || request.Amount <= 0f) return DamageResult.Invalid;
             if ((health != null && health.IsInvincible) || (player != null && player.IsDashInvincible))
                 return new DamageResult(true, 0f, DamageBlockReason.Invincible);
+            effects?.NotifyCombatInteraction();
             EnemyController attacker = request.Source;
             Vector3 sourcePosition = attacker != null ? attacker.transform.position : transform.position - Vector3.forward;
             float amount = effects != null ? effects.ProcessIncomingDamage(request.Amount, attacker) : request.Amount;
@@ -84,6 +85,7 @@ namespace Necrocis
             if (showHit && preview.WholeUnits >= 1f && !revivalHealth.HasValue)
                 AudioManager.Instance?.PlaySFX("PlayerHit");
             if (!stats.TryApplyDamage(preview, out float applied, revivalHealth)) return DamageResult.Invalid;
+            if (applied > 0f) SaveService.RecordPlayerHit(applied, stats.IsDead);
             if (revivalHealth.HasValue)
             {
                 ownerStats?.AdvanceHealthEffectGeneration();

@@ -196,6 +196,7 @@ namespace Necrocis
                 return false;
             }
 
+            if (enemy.IsBossEncounter) return true;
             if (enemy.GetComponent<IntestineBossPattern>() != null)
             {
                 return true;

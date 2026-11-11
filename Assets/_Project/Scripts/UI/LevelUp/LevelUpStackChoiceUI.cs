@@ -419,20 +419,22 @@ public class LevelUpStackChoiceUI : MonoBehaviour
             badge.color = BioGambleBadgeColor;
             valueText.text = "?";
             valueText.color = UnknownValueColor;
-            rangeText.text = $"{FormatSignedValue(minDelta)}~{FormatSignedValue(maxDelta)}";
+            rangeText.text = "x1 / x2 (30%)";
             rangeText.color = NormalValueColor;
             return;
         }
 
         float displayedValue = 1f;
+        bool isPercent = false;
         CharacterStatType characterStatType = ToCharacterStatType(statType);
         if (config != null && config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
         {
             displayedValue = valueConfig.value;
+            isPercent = valueConfig.mode == CharacterStatModifierMode.PercentAdd;
         }
 
         badge.color = NormalBadgeColor;
-        valueText.text = FormatSignedValue(displayedValue);
+        valueText.text = FormatSignedValue(displayedValue) + (isPercent ? "%" : string.Empty);
         valueText.color = NormalValueColor;
         rangeText.text = string.Empty;
     }
@@ -445,7 +447,7 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         }
 
         badge.color = BioGambleBadgeColor;
-        valueText.text = FormatSignedValue(result);
+        valueText.text = $"x{result}";
         valueText.color = result > 0
             ? PositiveValueColor
             : result < 0

@@ -20,11 +20,11 @@ MonoBehaviour:
     separate approval.'
   statSets:
   - id: Default
-    maxHealth: 30
+    maxHealth: 40
     attackPower: 2
     moveSpeed: 1
   reward:
-    baseExperience: 50
+    baseExperience: 100
   contact:
     enabled: 1
     damageCoefficient: 0.5

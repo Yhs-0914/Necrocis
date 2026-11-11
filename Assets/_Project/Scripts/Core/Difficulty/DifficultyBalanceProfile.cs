@@ -114,6 +114,8 @@ namespace Necrocis
     [Serializable]
     public sealed class EnemyDifficultyBalance
     {
+        [Tooltip("0이면 몬스터별 피해를 사용합니다. 양수이면 패턴·접촉 피해를 이 값으로 통일합니다.")]
+        [Min(0f)] public float fixedHitDamage;
         [Min(0.01f)] public float maxHealth = 1f;
         [Min(0.01f)] public float moveSpeed = 1f;
         [Min(0f)] public float outgoingDamage = 1f;

@@ -21,27 +21,27 @@ MonoBehaviour:
     \uC870\uC808."
   statSets:
   - id: Default
-    maxHealth: 10
+    maxHealth: 360
     attackPower: 3
     moveSpeed: 0.5
   - id: Phase2
-    maxHealth: 10
+    maxHealth: 360
     attackPower: 3
     moveSpeed: 1
   reward:
-    baseExperience: 0
+    baseExperience: 240
   contact:
     enabled: 1
     damageCoefficient: 0.33333334
     knockbackDistance: 0.45
   patternDamage:
   - id: melee
-    coefficient: 1
+    coefficient: 0.6666666666666666
   - id: charge
-    coefficient: 1.3333334
+    coefficient: 1
   - id: acid
     coefficient: 0.6666667
   - id: acid-dot
     coefficient: 0.33333334
   - id: short-range
-    coefficient: 1.6666666
+    coefficient: 1

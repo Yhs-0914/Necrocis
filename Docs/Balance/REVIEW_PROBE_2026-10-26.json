@@ -1,0 +1,95 @@
+{
+  "atFive": {
+    "level": 5,
+    "statPrompts": 3,
+    "jobPrompts": 1
+  },
+  "restore": {
+    "level": 4,
+    "pendingBefore": true,
+    "pendingAfter": false,
+    "emittedStatPrompts": 1
+  },
+  "repeated": {
+    "level": 3,
+    "emittedStatPromptsWithoutSelection": 2,
+    "pending": false
+  },
+  "xpRows": [
+    {
+      "stage": 0,
+      "baseXp": 10,
+      "Experience": 10
+    },
+    {
+      "stage": 0,
+      "baseXp": 12,
+      "Experience": 12
+    },
+    {
+      "stage": 0,
+      "baseXp": 15,
+      "Experience": 15
+    },
+    {
+      "stage": 1,
+      "baseXp": 10,
+      "Experience": 11
+    },
+    {
+      "stage": 1,
+      "baseXp": 12,
+      "Experience": 13
+    },
+    {
+      "stage": 1,
+      "baseXp": 15,
+      "Experience": 17
+    },
+    {
+      "stage": 2,
+      "baseXp": 10,
+      "Experience": 12
+    },
+    {
+      "stage": 2,
+      "baseXp": 12,
+      "Experience": 15
+    },
+    {
+      "stage": 2,
+      "baseXp": 15,
+      "Experience": 19
+    },
+    {
+      "stage": 3,
+      "baseXp": 10,
+      "Experience": 14
+    },
+    {
+      "stage": 3,
+      "baseXp": 12,
+      "Experience": 17
+    },
+    {
+      "stage": 3,
+      "baseXp": 15,
+      "Experience": 21
+    },
+    {
+      "stage": 4,
+      "baseXp": 10,
+      "Experience": 16
+    },
+    {
+      "stage": 4,
+      "baseXp": 12,
+      "Experience": 19
+    },
+    {
+      "stage": 4,
+      "baseXp": 15,
+      "Experience": 24
+    }
+  ]
+}

@@ -8,6 +8,7 @@ namespace Necrocis
         IItemCombatSettings Settings { get; }
         Transform Transform { get; }
         bool HasStatsOwner { get; }
+        bool RunRevivalUsed { get; set; }
         bool HasManagedStatsOwner { get; }
         CharacterStats Recipient { get; }
         float AttackPower { get; }

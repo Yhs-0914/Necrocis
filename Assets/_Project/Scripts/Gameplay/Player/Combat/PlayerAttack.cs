@@ -40,8 +40,8 @@ namespace Necrocis
         [SerializeField] private string beamTextureResourcePath = "ItemEffects/beam_organ_beam";
 
         [Header("Shared")]
-        [SerializeField] private float meleeCooldown  = 0.2f;
-        [SerializeField] private float attackCooldown = 0.3f;
+        [SerializeField] private float meleeCooldown  = 0.55f;
+        [SerializeField] private float attackCooldown = 0.75f;
         [SerializeField, Min(0f)] private float cellProliferationDelay = 0.5f;
         [SerializeField] private bool enableDebugLogs;
 
@@ -150,7 +150,7 @@ namespace Necrocis
                 float effectiveMeleeCooldown = PlayerCombatCalculator.GetBasicAttackCooldown(meleeCooldown, stats);
                 if (HasItemEffects)
                 {
-                    effectiveMeleeCooldown *= itemEffects.GetAttackCooldownMultiplier();
+                    effectiveMeleeCooldown *= itemEffects.GetAttackCooldownMultiplier(true);
                 }
 
                 if (Time.time < lastMeleeTime + effectiveMeleeCooldown) return;
@@ -245,6 +245,7 @@ namespace Necrocis
                 enemy.TakeDamage(appliedDamage, source);
                 itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, hitLife.Generation);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, hitPosition, hitLife.Generation);
+
             }
         }
 
@@ -384,7 +385,7 @@ namespace Necrocis
                 FireBeamVolley(
                     direction,
                     damage * itemEffects.BeamDamageMultiplier,
-                    effectiveProjectileRange,
+                    effectiveProjectileRange * itemEffects.GetRangeMultiplier(),
                     true);
                 return;
             }
@@ -480,6 +481,13 @@ namespace Necrocis
 
         private void FireBeamVolleyFromSource(Vector3 direction, float damage, float range, bool allowExtraVolley, HealthEffectSource source)
         {
+            float volleyDamage = damage;
+            if (HasItemEffects)
+            {
+                direction = itemEffects.ResolveBeamDirection(direction, range);
+                itemEffects.RollUnstableCellProjectileSpeedMultiplier(out float beamRollDamage);
+                volleyDamage *= beamRollDamage;
+            }
             int beamCount = HasItemEffects ? itemEffects.GetForwardProjectileCount() : 1;
             float spread = HasItemEffects ? itemEffects.GetSpreadAngleForCount(beamCount) : 0f;
             float accuracyPenalty = HasItemEffects ? itemEffects.GetAccuracyPenaltyAngle() : 0f;
@@ -487,7 +495,7 @@ namespace Necrocis
             float forwardDamageMultiplier = HasItemEffects
                 ? itemEffects.GetForwardProjectileDamageMultiplier(beamCount)
                 : 1f;
-            float forwardDamage = damage * forwardDamageMultiplier;
+            float forwardDamage = volleyDamage * forwardDamageMultiplier;
 
             if (beamCount <= 1)
             {
@@ -508,7 +516,7 @@ namespace Necrocis
             {
                 FireBeamFromSource(
                     -firingDirection,
-                    damage * itemEffects.GetBackShotDamageMultiplier(),
+                    volleyDamage * itemEffects.GetBackShotDamageMultiplier(),
                     range, itemEffects.GetItemHealthEffectSource(PlayerItemIds.LaryngealNerveId, "beam").WithEffect(source.EffectId));
             }
 
@@ -592,6 +600,7 @@ namespace Necrocis
         {
             EnsureBeamOverlapBuffer();
             var beamHitEnemies=new HashSet<EnemyController>();
+            bool splitTriggered = false;
 
             Vector3 forward = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             Vector3 origin = firePoint != null ? firePoint.position : transform.position;
@@ -634,6 +643,15 @@ namespace Necrocis
                 enemy.TakeDamage(appliedDamage, source);
                 itemEffects?.TryApplyPostDamageExecutionInstinct(enemy, appliedDamage, hitLife.Generation);
                 itemEffects?.ApplyCommonOnHitEffects(enemy, appliedDamage, hitPosition, hitLife.Generation);
+                if (HasItemEffects)
+                {
+                    if (itemEffects.HasSplitTissue && !splitTriggered)
+                    {
+                        splitTriggered = true;
+                        itemEffects.SpawnSplitProjectiles(hitPosition, forward, damage, rangedTargetMask, range);
+                    }
+                    itemEffects.ApplyBeamExplosion(hitPosition, enemy, damage);
+                }
             }
         }
 

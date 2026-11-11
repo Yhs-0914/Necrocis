@@ -73,7 +73,7 @@ namespace Necrocis
             if (toTarget.sqrMagnitude <= 0.45f * 0.45f)
             {
                 uint generation = launchGeneration;
-                target.TakeDamage(damage, damageSource);
+                target.TakeCompanionDamage(damage, damageSource);
                 if (generation == launchGeneration && isActiveAndEnabled) ReleaseSelf();
                 return;
             }

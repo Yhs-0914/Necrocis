@@ -158,13 +158,14 @@ namespace Necrocis
         private IItemStatRecipient playerStats;
         private IItemEffectLifecycle combatEffects;
         private bool isRestoringSavedItems;
+        public bool SplitRegenerationUsedForRun { get; set; }
 
         public event Action<PlayerItemManager, AcquiredPlayerItem> ItemAcquired;
         public event Action<PlayerItemManager, AcquiredPlayerItem> ItemRemoved;
 
-        public int MaxItemSlots => maxItemSlots;
+        public int MaxItemSlots => int.MaxValue;
         public int ItemCount => acquiredItems.Count;
-        public bool IsFull => acquiredItems.Count >= maxItemSlots;
+        public bool IsFull => false;
         public IReadOnlyList<PlayerItemEntry> ItemEntries => itemEntries;
         public IReadOnlyList<AcquiredPlayerItem> AcquiredItems => acquiredItems;
         public bool IsRestoringSavedItems => isRestoringSavedItems;
@@ -268,6 +269,7 @@ namespace Necrocis
 
                 ClearRuntimeFallbackIconForSpecialItems(entry);
                 AssignFallbackIcon(entry);
+                if (ItemDefinitions.TryGet(entry.ItemId, out var definition)) entry.SetDescription(definition.LegacyDescription);
                 entry.BindDescription(ResolveDescription);
 
                 if (!entryMap.ContainsKey(entry.ItemId))
@@ -573,7 +575,7 @@ namespace Necrocis
                 return false;
             }
 
-            if (!allowDuplicateItems && ContainsItem(itemId))
+            if (!allowDuplicateItems && !PlayerStatItemCatalog.IsRepeatable(itemId) && ContainsItem(itemId))
             {
                 failureReason = PlayerItemAcquireFailureReason.DuplicateNotAllowed;
                 return false;
@@ -581,6 +583,7 @@ namespace Necrocis
 
             AcquiredPlayerItem acquiredItem = new AcquiredPlayerItem(entry);
             acquiredItems.Add(acquiredItem);
+            ApplyStatItem(acquiredItem);
 
             if (acquiredItem.Implementation != null)
             {
@@ -589,7 +592,41 @@ namespace Necrocis
 
             EnsureCombatEffectsForInventoryChange();
             ItemAcquired?.Invoke(this, acquiredItem);
-            Debug.Log($"[PlayerItemManager] 아이템 획득: {acquiredItem.DisplayName} ({acquiredItem.ItemId}) [{acquiredItems.Count}/{maxItemSlots}]");
+            if (!isRestoringSavedItems) SaveService.RecordItemChoice(itemId);
+            Debug.Log($"[PlayerItemManager] 아이템 획득: {acquiredItem.DisplayName} ({acquiredItem.ItemId}) [보유 {acquiredItems.Count}개]");
+            return true;
+        }
+
+        public bool CanAcquireItem(string itemId) => entryMap.ContainsKey(itemId ?? string.Empty)
+            && (allowDuplicateItems || PlayerStatItemCatalog.IsRepeatable(itemId) || !ContainsItem(itemId));
+
+        private void ApplyStatItem(AcquiredPlayerItem item)
+        {
+            if (playerStats == null || !PlayerStatItemCatalog.TryGet(item.ItemId, out var definition)) return;
+            playerStats.ApplyPlayerItemStatModifiers(new[] { new PlayerItemStatModifierData
+                { statType = (PlayerItemStatType)Enum.Parse(typeof(PlayerItemStatType), definition.Stat.ToString()), value = definition.Amount, mode = definition.Mode } }, item);
+            if (!isRestoringSavedItems && definition.Stat == CharacterStatType.MaxHealth)
+                ItemInventoryBindings.Heal?.Invoke(playerStats, definition.Amount);
+        }
+
+        public bool TryReplaceItem(string previousItemId, string incomingItemId)
+        {
+            if (string.IsNullOrEmpty(incomingItemId) || !entryMap.TryGetValue(incomingItemId, out var entry)
+                || ContainsItem(incomingItemId)) return false;
+            int index = acquiredItems.FindIndex(item => string.Equals(item.ItemId, previousItemId, StringComparison.OrdinalIgnoreCase));
+            if (index < 0) return false;
+            var previous = acquiredItems[index];
+            if (previous.Implementation != null) ItemInventoryBindings.RemoveImplementation(previous.Implementation, playerStats);
+            playerStats?.RemoveModifiersFromSource(previous);
+            var replacement = new AcquiredPlayerItem(entry);
+            acquiredItems[index] = replacement;
+            ApplyStatItem(replacement);
+            if (replacement.Implementation != null) ItemInventoryBindings.ApplyImplementation(replacement.Implementation, playerStats);
+            EnsureCombatEffectsForInventoryChange();
+            // Both notifications observe the completed inventory, never a temporary empty slot.
+            ItemRemoved?.Invoke(this, previous);
+            ItemAcquired?.Invoke(this, replacement);
+            SaveService.RecordItemChoice(incomingItemId);
             return true;
         }
 
@@ -614,6 +651,7 @@ namespace Necrocis
                 }
 
                 acquiredItems.RemoveAt(i);
+                playerStats?.RemoveModifiersFromSource(acquiredItem);
                 combatEffects?.RetireItemHealthSources(acquiredItem.ItemId);
                 ItemRemoved?.Invoke(this, acquiredItem);
                 return true;
@@ -633,6 +671,7 @@ namespace Necrocis
             for (int i = acquiredItems.Count - 1; i >= 0; i--)
             {
                 AcquiredPlayerItem acquiredItem = acquiredItems[i];
+                playerStats?.RemoveModifiersFromSource(acquiredItem);
                 if (acquiredItem.Implementation != null)
                 {
                     ItemInventoryBindings.RemoveImplementation(acquiredItem.Implementation,playerStats);
@@ -670,6 +709,7 @@ namespace Necrocis
 
         public void RestoreSavedItems(IReadOnlyList<SavedItemStateData> savedItems)
         {
+            SplitRegenerationUsedForRun = false;
             isRestoringSavedItems = true;
             try
             {

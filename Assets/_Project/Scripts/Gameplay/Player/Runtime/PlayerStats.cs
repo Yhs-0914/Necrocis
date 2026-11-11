@@ -180,18 +180,21 @@ namespace Necrocis
             EnsureInitialized();
             LevelUpStatEffect effect = LevelUpStatCatalog.GetStatEffect(choice);
             float previousMaxHealth = RuntimeStats.MaxHealth;
+            var inventory = GetComponent<PlayerItemManager>();
+            int growthMultiplier = LevelUpManager.Config.bioGambleEnabled && inventory != null
+                && inventory.ContainsItem(PlayerItemIds.BioGambleId) ? LevelUpManager.Config.RollGrowthMultiplier() : 1;
 
             // 고정값 모디파이어 적용 (예: 공격력 +3)
             foreach (var stat in effect.flatStats)
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value,
+                    stat.Value * growthMultiplier,
                     CharacterStatModifierMode.Flat,
                     choice); // source를 choice로 설정하여 추적 가능
                 LevelUpManager.RecordResolvedModifier(
                     stat.Key,
-                    stat.Value,
+                    stat.Value * growthMultiplier,
                     CharacterStatModifierMode.Flat);
             }
 
@@ -200,12 +203,12 @@ namespace Necrocis
             {
                 RuntimeStats.AddModifier(
                     stat.Key,
-                    stat.Value / 100f, // UI에선 3%로 표시, 내부적으론 0.03
+                    stat.Value * growthMultiplier / 100f, // UI에선 3%로 표시, 내부적으론 0.03
                     CharacterStatModifierMode.PercentAdd,
                     choice);
                 LevelUpManager.RecordResolvedModifier(
                     stat.Key,
-                    stat.Value / 100f,
+                    stat.Value * growthMultiplier / 100f,
                     CharacterStatModifierMode.PercentAdd);
             }
 
@@ -255,8 +258,8 @@ namespace Necrocis
 
         public void TakeDamage(float damage) => RuntimeStats.ApplyDamage(damage, GetHealthEffectSource("legacy-damage", "player:legacy-damage"));
         public void TakeDamage(float damage, HealthEffectSource source) => RuntimeStats.ApplyDamage(damage, source);
-        public void Heal(float amount) => RuntimeStats.RestoreHealth(amount, GetHealthEffectSource("legacy-heal", "player:legacy-heal"));
-        public void Heal(float amount, HealthEffectSource source) => RuntimeStats.RestoreHealth(amount, source);
+        public void Heal(float amount) => Heal(amount, GetHealthEffectSource("legacy-heal", "player:legacy-heal"));
+        public void Heal(float amount, HealthEffectSource source) => SaveService.RecordPlayerHealing(RuntimeStats.RestoreHealth(amount, source));
 
         // ─────────────────────────────────
         // 모디파이어 API (아이템/버프용)

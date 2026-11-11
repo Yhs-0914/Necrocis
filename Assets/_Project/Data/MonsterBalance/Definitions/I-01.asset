@@ -21,11 +21,11 @@ MonoBehaviour:
     \uAC1C\uBCC4 \uAC80\uD1A0 \uB2E8\uACC4."
   statSets:
   - id: Default
-    maxHealth: 30
+    maxHealth: 40
     attackPower: 2
     moveSpeed: 1
   reward:
-    baseExperience: 50
+    baseExperience: 100
   contact:
     enabled: 1
     damageCoefficient: 0.5

@@ -239,7 +239,7 @@ namespace Necrocis
             eliteSpawner.ConfigureKillInterval(
                 config.enemySpawnConfig != null
                     ? config.enemySpawnConfig.NormalKillsPerElite
-                    : 10);
+                    : 40);
 
             int allMask = 0;
             for (int i = 0; i < config.regions.Count; i++)

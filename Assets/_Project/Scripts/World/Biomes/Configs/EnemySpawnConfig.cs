@@ -7,7 +7,7 @@ namespace Necrocis
     public class EnemySpawnConfig : ScriptableObject
     {
         [Header("Elite Spawn")]
-        [Min(1)] public int normalKillsPerElite = 10;
+        [Min(1)] public int normalKillsPerElite = 40;
 
         [Header("Enemy Spawn Rules")]
         public List<EnemySpawnRuleConfig> enemySpawnRules = new List<EnemySpawnRuleConfig>();

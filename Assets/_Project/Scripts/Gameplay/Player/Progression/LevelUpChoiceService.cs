@@ -17,12 +17,12 @@ namespace Necrocis
             if(player==null || !player.IsAvailable)return null;
             if(config!=null && config.bioGambleEnabled && ownsBioGamble)
             {
-                int delta=Random.Range(config.bioGambleMinDelta,Mathf.Max(config.bioGambleMinDelta,config.bioGambleMaxDelta)+1);
-                bool percent=stat==CharacterStatType.AttackRange || stat==CharacterStatType.AttackSpeed || stat==CharacterStatType.MoveSpeed;
-                float value=percent?delta/100f:delta;
-                var mode=percent?CharacterStatModifierMode.PercentAdd:CharacterStatModifierMode.Flat;
-                player.ApplyModifier(new CharacterStatModifier(stat,value,mode,source));recordResolved(stat,value,mode);
-                if(stat==CharacterStatType.MaxHealth && delta>0)player.Heal(delta);
+                if (!config.TryGetLevelUpStatValue(stat, out var growth)) return null;
+                int delta = config.RollGrowthMultiplier();
+                float value = config.GetRuntimeModifierValue(growth) * delta;
+                player.ApplyModifier(new CharacterStatModifier(stat, value, growth.mode, source));
+                recordResolved(stat, value, growth.mode);
+                if (growth.healWhenPositive && stat == CharacterStatType.MaxHealth && value > 0f) player.Heal(value);
                 return delta;
             }
             if(config==null || !config.TryGetLevelUpStatValue(stat,out var setting))

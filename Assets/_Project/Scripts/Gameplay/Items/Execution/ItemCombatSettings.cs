@@ -3,6 +3,11 @@ namespace Necrocis
 {
     internal interface IItemCombatSettings
     {
+        float frenzyHormoneAttackSpeedBonus { get; }
+        float frenzyHormoneMoveBonus { get; }
+        float frenzyHormoneAttackBonus { get; }
+        float decayOrganAttackBonusPerStack { get; }
+        float rampageAttackBonusPerStack { get; }
         float doubleShotSpreadAngle { get; }
         float tripleShotSpreadAngle { get; }
         float doubleShotDamageMultiplier { get; }
@@ -372,5 +377,10 @@ namespace Necrocis
         float IItemCombatSettings.frenzyHormoneCooldown => frenzyHormoneCooldown;
         float IItemCombatSettings.frenzyHormoneMinBonus => frenzyHormoneMinBonus;
         float IItemCombatSettings.frenzyHormoneMaxBonus => frenzyHormoneMaxBonus;
+        float IItemCombatSettings.rampageAttackBonusPerStack => rampageAttackBonusPerStack;
+        float IItemCombatSettings.decayOrganAttackBonusPerStack => decayOrganAttackBonusPerStack;
+        float IItemCombatSettings.frenzyHormoneAttackBonus => frenzyHormoneAttackBonus;
+        float IItemCombatSettings.frenzyHormoneMoveBonus => frenzyHormoneMoveBonus;
+        float IItemCombatSettings.frenzyHormoneAttackSpeedBonus => frenzyHormoneAttackSpeedBonus;
     }
 }

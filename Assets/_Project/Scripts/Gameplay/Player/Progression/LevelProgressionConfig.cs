@@ -25,10 +25,25 @@ namespace Necrocis
         [Min(0f)] public float lateExpGainMultiplier = 0.8f;
 
         [Header("Unlock Levels")]
-        [Min(1)] public int jobSelectionLevel = 10;
-        [Min(1)] public int jobBasedChoiceStartLevel = 11;
-        [Min(1)] public int skill1UnlockLevel = 10;
-        [Min(1)] public int skill2UnlockLevel = 20;
+        [Min(1)] public int jobSelectionLevel = 5;
+        [Min(1)] public int jobBasedChoiceStartLevel = 6;
+        [Min(1)] public int skill1UnlockLevel = 5;
+        [Min(1)] public int skill2UnlockLevel = 10;
+
+        [Header("Normal Enemy Spawner Population")]
+        [Tooltip("잡몹 스포너의 최소/최대 마릿수를 1씩 늘리는 레벨 간격입니다.")]
+        [Min(1)] public int normalEnemySpawnLevelInterval = 5;
+        [Tooltip("첫 레벨 구간에서 스포너 하나가 유지할 최소 잡몹 수입니다.")]
+        [Min(1)] public int normalEnemySpawnMinCount = 1;
+        [Tooltip("첫 레벨 구간에서 스포너 하나가 유지할 최대 잡몹 수입니다. 난이도별 maxAlive 배율 대신 이 범위를 사용합니다.")]
+        [Min(1)] public int normalEnemySpawnMaxCount = 2;
+
+        [Header("Enemy Health by Player Level")]
+        [Min(1)] public int enemyHealthLevelInterval = 5;
+        [Tooltip("잡몹은 첫 구간 이후 구간마다 최대 체력에 이 고정값을 누적해서 더합니다. 2이면 +0/+2/+4/+6/+8/+10입니다.")]
+        [Min(0)] public int normalEnemyHealthBonusPerBand = 2;
+        [Tooltip("엘리트는 구간마다 기본 체력에 이 비율을 더합니다. 복리로 증가하지 않습니다.")]
+        [Min(0f)] public float eliteEnemyHealthIncreasePerBand = 0.12f;
 
         [Header("Player Base Stats")]
         public List<CharacterStatValue> playerBaseStats = CreateDefaultPlayerBaseStats();
@@ -38,8 +53,14 @@ namespace Necrocis
 
         [Header("Bio Gamble")]
         public bool bioGambleEnabled = true;
-        public int bioGambleMinDelta = -1;
-        public int bioGambleMaxDelta = 3;
+        public int bioGambleMinDelta = 1;
+        public int bioGambleMaxDelta = 2;
+
+        public int RollGrowthMultiplier()
+        {
+            float roll = UnityEngine.Random.value;
+            return roll < 0.7f ? 1 : 2;
+        }
 
         public int MaxLevel => Mathf.Max(1, maxLevel);
         public int BaseExp => Mathf.Max(1, baseExp);
@@ -54,6 +75,28 @@ namespace Necrocis
         {
             int completedLevelUps = Mathf.Max(0, currentLevel - 1);
             return Mathf.Max(1, BaseExp + completedLevelUps * ExpIncreasePerLevel);
+        }
+
+        public void GetNormalEnemySpawnCountRange(int currentLevel, out int minCount, out int maxCount)
+        {
+            int levelBand = (Mathf.Clamp(currentLevel, 1, MaxLevel) - 1) / Mathf.Max(1, normalEnemySpawnLevelInterval);
+            int baseMin = Mathf.Max(1, normalEnemySpawnMinCount);
+            minCount = baseMin + levelBand;
+            maxCount = Mathf.Max(baseMin, normalEnemySpawnMaxCount) + levelBand;
+        }
+
+        public float GetEnemyHealthMultiplier(int currentLevel, MonsterTier tier)
+        {
+            if (tier != MonsterTier.Elite) return 1f;
+            int band = (Mathf.Clamp(currentLevel, 1, MaxLevel) - 1) / Mathf.Max(1, enemyHealthLevelInterval);
+            return 1f + band * Mathf.Max(0f, eliteEnemyHealthIncreasePerBand);
+        }
+
+        public float GetEnemyHealthBonus(int currentLevel, MonsterTier tier)
+        {
+            if (tier != MonsterTier.Normal) return 0f;
+            int band = (Mathf.Clamp(currentLevel, 1, MaxLevel) - 1) / Mathf.Max(1, enemyHealthLevelInterval);
+            return band * (float)Mathf.Max(0, normalEnemyHealthBonusPerBand);
         }
 
         public float GetExpGainMultiplier(int currentLevel, JobType currentJob)
@@ -222,11 +265,11 @@ namespace Necrocis
             return new List<LevelUpStatValueConfig>
             {
                 new LevelUpStatValueConfig(CharacterStatType.AttackPower, CharacterStatModifierMode.Flat, 1f),
-                new LevelUpStatValueConfig(CharacterStatType.AttackRange, CharacterStatModifierMode.PercentAdd, 1f),
-                new LevelUpStatValueConfig(CharacterStatType.AttackSpeed, CharacterStatModifierMode.PercentAdd, 1f),
-                new LevelUpStatValueConfig(CharacterStatType.Magic, CharacterStatModifierMode.Flat, 1f),
-                new LevelUpStatValueConfig(CharacterStatType.MoveSpeed, CharacterStatModifierMode.PercentAdd, 1f),
-                new LevelUpStatValueConfig(CharacterStatType.MaxHealth, CharacterStatModifierMode.Flat, 1f, true)
+                new LevelUpStatValueConfig(CharacterStatType.AttackRange, CharacterStatModifierMode.PercentAdd, 10f),
+                new LevelUpStatValueConfig(CharacterStatType.AttackSpeed, CharacterStatModifierMode.PercentAdd, 20f),
+                new LevelUpStatValueConfig(CharacterStatType.Magic, CharacterStatModifierMode.Flat, 25f),
+                new LevelUpStatValueConfig(CharacterStatType.MoveSpeed, CharacterStatModifierMode.PercentAdd, 5f),
+                new LevelUpStatValueConfig(CharacterStatType.MaxHealth, CharacterStatModifierMode.Flat, 2f, true)
             };
         }
     }

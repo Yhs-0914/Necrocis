@@ -22,22 +22,11 @@ namespace Necrocis
     /// </summary>
     public static class LevelUpStatCatalog
     {
-        private static Dictionary<LevelUpStatChoice, LevelUpStatEffect> statEffects; // 선택지별 효과 매핑
-
-        static LevelUpStatCatalog()
-        {
-            InitializeStatData();
-        }
-
-        private static void InitializeStatData()
-        {
-            statEffects = LevelUpManager.Config.BuildStatEffectMap();
-        }
-
-        // 선택지에 해당하는 효과 데이터 반환
+        // Read the current profile for both descriptions and grants; do not retain
+        // the first difficulty's values across runs or an Inspector balance edit.
         public static LevelUpStatEffect GetStatEffect(LevelUpStatChoice choice)
         {
-            return statEffects[choice];
+            return LevelUpManager.Config.BuildStatEffectMap()[choice];
         }
     }
 }

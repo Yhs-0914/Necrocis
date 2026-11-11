@@ -91,5 +91,17 @@ namespace Necrocis
                 SaveService.TrySaveActiveRun(out _);
             }
         }
+
+        private float nextMetricsSaveTime;
+
+        private void Update()
+        {
+            CampaignBalanceRuntime.Tick(Time.deltaTime, Time.unscaledDeltaTime);
+            if (Time.time >= nextMetricsSaveTime && SaveService.HasActiveSession && !SaveService.IsRestorePending)
+            {
+                nextMetricsSaveTime = Time.time + 30f;
+                SaveService.TrySaveActiveRun(out _);
+            }
+        }
     }
 }

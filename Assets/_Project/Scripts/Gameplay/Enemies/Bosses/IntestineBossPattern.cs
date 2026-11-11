@@ -366,6 +366,7 @@ namespace Necrocis
 
         private void LateUpdate()
         {
+            if (boss != null && boss.StatusEffects != null && boss.StatusEffects.IsStunned) return;
             if (!encounterActive || boss == null || boss.IsDead || phase == BossPhase.Transition || PlayerController.Instance == null)
             {
                 return;

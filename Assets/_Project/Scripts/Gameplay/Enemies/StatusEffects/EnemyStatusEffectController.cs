@@ -121,6 +121,7 @@ namespace Necrocis
 
         public void ApplyStun(float duration)
         {
+            if (enemy != null && enemy.IsBossEncounter) duration *= 0.25f;
             if (duration <= 0f)
             {
                 return;
@@ -170,6 +171,14 @@ namespace Necrocis
                 return;
             }
 
+            if (hasBleedSource && Time.time < bleedEndTime
+                && tickDamage / tickInterval < bleedTickDamage / Mathf.Max(0.05f, bleedTickInterval))
+            {
+                bleedEndTime = Mathf.Max(bleedEndTime, Time.time + duration);
+                RefreshStatusVisuals();
+                return;
+            }
+
             if (hasBleedSource && (bleedSource != source || Time.time >= bleedEndTime)) EndBleedSource();
             bleedSource = source;
             hasBleedSource = true;
@@ -198,6 +207,14 @@ namespace Necrocis
         {
             if (duration <= 0f || tickInterval <= 0f || tickDamage <= 0f)
             {
+                return;
+            }
+
+            if (hasPoisonSource && Time.time < poisonEndTime
+                && tickDamage / tickInterval < poisonTickDamage / Mathf.Max(0.05f, poisonTickInterval))
+            {
+                poisonEndTime = Mathf.Max(poisonEndTime, Time.time + duration);
+                RefreshStatusVisuals();
                 return;
             }
 

@@ -5,6 +5,7 @@ namespace Necrocis
         public static void Register()
         {
             ItemGroundPlacementBindings.Resolve=ItemGroundPlacementPolicy.Resolve;
+            ItemInventoryBindings.Heal=(recipient,amount)=>{if(recipient is PlayerStats stats)stats.Heal(amount);};
             ItemInventoryBindings.SlotOverride=()=>DifficultyBalanceService.ActiveProfile?.items?.maxSlotsOverride??0;
             ItemInventoryBindings.DescriptionPolicy=()=>{
                 var config=LevelUpManager.Config;
@@ -32,9 +33,9 @@ namespace Necrocis
                 var items=PlayerItemManager.Instance??UnityEngine.Object.FindFirstObjectByType<PlayerItemManager>();
                 return items!=null && items.ContainsItem(PlayerItemIds.BioGambleId);
             };
-            EnemyDefeatBindings.PlayerKillReaction=enemy=>{
+            EnemyDefeatBindings.PlayerKillReaction=(enemy,allowHostSpawn)=>{
                 var player=PlayerController.Instance;
-                if(player!=null)player.GetComponent<PlayerItemCombatEffects>()?.NotifyEnemyDefeatedByPlayer(enemy);
+                if(player!=null)player.GetComponent<PlayerItemCombatEffects>()?.NotifyEnemyDefeatedByPlayer(enemy, allowHostSpawn);
             };
         }
     }

@@ -437,8 +437,8 @@ MonoBehaviour:
   beamHeightOffset: -0.3
   beamVisualDuration: 0.1
   beamTextureResourcePath: ItemEffects/beam_organ_beam
-  meleeCooldown: 0.2
-  attackCooldown: 1
+  meleeCooldown: 0.55
+  attackCooldown: 0.75
   cellProliferationDelay: 0.5
   enableDebugLogs: 0
   meleeSlashSpriteResourcePath: AttackVisuals/basic_melee_slash
@@ -458,8 +458,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7994394bc01c564588e6c35d6653ebb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.Health
-  invincibilityDuration: 0.5
-  revivalInvincibilityDuration: 0.5
+  invincibilityDuration: 0.6
+  revivalInvincibilityDuration: 1.5
   hitFlashInterval: 0.08
   hitFlashColor: {r: 1, g: 0.18, b: 0.12, a: 1}
 --- !u!114 &941600583578446029
@@ -568,9 +568,9 @@ MonoBehaviour:
     forwardOffset: 0
     baseDamage: 0
     additionalDamage: 0
-    additionalDamageMin: 4
-    additionalDamageMax: 6
-    stunDuration: 1
+    additionalDamageMin: 5
+    additionalDamageMax: 7
+    stunDuration: 0.75
     areaEffectPrefab: {fileID: 3983581763031629201, guid: f73f946bcf806594fb157aac0fee0209, type: 3}
     areaEffectLifetime: 1
     fallbackEffectScale: 10
@@ -579,10 +579,10 @@ MonoBehaviour:
     cooldown: 12
     radius: 3.5
     forwardOffset: 2.5
-    baseDamage: 10
+    baseDamage: 16
     detonationDelay: 0.7
-    damageTakenIncreaseRatio: 0.1
-    damageTakenIncreaseDuration: 3
+    damageTakenIncreaseRatio: 0.15
+    damageTakenIncreaseDuration: 4
     markEffectPrefab: {fileID: 6458501098902630320, guid: cf3d327d8753b394bb815654ed1f9694, type: 3}
     markEffectLifetime: 0.8
     markFallbackEffectScale: 0.8
@@ -599,15 +599,15 @@ MonoBehaviour:
     cooldown: 6
     projectileCount: 5
     fanAngle: 55
-    projectileDamage: 1
+    projectileDamage: 1.5
     projectileSpeed: 16
     projectileRange: 6
     projectileLifeTime: 2
     projectilePrefab: {fileID: 4631496915048584632, guid: c1cbf5f8078a0444d8f033977407ff70, type: 3}
     projectileScale: 0.5
-    poisonDuration: 3
+    poisonDuration: 4
     poisonTickInterval: 1
-    poisonTickDamage: 1
+    poisonTickDamage: 0.75
     shootEffectPrefab: {fileID: 0}
     shootEffectLifetime: 0.4
   archerSkill2:
@@ -618,7 +618,7 @@ MonoBehaviour:
     projectileVisualLength: 4
     projectileVisualThickness: 0.8
     targetForwardOffset: 6
-    projectileDamage: 4
+    projectileDamage: 8
     projectileTravelSpeed: 24
     projectileLifeTime: 0.65
     projectilePrefab: {fileID: 5377739703324984544, guid: 21c6d35c963bab846bfde230ca8d29fa, type: 3}
@@ -627,7 +627,7 @@ MonoBehaviour:
     prefabRotationOffsetEuler: {x: 0, y: 0, z: 0}
     autoRollToCamera: 1
     prefabSurfaceNormalAxis: 2
-    virusExplosionDamage: 5
+    virusExplosionDamage: 6
     virusExplosionRadius: 1.8
     virusExplosionEffectPrefab: {fileID: 545757833818925850, guid: e85d0693183cd4c4ca091330d68d1599, type: 3}
     virusExplosionEffectLifetime: 1
@@ -637,23 +637,23 @@ MonoBehaviour:
     afterImageStartAlpha: 0.4
     afterImageMaxVisibleCount: 3
   warriorSkill1:
-    cooldown: 4
+    cooldown: 5
     range: 4.125
     forwardAngle: 140
     maxTargets: 8
-    damage: 4
-    bleedDuration: 2
+    damage: 5
+    bleedDuration: 3
     bleedTickInterval: 1
     bleedTickDamage: 1
     hitEffectPrefab: {fileID: 840110001, guid: 67f284e219c3405b98cdb7df65e8bf81, type: 3}
     hitEffectLifetime: 0.35
     fallbackEffectScale: 0.8
   warriorSkill2:
-    cooldown: 8
+    cooldown: 9
     searchRange: 6
     dashSpeed: 18
-    damage: 8
-    rootDuration: 2
+    damage: 12
+    rootDuration: 1.5
     searchAngle: 90
     hitEffectPrefab: {fileID: 840120001, guid: e1b7d39d0ac54e2098105cb7a35a0da4, type: 3}
     hitEffectLifetime: 0.5
@@ -766,7 +766,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b93a709745f6f8f4dafeb5bad620a5b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerItemManager
-  maxItemSlots: 3
   allowDuplicateItems: 0
   itemEntries:
   - itemId: double_core
@@ -1262,13 +1261,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.PlayerItemCombatEffects
   doubleShotSpreadAngle: 7
   tripleShotSpreadAngle: 11
-  doubleShotDamageMultiplier: 0.75
-  tripleShotDamageMultiplier: 0.55
-  backShotDamageMultiplier: 0.9
+  doubleShotDamageMultiplier: 0.7
+  tripleShotDamageMultiplier: 0.5
+  backShotDamageMultiplier: 0.75
   homingTurnRate: 7
   homingSearchRadius: 8
   boomerangReturnDistance: 8
-  boomerangRepeatHitDamageMultiplier: 0.75
+  boomerangRepeatHitDamageMultiplier: 0.6
   boomerangMaxHitsPerPass: 3
   piercingHitCount: 3
   piercingSubsequentHitDamageMultiplier: 0.75
@@ -1277,93 +1276,92 @@ MonoBehaviour:
   hypertrophyRangeMultiplier: 1.25
   pulseGrowEndScale: 2.6
   pulseShrinkEndScale: 0.2
-  splitDamageMultiplier: 0.5
+  splitDamageMultiplier: 0.35
   splitRangeMultiplier: 0.65
   splitAngle: 90
   explosionRadius: 2
   explosionDamageMultiplier: 1
-  explosiveBloodCellRangedDamageMultiplier: 0.5
+  explosiveBloodCellRangedDamageMultiplier: 0.7
   acidDuration: 4
   acidTickInterval: 1
   acidTickDamage: 0.5
   poisonDuration: 4
   poisonTickInterval: 1
-  poisonTickDamageRatio: 0.2
+  poisonTickDamageRatio: 0.15
   freezeSlowRatio: 0.3
   freezeDuration: 2
-  bleedDuration: 3.5
+  bleedDuration: 3.2
   bleedTickInterval: 0.8
-  bleedTickDamageRatio: 0.18
+  bleedTickDamageRatio: 0.15
   cellProliferationChance: 0.25
-  cellProliferationDamageMultiplier: 0.9
+  cellProliferationDamageMultiplier: 0.7
   beamRadius: 0.8
   beamDamageMultiplier: 0.8
   beamHitBufferSize: 48
   overheatMaxStacks: 10
   overheatStackWindow: 1.4
-  overheatPerStackAttackSpeedBonus: 0.1
+  overheatPerStackAttackSpeedBonus: 0.06
   overheatDecayInterval: 5
-  overheatExplosionRadius: 2.5
+  overheatExplosionRadius: 4
   overheatExplosionDamageMultiplier: 1.5
-  overheatExplosionSelfDamage: 1
-  mutantEyeAccuracyPenaltyAngle: 40
-  mutantEyeFlatDamageBonus: 2
+  mutantEyeAccuracyPenaltyAngle: 20
+  mutantEyeFlatDamageBonus: 2.5
   organTentacleAutoAttackInterval: 1.2
   organTentacleAutoAttackRadius: 4.5
   organTentacleAutoAttackDamageMultiplier: 0.3
   organTentacleMaxTargets: 2
-  organTentacleBaseAttackPenaltyMultiplier: 0.8
-  rampageMoveSecondsPerBonus: 8
-  rampageMaxAttackBonus: 2
+  organTentacleBaseAttackPenaltyMultiplier: 1
+  rampageMoveSecondsPerBonus: 6
+  rampageMaxAttackBonus: 3
   rampageIdleSecondsPerDecay: 4
   muscleSpasmMeleeRangeMultiplier: 1.7
   muscleSpasmAttackSpeedMultiplier: 0.8
-  unstableCoreMinAttackRatio: 0.6
-  unstableCoreMaxAttackRatio: 1.6
+  unstableCoreMinAttackRatio: 0.9
+  unstableCoreMaxAttackRatio: 1.5
   unstableCoreRerollInterval: 5
-  bioResonanceStackDamageBonus: 0.15
+  bioResonanceStackDamageBonus: 0.1
   bioResonanceMaxStacks: 3
   bioResonanceStackWindow: 3
   bloodPressureBaseAttackSpeedAdd: 0
   bloodPressurePerTenPercentMissingAdd: 0.06
   voidCellChance: 0.2
-  voidCellDamageMultiplier: 0.85
+  voidCellDamageMultiplier: 0.7
   voidCellSpawnRadius: 2.2
-  forbiddenGrowthMaxHealthPenalty: 3
-  forbiddenGrowthFlatAttackBonus: 2
+  forbiddenGrowthMaxHealthPenalty: 2
+  forbiddenGrowthFlatAttackBonus: 3
   overclockNerveMaxHealthPenalty: 2
   overclockNerveFlatMoveSpeedBonus: 2
-  bloodContractIncomingDamageMultiplier: 1.3
+  bloodContractIncomingDamageMultiplier: 1.25
   bloodContractKillsPerHeal: 20
   bloodContractHealthGainAmount: 1
-  bloodContractMaxHealthGainCount: 5
-  hyperplasiaMissingHealthAttackBonusMax: 2
-  decayOrganSecondsPerAttackBonus: 180
-  decayOrganMaxAttackBonus: 2
-  ruptureMuscleAttackBonusPerStack: 0.5
-  ruptureMuscleMovePenaltyPerStack: 0.25
+  bloodContractMaxHealthGainCount: 4
+  hyperplasiaMissingHealthAttackBonusMax: 3
+  decayOrganSecondsPerAttackBonus: 90
+  decayOrganMaxAttackBonus: 6
+  ruptureMuscleAttackBonusPerStack: 1
+  ruptureMuscleMovePenaltyPerStack: 0.15
   ruptureMuscleMaxStacks: 3
   ruptureMuscleDecayDelay: 3
   imperfectRegenMaxHealthPenalty: 2
   imperfectRegenDelay: 2
   imperfectRegenHealPerTrigger: 1
-  imperfectRegenCooldownDuration: 10
-  severanceReflexDuration: 2
-  severanceReflexFlatAttackBonus: 2
+  imperfectRegenCooldownDuration: 15
+  severanceReflexDuration: 5
+  severanceReflexFlatAttackBonus: 3
   exoskeletonDamageReductionRatio: 0.25
   exoskeletonMoveSpeedPenalty: 1.5
   plateletMembraneInterval: 20
   plateletMembraneShieldAmount: 1
-  recoveryFactorInterval: 30
+  recoveryFactorInterval: 45
   recoveryFactorHealAmount: 1
   reflectiveSkinDamageRatio: 0.75
-  bioBarrierIdleSecondsPerStep: 1.5
+  bioBarrierIdleSecondsPerStep: 0.5
   bioBarrierReductionPerStep: 0.1
-  bioBarrierMaxReduction: 0.4
-  splitRegenerationReviveHealth: 2
+  bioBarrierMaxReduction: 0.3
+  splitRegenerationReviveHealth: 4
   infectedHostChance: 0.15
   infectedHostLifetime: 6
-  infectedHostDamageMultiplier: 0.35
+  infectedHostDamageMultiplier: 0.3
   infectedHostAttackInterval: 1
   infectedHostAttackRadius: 1.25
   infectedHostSearchRadius: 7
@@ -1375,15 +1373,15 @@ MonoBehaviour:
   sporeBurstRadius: 1.1
   bloodDroneOrbitRadius: 1.4
   bloodDroneFireInterval: 1
-  bloodDroneDamageMultiplier: 0.3
+  bloodDroneDamageMultiplier: 0.25
   bloodDroneTargetRadius: 9
   guardianOrganOrbitRadius: 1.2
   guardianOrganBlockRadius: 0.9
-  guardianOrganCooldown: 3.5
+  guardianOrganCooldown: 4
   tentacleBindInterval: 3
   tentacleBindRadius: 5.5
   tentacleBindDuration: 1.2
-  tentacleSlowRatio: 0.6
+  tentacleSlowRatio: 0.5
   tentacleDamageMultiplier: 0.1
   tentacleMaxTargets: 2
   electricChainDamage: 1
@@ -1397,52 +1395,51 @@ MonoBehaviour:
   infectionTransferTickDamage: 0.5
   infectionTransferCooldown: 5
   macrophageDuration: 5
-  macrophageAttackBonusPerStack: 0.5
+  macrophageAttackBonusPerStack: 0.75
   macrophageMaxStacks: 3
   gluttonousOrganDuration: 3
   gluttonousOrganMoveBonusPerStack: 0.5
   gluttonousOrganMaxStacks: 4
   heartSniperHealthThreshold: 0.6
-  heartSniperDamageBonusRatio: 0.35
+  heartSniperDamageBonusRatio: 0.25
   bloodflowAccelerationRadius: 9
-  bloodflowAccelerationAttackSpeedBonus: 0.35
+  bloodflowAccelerationAttackSpeedBonus: 0.25
   focusedNerveRadius: 6
-  focusedNerveHighAttackBonus: 0.75
-  focusedNerveLowAttackBonus: 0.5
-  executionInstinctHealthThreshold: 0.2
-  executionInstinctChance: 0.2
-  executionInstinctBossDamageMultiplier: 1.5
+  focusedNerveHighAttackBonus: 2.5
+  focusedNerveLowAttackBonus: 1.25
+  executionInstinctHealthThreshold: 0.3
+  executionInstinctChance: 0.35
+  executionInstinctBossDamageMultiplier: 2
   berserkCellDuration: 15
-  berserkCellAttackBonus: 0.75
+  berserkCellAttackBonus: 0.5
   berserkCellMoveBonus: 0.5
-  berserkCellAttackSpeedBonus: 0.3
+  berserkCellAttackSpeedBonus: 0.25
   berserkCellBossDetectionRadius: 18
   unstableCellMinProjectileSpeedMultiplier: 0.5
   unstableCellMaxProjectileSpeedMultiplier: 1.5
   unstableCellSlowThreshold: 0.8
-  unstableCellSlowDamageMultiplier: 1.5
+  unstableCellSlowDamageMultiplier: 1.3
   grotesqueGrowthInterval: 10
   grotesqueGrowthSmallScale: 0.75
   grotesqueGrowthLargeScale: 1.35
   grotesqueGrowthSmallMoveBonus: 1
-  grotesqueGrowthLargeAttackBonus: 1
-  grotesqueGrowthLargeMovePenalty: 0.5
+  grotesqueGrowthLargeAttackBonus: 2
+  grotesqueGrowthLargeMovePenalty: 0.25
   mutationRampageInterval: 15
-  mutationRampageDuration: 7
-  mutationRampageBuffChance: 0.6
-  mutationRampageAttackBuff: 1
-  mutationRampageMoveBuff: 1
-  mutationRampageAttackSpeedBuff: 0.5
-  mutationRampageAttackDebuff: 0.5
-  mutationRampageMoveDebuff: 0.75
-  mutationRampageAttackSpeedDebuff: 0.25
+  mutationRampageDuration: 10
+  mutationRampageAttackBuff: 2
+  mutationRampageMoveBuff: 1.5
+  mutationRampageAttackSpeedBuff: 0.3
   parasiticBombChance: 0.2
   parasiticBombRadius: 4
-  parasiticBombDamageMultiplier: 1.5
-  frenzyHormoneDuration: 3
+  parasiticBombDamageMultiplier: 1
+  frenzyHormoneDuration: 5
   frenzyHormoneCooldown: 8
   frenzyHormoneMinBonus: 0.5
   frenzyHormoneMaxBonus: 1
+  frenzyHormoneAttackBonus: 2
+  frenzyHormoneMoveBonus: 1.5
+  frenzyHormoneAttackSpeedBonus: 0.3
 --- !u!114 &7793866378045300363
 MonoBehaviour:
   m_ObjectHideFlags: 0

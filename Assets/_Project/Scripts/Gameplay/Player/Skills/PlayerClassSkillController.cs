@@ -59,9 +59,9 @@ namespace Necrocis
             public float forwardOffset = 0f;
             public float baseDamage = 0f;
             public float additionalDamage = 0f;
-            public float additionalDamageMin = 4f;
-            public float additionalDamageMax = 6f;
-            public float stunDuration = 1f;
+            public float additionalDamageMin = 5f;
+            public float additionalDamageMax = 7f;
+            public float stunDuration = 0.75f;
             public GameObject areaEffectPrefab;
             public float areaEffectLifetime = 1f;
             public float fallbackEffectScale = 10f;
@@ -76,10 +76,10 @@ namespace Necrocis
             public float cooldown = 12f;
             public float radius = 3.5f;
             public float forwardOffset = 0f;
-            public float baseDamage = 10f;
-            public float detonationDelay = 3f;
-            public float damageTakenIncreaseRatio = 0.1f;
-            public float damageTakenIncreaseDuration = 3f;
+            public float baseDamage = 16f;
+            public float detonationDelay = 0.7f;
+            public float damageTakenIncreaseRatio = 0.15f;
+            public float damageTakenIncreaseDuration = 4f;
             public GameObject markEffectPrefab;
             public float markEffectLifetime = 3f;
             public float markFallbackEffectScale = 0.8f;
@@ -100,7 +100,7 @@ namespace Necrocis
             public float cooldown = 6f;
             public int projectileCount = 5;
             public float fanAngle = 55f;
-            public float projectileDamage = 1f;
+            public float projectileDamage = 1.5f;
             public float projectileSpeed = 16f;
             public float projectileRange = 6f;
             [Tooltip("Legacy serialized value; E lifetime is calculated from projectileRange / projectileSpeed.")]
@@ -108,9 +108,9 @@ namespace Necrocis
             public GameObject projectilePrefab;
             [Tooltip("Fallback visual scale only. An assigned E prefab retains its authored root scale.")]
             public float projectileScale = 0.25f;
-            public float poisonDuration = 3f;
+            public float poisonDuration = 4f;
             public float poisonTickInterval = 1f;
-            public float poisonTickDamage = 1f;
+            public float poisonTickDamage = 0.75f;
             public GameObject shootEffectPrefab;
             public float shootEffectLifetime = 0.4f;
         }
@@ -127,7 +127,7 @@ namespace Necrocis
             public float projectileVisualLength = 4f;
             public float projectileVisualThickness = 0.8f;
             public float targetForwardOffset = 6f;
-            public float projectileDamage = 4f;
+            public float projectileDamage = 8f;
             public float projectileTravelSpeed = 16f;
             [Tooltip("Positive: flight seconds (distance = speed x lifetime). Zero/negative: range / speed.")]
             public float projectileLifeTime = 0f;
@@ -138,7 +138,7 @@ namespace Necrocis
             public bool autoRollToCamera = true;
             public ProjectileDirectionReferenceAxis prefabSurfaceNormalAxis = ProjectileDirectionReferenceAxis.Forward;
             [FormerlySerializedAs("poisonExplosionDamage")]
-            public float virusExplosionDamage = 5f;
+            public float virusExplosionDamage = 6f;
             [FormerlySerializedAs("poisonExplosionRadius")]
             public float virusExplosionRadius = 1.8f;
             [FormerlySerializedAs("poisonExplosionEffectPrefab")]
@@ -155,12 +155,12 @@ namespace Necrocis
         [System.Serializable]
         private class WarriorSkill1Config
         {
-            public float cooldown = 4f;
+            public float cooldown = 5f;
             public float range = 4.125f;
             public float forwardAngle = 140f;
             public int maxTargets = 8;
-            public float damage = 4f;
-            public float bleedDuration = 2f;
+            public float damage = 5f;
+            public float bleedDuration = 3f;
             public float bleedTickInterval = 1f;
             public float bleedTickDamage = 1f;
             public GameObject hitEffectPrefab;
@@ -171,11 +171,11 @@ namespace Necrocis
         [System.Serializable]
         private class WarriorSkill2Config
         {
-            public float cooldown = 8f;
+            public float cooldown = 9f;
             public float searchRange = 6f;   // 돌진 대상 탐색 범위
             public float dashSpeed = 18f;    // 돌진 속도
-            public float damage = 8f;
-            public float rootDuration = 2f;  // 구속(이동불가) 시간
+            public float damage = 12f;
+            public float rootDuration = 1.5f;  // 구속(이동불가) 시간
             public float searchAngle = 90f;  // 전방 탐색 각도
             public GameObject hitEffectPrefab;
             public float hitEffectLifetime = 0.5f;
@@ -523,6 +523,12 @@ namespace Necrocis
 
             float effectiveCooldown = PlayerCombatCalculator.GetSkillCooldown(cooldown, CurrentPlayerStats);
             nextReadyTime = now + effectiveCooldown;
+            var metrics = SaveService.BalanceMetrics;
+            if (metrics != null)
+            {
+                if (slot == SkillSlot.Skill1) metrics.skill1Uses++;
+                else metrics.skill2Uses++;
+            }
             if(slot==SkillSlot.Skill1)skill1CooldownDuration=effectiveCooldown;else skill2CooldownDuration=effectiveCooldown;
             AudioManager.Instance?.PlaySFX("SkillUse");
             CooldownStarted?.Invoke(slot, effectiveCooldown);

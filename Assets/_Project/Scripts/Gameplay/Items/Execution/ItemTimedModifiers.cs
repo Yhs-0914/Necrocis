@@ -61,6 +61,7 @@ namespace Necrocis
         internal float berserkCellExpireTime = float.NegativeInfinity;
         internal int berserkCellActiveBossId;
         internal int berserkCellLastTriggeredBossId;
+        private readonly HashSet<string> berserkEncounterKeys = new HashSet<string>();
         internal bool berserkCellModifierApplied;
         internal float grotesqueGrowthNextRollTime;
         internal bool grotesqueGrowthModifierApplied;
@@ -106,7 +107,7 @@ namespace Necrocis
         public float GetIncomingDamageMultiplier()
         {
             float multiplier = 1f;
-            if (ownership.HasBloodContract)
+            if (ownership.HasBloodContract && bloodRuntime.HealthGainCount < Mathf.Max(1, settings.bloodContractMaxHealthGainCount))
             {
                 multiplier *= Mathf.Max(1f, settings.bloodContractIncomingDamageMultiplier);
             }
@@ -156,11 +157,12 @@ namespace Necrocis
         public bool TryConsumeSplitRegeneration(float currentHealth, float maxHealth, out float reviveHealth)
         {
             reviveHealth = 0f;
-            if (!ownership.HasSplitRegeneration || !splitRuntime.TryConsume())
+            if (!ownership.HasSplitRegeneration || host.RunRevivalUsed || !splitRuntime.TryConsume())
             {
                 return false;
             }
 
+            host.RunRevivalUsed = true;
             reviveHealth = Mathf.Clamp(Mathf.Max(0f, settings.splitRegenerationReviveHealth), 0f, Mathf.Max(0f, maxHealth));
             if (reviveHealth <= 0f)
             {
@@ -198,6 +200,7 @@ namespace Necrocis
 
                     if(ownership.IsPersistentRuntimeOwned(state.itemId) && PersistentRuntimes.TryGetValue(state.itemId,out var runtime))
                         runtime.Restore(state,Time.time,PersistentSettings);
+                    if (state.splitRegenerationUsed) host.RunRevivalUsed = true;
                 }
             }
 
@@ -325,7 +328,6 @@ namespace Necrocis
             }
 
             host.Recipient.RemoveModifiersFromSource(mutationRampageModifierSource);
-            bool isBuff = UnityEngine.Random.value <= Mathf.Clamp01(settings.mutationRampageBuffChance);
             int statRoll = UnityEngine.Random.Range(0, 3);
             CharacterStatType statType;
             float value;
@@ -333,20 +335,20 @@ namespace Necrocis
             if (statRoll == 0)
             {
                 statType = CharacterStatType.AttackPower;
-                value = isBuff ? Mathf.Max(0f, settings.mutationRampageAttackBuff) : -Mathf.Max(0f, settings.mutationRampageAttackDebuff);
+                value = Mathf.Max(0f, settings.mutationRampageAttackBuff);
             }
             else if (statRoll == 1)
             {
                 statType = CharacterStatType.MoveSpeed;
-                value = isBuff ? Mathf.Max(0f, settings.mutationRampageMoveBuff) : -Mathf.Max(0f, settings.mutationRampageMoveDebuff);
+                value = Mathf.Max(0f, settings.mutationRampageMoveBuff);
             }
             else
             {
                 statType = CharacterStatType.AttackSpeed;
-                value = isBuff ? Mathf.Max(0f, settings.mutationRampageAttackSpeedBuff) : -Mathf.Max(0f, settings.mutationRampageAttackSpeedDebuff);
+                value = Mathf.Max(0f, settings.mutationRampageAttackSpeedBuff);
             }
 
-            host.Recipient.AddModifier(statType, value, CharacterStatModifierMode.Flat, mutationRampageModifierSource);
+            host.Recipient.AddModifier(statType, value, statType == CharacterStatType.AttackSpeed ? CharacterStatModifierMode.PercentAdd : CharacterStatModifierMode.Flat, mutationRampageModifierSource);
             mutationRampageModifierApplied = true;
         }
 
@@ -393,10 +395,8 @@ namespace Necrocis
             CharacterStatType statType = statRoll == 0
                 ? CharacterStatType.AttackPower
                 : statRoll == 1 ? CharacterStatType.MoveSpeed : CharacterStatType.AttackSpeed;
-            float minBonus = Mathf.Max(0f, settings.frenzyHormoneMinBonus);
-            float maxBonus = Mathf.Max(minBonus, settings.frenzyHormoneMaxBonus);
-            float bonus = UnityEngine.Random.Range(minBonus, maxBonus);
-            host.Recipient.AddModifier(statType, bonus, CharacterStatModifierMode.Flat, frenzyHormoneModifierSource);
+            float bonus = statRoll == 0 ? settings.frenzyHormoneAttackBonus : statRoll == 1 ? settings.frenzyHormoneMoveBonus : settings.frenzyHormoneAttackSpeedBonus;
+            host.Recipient.AddModifier(statType, bonus, statRoll == 2 ? CharacterStatModifierMode.PercentAdd : CharacterStatModifierMode.Flat, frenzyHormoneModifierSource);
             frenzyHormoneModifierApplied = true;
             frenzyHormoneExpireTime = Time.time + Mathf.Max(0.1f, settings.frenzyHormoneDuration);
             frenzyHormoneCooldownUntil = Time.time + Mathf.Max(0f, settings.frenzyHormoneCooldown);
@@ -448,7 +448,12 @@ namespace Necrocis
                 if (berserkCellLastTriggeredBossId != bossId)
                 {
                     berserkCellLastTriggeredBossId = bossId;
-                    ActivateBerserkCellBuff();
+                    var biome = BiomeManager.Active;
+                    string encounter = FinalBossArena.Instance != null ? "final." + SaveService.ActiveRunId
+                        : biome != null ? "region." + biome.BiomeType + "." + biome.MonsterVisit.VisitId
+                        : "actor." + bossId + "." + boss.SpawnGeneration;
+                    if (CampaignRewardRules.TryUseEncounter(berserkEncounterKeys, encounter)
+                        && SaveService.TryUseBerserkEncounter(encounter)) ActivateBerserkCellBuff();
                 }
             }
             else

@@ -128,6 +128,7 @@ namespace Necrocis
             }
 
             RebuildItemCache();
+            if (acquiredItem.ItemId == RecoveryFactorId) timed.recoveryRuntime.Schedule(Time.time, settings.recoveryFactorInterval);
         }
 
         public void HandleItemRemoved(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem removedItem)

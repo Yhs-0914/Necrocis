@@ -64,13 +64,13 @@ namespace Necrocis
         public static void AddResolvedEnemyKillExp(int enemyKillExp)
         {
             EnsureExpRequirementInitialized();
-            if (currentLevel >= Config.MaxLevel || IsWaitingForJobSelection()) return;
+            if (currentLevel >= Config.MaxLevel) return;
             if (enemyKillExp <= 0) return;
 
             currentExp += enemyKillExp;
             OnExpGained?.Invoke(enemyKillExp);
 
-            CheckLevelUp();
+            if (!IsWaitingForJobSelection()) CheckLevelUp();
         }
 
         private static float GetExpMultiplier()
@@ -81,10 +81,10 @@ namespace Necrocis
         private static int pendingLevelUps; // 대기 중인 레벨업 수 (한번에 여러 레벨 오를 때)
 
         // 레벨업 가능 여부 확인 (한번에 여러 레벨 오를 수 있으므로 while 사용)
-        private static void CheckLevelUp()
+        private static void CheckLevelUp(bool notify = true)
         {
             EnsureExpRequirementInitialized();
-            while (currentExp >= expRequired && currentLevel < Config.MaxLevel)
+            while (currentExp >= expRequired && currentLevel < Config.MaxLevel && !IsWaitingForJobSelection())
             {
                 currentExp -= expRequired;
                 currentLevel++;
@@ -92,7 +92,7 @@ namespace Necrocis
                 pendingLevelUps++;
             }
 
-            if (pendingLevelUps > 0)
+            if (notify && pendingLevelUps > 0)
             {
                 pendingLevelUps--;
                 if (IsWaitingForJobSelection())
@@ -322,13 +322,15 @@ namespace Necrocis
         public static void RestoreProgress(PlayerProgressSaveData source)
         {
             source ??= new PlayerProgressSaveData();
+            bool jobChanged = currentJob != source.job;
+            currentJob = source.job;
             currentLevel = Mathf.Clamp(source.level, 1, Config.MaxLevel);
             currentExp = Mathf.Max(0, source.experience);
             pendingLevelUps = 0;
             CalculateExpRequired();
             if (currentLevel < Config.MaxLevel)
             {
-                currentExp = Mathf.Min(currentExp, Mathf.Max(0, expRequired - 1));
+                if (!IsWaitingForJobSelection()) currentExp = Mathf.Min(currentExp, Mathf.Max(0, expRequired - 1));
             }
             else
             {
@@ -361,8 +363,6 @@ namespace Necrocis
                 }
             }
 
-            bool jobChanged = currentJob != source.job;
-            currentJob = source.job;
             if (jobChanged)
             {
                 OnJobChanged?.Invoke(currentJob);
@@ -386,6 +386,7 @@ namespace Necrocis
             currentJob = job;
             AudioManager.Instance?.PlaySFX("JobSelect");
             OnJobChanged?.Invoke(currentJob);
+            CheckLevelUp(false);
         }
         public static void ResetSelectionHistory() => selectionHistory.Clear();
         public static JobType GetCurrentJob() => currentJob;
@@ -427,7 +428,7 @@ namespace Necrocis
 
         private static bool IsWaitingForJobSelection()
         {
-            return currentLevel == Config.JobSelectionLevel && currentJob == JobType.None;
+            return currentLevel >= Config.JobSelectionLevel && currentJob == JobType.None;
         }
     }
 }

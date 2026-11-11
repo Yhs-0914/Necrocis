@@ -37,6 +37,7 @@ namespace Necrocis
     {
         public override string ItemId => PlayerItemIds.RecoveryFactorId;
         public float ReadyAt { get; private set; }
+        public void Pause(float seconds) => ReadyAt += seconds;
         public void Schedule(float now,float interval) => ReadyAt=now+Mathf.Max(.1f,interval);
         public bool ShouldHeal(bool active,bool alive,float now,float interval)
         {
@@ -79,6 +80,8 @@ namespace Necrocis
         public override string ItemId => PlayerItemIds.DecayOrganId;
         public float StartedAt { get; private set; }=float.NegativeInfinity;
         public int AttackBonus { get; private set; }
+        public void Pause(float seconds) { if (!float.IsNegativeInfinity(StartedAt)) StartedAt += seconds; }
+        public override void OnAcquire(float now, ItemEffectRuntimeSettings settings) { if (float.IsNegativeInfinity(StartedAt)) StartedAt = now; }
         public void BeginRestore(bool active,float now) => StartedAt=active?now:float.NegativeInfinity;
         public void Tick(bool active,float now,float interval,int maximum)
         {

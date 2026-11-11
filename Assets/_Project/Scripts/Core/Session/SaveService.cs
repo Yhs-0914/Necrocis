@@ -39,6 +39,7 @@ namespace Necrocis
         public static bool HasActiveSession => activeRun != null && activeRun.isActive && !HasPendingTerminalOperation;
         public static GameDifficulty ActiveDifficulty => HasActiveSession ? activeRun.difficulty : GameDifficulty.Normal;
         public static bool IsRestorePending => restorePending;
+        public static bool IsCampaignCompleted => activeRun?.campaignCompleted == true;
         public static bool IsHardUnlocked => Profile.hardUnlocked;
 
         public static void EnsureInitialized()
@@ -233,6 +234,10 @@ namespace Necrocis
             targetRun.bosses ??= new BossProgressSaveData();
             targetRun.bosses.finalBossDefeated = true;
             targetRun.campaignCompleted = true;
+            targetRun.balanceMetrics ??= new CampaignBalanceMetrics();
+            targetRun.balanceMetrics.clearSeconds = targetRun.balanceMetrics.activeSeconds;
+            targetRun.balanceMetrics.clearSessionSeconds = targetRun.balanceMetrics.sessionSeconds;
+            targetRun.balanceMetrics.Record("campaign_clear", targetRun.difficulty.ToString());
             if (targetRun.difficulty == GameDifficulty.Normal)
             {
                 targetProfile.normalCampaignCompleted = true;
@@ -379,6 +384,7 @@ namespace Necrocis
         private static WorldRunSaveData CreateWorldRunSaveData(WorldRunSaveData previousWorld)
         {
             var world = new WorldRunSaveData();
+            world.rewards.Add(new WorldRewardSaveData { id = "campaign.starter-mutation", biome = BiomeType.None });
             world.SetSeed(BiomeType.Intestine, CreateBiomeSeed(BiomeType.Intestine, previousWorld));
             world.SetSeed(BiomeType.Liver, CreateBiomeSeed(BiomeType.Liver, previousWorld));
             world.SetSeed(BiomeType.Stomach, CreateBiomeSeed(BiomeType.Stomach, previousWorld));

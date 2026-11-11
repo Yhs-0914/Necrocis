@@ -51,6 +51,7 @@ namespace Necrocis
             if (source.Items != null)
             {
                 run.player.items = source.Items.CaptureSavedItems();
+                run.player.splitRegenerationUsed = source.Items.SplitRegenerationUsedForRun;
             }
 
             source.GameManager?.CaptureToSave(run);
@@ -114,6 +115,7 @@ namespace Necrocis
             }
 
             itemManager.RestoreSavedItems(progress.items);
+            itemManager.SplitRegenerationUsedForRun |= progress.splitRegenerationUsed;
             playerStats.RuntimeStats.SetCurrentHealth(
                 progress.currentHealth < 0f ? playerStats.MaxHealth : progress.currentHealth);
             player.ReviveRuntimeStateAfterLoad();

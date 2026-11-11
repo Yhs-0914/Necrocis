@@ -31,14 +31,23 @@ namespace Necrocis
         private readonly BloodContractRuntime blood;
         private readonly ItemKillEffectState state;
         internal ItemKillEffects(IItemKillActions actions, BloodContractRuntime blood, ItemKillEffectState state) { this.actions=actions; this.blood=blood; this.state=state; }
-        internal void NotifyDefeated(EnemyController enemy)
+        private bool processingKillEffects;
+        internal void NotifyDefeated(EnemyController enemy, bool allowHostSpawn = true)
         {
-            actions.SpawnInfectedHost(enemy);
+            if (processingKillEffects) return;
+            processingKillEffects = true;
+            try { HandleDefeated(enemy, allowHostSpawn); }
+            finally { processingKillEffects = false; }
+        }
+
+        private void HandleDefeated(EnemyController enemy, bool allowHostSpawn)
+        {
+            if (allowHostSpawn) actions.SpawnInfectedHost(enemy);
             TriggerElectricNeuralNetwork(enemy);
             TriggerInfectionTransference(enemy);
             TriggerMacrophageBuff();
             TriggerGluttonousOrganBuff();
-            TriggerParasiticBomb();
+            TriggerParasiticBomb(enemy);
             if (!actions.CanGrowBloodContract) return;
             if (!blood.RecordKill(actions.BloodContractPeriod, actions.BloodContractMaximum)) return;
             float gain=Mathf.Max(0f,actions.BloodContractGain);
@@ -62,7 +71,7 @@ namespace Necrocis
             Vector3 previousPosition = defeatedEnemy.transform.position;
             int maxHits = Mathf.Max(1, actions.Settings.electricChainMaxHits);
             float radius = Mathf.Max(0.1f, actions.Settings.electricChainRadius);
-            float damage = Mathf.Max(0f, actions.Settings.electricChainDamage);
+            float damage = Mathf.Max(actions.Settings.electricChainDamage, actions.Recipient.AttackPower * 0.4f);
             if (damage <= 0f)
             {
                 return;
@@ -172,7 +181,7 @@ namespace Necrocis
                 status?.ApplyPoison(
                     Mathf.Max(0.1f, actions.Settings.infectionTransferDuration),
                     Mathf.Max(0.1f, actions.Settings.infectionTransferTickInterval),
-                    Mathf.Max(0f, actions.Settings.infectionTransferTickDamage), source);
+                    Mathf.Max(actions.Settings.infectionTransferTickDamage, actions.Recipient.AttackPower * 0.15f), source);
                 actions.SpawnInfectionTransferVisual(center, enemy.transform.position);
             }
 
@@ -214,9 +223,9 @@ namespace Necrocis
                 Mathf.Max(0f, actions.Settings.gluttonousOrganMoveBonusPerStack) * state.gluttonousOrganStacks);
         }
 
-        internal void TriggerParasiticBomb()
+        internal void TriggerParasiticBomb(EnemyController defeatedEnemy)
         {
-            if (state.applyingParasiticBombDamage || !actions.HasItem(PlayerItemIds.ParasiticBombId) || !actions.HasStatsOwner || actions.Recipient.IsDead)
+            if (defeatedEnemy == null || state.applyingParasiticBombDamage || !actions.HasItem(PlayerItemIds.ParasiticBombId) || !actions.HasStatsOwner || actions.Recipient.IsDead)
             {
                 return;
             }
@@ -226,7 +235,7 @@ namespace Necrocis
                 return;
             }
 
-            Vector3 center = actions.OwnerPosition;
+            Vector3 center = defeatedEnemy.transform.position;
             float radius = Mathf.Max(0.1f, actions.Settings.parasiticBombRadius);
             float damage = Mathf.Max(0.1f, actions.Recipient.AttackPower * Mathf.Max(0f, actions.Settings.parasiticBombDamageMultiplier));
             var hits=EnemyHitSnapshot.Sphere(center,radius,~0,

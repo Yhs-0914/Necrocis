@@ -12,9 +12,9 @@ namespace Necrocis
     public class Health : MonoBehaviour
     {
         [Tooltip("피격 후 무적 시간(초)")]
-        [SerializeField] private float invincibilityDuration = 0.5f;
+        [SerializeField] private float invincibilityDuration = 0.6f;
         [Tooltip("분열 재생 부활 후 보호 시간(초)")]
-        [SerializeField] private float revivalInvincibilityDuration = 0.5f;
+        [SerializeField] private float revivalInvincibilityDuration = 1.5f;
         [SerializeField] private float hitFlashInterval = 0.08f;
         [SerializeField] private Color hitFlashColor = new Color(1f, 0.18f, 0.12f, 1f);
 

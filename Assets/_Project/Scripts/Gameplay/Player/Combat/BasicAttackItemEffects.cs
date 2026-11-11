@@ -42,7 +42,9 @@ namespace Necrocis
         float BeamRadius { get; }
         float CellProliferationDamageMultiplier { get; }
         float GetAccuracyPenaltyAngle();
-        float GetAttackCooldownMultiplier();
+        float GetAttackCooldownMultiplier(bool meleeAttack = false);
+        Vector3 ResolveBeamDirection(Vector3 direction, float range);
+        void ApplyBeamExplosion(Vector3 center, EnemyController primary, float sourceDamage);
         float GetBackShotDamageMultiplier();
         int GetForwardProjectileCount();
         float GetForwardProjectileDamageMultiplier(int projectileCount);

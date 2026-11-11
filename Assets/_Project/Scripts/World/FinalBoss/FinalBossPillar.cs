@@ -95,7 +95,7 @@ namespace Necrocis
 
             damageTarget = EnemyController.Acquire(owner.transform, rule.name, EnemyController.GetPoolArchetypeId(rule));
             damageTarget.ConfigureWithContext(null, rule, transform.position, transform.position,
-                EnemySpawnContextFactory.CaptureForBiome(BiomeManager.Active, rule, transform.position));
+                EnemySpawnContextFactory.CaptureForBiome(BiomeManager.Active, rule, transform.position, EnemyEncounterRole.Boss, true));
             maxHealth = owner.Balance.phaseOne.pillarMaxHealth * owner.Balance.GetDifficulty(WorldProgressBindings.Session.ActiveDifficulty).health;
             damageTarget.Stats.SetBaseStat(CharacterStatType.MaxHealth, maxHealth, true);
             damageTarget.SetAiSuppressed(true);

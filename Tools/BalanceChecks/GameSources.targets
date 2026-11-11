@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <CampaignSourceRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\Assets\_Project'))</CampaignSourceRoot>
+  </PropertyGroup>
+  <!-- Include new Unity files when the editor has not regenerated its ignored csproj yet. -->
+  <Target Name="IncludeCampaignSources" BeforeTargets="CoreCompile">
+    <ItemGroup Condition="'$(MSBuildProjectName)' == 'Assembly-CSharp'">
+      <Compile Include="$(CampaignSourceRoot)\Scripts\**\*.cs" Exclude="@(Compile->'%(FullPath)')" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(MSBuildProjectName)' == 'Assembly-CSharp-Editor'">
+      <Compile Include="$(CampaignSourceRoot)\Editor\**\*.cs" Exclude="@(Compile->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
+</Project>

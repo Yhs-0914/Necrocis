@@ -239,11 +239,13 @@ namespace Necrocis
             proj.Launch(dir, damage, config.projectileSpeed, config.projectileLifeTime, this);
         }
 
+        public void TakeCompanionDamage(float damage, HealthEffectSource source) => ApplyIncomingDamage(damage, true, source, false);
+
         public void TakeDamage(float damage) => TryTakeDamage(damage, HealthEffectSource.Legacy);
         public void TakeDamage(float damage, HealthEffectSource source) => TryTakeDamage(damage, source);
         public DamageResult TryTakeDamage(float damage, HealthEffectSource source) => ApplyIncomingDamage(damage, true, source);
 
-        private DamageResult ApplyIncomingDamage(float damage, bool fromPlayer, HealthEffectSource source)
+        private DamageResult ApplyIncomingDamage(float damage, bool fromPlayer, HealthEffectSource source, bool allowHostSpawn = true)
         {
             if (IsDead || IsRetiringLifetime || stats == null || damage <= 0f) return DamageResult.Invalid;
             uint expectedGeneration = SpawnGeneration;
@@ -262,6 +264,7 @@ namespace Necrocis
                 }
                 return blocked;
             }
+            float previousHealth = stats.CurrentHealth;
             if (!stats.TryApplyDamage(preview, out float appliedDamage)) return DamageResult.Invalid;
             if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy)
                 return new DamageResult(true, appliedDamage);
@@ -271,6 +274,22 @@ namespace Necrocis
                 hitByPlayer = true;
                 DamageAccepted?.Invoke(this);
                 if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
+                PlayerController.Instance?.GetComponent<PlayerItemCombatEffects>()?.NotifyCombatInteraction();
+                    var metrics = SaveService.BalanceMetrics;
+                    if (metrics != null)
+                    {
+                        float effectiveDamage = Mathf.Max(0f, previousHealth - stats.CurrentHealth);
+                        metrics.enemyDamageDealt += effectiveDamage;
+                        var biome = BiomeManager.Active;
+                        if (biome != null && biome.BiomeType != BiomeType.None)
+                        {
+                            var row = metrics.Region(biome.BiomeType);
+                            if (IsBossEncounter) row.bossDamage += effectiveDamage;
+                            else if (IsElite) row.eliteDamage += effectiveDamage;
+                            else row.normalDamage += effectiveDamage;
+                        }
+                        if (FinalBossArena.Instance != null && IsBossEncounter) metrics.finalBossDamage += effectiveDamage;
+                    }
                 if (appliedDamage > 0f) DamageTaken?.Invoke(this, appliedDamage);
                 if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
             }
@@ -286,7 +305,7 @@ namespace Necrocis
                 if (defeatEventRaised) return new DamageResult(true, appliedDamage, died: true);
                 suppressKillCredit = !fromPlayer && !hitByPlayer;
                 if (!IsBossEncounter) AudioManager.Instance?.PlaySFX("EnemyDeath");
-                if (!suppressKillCredit) EnemyDefeatBindings.NotifyPlayerKill(this);
+                if (!suppressKillCredit) EnemyDefeatBindings.NotifyPlayerKill(this, allowHostSpawn);
                 if (SpawnGeneration != expectedGeneration || !gameObject.activeInHierarchy) return result;
                 RaiseDefeated();
                 if (SpawnGeneration == expectedGeneration && gameObject.activeInHierarchy) ChangeState(EnemyDeadState.Instance);
@@ -299,12 +318,32 @@ namespace Necrocis
         {
             if (config == null || experienceGranted) return;
             experienceGranted = true;
-            if (SuppressExperienceReward || suppressKillCredit) return;
+            if (SuppressExperienceReward || suppressKillCredit || IsBossEncounter) return;
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;
             if (Balance != null) EnemyDefeatBindings.ResolvedExperience?.Invoke(Balance.Current.Experience);
             else EnemyDefeatBindings.LegacyExperience?.Invoke(config.expReward, multiplier);
+
+            int experience = Balance != null ? Balance.Current.Experience : config.expReward;
+            var biome = BiomeManager.Active;
+            if (biome != null && experience > 0)
+            {
+                var itemSpawner = biome.GetComponent<WorldItemSpawner>();
+                if (itemSpawner == null) itemSpawner = biome.gameObject.AddComponent<WorldItemSpawner>();
+                itemSpawner.TrySpawnEnemyReward(this);
+            }
+            if (biome != null && experience > 0)
+            {
+                var row = SaveService.BalanceMetrics?.Region(biome.BiomeType);
+                if (row != null)
+                {
+                    if (IsElite) row.eliteKills++; else row.normalKills++;
+                    row.experience += experience;
+                }
+                if (!IsElite)
+                    WorldRecoveryPickup.Spawn(SaveService.RegisterNormalKillForRecovery(biome.BiomeType, transform.position));
+            }
 
             // 엘리트 스포너에 킬 알림
             if (EliteSpawner.Instance != null && !IsElite && !IsBossEncounter)

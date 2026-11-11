@@ -21,6 +21,7 @@ namespace Necrocis
     public static class ItemInventoryBindings
     {
         public static Func<GameObject,IItemStatRecipient> StatRecipient;
+        public static Action<IItemStatRecipient,float> Heal;
         public static Func<int> SlotOverride;
         public static Func<ItemDescriptionPolicy> DescriptionPolicy;
         public static Action<PlayerItemBase,IItemStatRecipient> ApplyImplementation;

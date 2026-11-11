@@ -93,7 +93,7 @@ namespace Necrocis
             {
                 var spawner = owner.GetComponent<WorldItemSpawner>();
                 if (spawner == null) spawner = owner.AddComponent<WorldItemSpawner>();
-                return spawner.TrySpawnSingleRandomItemAt(position);
+                return spawner.TrySpawnBossRewardAt(position);
             }
         }
 
@@ -116,6 +116,7 @@ namespace Necrocis
             WorldProgressBindings.Relics = new Relics();
             WorldProgressBindings.Travel = new Travel();
             WorldProgressBindings.Rewards = new Rewards();
+            SaveService.RegionBossRewardGranted = experience => { LevelUpManager.AddResolvedEnemyKillExp(experience); PlayerStats.Instance?.Heal(4f); };
             WorldProgressBindings.Victory = new Victory();
             EnemyDefeatBindings.ResolvedExperience = LevelUpManager.AddResolvedEnemyKillExp;
             EnemyDefeatBindings.LegacyExperience = LevelUpManager.AddEnemyKillExp;

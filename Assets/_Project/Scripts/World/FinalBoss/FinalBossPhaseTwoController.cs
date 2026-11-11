@@ -760,11 +760,10 @@ namespace Necrocis
             if (player != null && Time.time >= nextReflectionHitTime)
             {
                 nextReflectionHitTime = Time.time + .45f;
-                // Reflection keeps the integer HP preview basis. A sub-unit accepted hit still
-                // reaches the existing minimum reflection, without committing any boss carry.
+                // Keep the incoming preview and lifetime checks; reflection has no minimum damage floor.
                 float incomingUnits = preview.WholeUnits > 0f ? preview.WholeUnits : finalDamage;
                 incomingUnits = Mathf.Min(incomingUnits, target.Stats.CurrentHealth);
-                player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(incomingUnits * reflectedDamageRatio, 1f, 2f), "reflection"));
+                player.TakeDamage(FinalBossArena.CreateDamage(Mathf.Clamp(incomingUnits * reflectedDamageRatio, 0f, 2f), "reflection"));
             }
             return DamageBlockReason.Reflected;
         }
@@ -872,6 +871,12 @@ namespace Necrocis
                 healthBar.transform.SetParent(transform, false);
                 healthBar.SetValue(0f, 0f, MaxHealth);
                 healthBar.SetPattern("CEREBRUM SILENCED", new Color(.55f, .86f, 1f), "FINAL BOSS DEFEATED", 3f);
+            }
+            var rewardBiome = BiomeManager.Active;
+            if (rewardBiome != null)
+            {
+                var itemSpawner = rewardBiome.GetComponent<WorldItemSpawner>() ?? rewardBiome.gameObject.AddComponent<WorldItemSpawner>();
+                itemSpawner.TrySpawnBossRewardAt(bossDamageTarget != null ? bossDamageTarget.transform.position : transform.position);
             }
             bool clearSaved = WorldProgressBindings.Encounters.TryCompleteFinalBoss(out string clearSaveError);
             StopAllCoroutines();

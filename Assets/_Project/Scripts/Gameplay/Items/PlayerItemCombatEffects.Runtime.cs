@@ -24,6 +24,7 @@ namespace Necrocis
         private ItemCombatQueries Queries {get{EnsureExecutors();return queries;}}
         IItemCombatSettings IItemCombatHost.Settings=>this;
         Transform IItemCombatHost.Transform=>transform;
+        bool IItemCombatHost.RunRevivalUsed { get => itemManager != null && itemManager.SplitRegenerationUsedForRun; set { if (itemManager != null) itemManager.SplitRegenerationUsedForRun = value; } }
         bool IItemCombatHost.HasStatsOwner=>playerStats!=null;
         bool IItemCombatHost.HasManagedStatsOwner=>!ReferenceEquals(playerStats,null);
         // Preserve C# null-conditional read-through of a destroyed cached Unity component.

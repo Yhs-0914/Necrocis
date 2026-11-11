@@ -163,7 +163,7 @@ namespace Necrocis
             StartAttackVisual();
             uint generation = healthGeneration;
             if(target.LogicalLife!=null)healthRecipients.Add(target.LogicalLife);
-            target.TakeDamage(damage, damageSource);
+            target.TakeCompanionDamage(damage, damageSource);
             if (generation != healthGeneration || !isActiveAndEnabled) return;
             if (destroyOnAttack)
             {

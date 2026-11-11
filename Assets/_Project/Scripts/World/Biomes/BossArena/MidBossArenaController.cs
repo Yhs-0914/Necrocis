@@ -504,6 +504,12 @@ namespace Necrocis
                 encounter = null;
             }
 
+            if (biome != null)
+            {
+                int reward = defeatedBoss != null && defeatedBoss.Balance != null ? defeatedBoss.Balance.Current.Experience : 240;
+                SaveService.TryRewardRegionBoss(biome.BiomeType, reward);
+            }
+
             WorldProgressBindings.Encounters.CompleteMidBoss(biome != null ? biome.BiomeType : (BiomeType?)null);
 
             SpawnReturnPortal(returnPortalPosition);

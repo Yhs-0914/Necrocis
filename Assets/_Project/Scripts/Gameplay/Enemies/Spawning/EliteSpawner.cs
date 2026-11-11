@@ -6,7 +6,7 @@ namespace Necrocis
 {
     /// <summary>
     /// 엘리트 몹 스포너.
-    /// 등록된 일반 적을 합산해 10마리 처치할 때마다 엘리트 1마리를 소환한다.
+    /// 등록된 일반 적을 합산해 설정된 간격(기본 40킬)마다 엘리트 1마리를 소환한다.
     /// 첫 소환은 전체 경고, 이후 소환은 미니 경고를 표시한다.
     /// </summary>
     public class EliteSpawner : MonoBehaviour
@@ -14,7 +14,7 @@ namespace Necrocis
         [Header("Spawn Settings")]
         [SerializeField] private float spawnDistanceMin = 8f;
         [SerializeField] private float spawnDistanceMax = 12f;
-        [SerializeField, Min(1)] private int eliteSpawnEveryNKills = 10;
+        [SerializeField, Min(1)] private int eliteSpawnEveryNKills = 40;
 
         private readonly HashSet<string> normalEnemyNames = new HashSet<string>();
         private readonly List<EnemySpawnRuleConfig> activeEliteConfigs = new List<EnemySpawnRuleConfig>();
