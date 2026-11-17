@@ -1,0 +1,510 @@
+{
+  "baseline": "3d16e4b (Nov11 balance), preserved by HEAD",
+  "defaults": [
+    {
+      "field": "overheatExplosionRadius",
+      "before": "2.5f",
+      "restored": "4f"
+    },
+    {
+      "field": "mutantEyeAccuracyPenaltyAngle",
+      "before": "40f",
+      "restored": "20f"
+    },
+    {
+      "field": "mutantEyeFlatDamageBonus",
+      "before": "0.75f",
+      "restored": "2.5f"
+    },
+    {
+      "field": "organTentacleBaseAttackPenaltyMultiplier",
+      "before": "0.8f",
+      "restored": "1f"
+    },
+    {
+      "field": "rampageMoveSecondsPerBonus",
+      "before": "8f",
+      "restored": "6f"
+    },
+    {
+      "field": "unstableCoreMinAttackRatio",
+      "before": "0.7f",
+      "restored": "0.9f"
+    },
+    {
+      "field": "forbiddenGrowthMaxHealthPenalty",
+      "before": "3f",
+      "restored": "2f"
+    },
+    {
+      "field": "forbiddenGrowthFlatAttackBonus",
+      "before": "0.75f",
+      "restored": "3f"
+    },
+    {
+      "field": "hyperplasiaMissingHealthAttackBonusMax",
+      "before": "0.75f",
+      "restored": "3f"
+    },
+    {
+      "field": "decayOrganSecondsPerAttackBonus",
+      "before": "180f",
+      "restored": "90f"
+    },
+    {
+      "field": "decayOrganMaxAttackBonus",
+      "before": "3",
+      "restored": "6"
+    },
+    {
+      "field": "ruptureMuscleAttackBonusPerStack",
+      "before": "0.2f",
+      "restored": "1f"
+    },
+    {
+      "field": "ruptureMuscleMovePenaltyPerStack",
+      "before": "0.25f",
+      "restored": "0.15f"
+    },
+    {
+      "field": "severanceReflexDuration",
+      "before": "3f",
+      "restored": "5f"
+    },
+    {
+      "field": "severanceReflexFlatAttackBonus",
+      "before": "0.75f",
+      "restored": "3f"
+    },
+    {
+      "field": "bioBarrierIdleSecondsPerStep",
+      "before": "1.5f",
+      "restored": "0.5f"
+    },
+    {
+      "field": "macrophageAttackBonusPerStack",
+      "before": "0.2f",
+      "restored": "0.75f"
+    },
+    {
+      "field": "focusedNerveHighAttackBonus",
+      "before": "0.5f",
+      "restored": "2.5f"
+    },
+    {
+      "field": "focusedNerveLowAttackBonus",
+      "before": "0.25f",
+      "restored": "1.25f"
+    },
+    {
+      "field": "executionInstinctHealthThreshold",
+      "before": "0.2f",
+      "restored": "0.3f"
+    },
+    {
+      "field": "executionInstinctChance",
+      "before": "0.2f",
+      "restored": "0.35f"
+    },
+    {
+      "field": "executionInstinctBossDamageMultiplier",
+      "before": "1.5f",
+      "restored": "2f"
+    },
+    {
+      "field": "grotesqueGrowthLargeAttackBonus",
+      "before": "0.5f",
+      "restored": "2f"
+    },
+    {
+      "field": "grotesqueGrowthLargeMovePenalty",
+      "before": "0.5f",
+      "restored": "0.25f"
+    },
+    {
+      "field": "mutationRampageDuration",
+      "before": "7f",
+      "restored": "10f"
+    },
+    {
+      "field": "frenzyHormoneDuration",
+      "before": "3f",
+      "restored": "5f"
+    },
+    {
+      "field": "rampageAttackBonusPerStack",
+      "before": "0.25f",
+      "restored": "0.75f"
+    },
+    {
+      "field": "decayOrganAttackBonusPerStack",
+      "before": "0.25f",
+      "restored": "0.5f"
+    },
+    {
+      "field": "frenzyHormoneAttackBonus",
+      "before": "0.5f",
+      "restored": "2f"
+    },
+    {
+      "field": "frenzyHormoneMoveBonus",
+      "before": "1f",
+      "restored": "1.5f"
+    },
+    {
+      "field": "frenzyHormoneAttackSpeedBonus",
+      "before": "0.2f",
+      "restored": "0.3f"
+    }
+  ],
+  "serialized": [
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "overheatExplosionRadius",
+      "before": "2.5",
+      "restored": "4"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutantEyeAccuracyPenaltyAngle",
+      "before": "40",
+      "restored": "20"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutantEyeFlatDamageBonus",
+      "before": "0.75",
+      "restored": "2.5"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "organTentacleBaseAttackPenaltyMultiplier",
+      "before": "0.8",
+      "restored": "1"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "rampageMoveSecondsPerBonus",
+      "before": "8",
+      "restored": "6"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "unstableCoreMinAttackRatio",
+      "before": "0.7",
+      "restored": "0.9"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "forbiddenGrowthMaxHealthPenalty",
+      "before": "3",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "forbiddenGrowthFlatAttackBonus",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "hyperplasiaMissingHealthAttackBonusMax",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "decayOrganSecondsPerAttackBonus",
+      "before": "180",
+      "restored": "90"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "decayOrganMaxAttackBonus",
+      "before": "3",
+      "restored": "6"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "ruptureMuscleAttackBonusPerStack",
+      "before": "0.2",
+      "restored": "1"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "ruptureMuscleMovePenaltyPerStack",
+      "before": "0.25",
+      "restored": "0.15"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "severanceReflexDuration",
+      "before": "3",
+      "restored": "5"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "severanceReflexFlatAttackBonus",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "bioBarrierIdleSecondsPerStep",
+      "before": "1.5",
+      "restored": "0.5"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "macrophageAttackBonusPerStack",
+      "before": "0.2",
+      "restored": "0.75"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "focusedNerveHighAttackBonus",
+      "before": "0.5",
+      "restored": "2.5"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "focusedNerveLowAttackBonus",
+      "before": "0.25",
+      "restored": "1.25"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "executionInstinctHealthThreshold",
+      "before": "0.2",
+      "restored": "0.3"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "executionInstinctChance",
+      "before": "0.2",
+      "restored": "0.35"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "executionInstinctBossDamageMultiplier",
+      "before": "1.5",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "grotesqueGrowthLargeAttackBonus",
+      "before": "0.5",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "grotesqueGrowthLargeMovePenalty",
+      "before": "0.5",
+      "restored": "0.25"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutationRampageDuration",
+      "before": "7",
+      "restored": "10"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutationRampageAttackBuff",
+      "before": "1",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutationRampageMoveBuff",
+      "before": "1",
+      "restored": "1.5"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "mutationRampageAttackSpeedBuff",
+      "before": "0.5",
+      "restored": "0.3"
+    },
+    {
+      "path": "Assets/_Project/Scenes/Hub.unity",
+      "field": "frenzyHormoneDuration",
+      "before": "3",
+      "restored": "5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "overheatExplosionRadius",
+      "before": "2.5",
+      "restored": "4"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "mutantEyeAccuracyPenaltyAngle",
+      "before": "40",
+      "restored": "20"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "mutantEyeFlatDamageBonus",
+      "before": "0.75",
+      "restored": "2.5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "organTentacleBaseAttackPenaltyMultiplier",
+      "before": "0.8",
+      "restored": "1"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "rampageMoveSecondsPerBonus",
+      "before": "8",
+      "restored": "6"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "unstableCoreMinAttackRatio",
+      "before": "0.7",
+      "restored": "0.9"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "forbiddenGrowthMaxHealthPenalty",
+      "before": "3",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "forbiddenGrowthFlatAttackBonus",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "hyperplasiaMissingHealthAttackBonusMax",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "decayOrganSecondsPerAttackBonus",
+      "before": "180",
+      "restored": "90"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "decayOrganMaxAttackBonus",
+      "before": "3",
+      "restored": "6"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "ruptureMuscleAttackBonusPerStack",
+      "before": "0.2",
+      "restored": "1"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "ruptureMuscleMovePenaltyPerStack",
+      "before": "0.25",
+      "restored": "0.15"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "severanceReflexDuration",
+      "before": "3",
+      "restored": "5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "severanceReflexFlatAttackBonus",
+      "before": "0.75",
+      "restored": "3"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "bioBarrierIdleSecondsPerStep",
+      "before": "1.5",
+      "restored": "0.5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "macrophageAttackBonusPerStack",
+      "before": "0.2",
+      "restored": "0.75"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "focusedNerveHighAttackBonus",
+      "before": "0.5",
+      "restored": "2.5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "focusedNerveLowAttackBonus",
+      "before": "0.25",
+      "restored": "1.25"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "executionInstinctHealthThreshold",
+      "before": "0.2",
+      "restored": "0.3"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "executionInstinctChance",
+      "before": "0.2",
+      "restored": "0.35"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "executionInstinctBossDamageMultiplier",
+      "before": "1.5",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "grotesqueGrowthLargeAttackBonus",
+      "before": "0.5",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "grotesqueGrowthLargeMovePenalty",
+      "before": "0.5",
+      "restored": "0.25"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "mutationRampageDuration",
+      "before": "7",
+      "restored": "10"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "frenzyHormoneDuration",
+      "before": "3",
+      "restored": "5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "frenzyHormoneAttackBonus",
+      "before": "0.5",
+      "restored": "2"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "frenzyHormoneMoveBonus",
+      "before": "1",
+      "restored": "1.5"
+    },
+    {
+      "path": "Assets/_Project/Art/Generated/FinalBoss/FinalBossPlayerFallback.prefab",
+      "field": "frenzyHormoneAttackSpeedBonus",
+      "before": "0.2",
+      "restored": "0.3"
+    }
+  ]
+}

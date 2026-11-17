@@ -15,12 +15,13 @@ namespace Necrocis
         bool IItemCompanionOwner.HasGuardianOrganItem => Ownership.hasGuardianOrganItem;
         float IItemCompanionOwner.BloodDroneOrbitRadius => bloodDroneOrbitRadius;
         float IItemCompanionOwner.BloodDroneTargetRadius => bloodDroneTargetRadius;
-        float IItemCompanionOwner.BloodDroneFireInterval => bloodDroneFireInterval;
-        float IItemCompanionOwner.BloodDroneDamageMultiplier => bloodDroneDamageMultiplier;
+        float IItemCompanionOwner.BloodDroneFireInterval => ((IItemCombatSettings)this).bloodDroneFireInterval;
+        float IItemCompanionOwner.BloodDroneDamageMultiplier => ((IItemCombatSettings)this).bloodDroneDamageMultiplier;
         float IItemCompanionOwner.GuardianOrganOrbitRadius => guardianOrganOrbitRadius;
         float IItemCompanionOwner.GuardianOrganBlockRadius => guardianOrganBlockRadius;
-        float IItemCompanionOwner.GuardianOrganCooldown => guardianOrganCooldown;
-        EnemyController IItemCompanionOwner.FindClosestEnemy(Vector3 center,float radius) => Queries.FindClosestEnemy(center,radius);
+        float IItemCompanionOwner.GuardianOrganCooldown => ((IItemCombatSettings)this).guardianOrganCooldown;
+        EnemyController IItemCompanionOwner.FindClosestEnemy(Vector3 center,float radius)
+            => Queries.FindClosestEnemy(center,radius);
         float IItemCompanionOwner.GetCompanionBaseDamage() => Queries.GetCompanionBaseDamage();
         Vector3 IItemCompanionOwner.GetPlayerVisualCenter() => GetPlayerVisualCenter();
         void IItemCompanionOwner.ReleaseBioSummon(PlayerBioSummon summon) => ReleaseBioSummon(summon);

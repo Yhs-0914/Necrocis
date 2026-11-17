@@ -21,7 +21,102 @@ namespace Necrocis
         {
             "parasitic_spore",
             "neural_overload",
-            "coagulation_cell"
+            "coagulation_cell",
+            // Retired on 2026-11-17: exclude from old serialized catalogs and saves.
+            "acid_cyst",
+            "acid_leak",
+            "acid_seal",
+            "afterimage_fiber",
+            "aggregated_platelets",
+            "bilobed_parasite",
+            "binding_mucus",
+            "blood_larva",
+            "bloodtrail_receptor",
+            "boss_marrow_seal",
+            "buffer_fat",
+            "burst_valve",
+            "ciliated_sole",
+            "clasping_tendon",
+            "clot_disruptor",
+            "clot_membrane",
+            "cold_bloom",
+            "compound_antigen",
+            "compressed_alveolus",
+            "concentrated_mucosa",
+            "cooling_nerve",
+            "corner_nerve",
+            "differentiation_cell",
+            "dilute_mucosa",
+            "dilute_mucus",
+            "distance_lens",
+            "elastic_joint",
+            "elastic_vessel",
+            "escape_vein",
+            "feeder_sac",
+            "fibrin_lock",
+            "focusing_organ",
+            "friction_mucus",
+            "frost_ganglion",
+            "frozen_fissure",
+            "guardian_spore",
+            "impact_marrow",
+            "infectious_mucus",
+            "landing_pad",
+            "layered_guardian",
+            "layered_vessel",
+            "leukocyte_barrier",
+            "long_synapse",
+            "luminous_tissue",
+            "lymph_reservoir",
+            "mana_reservoir",
+            "marrow_memory",
+            "marrow_nest",
+            "medulla_valve",
+            "mutation_lens",
+            "nerve_wick",
+            "opening_cartilage",
+            "orbit_vesicle",
+            "organ_imprint",
+            "paired_nerve",
+            "patrolling_rib",
+            "predator_larva",
+            "pressure_pouch",
+            "pulse_companion",
+            "pulse_stitch",
+            "pulsing_blood_drone",
+            "radial_tissue",
+            "recovery_capsule",
+            "redundancy_filter",
+            "reflex_ganglion",
+            "regeneration_fragment",
+            "regenerative_marrow",
+            "regional_buffer",
+            "rehearsal_tissue",
+            "relay_colony",
+            "residual_muscle",
+            "resonant_bone",
+            "retaliation_cortex",
+            "retrieval_tentacle",
+            "rupture_platelets",
+            "ruptured_capillary",
+            "scar_tissue",
+            "scent_receptor",
+            "serous_rind",
+            "serum_leech",
+            "shield_vesicle",
+            "shock_absorber",
+            "slow_coagulum",
+            "spinal_hook",
+            "spiral_fiber",
+            "split_fragment",
+            "spurting_vessel",
+            "steady_step",
+            "surplus_serum",
+            "suture_stinger",
+            "symbiotic_receptor",
+            "target_lymphocyte",
+            "trophy_receptor",
+            "twin_step"
         };
 
         [Serializable]
@@ -88,6 +183,8 @@ namespace Necrocis
                     icon = null;
                 }
             }
+
+            internal void SetDisplayName(string text) => displayName = text;
 
             public void SetDescription(string text)
             {
@@ -253,6 +350,7 @@ namespace Necrocis
 
         public void RebuildCatalog()
         {
+            PurgeRemovedItemsFromCatalog();
             entryMap.Clear();
             if (itemEntries == null)
             {
@@ -269,7 +367,7 @@ namespace Necrocis
 
                 ClearRuntimeFallbackIconForSpecialItems(entry);
                 AssignFallbackIcon(entry);
-                if (ItemDefinitions.TryGet(entry.ItemId, out var definition)) entry.SetDescription(definition.LegacyDescription);
+                if (ItemDefinitions.TryGet(entry.ItemId, out var definition)) { entry.SetDisplayName(definition.DisplayName); entry.SetDescription(definition.LegacyDescription); }
                 entry.BindDescription(ResolveDescription);
 
                 if (!entryMap.ContainsKey(entry.ItemId))
@@ -612,12 +710,13 @@ namespace Necrocis
         public bool TryReplaceItem(string previousItemId, string incomingItemId)
         {
             if (string.IsNullOrEmpty(incomingItemId) || !entryMap.TryGetValue(incomingItemId, out var entry)
-                || ContainsItem(incomingItemId)) return false;
+                || ContainsItem(incomingItemId) || !CanAcquireItem(incomingItemId)) return false;
             int index = acquiredItems.FindIndex(item => string.Equals(item.ItemId, previousItemId, StringComparison.OrdinalIgnoreCase));
             if (index < 0) return false;
             var previous = acquiredItems[index];
             if (previous.Implementation != null) ItemInventoryBindings.RemoveImplementation(previous.Implementation, playerStats);
             playerStats?.RemoveModifiersFromSource(previous);
+            combatEffects?.RetireItemHealthSources(previous.ItemId);
             var replacement = new AcquiredPlayerItem(entry);
             acquiredItems[index] = replacement;
             ApplyStatItem(replacement);
@@ -626,7 +725,7 @@ namespace Necrocis
             // Both notifications observe the completed inventory, never a temporary empty slot.
             ItemRemoved?.Invoke(this, previous);
             ItemAcquired?.Invoke(this, replacement);
-            SaveService.RecordItemChoice(incomingItemId);
+            if (!isRestoringSavedItems) SaveService.RecordItemChoice(incomingItemId);
             return true;
         }
 
@@ -719,7 +818,7 @@ namespace Necrocis
                     for (int i = 0; i < savedItems.Count; i++)
                     {
                         SavedItemStateData state = savedItems[i];
-                        if (state == null || string.IsNullOrWhiteSpace(state.itemId))
+                        if (state == null || string.IsNullOrWhiteSpace(state.itemId) || RemovedItemIds.Contains(state.itemId))
                         {
                             continue;
                         }

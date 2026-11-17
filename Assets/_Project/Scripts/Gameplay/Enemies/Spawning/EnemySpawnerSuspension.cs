@@ -10,18 +10,24 @@ namespace Necrocis
         public readonly bool Initialized;
         public readonly float SpawnRemaining, EvaluationRemaining;
         public readonly uint RandomState;
+        public readonly EnemyLogicalLife[] Pursuers;
 
         public EnemySpawnerRuntimeSnapshot(EnemyRuntimeSnapshot[] living, bool initialized,
-            float spawn, float evaluation, uint random)
+            float spawn, float evaluation, uint random, EnemyLogicalLife[] pursuers = null)
         {
             Living = living;
             Initialized = initialized;
             SpawnRemaining = spawn;
             EvaluationRemaining = evaluation;
             RandomState = random;
+            Pursuers = pursuers ?? Array.Empty<EnemyLogicalLife>();
         }
 
-        public void Retire() { foreach (var actor in Living) actor.Retire(); }
+        public void Retire()
+        {
+            foreach (var actor in Living) actor.Retire();
+            foreach (var life in Pursuers) life.Retire();
+        }
     }
 
     public interface IEnemySuspensionOwner : IEnemySpawnOwner
@@ -37,10 +43,18 @@ namespace Necrocis
         bool CommitRestore(EnemySpawnerIdentity id, EnemySpawnerRuntimeSnapshot expected);
     }
 
+    public interface IEnemyPursuitStore
+    {
+        bool TryRetainPursuer(EnemyController actor, IEnemySpawnOwner previousOwner);
+    }
+
     public partial class EnemySpawner
     {
         private IEnemySpawnerStateStore stateStore;
         private bool suspendingGroup, restoringGroup;
+        private readonly List<EnemyLogicalLife> detachedPursuers = new List<EnemyLogicalLife>();
+        private int OccupiedSpawnSlots => activeEnemies.Count + detachedPursuers.Count;
+        private bool HasActivePursuer => activeEnemies.Exists(actor => actor != null && actor.HasPersistentPlayerAggro);
 
         public void BindStateStore(IEnemySpawnerStateStore store) => stateStore = store;
 
@@ -51,9 +65,20 @@ namespace Necrocis
             var identity = Identity;
             if (store.TryGet(identity, out _)) return true;
             // An untouched placement has no lifetime or timer to freeze.
-            if (!initializedWave && activeEnemies.Count == 0 && spawnRandom.State == identity.StableHash) return true;
+            if (!initializedWave && OccupiedSpawnSlots == 0 && spawnRandom.State == identity.StableHash) return true;
 
             uint version = configurationVersion;
+            if (store is IEnemyPursuitStore pursuitStore)
+            {
+                // Transfer the living actor, retaining its original population slot by logical life.
+                // The chunk and its native spawner can then unload without ending this chase.
+                foreach (var actor in activeEnemies.ToArray())
+                {
+                    if (actor == null || !actor.HasPersistentPlayerAggro || !pursuitStore.TryRetainPursuer(actor, this)) continue;
+                    detachedPursuers.Add(actor.LogicalLife);
+                    activeEnemies.Remove(actor);
+                }
+            }
             var actors = activeEnemies.ToArray();
             var snapshots = new List<EnemyRuntimeSnapshot>();
             var records = new Dictionary<EnemyController, EnemyRuntimeSnapshot>();
@@ -76,7 +101,7 @@ namespace Necrocis
                 ? GetDifficultyRespawnCooldown(GetActiveWorldBalance())
                 : Mathf.Max(0, nextSpawnTime - Time.time);
             var saved = new EnemySpawnerRuntimeSnapshot(snapshots.ToArray(), initializedWave,
-                spawnRemaining, Mathf.Max(0, nextEvaluationTime - Time.time), spawnRandom.State);
+                spawnRemaining, Mathf.Max(0, nextEvaluationTime - Time.time), spawnRandom.State, detachedPursuers.ToArray());
             suspendingGroup = true;
             try
             {
@@ -131,6 +156,9 @@ namespace Necrocis
                 // Transfer ownership before activation/StatChanged callbacks. Those callbacks may
                 // legitimately kill or return an actor; they must see the original owner's list.
                 activeEnemies.AddRange(prepared);
+                detachedPursuers.Clear();
+                foreach (var life in saved.Pursuers)
+                    if (!life.IsRetired) detachedPursuers.Add(life);
                 initializedWave = saved.Initialized;
                 nextSpawnTime = Time.time + saved.SpawnRemaining;
                 nextEvaluationTime = Time.time + saved.EvaluationRemaining;

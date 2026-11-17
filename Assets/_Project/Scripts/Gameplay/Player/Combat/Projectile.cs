@@ -632,6 +632,9 @@ namespace Necrocis
                 return false;
             }
 
+            // Breakable residue has its own damage path and does not block projectiles.
+            if (obstacle.GetComponentInParent<ResidueRubble>() != null) return false;
+
             return true;
         }
 

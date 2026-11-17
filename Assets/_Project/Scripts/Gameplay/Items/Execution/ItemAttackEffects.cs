@@ -522,7 +522,8 @@ namespace Necrocis
             if (ownership.HasAcidicRupture)
             {
                 float tickDamage = Mathf.Max(0.1f, settings.acidTickDamage);
-                AcidPuddle.Spawn(hitPosition, tickDamage, settings.acidDuration, GetExplosionRadius(), settings.acidTickInterval);
+                AcidPuddle.Spawn(hitPosition, tickDamage, settings.acidDuration, settings.acidRadius,
+                    settings.acidTickInterval, settings.acidMaxCount, host.GetItemHealthEffectSource(AcidicRuptureId, "acid"));
             }
 
             uint generation = expectedGeneration ?? enemy.SpawnGeneration;
@@ -542,7 +543,7 @@ namespace Necrocis
             if (enemy == null || enemy.SpawnGeneration != generation) return;
             if (ownership.HasFreezingNerve)
             {
-                status?.ApplyMoveSpeedSlow(settings.freezeSlowRatio, settings.freezeDuration);
+                status?.ApplyMoveSpeedSlow(settings.freezeSlowRatio, settings.freezeDuration, host.GetItemHealthEffectSource(FreezingNerveId, "slow"));
             }
 
             if (enemy == null || enemy.SpawnGeneration != generation) return;

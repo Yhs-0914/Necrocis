@@ -158,6 +158,15 @@ namespace Necrocis
           ""processors"": """",
           ""interactions"": """",
           ""initialStateCheck"": false
+        },
+        {
+          ""name"": ""Interact"",
+          ""type"": ""Button"",
+          ""id"": ""1952cbe3-a71f-4dd5-8d4c-c364eec67896"",
+          ""expectedControlType"": ""Button"",
+          ""processors"": """",
+          ""interactions"": """",
+          ""initialStateCheck"": false
         }
       ],
       ""bindings"": [
@@ -285,6 +294,12 @@ namespace Necrocis
           ""id"": ""26d505da-0047-550b-8860-7df7744977ca"",
           ""path"": ""<Keyboard>/escape"",
           ""action"": ""MenuBack""
+        },
+        {
+          ""name"": """",
+          ""id"": ""86153bd1-59f5-4259-a0af-75fca541f8e6"",
+          ""path"": ""<Keyboard>/f"",
+          ""action"": ""Interact""
         }
       ]
     }

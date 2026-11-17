@@ -17,7 +17,7 @@ namespace Necrocis
         {
             this.owner = owner;
             unchecked { healthGeneration++; }
-            damageSource = HealthEffectSource.ForOwner(this, "blood-drone/projectile", healthGeneration);
+            damageSource = owner is PlayerItemCombatEffects items ? items.GetItemHealthEffectSource("blood_drone", "projectile") : HealthEffectSource.ForOwner(this, "blood-drone/projectile", healthGeneration);
             angle = 0f;
             nextFireTime = 0f;
 

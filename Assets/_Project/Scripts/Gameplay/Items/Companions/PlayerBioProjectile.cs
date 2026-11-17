@@ -62,7 +62,7 @@ namespace Necrocis
 
         private void Update()
         {
-            if (Time.time >= expireTime || !ItemEnemyQueries.IsTargetable(target) || target.SpawnGeneration!=targetGeneration)
+            if (RetiredItemHealthSources.Contains(damageSource) || Time.time >= expireTime || !ItemEnemyQueries.IsTargetable(target) || target.SpawnGeneration!=targetGeneration)
             {
                 ReleaseSelf();
                 return;

@@ -49,10 +49,12 @@ namespace Necrocis
         private Text inventoryHint;
         private bool requiresRewardSelection;
 
+        public bool CanRequestReward => isActiveAndEnabled && !isOpen && itemManager != null && Time.timeScale > 0f
+            && InputManager.Instance?.Contexts.CanOpenAuxiliary == true;
+
         public bool RequestReward(IReadOnlyList<string> options, Action<string> onSelected, bool requireSelection = false)
         {
-            if (isOpen || itemManager == null || options == null || Time.timeScale <= 0f
-                || InputManager.Instance?.Contexts.CanOpenAuxiliary != true) return false;
+            if (!CanRequestReward || options == null) return false;
             var valid = new List<string>();
             foreach (string id in options)
                 if (itemManager.CanAcquireItem(id) && !valid.Contains(id)) valid.Add(id);

@@ -11,6 +11,7 @@ namespace Necrocis
         private static readonly Func<GameObject> CreateFunc = CreatePuddleObject;
         private static readonly List<AcidPuddle> ActivePuddles = new List<AcidPuddle>(MaxActivePuddles);
 
+        private HealthEffectSource? providedSource;
         private float tickDamage;
         private float radius;
         private float tickInterval;
@@ -23,22 +24,25 @@ namespace Necrocis
         private HealthEffectSource damageSource;
         private readonly HashSet<EnemyLogicalLife> healthRecipients = new HashSet<EnemyLogicalLife>();
 
-        public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval)
+        public static AcidPuddle Spawn(Vector3 position, float tickDamage, float duration, float radius, float tickInterval, int maxActive = MaxActivePuddles, HealthEffectSource? source = null)
         {
             PruneInactivePuddles();
             // Refresh nearby acid without restarting its pending damage tick.
             foreach (var active in ActivePuddles)
             {
+                if (active.providedSource != source) continue;
                 Vector3 delta = active.transform.position - position;
                 delta.y = 0f;
                 if (delta.sqrMagnitude > Mathf.Max(0.2f, radius) * Mathf.Max(0.2f, radius)) continue;
                 active.tickDamage = Mathf.Max(active.tickDamage, tickDamage);
+                active.radius = Mathf.Max(active.radius, radius);
                 active.remainingTicks = Mathf.Max(active.remainingTicks,
                     Mathf.Max(1, Mathf.RoundToInt(duration / Mathf.Max(0.05f, active.tickInterval))));
                 active.startTime = Time.time;
                 return active;
             }
-            if (ActivePuddles.Count >= MaxActivePuddles)
+            int matching = 0; foreach (var active in ActivePuddles) if (active.providedSource == source) matching++;
+            if (matching >= Mathf.Max(1, maxActive))
             {
                 // Keep both existing areas alive long enough to deal their damage.
                 return null;
@@ -53,11 +57,14 @@ namespace Necrocis
 
             puddleObject.name = "AcidPuddle";
             puddleObject.transform.position = new Vector3(position.x, position.y + 0.05f, position.z);
-            puddle.Initialize(tickDamage, duration, radius, tickInterval);
+            puddle.Initialize(tickDamage, duration, radius, tickInterval, source);
             ActivePuddles.Remove(puddle);
             ActivePuddles.Add(puddle);
             return puddle;
         }
+
+        public static void RetireSource(HealthEffectSource source)
+        { foreach (var puddle in ActivePuddles.ToArray()) if (puddle != null && puddle.providedSource == source) RuntimePool.Release(puddle.gameObject); }
 
         private void OnDisable()
         {
@@ -66,11 +73,12 @@ namespace Necrocis
             unchecked { healthGeneration++; }
         }
 
-        public void Initialize(float damage, float duration, float areaRadius, float interval)
+        public void Initialize(float damage, float duration, float areaRadius, float interval, HealthEffectSource? source = null)
         {
             RetireHealthSource();
             unchecked { healthGeneration++; }
-            damageSource = HealthEffectSource.ForOwner(this, "acidic-rupture", healthGeneration);
+            providedSource = source;
+            damageSource = source ?? HealthEffectSource.ForOwner(this, "acidic-rupture", healthGeneration);
             tickDamage = Mathf.Max(0.1f, damage);
             radius = Mathf.Max(0.2f, areaRadius);
             tickInterval = Mathf.Max(0.05f, interval);
@@ -142,7 +150,7 @@ namespace Necrocis
 
         private void RetireHealthSource()
         {
-            foreach (var recipient in healthRecipients)recipient.RemoveHealthSource(damageSource);
+            if (!providedSource.HasValue) foreach (var recipient in healthRecipients)recipient.RemoveHealthSource(damageSource);
             healthRecipients.Clear();
         }
 

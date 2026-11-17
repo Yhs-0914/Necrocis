@@ -227,7 +227,7 @@ namespace Necrocis
             if (dx * dx + dz * dz > radius * radius) return;
             nextHit = Time.time + Mathf.Max(0.1f, hitCooldown);
             player.TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)),
-                null, HealthEffectSource.ForOwner(this, "toxic-rain")));
+                null, HealthEffectSource.ForOwner(this, "toxic-rain")).AsTerrain());
         }
 
         private void EnsureWarningSprite()

@@ -84,6 +84,7 @@ namespace Necrocis
         public static void NormalizeRun(RunSaveData run)
         {
             if (run == null) return;
+            run.currency = Math.Max(0L, run.currency);
             run.player ??= new PlayerProgressSaveData();
             run.player.selectionHistory ??= new List<LevelUpStatChoice>();
             run.player.levelUpModifiers ??= new List<SavedStatModifierData>();
@@ -92,6 +93,13 @@ namespace Necrocis
             run.bosses ??= new BossProgressSaveData();
             run.checkpoint ??= new ResumeCheckpointSaveData();
             run.world ??= new WorldRunSaveData();
+            run.world.merchantShops ??= new List<MerchantShopSaveData>();
+            run.world.merchantShops.RemoveAll(shop => shop == null);
+            foreach (var shop in run.world.merchantShops)
+            {
+                shop.itemIds ??= new List<string>();
+                shop.purchasedItemIds ??= new List<string>();
+            }
             run.world.biomeElitePlans ??= new List<BiomeElitePlan>();
             run.world.defeatedBiomeEliteIds ??= new List<string>();
             run.world.biomeElitePlans.RemoveAll(p => p == null);

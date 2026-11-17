@@ -1,7 +1,8 @@
 namespace Necrocis
 {
     /// <summary>
-    /// 추격 상태: 플레이어를 향해 이동, 공격 범위 진입 시 Attack, leash 이탈 시 Return
+    /// 추격 상태: 플레이어를 향해 이동, 공격 범위 진입 시 Attack.
+    /// 이동형 잡몹은 한 번 추격하면 감지 거리와 스폰 지점의 복귀 거리를 무시한다.
     /// 고정형(원거리): 이동하지 않고 범위 체크만
     /// </summary>
     public class EnemyChaseState : IEnemyState
@@ -22,6 +23,12 @@ namespace Necrocis
             if (enemy.IsDead)
             {
                 enemy.ChangeState(EnemyDeadState.Instance);
+                return;
+            }
+
+            if (!enemy.HasLivingPlayerTarget)
+            {
+                enemy.ChangeState(EnemyReturnState.Instance);
                 return;
             }
 

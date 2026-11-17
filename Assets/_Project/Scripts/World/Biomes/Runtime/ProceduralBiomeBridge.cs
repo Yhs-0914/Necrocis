@@ -163,6 +163,7 @@ namespace Necrocis
                 }
                 if (existingCycle == null) gameObject.AddComponent<StomachAcidCycle>();
             }
+            WorldMerchantSpawner.Ensure(this);
             context.MarkEncounterPrepared();
         }
 

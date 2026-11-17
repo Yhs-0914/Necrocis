@@ -23,7 +23,7 @@ namespace Necrocis
         internal Color Color;
         internal bool FlipX,FlipY;
         internal EnemyEncounterRole Role;
-        internal bool IgnoreArena;
+        internal bool IgnoreArena, PersistentPlayerAggro;
         internal AggroRuntimeSnapshot[] Aggro;
         public Vector3 SavedPosition=>Position;
         public float SavedHealth=>Stats.Health;
@@ -56,6 +56,7 @@ namespace Necrocis
                 Charging=isCharging,ChargeDirection=chargeDirection,ChargeElapsed=chargeElapsed,ChargeSpeed=chargeCurrentSpeed,ChargeCooldown=chargeCooldownTimer,
                 HitByPlayer=hitByPlayer,SuppressCredit=suppressKillCredit,ExperienceGranted=experienceGranted,DefeatRaised=defeatEventRaised,SuppressXp=SuppressExperienceReward,
                 HasGround=hasCachedGroundHeight,GroundHeight=cachedGroundHeight,GroundCell=cachedGroundGrid,LoopFrames=currentLoopFrames,Role=EncounterRole,IgnoreArena=ignoreMidBossArenaRestriction,Aggro=aggro,
+                PersistentPlayerAggro=persistentPlayerAggro,
                 ColliderSize=boxCollider.size,ColliderCenter=boxCollider.center,ColliderEnabled=boxCollider.enabled,ContactEnabled=contactDamage.enabled,
                 DisplayedSprite=spriteRenderer.sprite,Color=spriteRenderer.color,FlipX=spriteRenderer.flipX,FlipY=spriteRenderer.flipY,SortingLayer=spriteRenderer.sortingLayerID,SortingOrder=spriteRenderer.sortingOrder,
                 VisualPosition=visualRoot.localPosition,VisualScale=visualRoot.localScale,VisualRotation=visualRoot.localRotation};
@@ -84,6 +85,7 @@ namespace Necrocis
         private void ApplySuspendedState(EnemyRuntimeSnapshot state)
         {
             pendingResume=state;uint restoringGeneration=SpawnGeneration;
+            persistentPlayerAggro=state.PersistentPlayerAggro;
             bool Current()=>this!=null&&SpawnGeneration==restoringGeneration&&ReferenceEquals(pendingResume,state);
             stats.RestoreRuntime(state.Stats,Current);
             if(!Current())return;
@@ -143,6 +145,13 @@ namespace Necrocis
     }
     public partial class EnemyController
     {
+        internal bool TransferSpawnOwner(IEnemySpawnOwner expected, IEnemySpawnOwner replacement)
+        {
+            if (!ReferenceEquals(owner, expected) || replacement == null || IsDead || IsRetiringLifetime) return false;
+            owner = replacement;
+            notifiedOwner = false;
+            return true;
+        }
         internal void BindLooseSuspensionOwner(IEnemySuspensionOwner value)
         {if(owner!=null)throw new InvalidOperationException("An enemy already has a spawn owner.");owner=value;notifiedOwner=false;}
         public bool TrySuspendByOwner()=>owner is IEnemySuspensionOwner suspension&&suspension.TrySuspend(this);

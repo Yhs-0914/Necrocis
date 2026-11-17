@@ -1,0 +1,14 @@
+{
+  "baseline": "3d16e4b",
+  "compared_fields": 180,
+  "differences": [],
+  "extra_fields": [
+    "frenzyHormoneMaxBonus",
+    "frenzyHormoneMinBonus",
+    "mutationRampageAttackDebuff",
+    "mutationRampageAttackSpeedDebuff",
+    "mutationRampageBuffChance",
+    "mutationRampageMoveDebuff",
+    "overheatExplosionSelfDamage"
+  ]
+}

@@ -1,0 +1,12 @@
+Generator: built-in image_gen; transparent_background=true; edit reference merchant-npc-v1.png.
+
+Use case: identity-preserve / style-transfer.
+Input image 1 is the APPROVED merchant design, the sole character identity reference. Convert this exact merchant into a compact pixel-art idle animation sprite sheet for the 2D game Necrocis.
+Preserve the reference design: squat friendly ivory-and-pink cellular face, small dark eyes, aubergine and dusty-rose organic hood, stitched pink membrane backpack with bone frame and wares, tiny amber lantern, red heart-marked potion held in the raised hand, short little feet. Keep its recognisable silhouette and outfit. Simplify small decorative details to read at game scale rather than making an illustration.
+
+Output a clean WIDE HORIZONTAL SPRITE SHEET with exactly FOUR equal SQUARE cells in ONE row (4 columns, 1 row). Overall aspect ratio exactly 4:1 if possible. Each frame is the same front / slight three-quarter merchant, identical size, facing, and camera. The full merchant fits INSIDE each cell with transparent padding, feet at the same baseline, the body at exactly the same horizontal anchor in each cell. No overlaps between cells, no cropped backpack, no cropped feet or potion. Suggested logical frame resolution 128x128 pixels, so the sheet reads as 512x128 logical pixels, shown at a clean integer enlargement. Transparent RGBA background throughout.
+Frame 1: calm neutral idle, both eyes open.
+Frame 2: gentle inhale, belly and shoulders rise only one or two logical pixels, feet unmoved.
+Frame 3: brief soft blink, body relaxed, feet unmoved.
+Frame 4: gentle exhale and eyes open, returns smoothly to frame 1.
+It stays standing in place: NO walking, no turning, no large motion, no duplicated hands, no prop additions or disappearing inventory. The vial stays in the same hand in every frame. Crisp deliberate hand-pixelled clusters, limited fleshy mauve / burgundy / ivory palette matching the approved design, strong stepped dark outlines. No smooth painterly rendering, no soft gradients, no motion blur. No text, no frame numbers, no separator lines, no UI, no environment or ground platform, no shadows outside the character. The ONLY visible objects are the four frames of this same merchant.

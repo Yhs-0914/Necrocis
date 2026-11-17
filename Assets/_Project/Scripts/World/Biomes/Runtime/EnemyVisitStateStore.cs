@@ -5,7 +5,7 @@ namespace Necrocis
 {
     // Current world instance/visit only. Nothing is written into RunSaveData.
     [DisallowMultipleComponent]
-    public sealed partial class EnemyVisitStateStore : MonoBehaviour,IEnemySpawnerStateStore
+    public sealed partial class EnemyVisitStateStore : MonoBehaviour,IEnemySpawnerStateStore,IEnemyPursuitStore
     {
         private BiomeManager biome;
         private MonsterVisitContext visit;

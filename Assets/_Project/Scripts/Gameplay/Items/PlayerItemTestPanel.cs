@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -28,6 +29,9 @@ namespace Necrocis
         private Text summaryText;
         private Text detailText;
         private Text statusText;
+        private InputField searchField;
+        private string searchQuery = string.Empty;
+        private Font panelFont;
 
         private string selectedCatalogItemId;
         private string selectedAcquiredItemId;
@@ -98,10 +102,12 @@ namespace Necrocis
             inputScope = new ModalInputScope(this, canvasObject, false, HidePanel);
             RefreshLists();
             UpdateStatus($"{toggleKey}: 테스트 패널 열기/닫기");
+            if (inputScope.CanInteract) searchField.ActivateInputField();
         }
 
         private void HidePanel()
         {
+            if (searchField != null) searchField.DeactivateInputField();
             inputScope?.Dispose(); inputScope = null;
             if (canvasObject != null) canvasObject.SetActive(false);
         }
@@ -154,20 +160,23 @@ namespace Necrocis
             summaryText = CreateLabel("Summary", panelObject.transform, new Vector2(0f, 420f), new Vector2(1740f, 42f), 26, TextAnchor.MiddleCenter);
             summaryText.color = new Color(0.77f, 0.89f, 0.98f, 1f);
 
-            detailText = CreateLabel("Detail", panelObject.transform, new Vector2(0f, 365f), new Vector2(1740f, 60f), 24, TextAnchor.MiddleCenter);
+            CreateSearchField();
+
+            detailText = CreateLabel("Detail", panelObject.transform, new Vector2(0f, 310f), new Vector2(1740f, 50f), 24, TextAnchor.MiddleCenter);
             detailText.color = new Color(0.93f, 0.93f, 0.93f, 1f);
 
-            CreateLabel("CatalogLabel", panelObject.transform, new Vector2(-450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "전체 아이템 목록";
-            CreateLabel("AcquiredLabel", panelObject.transform, new Vector2(450f, 315f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "현재 보유 아이템";
+            CreateLabel("CatalogLabel", panelObject.transform, new Vector2(-450f, 260f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "전체 아이템 목록";
+            CreateLabel("AcquiredLabel", panelObject.transform, new Vector2(450f, 260f), new Vector2(840f, 40f), 26, TextAnchor.MiddleLeft).text = "현재 보유 아이템";
 
-            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -10f), new Vector2(840f, 620f));
-            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -10f), new Vector2(840f, 620f));
+            catalogContent = CreateScrollList(panelObject.transform, new Vector2(-450f, -35f), new Vector2(840f, 550f));
+            acquiredContent = CreateScrollList(panelObject.transform, new Vector2(450f, -35f), new Vector2(840f, 550f));
 
             CreateActionButton("RefreshButton", panelObject.transform, new Vector2(-690f, -365f), new Vector2(220f, 68f), "새로고침", RefreshLists, new Color(0.2f, 0.3f, 0.42f, 1f));
             CreateActionButton("AddButton", panelObject.transform, new Vector2(-430f, -365f), new Vector2(260f, 68f), "선택 아이템 추가", AddSelectedCatalogItem, new Color(0.18f, 0.44f, 0.22f, 1f));
             CreateActionButton("SpawnButton", panelObject.transform, new Vector2(-120f, -365f), new Vector2(300f, 68f), "플레이어 위치 생성", SpawnSelectedCatalogItemAtPlayer, new Color(0.44f, 0.32f, 0.12f, 1f));
             CreateActionButton("RemoveButton", panelObject.transform, new Vector2(210f, -365f), new Vector2(260f, 68f), "선택 아이템 삭제", RemoveSelectedAcquiredItem, new Color(0.5f, 0.18f, 0.18f, 1f));
             CreateActionButton("ClearButton", panelObject.transform, new Vector2(500f, -365f), new Vector2(220f, 68f), "전체 삭제", ClearAllItems, new Color(0.41f, 0.14f, 0.14f, 1f));
+            CreateActionButton("AddGoldButton", panelObject.transform, new Vector2(-530f, -445f), new Vector2(340f, 58f), "골드 +100", AddTestGold, new Color(0.5f, 0.35f, 0.1f, 1f));
             CreateActionButton("HealButton", panelObject.transform, new Vector2(0f, -445f), new Vector2(340f, 58f), "플레이어 체력 전체 회복", RestorePlayerHealth, new Color(0.12f, 0.48f, 0.4f, 1f));
 
             CreateActionButton("CompleteBiomeBossesButton", panelObject.transform, new Vector2(520f, -445f), new Vector2(620f, 58f), "4개 맵 보스 처치 완료 (저장 반영)", CompleteBiomeBosses, new Color(0.38f, 0.24f, 0.53f, 1f));
@@ -176,6 +185,71 @@ namespace Necrocis
             statusText.color = new Color(0.97f, 0.83f, 0.35f, 1f);
             canvasObject.SetActive(false);
         }
+
+        private void CreateSearchField()
+        {
+            CreateLabel("SearchLabel", panelObject.transform, new Vector2(-800f, 365f), new Vector2(140f, 50f), 26, TextAnchor.MiddleLeft).text = "아이템 검색";
+            GameObject root = CreateUiObject("ItemSearch", panelObject.transform);
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(-30f, 365f);
+            rect.sizeDelta = new Vector2(1340f, 52f);
+            Image background = root.AddComponent<Image>();
+            background.color = new Color(0.13f, 0.19f, 0.25f, 1f);
+            searchField = root.AddComponent<InputField>();
+            searchField.targetGraphic = background;
+            searchField.contentType = InputField.ContentType.Standard;
+            searchField.lineType = InputField.LineType.SingleLine;
+            searchField.characterLimit = 80;
+            Text valueText = CreateLabel("SearchText", root.transform, Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleLeft);
+            Text placeholder = CreateLabel("Placeholder", root.transform, Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleLeft);
+            placeholder.text = "한글 이름 또는 아이템 ID 입력 (예: 점액, 혈액드론)";
+            placeholder.color = new Color(0.65f, 0.71f, 0.78f, 1f);
+            foreach (Text text in new[] { valueText, placeholder })
+            {
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                text.supportRichText = false;
+                text.raycastTarget = false;
+                text.rectTransform.anchorMin = Vector2.zero;
+                text.rectTransform.anchorMax = Vector2.one;
+                text.rectTransform.offsetMin = new Vector2(14f, 6f);
+                text.rectTransform.offsetMax = new Vector2(-14f, -6f);
+            }
+            searchField.textComponent = valueText;
+            searchField.placeholder = placeholder;
+            searchField.onValueChanged.AddListener(HandleSearchChanged);
+            CreateActionButton("ClearSearchButton", panelObject.transform, new Vector2(770f, 365f), new Vector2(180f, 52f),
+                "검색 초기화", () => { searchField.text = string.Empty; searchField.ActivateInputField(); }, new Color(.2f, .3f, .42f, 1f));
+        }
+
+        private void HandleSearchChanged(string value)
+        {
+            string query = NormalizeSearch(value);
+            if (string.Equals(searchQuery, query, StringComparison.Ordinal)) return;
+            searchQuery = query;
+            RefreshLists();
+            foreach (Transform content in new[] { catalogContent, acquiredContent })
+            {
+                if (content == null) continue;
+                ScrollRect scroll = content.GetComponentInParent<ScrollRect>();
+                scroll.StopMovement();
+                scroll.verticalNormalizedPosition = 1f;
+                // Reset the content too: the layout height updates at the end of the frame.
+                ((RectTransform)content).anchoredPosition = Vector2.zero;
+            }
+        }
+
+        private static string NormalizeSearch(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var result = new StringBuilder(value.Length);
+            foreach (char character in value.Normalize(NormalizationForm.FormC))
+                if (!char.IsWhiteSpace(character)) result.Append(character);
+            return result.ToString();
+        }
+
+        private bool MatchesSearch(string displayName, string itemId) => searchQuery.Length == 0
+            || NormalizeSearch(displayName).IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0
+            || NormalizeSearch(itemId).IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase) >= 0;
 
         private static void EnsureEventSystem()
         {
@@ -286,15 +360,21 @@ namespace Necrocis
 
             for (int i = catalogContent.childCount - 1; i >= 0; i--)
             {
-                Destroy(catalogContent.GetChild(i).gameObject);
+                GameObject row = catalogContent.GetChild(i).gameObject;
+                row.SetActive(false);
+                Destroy(row);
             }
 
             for (int i = acquiredContent.childCount - 1; i >= 0; i--)
             {
-                Destroy(acquiredContent.GetChild(i).gameObject);
+                GameObject row = acquiredContent.GetChild(i).gameObject;
+                row.SetActive(false);
+                Destroy(row);
             }
 
             IReadOnlyList<PlayerItemManager.PlayerItemEntry> entries = itemManager.ItemEntries;
+            int catalogMatches = 0, acquiredMatches = 0;
+            bool catalogSelectionVisible = false, acquiredSelectionVisible = false;
             for (int i = 0; i < entries.Count; i++)
             {
                 PlayerItemManager.PlayerItemEntry entry = entries[i];
@@ -303,6 +383,9 @@ namespace Necrocis
                     continue;
                 }
 
+                if (!MatchesSearch(entry.DisplayName, entry.ItemId)) continue;
+                catalogMatches++;
+
                 string label = $"{entry.DisplayName} ({entry.ItemId})";
                 if (!string.IsNullOrWhiteSpace(entry.Description))
                 {
@@ -310,6 +393,7 @@ namespace Necrocis
                 }
 
                 bool selected = string.Equals(selectedCatalogItemId, entry.ItemId, StringComparison.OrdinalIgnoreCase);
+                catalogSelectionVisible |= selected;
                 CreateItemRow(catalogContent, label, selected, () =>
                 {
                     selectedCatalogItemId = entry.ItemId;
@@ -327,8 +411,12 @@ namespace Necrocis
                     continue;
                 }
 
+                if (!MatchesSearch(item.DisplayName, item.ItemId)) continue;
+                acquiredMatches++;
+
                 string label = $"{i + 1}. {item.DisplayName} ({item.ItemId})";
                 bool selected = string.Equals(selectedAcquiredItemId, item.ItemId, StringComparison.OrdinalIgnoreCase);
+                acquiredSelectionVisible |= selected;
                 CreateItemRow(acquiredContent, label, selected, () =>
                 {
                     selectedAcquiredItemId = item.ItemId;
@@ -337,7 +425,23 @@ namespace Necrocis
                 });
             }
 
-            summaryText.text = $"보유: {itemManager.ItemCount}개 (제한 없음) | 카탈로그: {entries.Count}";
+            bool selectionHidden = !catalogSelectionVisible && selectedCatalogItemId != null
+                || !acquiredSelectionVisible && selectedAcquiredItemId != null;
+            if (!catalogSelectionVisible) selectedCatalogItemId = null;
+            if (!acquiredSelectionVisible) selectedAcquiredItemId = null;
+            if (selectionHidden) detailText.text = "목록에서 아이템을 선택하세요.";
+            if (catalogMatches == 0) CreateEmptySearchRow(catalogContent, "검색 결과가 없습니다.");
+            if (acquiredMatches == 0) CreateEmptySearchRow(acquiredContent, searchQuery.Length > 0 ? "검색에 맞는 보유 아이템이 없습니다." : "보유 아이템이 없습니다.");
+            summaryText.text = searchQuery.Length == 0
+                ? $"보유: {itemManager.ItemCount}개 (제한 없음) | 카탈로그: {entries.Count}"
+                : $"검색 결과 | 전체 목록: {catalogMatches}/{entries.Count}개 | 보유 목록: {acquiredMatches}/{itemManager.ItemCount}개";
+        }
+
+        private void CreateEmptySearchRow(Transform parent, string message)
+        {
+            Text text = CreateLabel("EmptySearch", parent, Vector2.zero, new Vector2(0f, 62f), 24, TextAnchor.MiddleCenter);
+            text.text = message;
+            text.color = new Color(.65f, .71f, .78f, 1f);
         }
 
         private void AddSelectedCatalogItem()
@@ -484,6 +588,14 @@ namespace Necrocis
             UpdateStatus("보스 처치 및 부산물 4/4 완료. F8을 닫고 허브 중앙 포탈로 들어가세요. (현재 저장에 반영)");
         }
 
+        private void AddTestGold()
+        {
+            if (!IsAvailable || inputScope?.CanInteract != true) return;
+            long previous = SaveService.CurrencyBalance;
+            SaveService.CreditCurrency(100);
+            UpdateStatus($"골드 +{SaveService.CurrencyBalance - previous:N0} (보유 골드: {SaveService.CurrencyBalance:N0})");
+        }
+
         private void RestorePlayerHealth()
         {
             if (!IsAvailable || inputScope?.CanInteract != true) return;
@@ -581,7 +693,8 @@ namespace Necrocis
             rect.sizeDelta = size;
 
             Text text = textObject.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (panelFont == null) panelFont = Resources.Load<Font>("PFStardust") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = panelFont;
             text.fontSize = fontSize;
             text.alignment = alignment;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;

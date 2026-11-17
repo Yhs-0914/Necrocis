@@ -15,6 +15,7 @@ namespace Necrocis
             public bool TrySuspend(EnemyController actor)
             {
                 if(Store==null||!Store.IsAvailable||actor!=Active||actor.IsDead||Saved!=null)return false;
+                if (actor.HasPersistentPlayerAggro) { Store.KeepPursuerActive(actor); return true; }
                 var saved=actor.CaptureSuspension();Saved=saved;Suspending=true;
                 try{actor.ReleaseForSuspension(saved);Active=null;return true;}
                 finally{Suspending=false;}
@@ -26,6 +27,27 @@ namespace Necrocis
             }
         }
         private readonly List<LooseEntry> loose=new List<LooseEntry>();
+        private Transform pursuersRoot;
+        private void KeepPursuerActive(EnemyController actor)
+        {
+            if (pursuersRoot == null)
+            {
+                pursuersRoot = new GameObject("PursuingEnemies").transform;
+                pursuersRoot.SetParent(biome.transform, false);
+            }
+            actor.transform.SetParent(pursuersRoot, true);
+        }
+
+        public bool TryRetainPursuer(EnemyController actor, IEnemySpawnOwner previousOwner)
+        {
+            if (!IsAvailable || actor == null || !actor.HasPersistentPlayerAggro || actor.LogicalLife == null) return false;
+            var cell = biome.WorldToGrid(actor.transform.position);
+            var entry = new LooseEntry { Store = this, Chunk = biome.GridToChunk(cell.x, cell.y), Active = actor };
+            if (!actor.TransferSpawnOwner(previousOwner, entry)) return false;
+            loose.Add(entry);
+            KeepPursuerActive(actor);
+            return true;
+        }
         public int StoredLooseActors {get{int n=0;foreach(var entry in loose)if(entry.Saved!=null)n++;return n;}}
         public void RegisterLooseActor(EnemyController actor,Vector2Int chunk)
         {
@@ -62,6 +84,14 @@ namespace Necrocis
                 finally{entry.Suspending=false;}
             }
         }
-        private void ClearLooseActors(){foreach(var entry in loose){entry.Saved?.Retire();entry.Active?.LogicalLife?.Retire();}loose.Clear();}
+        private void ClearLooseActors()
+        {
+            foreach (var entry in loose.ToArray())
+            {
+                entry.Saved?.Retire();
+                if (entry.Active != null) entry.Active.ReleaseToPool();
+            }
+            loose.Clear();
+        }
     }
 }

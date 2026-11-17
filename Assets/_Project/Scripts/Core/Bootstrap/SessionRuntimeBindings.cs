@@ -6,6 +6,13 @@ namespace Necrocis
     {
         private sealed class RuntimePort : ISessionRuntimeSavePort
         {
+            public void Prepare(RunSaveData run)
+            {
+                // World spawners can initialize before the player is ready for full restoration.
+                // Publish the selected run's progression before loading any gameplay scene.
+                LevelUpManager.RestoreProgress(run.player);
+                GameManager.Instance?.RestoreFromSave(run);
+            }
             public void Capture(RunSaveData run)=>GameplaySaveCoordinator.CreateSessionSaveAdapter().Capture(run);
             public bool TryRestore(RunSaveData run,out string error)=>GameplaySaveCoordinator.CreateSessionSaveAdapter().TryRestore(run,out error);
         }

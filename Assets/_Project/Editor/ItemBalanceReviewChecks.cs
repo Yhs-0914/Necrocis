@@ -27,6 +27,7 @@ namespace NecrocisEditor
             oldOptions = EditorSettings.enterPlayModeOptions;
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload;
+            GameplayFocusOwner.TestFocusOverride = true;
             SaveService.UseStorageRootForTests(Path.GetFullPath("tmp/item-review-saves"));
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             new GameObject("ReviewAudioListener").AddComponent<AudioListener>();
@@ -71,6 +72,8 @@ namespace NecrocisEditor
                 Acquire(inventory, "forbidden_growth");
                 Equal(attack + 3, stats.AttackPower, "forbidden growth grants useful attack");
                 Equal(health - 2, stats.MaxHealth, "forbidden growth health cost");
+                Require(inventory.TryGetItemEntry("forbidden_growth", out var forbidden) && forbidden.Description.Contains("-2")
+                    && forbidden.Description.Contains("+3"), "forbidden growth description matches restored effect");
                 Require(inventory.RemoveItem("forbidden_growth"), "remove forbidden growth");
                 Equal(attack, stats.AttackPower, "removing curse restores attack");
                 Equal(health, stats.MaxHealth, "removing curse restores maximum health");
@@ -150,6 +153,23 @@ namespace NecrocisEditor
                 }
                 inventory.ClearAllItems();
 
+                var growth = ScriptableObject.CreateInstance<LevelProgressionConfig>();
+                Require(growth.bioGambleMinDelta == 1 && growth.bioGambleMaxDelta == 2, "bio gamble default guarantees base growth");
+                var randomState = UnityEngine.Random.state;
+                try
+                {
+                    UnityEngine.Random.InitState(1111);
+                    bool doubled = false;
+                    for (int roll = 0; roll < 100; roll++)
+                    {
+                        int multiplier = growth.RollGrowthMultiplier();
+                        Require(multiplier == 1 || multiplier == 2, "bio gamble cannot erase growth " + roll);
+                        doubled |= multiplier == 2;
+                    }
+                    Require(doubled, "bio gamble can still double growth");
+                }
+                finally { UnityEngine.Random.state = randomState; UnityEngine.Object.Destroy(growth); }
+
                 var target = Enemy(new Vector3(0, 0, 4));
                 var nearby = Enemy(new Vector3(1, 0, 4));
                 Acquire(inventory, "explosive_blood_cell");
@@ -170,6 +190,22 @@ namespace NecrocisEditor
                 Equal(10, Get<float>(status, "poisonTickDamage"), "weak infection cannot replace strong poison");
                 status.ApplyBleed(3.2f, .8f, 8); status.ApplyBleed(3.2f, .8f, 1);
                 Equal(8, Get<float>(status, "bleedTickDamage"), "weak child projectile cannot replace strong bleed");
+                status.ResetEffects();
+                var strongSource = HealthEffectSource.ForOwner(go, "review-strong-dot");
+                var weakSource = HealthEffectSource.ForOwner(go, "review-weak-dot");
+                status.ApplyPoison(4, 1, 10, strongSource);
+                status.ApplyPoison(8, 1, .5f, weakSource);
+                Equal(10, Get<float>(status, "poisonTickDamage"), "weak poison from another item cannot overwrite strong poison");
+                Require(Get<HealthEffectSource>(status, "poisonSource") == strongSource, "strong poison keeps its owning source");
+                Require(Get<System.Collections.IDictionary>(status, "poisonRecords").Count == 1, "weaker poison does not stack as a secondary tick");
+                status.ApplyBleed(3.2f, .8f, 8, strongSource);
+                status.ApplyBleed(6.4f, .8f, 1, weakSource);
+                Equal(8, Get<float>(status, "bleedTickDamage"), "weak bleed from another item cannot overwrite strong bleed");
+                Require(Get<System.Collections.IDictionary>(status, "bleedRecords").Count == 1, "weaker bleed does not stack as a secondary tick");
+                status.RemoveItemSource(weakSource);
+                Require(status.IsPoisoned && status.IsBleeding, "removing weaker source does not cancel stronger effects");
+                status.RemoveItemSource(strongSource);
+                Require(!status.IsPoisoned && !status.IsBleeding, "removing actual source still retires its status effects");
                 status.ResetEffects();
 
                 var puddle = AcidPuddle.Spawn(target.transform.position, .5f, 4, 2, 1);
@@ -241,6 +277,7 @@ namespace NecrocisEditor
             EditorSettings.enterPlayModeOptionsEnabled = oldOptionsEnabled;
             EditorSettings.enterPlayModeOptions = oldOptions;
             SaveService.ResetStaticStateForTests();
+            GameplayFocusOwner.TestFocusOverride = null;
             Directory.CreateDirectory("output/item-review");
             File.WriteAllLines("output/item-review/unity-checks.txt", checks);
             Debug.Log("[ItemReview] " + (passed ? "PASS" : "FAIL") + ": " + checks.Count + " checks");

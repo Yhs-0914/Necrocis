@@ -58,6 +58,10 @@ for value in growth['levelUpStatValues']:
 stages = asset('Assets/_Project/Data/MonsterBalance/MonsterProgressionProfile.asset')
 effect_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerItemCombatEffects.cs').read_text(encoding='utf-8-sig')
 effect_defaults = {k: float(v) for k, v in re.findall(r'\b(?:float|int) (\w+)\s*=\s*([.\d]+)f?;', effect_source)}
+definition_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/ItemDefinition.cs').read_text(encoding='utf-8-sig')
+stat_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerStatItemCatalog.cs').read_text(encoding='utf-8-sig')
+item_descriptions = dict(re.findall(r'new ItemDefinition\("([^"]+)", "[^"]+", "([^"]*)"', definition_source))
+item_descriptions.update(re.findall(r'new Definition\("([^"]+)", "[^"]+", "([^"]*)"', stat_source))
 
 skills = {'mageSkill1': {'additionalDamageMin': 5, 'additionalDamageMax': 7, 'stunDuration': .75},
           'mageSkill2': {'baseDamage': 16, 'detonationDelay': .7, 'damageTakenIncreaseRatio': .15},
@@ -78,12 +82,18 @@ for path in ['Assets/_Project/Scenes/Hub.unity', 'Assets/_Project/Art/Generated/
             require(components['Necrocis.PlayerClassSkillController'][group][key] == expected, path + '/' + group + '/' + key)
     if 'Necrocis.PlayerItemCombatEffects' in components:
         effects = components['Necrocis.PlayerItemCombatEffects']
+        for key, expected in effect_defaults.items():
+            if key in effects:
+                require(effects[key] == expected, path + ' item setting matches code/' + key)
         for key, value in {'doubleShotDamageMultiplier': .7, 'tripleShotDamageMultiplier': .5,
                            'recoveryFactorInterval': 45, 'splitRegenerationReviveHealth': 4,
                            'rampageMaxAttackBonus': 3, 'decayOrganMaxAttackBonus': 6,
                            'forbiddenGrowthMaxHealthPenalty': 2, 'forbiddenGrowthFlatAttackBonus': 3,
                            'decayOrganSecondsPerAttackBonus': 90, 'decayOrganAttackBonusPerStack': .5}.items():
             require(effects.get(key, effect_defaults.get(key)) == value, path + '/' + key)
+    for entry in components['Necrocis.PlayerItemManager']['itemEntries']:
+        if entry['itemId'] in item_descriptions:
+            require(entry['description'] == item_descriptions[entry['itemId']], path + ' item description/' + entry['itemId'])
 
 for region in ['Intestine', 'Liver', 'Stomach', 'Lung']:
     elite = asset(f'Assets/_Project/Data/BiomeElites/{region}BiomeEliteSpawnConfig.asset')
@@ -106,7 +116,7 @@ inputs = {'growth': growth, 'stages': stages,
           'normal': asset('Assets/_Project/Resources/Balance/Difficulty/NormalDifficultyBalance.asset'),
           'hard': asset('Assets/_Project/Resources/Balance/Difficulty/HardDifficultyBalance.asset'), 'definitions': defs}
 manager_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs').read_text(encoding='utf-8-sig')
-inputs['itemIds'] = re.findall(r'new PlayerItemEntry\(\s*"([^"]+)"', manager_source)
+inputs['itemIds'] = re.findall(r'new ItemDefinition\(\s*"([^"]+)"', definition_source)
 stat_source = (ROOT / 'Assets/_Project/Scripts/Gameplay/Items/PlayerStatItemCatalog.cs').read_text(encoding='utf-8-sig')
 inputs['itemIds'] += re.findall(r'new Definition\(\s*"([^"]+)"', stat_source)
 require(len(inputs['itemIds']) == 68 and len(set(inputs['itemIds'])) == 68, 'all 68 offer candidates')

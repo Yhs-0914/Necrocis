@@ -142,15 +142,6 @@ namespace Necrocis
             if (ownership.HasPlateletMembrane && shieldRuntime.Shield > 0f)
                 damage=shieldRuntime.Absorb(damage,Time.time,settings.plateletMembraneInterval);
 
-            if (ownership.HasReflectiveSkin && sourceEnemy != null && !sourceEnemy.IsDead && damage > 0f)
-            {
-                float reflectedDamage = damage * Mathf.Max(0f, settings.reflectiveSkinDamageRatio);
-                if (reflectedDamage > 0f)
-                {
-                    sourceEnemy.TakeDamage(reflectedDamage, host.GetItemHealthEffectSource(ReflectiveSkinId, "reflection"));
-                }
-            }
-
             return Mathf.Max(0f, damage);
         }
 
@@ -198,7 +189,8 @@ namespace Necrocis
                         continue;
                     }
 
-                    if(ownership.IsPersistentRuntimeOwned(state.itemId) && PersistentRuntimes.TryGetValue(state.itemId,out var runtime))
+                    if(ownership.HasItem(state.itemId) && ownership.IsPersistentRuntimeOwned(state.itemId)
+                        && PersistentRuntimes.TryGetValue(state.itemId,out var runtime))
                         runtime.Restore(state,Time.time,PersistentSettings);
                     if (state.splitRegenerationUsed) host.RunRevivalUsed = true;
                 }

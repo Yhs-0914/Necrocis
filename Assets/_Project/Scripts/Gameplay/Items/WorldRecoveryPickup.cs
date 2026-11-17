@@ -55,6 +55,11 @@ namespace Necrocis
         private void OnTriggerStay(Collider other)
         {
             var player = other.GetComponentInParent<PlayerController>();
+            TryCollect(player);
+        }
+
+        private void TryCollect(PlayerController player)
+        {
             var stats = player != null ? player.Stats : null;
             if (reward == null || reward.collected || stats == null || stats.IsDead
                 || stats.CurrentHealth >= stats.MaxHealth) return;

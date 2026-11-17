@@ -1,0 +1,838 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.9f1 (7a9955a4f2fa) revision 8034645'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26300) Education' Language: 'ko' Physical Memory: 31894 MB
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-kimsong" at "2026-11-17T13:00:13.0189163Z"
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-11-17T13:00:13Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.3.9f1\Editor\Unity.exe
+-batchmode
+-projectPath
+C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/meeting-unity-check
+-executeMethod
+NecrocisEditor.CurrencyEconomyChecks.Run
+-logFile
+C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/currency-economy-check.log
+Successfully changed project path to: C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/meeting-unity-check
+C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/meeting-unity-check
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+Player connection [30272]  Target information:
+
+Player connection [30272]  * "[IP] 192.168.219.100 [Port] 55505 [Flags] 2 [Guid] 3747293624 [EditorId] 3747293624 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-Kimsong) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [30272]  * "[IP] 192.168.253.1 [Port] 55505 [Flags] 2 [Guid] 3747293624 [EditorId] 3747293624 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-Kimsong) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [30272]  * "[IP] 192.168.247.1 [Port] 55505 [Flags] 2 [Guid] 3747293624 [EditorId] 3747293624 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-Kimsong) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [30272] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [30272] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-33516" after 0.2 seconds.
+[Licensing::Module] Licensing is not yet initialized.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.17.4+4293ba1
+  Session Id:              0bb794fc19644495acde461f2e9b1db2
+  Correlation Id:          ac299b23a8bacb20dd3b89b131a4654f
+  External correlation Id: 1002285377318653145
+  Machine Id:              Rwt0u5dxT9KRzIbj5w1c4TnUyJQ=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-kimsong" (connect: 0.00s, validation: 0.00s, handshake: 0.85s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-kimsong-notifications" at "2026-11-17T13:00:13.8674795Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 14569556964167-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.86s
+[Licensing::Module] Licensing is initialized (took 0.54s).
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 0.28 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.3.9f1 (7a9955a4f2fa)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/meeting-unity-check/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 4070 (ID=0x2786)
+    Vendor:   NVIDIA
+    VRAM:     12010 MB
+    Driver:   32.0.16.1088
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56516
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+[Licensing::Client] Successfully resolved entitlement details
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.9f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Registered in 0.005024 seconds.
+- Loaded All Assemblies, in  0.325 seconds
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 2231 ms
+Native extension for WindowsStandalone target not found
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:False
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  2.516 seconds
+Domain Reload Profiling: 2837ms
+	BeginReloadAssembly (116ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (7ms)
+	RebuildCommonClasses (27ms)
+	RebuildNativeTypeToScriptingClass (9ms)
+	initialDomainReloadingComplete (45ms)
+	LoadAllAssembliesAndSetupDomain (123ms)
+		LoadAssemblies (105ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (120ms)
+			TypeCache.Refresh (119ms)
+				TypeCache.ScanAssembly (108ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (0ms)
+	FinalizeReload (2516ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (2491ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (2294ms)
+			SetLoadedEditorAssemblies (3ms)
+			BeforeProcessingInitializeOnLoad (53ms)
+			ProcessInitializeOnLoadAttributes (92ms)
+			ProcessInitializeOnLoadMethodAttributes (49ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+Package Manager log level set to [2]
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 56 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.2d.tilemap.extras@6.0.1 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.2d.tilemap.extras@3dde84bf3867)
+    com.unity.ide.visualstudio@2.0.26 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.ide.visualstudio@a99d56dec63f)
+    com.unity.inputsystem@1.18.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.inputsystem@57d0e36f6123)
+    com.unity.nuget.newtonsoft-json@3.2.2 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64)
+    com.unity.timeline@1.8.10 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.timeline@7f8b2fb101b6)
+    com.unity.visualscripting@1.9.9 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.visualscripting@191c0d7e3b69)
+    com.unity.searcher@4.9.4 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.searcher@d45a78918735)
+    com.unity.burst@1.8.28 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.burst@07790c2d06d9)
+    com.unity.mathematics@1.3.3 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.mathematics@19a9377c4ffa)
+    com.unity.collections@2.6.2 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.collections@aea9d3bd5e19)
+    com.unity.nuget.mono-cecil@1.11.6 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.test-framework.performance@3.2.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.test-framework.performance@0840f58e4562)
+  Built-in packages:
+    com.unity.2d.sprite@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.2d.sprite@d14b9d497a24)
+    com.unity.2d.tilemap@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.2d.tilemap@f011712243ad)
+    com.unity.render-pipelines.universal@17.3.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.render-pipelines.universal@7327e77c1cc2)
+    com.unity.ugui@2.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.ugui@bb329a87fcdc)
+    com.unity.modules.accessibility@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.androidjni@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.render-pipelines.core@17.3.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.render-pipelines.core@04ab0eefa0c3)
+    com.unity.shadergraph@17.3.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.shadergraph@f80b792d4861)
+    com.unity.render-pipelines.universal-config@17.0.3 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.render-pipelines.universal-config@8dc1aab4af1d)
+    com.unity.test-framework@1.6.0 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.test-framework@0b7a23ab2e1d)
+    com.unity.ext.nunit@2.0.5 (location: C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Library\PackageCache\com.unity.ext.nunit@d8c07649098d)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.02 seconds
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.9f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: C:/Users/kimsong/Documents/GitHub/unity/Necrocis/tmp/meeting-unity-check
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 2s680ms
+[699/897    0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[889/897    1s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll (+2 others)
+[890/897    0s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+[891/897    0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp-Editor.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll, with 135 defines and 339 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[892/897    0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll, with 137 defines and 322 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[893/897    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[894/897    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[895/897    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[896/897    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (2.65 seconds), 9 items updated, 897 evaluated
+AssetDatabase: script compilation time: 3.023744s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.041 seconds
+Refreshing native plugins compatible for Editor in 0.82 ms, found 1 plugins.
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  2.253 seconds
+Domain Reload Profiling: 3284ms
+	BeginReloadAssembly (285ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (11ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (156ms)
+	RebuildCommonClasses (29ms)
+	RebuildNativeTypeToScriptingClass (10ms)
+	initialDomainReloadingComplete (32ms)
+	LoadAllAssembliesAndSetupDomain (676ms)
+		LoadAssemblies (583ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (181ms)
+			TypeCache.Refresh (116ms)
+				TypeCache.ScanAssembly (106ms)
+			BuildScriptInfoCaches (53ms)
+			ResolveRequiredComponents (9ms)
+	FinalizeReload (2253ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (2120ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (27ms)
+			SetLoadedEditorAssemblies (2ms)
+			BeforeProcessingInitializeOnLoad (133ms)
+			ProcessInitializeOnLoadAttributes (1819ms)
+			ProcessInitializeOnLoadMethodAttributes (126ms)
+			AfterProcessingInitializeOnLoad (11ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (7ms)
+Refreshing native plugins compatible for Editor in 0.87 ms, found 1 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=c104907c4840e464bb3bd5af156ce6fc): Total: 7.005 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=2599 ms
+		Asset DB Callback time: managed=258 ms, native=23 ms
+		Scripting: domain reloads=1, domain reload time=1041 ms, compile time=3026 ms, other=55 ms
+		Project Asset Count: scripts=1387, non-scripts=2923
+		Asset File Changes: new=0, changed=2, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.001ms
+	InvokePackagesCallback: 22.675ms
+	ApplyChangesToAssetFolders: 0.617ms
+	Scan: 83.456ms
+	OnSourceAssetsModified: 0.715ms
+	CategorizeAssetsWithTransientArtifact: 33.411ms
+	ProcessAssetsWithTransientArtifactChanges: 62.595ms
+	CategorizeAssets: 36.541ms
+	ImportOutOfDateAssets: 2259.518ms (-766.808ms without children)
+		CompileScripts: 3025.576ms
+		ReloadNativeAssets: 0.000ms
+		UnloadImportedAssets: 0.092ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.414ms
+		InitializingProgressBar: 0.000ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.000ms
+		OnDemandSchedulerStart: 0.243ms
+	PostProcessAllAssets: 259.578ms
+	Hotreload: 2.076ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.002ms
+	UnloadStreamsBegin: 0.845ms
+	PersistCurrentRevisions: 0.084ms
+	UnloadStreamsEnd: 0.001ms
+	GenerateScriptTypeHashes: 2.184ms
+	Untracked: 4243.189ms
+
+Application.AssetDatabase Initial Refresh End
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
+Scanning for USB devices : 10.177ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-Nc_Map
+Unloading 189 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 6220 unused Assets / (13.5 MB). Loaded Objects now: 6926.
+Memory consumption went from 223.5 MB to 210.1 MB.
+Total: 10.676000 ms (FindLiveObjects: 0.566100 ms CreateObjectMapping: 0.184100 ms MarkObjects: 5.096000 ms  DeleteObjects: 4.829400 ms)
+
+Unloading 8 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 1 unused Assets / (62.0 KB). Loaded Objects now: 6940.
+Memory consumption went from 177.5 MB to 177.4 MB.
+Total: 5.470500 ms (FindLiveObjects: 0.229900 ms CreateObjectMapping: 0.098600 ms MarkObjects: 5.126600 ms  DeleteObjects: 0.014900 ms)
+
+[Project] Loading completed in 13.378 seconds
+	Project init time: 				11.573 seconds
+		Template init time: 		0.000 seconds
+		Package Manager init time: 		0.752 seconds
+		Asset Database init time: 		0.134 seconds
+		Global illumination init time: 	0.003 seconds
+		Assemblies load time: 			2.864 seconds
+		Unity extensions init time: 	0.007 seconds
+		Asset Database refresh time: 	7.005 seconds
+	Scene opening time: 			1.649 seconds
+##utp:{"type":"ProjectInfo","version":2,"phase":"Immediate","time":1794920426329,"processId":33516,"projectLoad":13.3782342,"projectInit":11.5732163,"templateInit":0.0,"packageManagerInit":0.7515026,"assetDatabaseInit":0.1337479,"globalIlluminationInit":0.0030141,"assembliesLoad":2.8639416,"unityExtensionsInit":0.0067775,"assetDatabaseRefresh":7.0053839,"sceneOpening":1.6494584}
+##utp:{"type":"EditorInfo","version":2,"phase":"Immediate","time":1794920426329,"processId":33516,"editorVersion":"6000.3.9f1 (7a9955a4f2fa)","branch":"6000.3/staging","buildType":"Release","platform":"Windows"}
+Entering Playmode with Reload Domain disabled.
+If you experience any issues, please disable "Enter Play Mode Options" in Editor Settings
+[AudioManager] SFX 파일 없음: Resources/Audio/Player/스킬 사용
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogWarning (object)
+Necrocis.AudioManager:LoadResourceClips () (at Assets/_Project/Scripts/Core/Audio/AudioManager.cs:558)
+Necrocis.AudioManager:EnsureInitialized () (at Assets/_Project/Scripts/Core/Audio/AudioManager.cs:475)
+Necrocis.AudioManager:Awake () (at Assets/_Project/Scripts/Core/Audio/AudioManager.cs:210)
+UnityEngine.GameObject:Internal_AddComponentWithType (System.Type)
+UnityEngine.GameObject:AddComponent (System.Type)
+UnityEngine.GameObject:AddComponent<Necrocis.AudioManager> ()
+Necrocis.AudioManager:get_Instance () (at Assets/_Project/Scripts/Core/Audio/AudioManager.cs:161)
+Necrocis.AudioManager:AutoCreate () (at Assets/_Project/Scripts/Core/Audio/AudioManager.cs:644)
+
+(Filename: Assets/_Project/Scripts/Core/Audio/AudioManager.cs Line: 558)
+
+Loaded scene 'Temp/__Backupscenes/0.backup'
+	Deserialize:            0.319 ms
+	Integration:            282.907 ms
+	Integration of assets:  0.004 ms
+	Thread Wait Time:       0.008 ms
+	Total Operation Time:   283.237 ms
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+[InputManager] Initialized
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.InputManager:Awake () (at Assets/_Project/Scripts/Core/Input/InputManager.cs:61)
+UnityEngine.GameObject:Internal_AddComponentWithType (System.Type)
+UnityEngine.GameObject:AddComponent (System.Type)
+UnityEngine.GameObject:AddComponent<Necrocis.InputManager> ()
+Necrocis.InputManager:get_Instance () (at Assets/_Project/Scripts/Core/Input/InputManager.cs:19)
+Necrocis.InGameAudioSettings:Update () (at Assets/_Project/Scripts/UI/HUD/InGameAudioSettings.cs:107)
+
+(Filename: Assets/_Project/Scripts/Core/Input/InputManager.cs Line: 61)
+
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+Asset Pipeline Refresh (id=e2a5b1350e42dd745a74b94221614c3f): Total: 0.042 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Start Indexing on Editor startup
+ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index
+  at System.Collections.Generic.List`1[T].get_Item (System.Int32 index) [0x00009] in <1eb9db207454431c84a47bcd81e79c37>:0 
+  at UnityEditor.Search.SearchDatabase+<EnumerateAll>d__80.MoveNext () [0x00106] in <f29da4183e8c440eae36881e4f178001>:0 
+  at System.Linq.Enumerable.TryGetFirst[TSource] (System.Collections.Generic.IEnumerable`1[T] source, System.Boolean& found) [0x00045] in <6faa6124236442759eb396cfbfdad508>:0 
+  at System.Linq.Enumerable.First[TSource] (System.Collections.Generic.IEnumerable`1[T] source) [0x00000] in <6faa6124236442759eb396cfbfdad508>:0 
+  at UnityEditor.Search.SearchDatabase.GetDefaultSearchDatabase () [0x00006] in <f29da4183e8c440eae36881e4f178001>:0 
+  at UnityEditor.Search.SearchInit.IndexationOnStartup () [0x0000c] in <f29da4183e8c440eae36881e4f178001>:0 
+  at UnityEditor.EditorApplication.Internal_CallDelayFunctions () [0x0002c] in <5016c3a47c2a4a0cbfa8e12eb592279b>:0 
+
+Created GICache directory at C:/Users/kimsong/AppData/LocalLow/Unity/Caches/GiCache. Took: 0.025s, timestamps: [13.796 - 13.821]
+Unloading 159 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 1.227200 ms
+[PlayerProjectilePool] Initialized pool with 10 bullets.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.PlayerProjectilePool:InitializePool () (at Assets/_Project/Scripts/Core/Pooling/PlayerProjectilePool.cs:125)
+Necrocis.PlayerProjectilePool:Awake () (at Assets/_Project/Scripts/Core/Pooling/PlayerProjectilePool.cs:57)
+
+(Filename: Assets/_Project/Scripts/Core/Pooling/PlayerProjectilePool.cs Line: 125)
+
+Loaded scene 'Assets/_Project/Scenes/Hub.unity'
+	Deserialize:            129.434 ms
+	Integration:            214.635 ms
+	Integration of assets:  32.818 ms
+	Thread Wait Time:       -0.021 ms
+	Total Operation Time:   376.867 ms
+Unloading 13 unused Assets / (21.6 KB). Loaded Objects now: 8215.
+Memory consumption went from 437.4 MB to 437.4 MB.
+Total: 6.561200 ms (FindLiveObjects: 0.382500 ms CreateObjectMapping: 0.099200 ms MarkObjects: 6.042000 ms  DeleteObjects: 0.037200 ms)
+
+[HubMapRenderer] 배경 설정 완료 - Shader: Unlit/Texture, Texture: HubRoom (2)
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubMapRenderer:SetupBackground () (at Assets/_Project/Scripts/World/Hub/HubMapRenderer.cs:117)
+Necrocis.HubMapRenderer:Initialize (UnityEngine.Sprite) (at Assets/_Project/Scripts/World/Hub/HubMapRenderer.cs:39)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:88)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubMapRenderer.cs Line: 117)
+
+[HubMapRenderer] 맵 초기화 완료 (30x30)
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubMapRenderer:Initialize (UnityEngine.Sprite) (at Assets/_Project/Scripts/World/Hub/HubMapRenderer.cs:41)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:88)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubMapRenderer.cs Line: 41)
+
+[HubRoom] 벽 콜라이더 생성 완료
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubRoom:SetupWallColliders () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:158)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:91)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubRoom.cs Line: 158)
+
+[HubBiomePortal] Intestine 포털 초기화 완료
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubBiomePortal:Initialize (Necrocis.BiomeType) (at Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs:114)
+Necrocis.HubRoom:SetupPortals () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:229)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:94)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs Line: 114)
+
+[HubBiomePortal] Liver 포털 초기화 완료
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubBiomePortal:Initialize (Necrocis.BiomeType) (at Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs:114)
+Necrocis.HubRoom:SetupPortals () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:229)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:94)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs Line: 114)
+
+[HubBiomePortal] Stomach 포털 초기화 완료
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubBiomePortal:Initialize (Necrocis.BiomeType) (at Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs:114)
+Necrocis.HubRoom:SetupPortals () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:229)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:94)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs Line: 114)
+
+[HubBiomePortal] Lung 포털 초기화 완료
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubBiomePortal:Initialize (Necrocis.BiomeType) (at Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs:114)
+Necrocis.HubRoom:SetupPortals () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:229)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:94)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubBiomePortal.cs Line: 114)
+
+[HubRoom] 중간방 생성 완료!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.HubRoom:GenerateHub () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:105)
+Necrocis.HubRoom:Start () (at Assets/_Project/Scripts/World/Hub/HubRoom.cs:55)
+
+(Filename: Assets/_Project/Scripts/World/Hub/HubRoom.cs Line: 105)
+
+Unloading 142 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0.888200 ms
+Loaded scene 'Assets/_Project/Scenes/Intestine.unity'
+	Deserialize:            62.391 ms
+	Integration:            189.344 ms
+	Integration of assets:  11.657 ms
+	Thread Wait Time:       -0.009 ms
+	Total Operation Time:   263.382 ms
+Unloading 16 unused Assets / (45.4 KB). Loaded Objects now: 8694.
+Memory consumption went from 464.0 MB to 463.9 MB.
+Total: 7.110700 ms (FindLiveObjects: 0.448000 ms CreateObjectMapping: 0.108700 ms MarkObjects: 6.484700 ms  DeleteObjects: 0.068800 ms)
+
+[MidBossArena] 중간보스 스폰: IntestineBoss @ (150.00, 0.00, 150.00)
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.MidBossArenaController:SpawnBoss () (at Assets/_Project/Scripts/World/Biomes/BossArena/MidBossArenaController.cs:316)
+Necrocis.MidBossArenaController:Configure (Necrocis.BiomeManager,Necrocis.MidBossArenaConfig,System.Collections.Generic.IList`1<Necrocis.EnemySpawnRuleConfig>,Necrocis.BiomeReturnPortalConfig) (at Assets/_Project/Scripts/World/Biomes/BossArena/MidBossArenaController.cs:63)
+Necrocis.ProceduralBiomeBridge:CreateBossArena () (at Assets/_Project/Scripts/World/Biomes/Runtime/ProceduralBiomeBridge.cs:202)
+Necrocis.ProceduralBiomeBridge/<InitializeWhenMapReady>d__20:MoveNext () (at Assets/_Project/Scripts/World/Biomes/Runtime/ProceduralBiomeBridge.cs:144)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
+UnityEngine.MonoBehaviour:StartCoroutineManaged2 (System.Collections.IEnumerator)
+UnityEngine.MonoBehaviour:StartCoroutine (System.Collections.IEnumerator)
+Necrocis.ProceduralBiomeBridge:Start () (at Assets/_Project/Scripts/World/Biomes/Runtime/ProceduralBiomeBridge.cs:111)
+
+(Filename: Assets/_Project/Scripts/World/Biomes/BossArena/MidBossArenaController.cs Line: 316)
+
+[BiomeElite] 가스낭 표현 스프라이트가 필요합니다.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogError (object)
+Necrocis.BiomeEliteField:Configure (Necrocis.BiomeManager,Necrocis.BiomeEliteSpawnConfig,Necrocis.MidBossArenaConfig,Necrocis.BiomeReturnPortalConfig) (at Assets/_Project/Scripts/World/Biomes/Runtime/BiomeEliteField.cs:40)
+Necrocis.BiomeEliteField:Create (Necrocis.BiomeManager,Necrocis.BiomeConfig) (at Assets/_Project/Scripts/World/Biomes/Runtime/BiomeEliteField.cs:28)
+Necrocis.ProceduralBiomeBridge/<InitializeWhenMapReady>d__20:MoveNext () (at Assets/_Project/Scripts/World/Biomes/Runtime/ProceduralBiomeBridge.cs:145)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr)
+UnityEngine.MonoBehaviour:StartCoroutineManaged2 (System.Collections.IEnumerator)
+UnityEngine.MonoBehaviour:StartCoroutine (System.Collections.IEnumerator)
+Necrocis.ProceduralBiomeBridge:Start () (at Assets/_Project/Scripts/World/Biomes/Runtime/ProceduralBiomeBridge.cs:111)
+
+(Filename: Assets/_Project/Scripts/World/Biomes/Runtime/BiomeEliteField.cs Line: 40)
+
+[PlayerItem] 아이템 획득: 삼중핵
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.PlayerItemPickupNotifier:HandleItemAcquired (Necrocis.IInventoryItemView) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemPickupNotifier.cs:50)
+Necrocis.PlayerDisplayAdapters/InventoryDisplay/<>c__DisplayClass13_0:<Add>b__0 (Necrocis.PlayerItemManager,Necrocis.PlayerItemManager/AcquiredPlayerItem) (at Assets/_Project/Scripts/Core/Bootstrap/PlayerDisplayAdapters.cs:82)
+Necrocis.PlayerItemManager:TryAcquireItem (string,Necrocis.PlayerItemAcquireFailureReason&) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs:692)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:57)
+Necrocis.PlayerMerchantShopUI:BuyItem (int) (at Assets/_Project/Scripts/Gameplay/Merchants/PlayerMerchantShopUI.cs:92)
+Necrocis.PlayerMerchantShopUI/<>c__DisplayClass37_0:<BuildUi>b__0 () (at Assets/_Project/Scripts/Gameplay/Merchants/PlayerMerchantShopUI.cs:160)
+UnityEngine.Events.InvokableCall:Invoke ()
+UnityEngine.Events.UnityEvent:Invoke ()
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:115)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Gameplay/Items/PlayerItemPickupNotifier.cs Line: 50)
+
+[PlayerItemManager] 아이템 획득: 삼중핵 (triple_core) [보유 1개]
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.PlayerItemManager:TryAcquireItem (string,Necrocis.PlayerItemAcquireFailureReason&) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs:694)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:57)
+Necrocis.PlayerMerchantShopUI:BuyItem (int) (at Assets/_Project/Scripts/Gameplay/Merchants/PlayerMerchantShopUI.cs:92)
+Necrocis.PlayerMerchantShopUI/<>c__DisplayClass37_0:<BuildUi>b__0 () (at Assets/_Project/Scripts/Gameplay/Merchants/PlayerMerchantShopUI.cs:160)
+UnityEngine.Events.InvokableCall:Invoke ()
+UnityEngine.Events.UnityEvent:Invoke ()
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:115)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs Line: 694)
+
+[PlayerItem] 아이템 획득: 생명 장기
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.PlayerItemPickupNotifier:HandleItemAcquired (Necrocis.IInventoryItemView) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemPickupNotifier.cs:50)
+Necrocis.PlayerDisplayAdapters/InventoryDisplay/<>c__DisplayClass13_0:<Add>b__0 (Necrocis.PlayerItemManager,Necrocis.PlayerItemManager/AcquiredPlayerItem) (at Assets/_Project/Scripts/Core/Bootstrap/PlayerDisplayAdapters.cs:82)
+Necrocis.PlayerItemManager:TryAcquireItem (string,Necrocis.PlayerItemAcquireFailureReason&) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs:692)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:57)
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:139)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Gameplay/Items/PlayerItemPickupNotifier.cs Line: 50)
+
+[PlayerItemManager] 아이템 획득: 생명 장기 (vital_organ) [보유 2개]
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.PlayerItemManager:TryAcquireItem (string,Necrocis.PlayerItemAcquireFailureReason&) (at Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs:694)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:57)
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:139)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Gameplay/Items/PlayerItemManager.cs Line: 694)
+
+[SaveFileStore] 'normal.json' 저장 실패: System.IO.IOException: economy check simulated save failure
+  at NecrocisEditor.CurrencyEconomyChecks+<>c__DisplayClass10_0.<Checks>b__2 (System.String file, System.String point) [0x00034] in C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Assets\_Project\Editor\CurrencyEconomyChecks.cs:137 
+  at Necrocis.SaveFileStore.Inject (System.String fileName, System.String point) [0x00000] in C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Assets\_Project\Scripts\Core\Persistence\SaveFileStore.cs:258 
+  at Necrocis.SaveFileStore.TryWriteFile[T] (System.String fileName, T value, System.Boolean retainBackup, System.Boolean createOnly, System.String& error) [0x00053] in C:\Users\kimsong\Documents\GitHub\unity\Necrocis\tmp\meeting-unity-check\Assets\_Project\Scripts\Core\Persistence\SaveFileStore.cs:80 
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogError (object)
+Necrocis.SaveFileStore:TryWriteFile<Necrocis.RunSaveData> (string,Necrocis.RunSaveData,bool,bool,string&) (at Assets/_Project/Scripts/Core/Persistence/SaveFileStore.cs:126)
+Necrocis.SaveFileStore:TryWrite<Necrocis.RunSaveData> (string,Necrocis.RunSaveData,string&) (at Assets/_Project/Scripts/Core/Persistence/SaveFileStore.cs:47)
+Necrocis.SaveRepository:WriteTarget<Necrocis.RunSaveData> (string,Necrocis.RunSaveData,System.Func`2<Necrocis.RunSaveData, bool>,string&) (at Assets/_Project/Scripts/Core/Persistence/SaveRepository.cs:281)
+Necrocis.SaveRepository:ApplyFixedTarget (Necrocis.SaveOperation,string&) (at Assets/_Project/Scripts/Core/Persistence/SaveRepository.cs:219)
+Necrocis.SaveRepository:TryCommit (Necrocis.SaveOperation,string&) (at Assets/_Project/Scripts/Core/Persistence/SaveRepository.cs:167)
+Necrocis.SaveService:TryRetryPendingOperation (string&) (at Assets/_Project/Scripts/Core/Session/SaveService.Transactions.cs:139)
+Necrocis.SaveService:Commit (string,Necrocis.RunSaveData,Necrocis.ProfileSaveData,bool,string&) (at Assets/_Project/Scripts/Core/Session/SaveService.Transactions.cs:113)
+Necrocis.SaveService:TrySaveActiveRun (string&) (at Assets/_Project/Scripts/Core/Session/SaveService.cs:144)
+Necrocis.WorldMerchantShop:SavePurchase (string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:89)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:61)
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:139)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Core/Persistence/SaveFileStore.cs Line: 126)
+
+[Merchant] economy check simulated save failure
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogWarning (object)
+Necrocis.WorldMerchantShop:SavePurchase (string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:90)
+Necrocis.WorldMerchantShop:TryBuyItem (Necrocis.WorldMerchantNpc,Necrocis.PlayerController,string,string&) (at Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs:61)
+NecrocisEditor.CurrencyEconomyChecks/<Checks>d__10:MoveNext () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:139)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Scripts/Gameplay/Merchants/WorldMerchantShop.cs Line: 90)
+
+Unloading 239 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 2.823500 ms
+[GameInitializer] 게임 초기화 완료!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Necrocis.GameInitializer:InitializeGame () (at Assets/_Project/Scripts/Core/Bootstrap/GameInitializer.cs:81)
+Necrocis.GameInitializer:Awake () (at Assets/_Project/Scripts/Core/Bootstrap/GameInitializer.cs:27)
+
+(Filename: Assets/_Project/Scripts/Core/Bootstrap/GameInitializer.cs Line: 81)
+
+Loaded scene 'Assets/_Project/Scenes/FinalBoss.unity'
+	Deserialize:            93.726 ms
+	Integration:            191.437 ms
+	Integration of assets:  17.115 ms
+	Thread Wait Time:       -0.020 ms
+	Total Operation Time:   302.257 ms
+Unloading 13 unused Assets / (1.5 KB). Loaded Objects now: 9516.
+Memory consumption went from 507.2 MB to 507.2 MB.
+Total: 7.654300 ms (FindLiveObjects: 0.415400 ms CreateObjectMapping: 0.113300 ms MarkObjects: 7.100400 ms  DeleteObjects: 0.024800 ms)
+
+CURRENCY_ECONOMY_PASS assertions=63
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+NecrocisEditor.CurrencyEconomyChecks:Tick () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:47)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/_Project/Editor/CurrencyEconomyChecks.cs Line: 47)
+
+Setting linear velocity of a kinematic body is not supported.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.Rigidbody:set_linearVelocity (UnityEngine.Vector3)
+Necrocis.PlayerController:SpawnAt (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/PlayerController.cs:741)
+Necrocis.ProceduralTerrainMotor:<BindMapIfNeeded>b__30_0 (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:75)
+Necrocis.BiomeRuntimeContext:TryBindPlayer (UnityEngine.Object,System.Action`1<UnityEngine.Vector3>) (at Assets/_Project/Scripts/World/Biomes/Runtime/BiomeRuntimeContext.cs:62)
+Necrocis.ProceduralTerrainMotor:BindMapIfNeeded () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:71)
+Necrocis.ProceduralTerrainMotor:Update () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:44)
+
+[Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs line 71]
+
+Setting angular velocity of a kinematic body is not supported.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.Rigidbody:set_angularVelocity (UnityEngine.Vector3)
+Necrocis.PlayerController:SpawnAt (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/PlayerController.cs:742)
+Necrocis.ProceduralTerrainMotor:<BindMapIfNeeded>b__30_0 (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:75)
+Necrocis.BiomeRuntimeContext:TryBindPlayer (UnityEngine.Object,System.Action`1<UnityEngine.Vector3>) (at Assets/_Project/Scripts/World/Biomes/Runtime/BiomeRuntimeContext.cs:62)
+Necrocis.ProceduralTerrainMotor:BindMapIfNeeded () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:71)
+Necrocis.ProceduralTerrainMotor:Update () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:44)
+
+[Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs line 71]
+
+Setting angular velocity of a kinematic body is not supported.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.Rigidbody:set_angularVelocity (UnityEngine.Vector3)
+Necrocis.PlayerController:ApplyLockedRotation () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/PlayerController.cs:881)
+Necrocis.PlayerController:SpawnAt (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/PlayerController.cs:753)
+Necrocis.ProceduralTerrainMotor:<BindMapIfNeeded>b__30_0 (UnityEngine.Vector3) (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:75)
+Necrocis.BiomeRuntimeContext:TryBindPlayer (UnityEngine.Object,System.Action`1<UnityEngine.Vector3>) (at Assets/_Project/Scripts/World/Biomes/Runtime/BiomeRuntimeContext.cs:62)
+Necrocis.ProceduralTerrainMotor:BindMapIfNeeded () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:71)
+Necrocis.ProceduralTerrainMotor:Update () (at Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs:44)
+
+[Assets/_Project/Scripts/Gameplay/Player/Runtime/ProceduralTerrainMotor.cs line 71]
+
+Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
+Loaded scene 'Temp/__Backupscenes/0.backup'
+	Deserialize:            0.266 ms
+	Integration:            175.354 ms
+	Integration of assets:  0.001 ms
+	Thread Wait Time:       0.006 ms
+	Total Operation Time:   175.627 ms
+Unloading 275 unused Assets / (15.7 MB). Loaded Objects now: 8912.
+Memory consumption went from 0.68 GB to 0.67 GB.
+Total: 10.537200 ms (FindLiveObjects: 0.457900 ms CreateObjectMapping: 0.135500 ms MarkObjects: 9.294400 ms  DeleteObjects: 0.648900 ms)
+
+TextMesh Pro Essential Resources are missing, which are crucial for proper functionality. To import them, go to 'Window > Text Mesh Pro > Import TMP Essential Resources' in the menu.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogError (object)
+TMPro.TMP_PackageResourceImporter:OnDestroy () (at ./Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_PackageResourceImporter.cs:30)
+TMPro.TMP_PackageResourceImporterWindow:OnDestroy () (at ./Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_PackageResourceImporter.cs:263)
+UnityEngine.Object:DestroyImmediate (UnityEngine.Object,bool)
+UnityEditor.DockArea:OnDestroy ()
+UnityEngine.Object:DestroyImmediate (UnityEngine.Object,bool)
+UnityEditor.View:OnDestroy ()
+UnityEngine.Object:DestroyImmediate (UnityEngine.Object,bool)
+UnityEditor.ContainerWindow:Close ()
+UnityEditor.ContainerWindow:RequestCloseSentByNativeCode ()
+NecrocisEditor.CurrencyEconomyChecks:Finish () (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:204)
+NecrocisEditor.CurrencyEconomyChecks:OnState (UnityEditor.PlayModeStateChange) (at Assets/_Project/Editor/CurrencyEconomyChecks.cs:199)
+UnityEditor.EditorApplication:Internal_PlayModeStateChanged (UnityEditor.PlayModeStateChange)
+
+(Filename: ./Library/PackageCache/com.unity.ugui@bb329a87fcdc/Runtime/TMP/TMP_PackageResourceImporter.cs Line: 30)
+
+Killing ADB server in 0.0569249 seconds.
+Start importing ProjectSettings/TimeManager.asset using Guid(00000000000000007000000000000000) (LibraryAssetImporter) -> (artifact id: '52c307e924e96ceef905bcc2cea85a00') in 0.0074223 seconds
+Start importing ProjectSettings/EditorSettings.asset using Guid(0000000000000000c000000000000000) (LibraryAssetImporter) -> (artifact id: 'fdcca38f5f1944c9bec0b9f00395ab39') in 0.0024748 seconds
+Refreshing native plugins compatible for Editor in 0.76 ms, found 1 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=0c432a62290a53a46950d658d22f0173): Total: 0.040 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-kimsong-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-kimsong channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+Checking for leaked weakptr:
+  Found no leaked weakptrs.
+[Package Manager] Server process was shutdown
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1794920430394,"processId":33516,"allocatedMemory":142856839,"memoryLabels":[{"Default":29313},{"Permanent":15236},{"NewDelete":68083},{"Thread":4230344},{"Manager":32893},{"VertexData":584},{"Geometry":816},{"Texture":296},{"Shader":79379},{"Material":24},{"GfxDevice":55689},{"Animation":392},{"Audio":2664},{"FreeType":8},{"FontEngine":127442564},{"Physics":2090},{"Physics2D":16},{"Serialization":592},{"Input":14984},{"JobScheduler":33024},{"TextLib":216},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":2131136},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":9783},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":19686},{"DynamicArray":122409},{"HashMap":79704},{"Utility":2660278},{"Curl":2696},{"PoolAlloc":2152},{"AI":80},{"TypeTree":5341},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":8784},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":208},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":384},{"Hierarchy":608},{"CoreStats":13032},{"Identifiers":12960},{"Gui":601},{"EditorUtility":143764},{"VersionControl":4},{"Undo":947},{"AssetDatabase":4994875},{"EditorGi":328},{"UnityConnect":29232},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":213},{"ProfilerEditor":9778},{"CoreBusinessMetrics":2874},{"Licensing":664},{"AssetReference":32},{"IPCStream":32}]}

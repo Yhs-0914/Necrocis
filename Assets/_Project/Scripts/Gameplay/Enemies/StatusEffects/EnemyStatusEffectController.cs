@@ -10,6 +10,8 @@ namespace Necrocis
         private struct MoveSpeedSlow
         {
             public float ratio;
+            public bool hasSource;
+            public HealthEffectSource source;
             public float endTime;
         }
 
@@ -51,8 +53,8 @@ namespace Necrocis
         private EnemyStatusVisualOverlay statusVisualOverlay;
 
         public bool IsStunned => Time.time < stunEndTime;
-        public bool IsPoisoned => Time.time < poisonEndTime;
-        public bool IsBleeding => Time.time < bleedEndTime;
+        public bool IsPoisoned => Time.time < poisonEndTime || HasLiveRecords(poisonRecords);
+        public bool IsBleeding => Time.time < bleedEndTime || HasLiveRecords(bleedRecords);
         public bool IsFrozenVisualActive => Time.time < freezeVisualEndTime;
 
         public void Initialize(EnemyController owner)
@@ -63,6 +65,8 @@ namespace Necrocis
         public void ResetEffects()
         {
             resumeWaitersReserved = slowReappliedBeforeResume = false;
+            if (enemy != null && enemy.Stats != null) { foreach (var source in poisonRecords.Keys) enemy.Stats.RemoveHealthEffectSource(source); foreach (var source in bleedRecords.Keys) enemy.Stats.RemoveHealthEffectSource(source); }
+            poisonRecords.Clear(); bleedRecords.Clear(); bleedExtended = false; bleedSkippedTicks = 0;
             EndPoisonSource();
             EndBleedSource();
             poisonWaitPending=bleedWaitPending=false;
@@ -175,12 +179,20 @@ namespace Necrocis
                 && tickDamage / tickInterval < bleedTickDamage / Mathf.Max(0.05f, bleedTickInterval))
             {
                 bleedEndTime = Mathf.Max(bleedEndTime, Time.time + duration);
+                if (bleedRecords.TryGetValue(bleedSource, out var active))
+                { active.Until = bleedEndTime; bleedRecords[bleedSource] = active; }
                 RefreshStatusVisuals();
                 return;
             }
 
-            if (hasBleedSource && (bleedSource != source || Time.time >= bleedEndTime)) EndBleedSource();
+            RegisterDot(false, duration, tickInterval, tickDamage, source);
+            if (hasBleedSource && (bleedSource != source || Time.time >= bleedEndTime))
+            {
+                if (bleedCoroutine != null) StopCoroutine(bleedCoroutine);
+                bleedCoroutine = null; EndBleedSource();
+            }
             bleedSource = source;
+            bleedSkippedTicks = bleedRecords.TryGetValue(source,out var recordForSkips) ? recordForSkips.Skipped : 0;
             hasBleedSource = true;
             bleedTickInterval = tickInterval;
             bleedTickDamage = tickDamage;
@@ -214,11 +226,18 @@ namespace Necrocis
                 && tickDamage / tickInterval < poisonTickDamage / Mathf.Max(0.05f, poisonTickInterval))
             {
                 poisonEndTime = Mathf.Max(poisonEndTime, Time.time + duration);
+                if (poisonRecords.TryGetValue(poisonSource, out var active))
+                { active.Until = poisonEndTime; poisonRecords[poisonSource] = active; }
                 RefreshStatusVisuals();
                 return;
             }
 
-            if (hasPoisonSource && (poisonSource != source || Time.time >= poisonEndTime)) EndPoisonSource();
+            RegisterDot(true, duration, tickInterval, tickDamage, source);
+            if (hasPoisonSource && (poisonSource != source || Time.time >= poisonEndTime))
+            {
+                if (poisonCoroutine != null) StopCoroutine(poisonCoroutine);
+                poisonCoroutine = null; EndPoisonSource();
+            }
             poisonSource = source;
             hasPoisonSource = true;
             poisonTickInterval = tickInterval;
@@ -238,7 +257,7 @@ namespace Necrocis
             }
         }
 
-        public void ApplyMoveSpeedSlow(float slowRatio, float duration)
+        public void ApplyMoveSpeedSlow(float slowRatio, float duration, HealthEffectSource? source = null)
         {
             if (slowRatio <= 0f || duration <= 0f || enemy == null || enemy.Stats == null)
             {
@@ -248,6 +267,7 @@ namespace Necrocis
             moveSpeedSlows.Add(new MoveSpeedSlow
             {
                 ratio = Mathf.Clamp01(slowRatio),
+                hasSource = source.HasValue, source = source.GetValueOrDefault(),
                 endTime = Time.time + duration
             });
             freezeVisualEndTime = Mathf.Max(freezeVisualEndTime, Time.time + duration);
@@ -291,11 +311,13 @@ namespace Necrocis
                     break;
                 }
 
+                if (poisonNextTickTime > poisonEndTime + .0001f) break;
                 enemy.TakeDamage(poisonTickDamage, poisonSource);
                 if (enemy == null || enemy.SpawnGeneration != generation) yield break;
             }
 
             if (enemy != null && enemy.SpawnGeneration != generation) yield break;
+            poisonRecords.Remove(poisonSource);
             EndPoisonSource();
             poisonCoroutine = null;
             poisonEndTime = 0f;
@@ -322,11 +344,14 @@ namespace Necrocis
                     break;
                 }
 
+                if (bleedNextTickTime > bleedEndTime + .0001f) break;
+                if (bleedSkippedTicks > 0) { bleedSkippedTicks--; continue; }
                 enemy.TakeDamage(bleedTickDamage, bleedSource);
                 if (enemy == null || enemy.SpawnGeneration != generation) yield break;
             }
 
             if (enemy != null && enemy.SpawnGeneration != generation) yield break;
+            bleedRecords.Remove(bleedSource);
             EndBleedSource();
             bleedCoroutine = null;
             bleedEndTime = 0f;
@@ -335,14 +360,14 @@ namespace Necrocis
 
         private void EndPoisonSource()
         {
-            if (hasPoisonSource && enemy != null && enemy.Stats != null) enemy.Stats.RemoveHealthEffectSource(poisonSource);
+            // Accumulate fractional damage across applications from the same source.
             hasPoisonSource = false;
             poisonSource = default;
         }
 
         private void EndBleedSource()
         {
-            if (hasBleedSource && enemy != null && enemy.Stats != null) enemy.Stats.RemoveHealthEffectSource(bleedSource);
+            // Item removal/lifetime retirement explicitly clears this source.
             hasBleedSource = false;
             bleedSource = default;
         }

@@ -34,6 +34,7 @@ namespace Necrocis
             if(version!=configurationVersion)return false;
             config=null;
             stateStore=null;
+            detachedPursuers.Clear();
             playerTransform=null;
             spawnParent=null;
             initializedWave=false;

@@ -50,6 +50,7 @@ namespace Necrocis
         public InputAction DebugLevelUpAction { get; private set; }
         public InputAction TraversalHoldAction { get; private set; }
         public InputAction MenuBackAction { get; private set; }
+        public InputAction InteractAction { get; private set; }
 
         private void Awake()
         {
@@ -132,6 +133,7 @@ namespace Necrocis
             DebugLevelUpAction = ownedActions.FindAction("DebugLevelUp", true);
             TraversalHoldAction = ownedActions.FindAction("TraversalHold", true);
             MenuBackAction = ownedActions.FindAction("MenuBack", true);
+            InteractAction = ownedActions.FindAction("Interact", true);
         }
 
         public void SaveRebinds()

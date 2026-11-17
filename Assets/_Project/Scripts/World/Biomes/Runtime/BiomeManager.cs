@@ -155,6 +155,7 @@ namespace Necrocis
         {
             Initialize();
             SetupPlayer();
+            WorldMerchantSpawner.Ensure(this);
         }
 
         protected virtual void Update()

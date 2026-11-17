@@ -319,6 +319,9 @@ namespace Necrocis
             if (config == null || experienceGranted) return;
             experienceGranted = true;
             if (SuppressExperienceReward || suppressKillCredit || IsBossEncounter) return;
+            // Boss helpers share the boss encounter role; final-arena waves are summons too.
+            if (FinalBossArena.Instance == null)
+                SaveService.CreditCurrency(IsElite ? CurrencyEconomy.EliteKill : CurrencyEconomy.NormalKill);
             float multiplier = DifficultyBalanceService
                 .GetEnemyBalance(IsBossEncounter)
                 .experienceReward;

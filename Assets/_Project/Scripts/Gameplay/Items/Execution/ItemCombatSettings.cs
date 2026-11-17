@@ -32,6 +32,8 @@ namespace Necrocis
         float explosionDamageMultiplier { get; }
         float explosiveBloodCellRangedDamageMultiplier { get; }
         float acidDuration { get; }
+        float acidRadius { get; }
+        int acidMaxCount { get; }
         float acidTickInterval { get; }
         float acidTickDamage { get; }
         float poisonDuration { get; }
@@ -194,6 +196,8 @@ namespace Necrocis
     }
     public partial class PlayerItemCombatEffects : IItemCombatSettings
     {
+        float IItemCombatSettings.acidRadius => 2;
+        int IItemCombatSettings.acidMaxCount => (int)2;
         float IItemCombatSettings.doubleShotSpreadAngle => doubleShotSpreadAngle;
         float IItemCombatSettings.tripleShotSpreadAngle => tripleShotSpreadAngle;
         float IItemCombatSettings.doubleShotDamageMultiplier => doubleShotDamageMultiplier;

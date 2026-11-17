@@ -5,7 +5,10 @@ namespace Necrocis
 {
     public sealed class EnemyStatusRuntimeSnapshot
     {
-        public struct Slow {public float Ratio,EndRemaining;}
+        public struct Slow {public float Ratio,EndRemaining; public bool HasSource; public HealthEffectSource Source;}
+        public EnemyStatusEffectController.ItemDotRecord[] PoisonRecords, BleedRecords;
+        public bool BleedExtended;
+        public int BleedSkippedTicks;
         public float Stun,Vulnerability,VulnerabilityRatio,Freeze,AppliedSlow,NextSlow;
         public bool SlowRunning;
         public Slow[] Slows;
@@ -22,8 +25,9 @@ namespace Necrocis
         public EnemyStatusRuntimeSnapshot CaptureSuspension()
         {
             float now=Time.time;var slows=new EnemyStatusRuntimeSnapshot.Slow[moveSpeedSlows.Count];
-            for(int i=0;i<slows.Length;i++)slows[i]=new EnemyStatusRuntimeSnapshot.Slow{Ratio=moveSpeedSlows[i].ratio,EndRemaining=moveSpeedSlows[i].endTime-now};
+            for(int i=0;i<slows.Length;i++)slows[i]=new EnemyStatusRuntimeSnapshot.Slow{Ratio=moveSpeedSlows[i].ratio,EndRemaining=moveSpeedSlows[i].endTime-now,HasSource=moveSpeedSlows[i].hasSource,Source=moveSpeedSlows[i].source};
             return new EnemyStatusRuntimeSnapshot{
+                PoisonRecords=CaptureRecords(poisonRecords),BleedRecords=CaptureRecords(bleedRecords),BleedExtended=bleedExtended,BleedSkippedTicks=bleedSkippedTicks,
                 Stun=stunEndTime-now,Vulnerability=vulnerabilityEndTime-now,VulnerabilityRatio=damageTakenIncreaseRatio,
                 Freeze=freezeVisualEndTime-now,AppliedSlow=appliedSlowRatio,NextSlow=Mathf.Max(0,slowNextRefreshTime-now),SlowRunning=slowRoutine!=null,Slows=slows,
                 Poison=new EnemyStatusRuntimeSnapshot.Dot{Source=poisonSource,HasSource=hasPoisonSource,Running=poisonCoroutine!=null,Pending=poisonWaitPending,EndRemaining=poisonEndTime-now,NextRemaining=Mathf.Max(0,poisonNextTickTime-now),Interval=poisonTickInterval,Damage=poisonTickDamage},
@@ -37,12 +41,16 @@ namespace Necrocis
             if(enemy==null||enemy.SpawnGeneration!=restoringGeneration)return;
             float now=Time.time;
             stunEndTime=now+state.Stun;vulnerabilityEndTime=now+state.Vulnerability;damageTakenIncreaseRatio=state.VulnerabilityRatio;freezeVisualEndTime=now+state.Freeze;
-            foreach(var slow in state.Slows)moveSpeedSlows.Add(new MoveSpeedSlow{ratio=slow.Ratio,endTime=now+slow.EndRemaining});
+            foreach(var slow in state.Slows)moveSpeedSlows.Add(new MoveSpeedSlow{ratio=slow.Ratio,endTime=now+slow.EndRemaining,hasSource=slow.HasSource,source=slow.Source});
             appliedSlowRatio=state.AppliedSlow;slowNextRefreshTime=now+state.NextSlow;
             if(appliedSlowRatio>0)enemy.Stats.AddModifier(CharacterStatType.MoveSpeed,-appliedSlowRatio,CharacterStatModifierMode.PercentAdd,this);
             if(enemy==null||enemy.SpawnGeneration!=restoringGeneration)return;
             poisonSource=state.Poison.Source;hasPoisonSource=state.Poison.HasSource;poisonEndTime=now+state.Poison.EndRemaining;poisonTickInterval=state.Poison.Interval;poisonTickDamage=state.Poison.Damage;poisonNextTickTime=now+state.Poison.NextRemaining;poisonWaitPending=state.Poison.Pending;
             bleedSource=state.Bleed.Source;hasBleedSource=state.Bleed.HasSource;bleedEndTime=now+state.Bleed.EndRemaining;bleedTickInterval=state.Bleed.Interval;bleedTickDamage=state.Bleed.Damage;bleedNextTickTime=now+state.Bleed.NextRemaining;bleedWaitPending=state.Bleed.Pending;
+            RestoreRecords(poisonRecords,state.PoisonRecords); RestoreRecords(bleedRecords,state.BleedRecords); bleedExtended=state.BleedExtended; bleedSkippedTicks=state.BleedSkippedTicks;
+            if(hasPoisonSource && RetiredItemHealthSources.Contains(poisonSource))RemoveItemSource(poisonSource);
+            if(hasBleedSource && RetiredItemHealthSources.Contains(bleedSource))RemoveItemSource(bleedSource);
+            foreach(var slow in moveSpeedSlows.ToArray())if(slow.hasSource && RetiredItemHealthSources.Contains(slow.source))RemoveItemSource(slow.source);
             resumeWaitersReserved=true;
             RefreshStatusVisuals();
         }

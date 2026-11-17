@@ -118,7 +118,7 @@ namespace Necrocis
 
             nextDamageTime = Time.time + Mathf.Max(0.1f, damageInterval);
             health.TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damagePerTick * DifficultyBalanceService.GetIncomingDamageMultiplier(null)),
-                null, HealthEffectSource.ForOwner(this, "player-acid")));
+                null, HealthEffectSource.ForOwner(this, "player-acid")).AsTerrain());
         }
 
         private void OnDestroy() => hud?.Dispose();

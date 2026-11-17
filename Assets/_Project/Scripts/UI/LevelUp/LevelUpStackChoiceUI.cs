@@ -430,7 +430,8 @@ public class LevelUpStackChoiceUI : MonoBehaviour
         if (config != null && config.TryGetLevelUpStatValue(characterStatType, out LevelUpStatValueConfig valueConfig))
         {
             displayedValue = valueConfig.value;
-            isPercent = valueConfig.mode == CharacterStatModifierMode.PercentAdd;
+            isPercent = valueConfig.mode == CharacterStatModifierMode.PercentAdd
+                || characterStatType == CharacterStatType.Magic;
         }
 
         badge.color = NormalBadgeColor;

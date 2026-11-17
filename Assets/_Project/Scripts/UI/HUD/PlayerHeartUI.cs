@@ -21,6 +21,7 @@ namespace Necrocis
         [SerializeField] private MonoBehaviour health;
         private IHealthDisplay healthDisplay;
         [SerializeField] private RectTransform heartContainer;
+        public RectTransform HeartContainer => heartContainer;
 
         [Header("Sprites")]
         [SerializeField] private Sprite fullHeartSprite;

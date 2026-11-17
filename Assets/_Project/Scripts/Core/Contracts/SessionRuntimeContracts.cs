@@ -2,6 +2,8 @@ namespace Necrocis
 {
     public interface ISessionRuntimeSavePort
     {
+        // Publish run progression before scene-owned enemies/spawners initialize.
+        void Prepare(RunSaveData run);
         void Capture(RunSaveData run);
         bool TryRestore(RunSaveData run,out string error);
     }

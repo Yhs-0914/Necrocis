@@ -92,6 +92,7 @@ namespace Necrocis
             ClearSpawnedEnemies();
             if(version!=configurationVersion)return;
             stateStore=null;
+            detachedPursuers.Clear();
             Identity = identity;
             spawnRandom = new SpawnPositionRandom(identity.StableHash);
 
@@ -148,6 +149,8 @@ namespace Necrocis
             float playerDistanceSqr = playerDelta.x * playerDelta.x + playerDelta.z * playerDelta.z;
             if (activationRadius < 0f || playerDistanceSqr > activationRadius * activationRadius)
             {
+                // Legacy standalone spawners have no visit store to take over a chase.
+                if (HasActivePursuer && !(stateStore is IEnemyPursuitStore)) return;
                 if(!SuspendSpawnedEnemies())
                 {
                     if(activeEnemies.Count>0)ClearSpawnedEnemies();
@@ -168,7 +171,7 @@ namespace Necrocis
                 return;
             }
 
-            if (activeEnemies.Count >= maxAlive || Time.time < nextSpawnTime)
+            if (OccupiedSpawnSlots >= maxAlive || Time.time < nextSpawnTime)
             {
                 return;
             }
@@ -234,7 +237,7 @@ namespace Necrocis
             WorldDifficultyBalance worldBalance = GetActiveWorldBalance();
             if (config == null) return;
             int maxAlive = GetMaxAlive(worldBalance);
-            if (enemy != null && enemy.IsDead && initializedWave && activeEnemies.Count < maxAlive)
+            if (enemy != null && enemy.IsDead && initializedWave && OccupiedSpawnSlots < maxAlive)
             {
                 nextSpawnTime = Time.time + GetDifficultyRespawnCooldown(worldBalance);
             }
@@ -242,7 +245,7 @@ namespace Necrocis
 
         private bool TrySpawnWave(int maxAlive)
         {
-            while (activeEnemies.Count < maxAlive)
+            while (OccupiedSpawnSlots < maxAlive)
             {
                 if (!SpawnEnemy())
                 {
@@ -250,7 +253,7 @@ namespace Necrocis
                 }
             }
 
-            return activeEnemies.Count > 0;
+            return OccupiedSpawnSlots > 0;
         }
 
         private bool SpawnEnemy()
@@ -344,6 +347,8 @@ namespace Necrocis
 
         private void CleanupReleasedEnemies()
         {
+            if (detachedPursuers.RemoveAll(life => life.IsRetired) > 0 && initializedWave)
+                nextSpawnTime = Time.time + GetDifficultyRespawnCooldown(GetActiveWorldBalance());
             for (int i = activeEnemies.Count - 1; i >= 0; i--)
             {
                 if (activeEnemies[i] == null)

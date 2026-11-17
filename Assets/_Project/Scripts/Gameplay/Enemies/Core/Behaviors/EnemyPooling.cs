@@ -82,6 +82,7 @@ namespace Necrocis
             config = config.CreateRuntimeCopy();
             this.owner = owner;
             this.config = config;
+            persistentPlayerAggro = false;
             experienceGranted = false;
             PatternOwnsContact = false;
             SuppressExperienceReward = false;
@@ -215,6 +216,7 @@ namespace Necrocis
 
         private void OnDisable()
         {
+            if (!preservingSuspendedLife && !preparingResume) persistentPlayerAggro = false;
             if(!preservingSuspendedLife&&!preparingResume)logicalLife?.Retire();
             ResetDamageGate();
             stats?.BeginHealthLifetime();

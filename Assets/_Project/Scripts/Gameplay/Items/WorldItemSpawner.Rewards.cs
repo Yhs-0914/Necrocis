@@ -59,7 +59,7 @@ namespace Necrocis
         {
             if (enemy == null || enemy.IsBossEncounter || enemy.SuppressExperienceReward) return false;
             var tier = enemy.IsElite ? MonsterTier.Elite : MonsterTier.Normal;
-            if (!CampaignRewardRules.ShouldDropItem(tier, Random.value)) return false;
+            if (!CampaignRewardRules.ShouldDropItem(tier, Random.value, dropScenario)) return false;
             return TrySpawnChoiceRewardAt("drop." + System.Guid.NewGuid().ToString("N"), enemy.transform.position);
         }
 

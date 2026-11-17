@@ -79,6 +79,8 @@ namespace Necrocis
             if (forcePickupNotifier || items.PickupNotificationsEnabled) Ensure<PlayerItemPickupNotifier>();
             Ensure<PlayerItemInventoryUI>();
             Ensure<ExpBarUI>(); Ensure<PlayerHeartUI>();
+            Ensure<PlayerCurrencyUI>();
+            Ensure<PlayerMerchantShopUI>();
             deathScreen = Ensure<PlayerDeathScreen>();
             Ensure<global::LevelUpStackChoiceUI>(); Ensure<LevelUpUI>(); Ensure<StatUI>();
             player.DeathPresentationRequested -= ShowDeathPresentation;

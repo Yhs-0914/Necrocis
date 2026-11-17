@@ -329,7 +329,8 @@ namespace Necrocis
             foreach (var stat in effect.flatStats)
             {
                 string sign = stat.Value >= 0 ? "+" : "";
-                parts.Add($"{GetStatName(stat.Key)} {sign}{stat.Value}");
+                string unit = stat.Key == CharacterStatType.Magic ? "%" : string.Empty;
+                parts.Add($"{GetStatName(stat.Key)} {sign}{stat.Value}{unit}");
             }
 
             foreach (var stat in effect.percentStats)

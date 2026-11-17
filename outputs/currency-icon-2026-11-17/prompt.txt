@@ -1,0 +1,12 @@
+Generator: built-in image_gen; transparent_background=true.
+Asset: Assets/_Project/Resources/UI/Currency/CellCoin.png
+
+Use case: stylized-concept.
+Asset type: ONE currency HUD icon for Necrocis, a 2D pixel-art / illustrated game about tiny cellular creatures inside a living body.
+Primary request: a clearly readable GOLD COIN icon, suitable next to a currency number at 24–48 pixels on screen.
+
+Subject: one thick round golden coin with a substantial raised outer rim, viewed almost straight on with a very slight three-quarter angle so a narrow edge is visible. The face carries a SIMPLE embossed biological cell emblem: a rounded cell outline with one round nucleus, stamped in the same gold metal. It must instantly read as a coin, with the cell motif adding the game's identity.
+Style: polished compact 2D game sprite, crisp stepped burgundy-brown outer outline, deliberate square pixel clusters, restrained cel shading. Warm honey gold, amber shadows, pale yellow highlights, tiny muted rose-gold accent reflected in the metal. Broad readable forms and a simple central stamp rather than intricate engraving. Match an organic pink-and-mauve cellular merchant's world, while making the currency stand out in gold.
+Lighting: a small bright bevel highlight at upper left, darker lower-right edge, no environmental reflections. Make the coin feel tangible and valuable without photorealism.
+Composition: square canvas, ONE centered coin filling about 80% of the canvas, entire silhouette contained, even transparent margin. Genuinely transparent RGBA background, including all corners. No scene or ground.
+Constraints: exactly one coin, no stack, no pouch, no extra objects, no floating particles, no external sparkle stars, no labels, no numbers, no letters, no currency symbols, no watermark, no interface mockup. Do not use a heart emblem; this is currency rather than health. No scary face or skull. No photorealistic coin photography and no soft blurred halo. Keep it legible as a tiny HUD sprite.

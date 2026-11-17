@@ -1,0 +1,230 @@
+PASS: catalog contains 68 items
+PASS: acquire forbidden_growth
+PASS: forbidden growth grants useful attack (4)
+PASS: forbidden growth health cost (8)
+PASS: forbidden growth description matches restored effect
+PASS: remove forbidden growth
+PASS: removing curse restores attack (1)
+PASS: removing curse restores maximum health (10)
+PASS: acquire dense_muscle
+PASS: dense muscle attack (2)
+PASS: dense muscle only grants attack (1)
+PASS: acquire vital_cell
+PASS: vital cell grants health (11)
+PASS: vital cell does not grant movement (10)
+PASS: acquire elongated_fiber
+PASS: acquire elongated_fiber
+PASS: new range item stacks additively (1.2)
+PASS: remove one range stack
+PASS: removing one range stack preserves the other (1.1)
+PASS: acquire active_fiber
+PASS: acquire active_fiber
+PASS: new movement item stacks (12)
+PASS: remove one movement stack
+PASS: removing one movement stack preserves the other (11)
+PASS: acquire swift_cell
+PASS: swift cell keeps fifteen percent bonus (1.15)
+PASS: clearing removes new range item (1)
+PASS: clearing removes new movement item (10)
+PASS: new range item restores exactly once (1.1)
+PASS: new movement item restores exactly once (11)
+PASS: acquire double_core
+PASS: acquire triple_core
+PASS: multi-core combination adds a fourth shot (4)
+PASS: combined volley has 200 percent total damage (2)
+PASS: acquire muscle_spasm
+PASS: muscle spasm preserves ranged speed (1)
+PASS: muscle spasm melee tradeoff remains (1.25)
+PASS: acquire blood_contract
+PASS: unfinished contract has cost (1.25)
+PASS: contract earns all four health rewards (14)
+PASS: completed contract removes cost (1)
+PASS: contract completion survives save restoration (1)
+PASS: restored contract health does not compound (14)
+PASS: acquire overheated_organ
+PASS: overheating cannot damage player (10)
+PASS: overheat resets stacks after burst (1)
+PASS: acquire decay_organ
+PASS: decay rewards sustained combat with attack +3 (3)
+PASS: acquire mutation_rampage
+PASS: mutation never weakens stats 0
+PASS: mutation never weakens stats 1
+PASS: mutation never weakens stats 2
+PASS: mutation never weakens stats 3
+PASS: mutation never weakens stats 4
+PASS: mutation never weakens stats 5
+PASS: mutation never weakens stats 6
+PASS: mutation never weakens stats 7
+PASS: mutation never weakens stats 8
+PASS: mutation never weakens stats 9
+PASS: mutation never weakens stats 10
+PASS: mutation never weakens stats 11
+PASS: mutation never weakens stats 12
+PASS: mutation never weakens stats 13
+PASS: mutation never weakens stats 14
+PASS: mutation never weakens stats 15
+PASS: mutation never weakens stats 16
+PASS: mutation never weakens stats 17
+PASS: mutation never weakens stats 18
+PASS: mutation never weakens stats 19
+PASS: mutation never weakens stats 20
+PASS: mutation never weakens stats 21
+PASS: mutation never weakens stats 22
+PASS: mutation never weakens stats 23
+PASS: mutation never weakens stats 24
+PASS: mutation never weakens stats 25
+PASS: mutation never weakens stats 26
+PASS: mutation never weakens stats 27
+PASS: mutation never weakens stats 28
+PASS: mutation never weakens stats 29
+PASS: bio gamble default guarantees base growth
+PASS: bio gamble cannot erase growth 0
+PASS: bio gamble cannot erase growth 1
+PASS: bio gamble cannot erase growth 2
+PASS: bio gamble cannot erase growth 3
+PASS: bio gamble cannot erase growth 4
+PASS: bio gamble cannot erase growth 5
+PASS: bio gamble cannot erase growth 6
+PASS: bio gamble cannot erase growth 7
+PASS: bio gamble cannot erase growth 8
+PASS: bio gamble cannot erase growth 9
+PASS: bio gamble cannot erase growth 10
+PASS: bio gamble cannot erase growth 11
+PASS: bio gamble cannot erase growth 12
+PASS: bio gamble cannot erase growth 13
+PASS: bio gamble cannot erase growth 14
+PASS: bio gamble cannot erase growth 15
+PASS: bio gamble cannot erase growth 16
+PASS: bio gamble cannot erase growth 17
+PASS: bio gamble cannot erase growth 18
+PASS: bio gamble cannot erase growth 19
+PASS: bio gamble cannot erase growth 20
+PASS: bio gamble cannot erase growth 21
+PASS: bio gamble cannot erase growth 22
+PASS: bio gamble cannot erase growth 23
+PASS: bio gamble cannot erase growth 24
+PASS: bio gamble cannot erase growth 25
+PASS: bio gamble cannot erase growth 26
+PASS: bio gamble cannot erase growth 27
+PASS: bio gamble cannot erase growth 28
+PASS: bio gamble cannot erase growth 29
+PASS: bio gamble cannot erase growth 30
+PASS: bio gamble cannot erase growth 31
+PASS: bio gamble cannot erase growth 32
+PASS: bio gamble cannot erase growth 33
+PASS: bio gamble cannot erase growth 34
+PASS: bio gamble cannot erase growth 35
+PASS: bio gamble cannot erase growth 36
+PASS: bio gamble cannot erase growth 37
+PASS: bio gamble cannot erase growth 38
+PASS: bio gamble cannot erase growth 39
+PASS: bio gamble cannot erase growth 40
+PASS: bio gamble cannot erase growth 41
+PASS: bio gamble cannot erase growth 42
+PASS: bio gamble cannot erase growth 43
+PASS: bio gamble cannot erase growth 44
+PASS: bio gamble cannot erase growth 45
+PASS: bio gamble cannot erase growth 46
+PASS: bio gamble cannot erase growth 47
+PASS: bio gamble cannot erase growth 48
+PASS: bio gamble cannot erase growth 49
+PASS: bio gamble cannot erase growth 50
+PASS: bio gamble cannot erase growth 51
+PASS: bio gamble cannot erase growth 52
+PASS: bio gamble cannot erase growth 53
+PASS: bio gamble cannot erase growth 54
+PASS: bio gamble cannot erase growth 55
+PASS: bio gamble cannot erase growth 56
+PASS: bio gamble cannot erase growth 57
+PASS: bio gamble cannot erase growth 58
+PASS: bio gamble cannot erase growth 59
+PASS: bio gamble cannot erase growth 60
+PASS: bio gamble cannot erase growth 61
+PASS: bio gamble cannot erase growth 62
+PASS: bio gamble cannot erase growth 63
+PASS: bio gamble cannot erase growth 64
+PASS: bio gamble cannot erase growth 65
+PASS: bio gamble cannot erase growth 66
+PASS: bio gamble cannot erase growth 67
+PASS: bio gamble cannot erase growth 68
+PASS: bio gamble cannot erase growth 69
+PASS: bio gamble cannot erase growth 70
+PASS: bio gamble cannot erase growth 71
+PASS: bio gamble cannot erase growth 72
+PASS: bio gamble cannot erase growth 73
+PASS: bio gamble cannot erase growth 74
+PASS: bio gamble cannot erase growth 75
+PASS: bio gamble cannot erase growth 76
+PASS: bio gamble cannot erase growth 77
+PASS: bio gamble cannot erase growth 78
+PASS: bio gamble cannot erase growth 79
+PASS: bio gamble cannot erase growth 80
+PASS: bio gamble cannot erase growth 81
+PASS: bio gamble cannot erase growth 82
+PASS: bio gamble cannot erase growth 83
+PASS: bio gamble cannot erase growth 84
+PASS: bio gamble cannot erase growth 85
+PASS: bio gamble cannot erase growth 86
+PASS: bio gamble cannot erase growth 87
+PASS: bio gamble cannot erase growth 88
+PASS: bio gamble cannot erase growth 89
+PASS: bio gamble cannot erase growth 90
+PASS: bio gamble cannot erase growth 91
+PASS: bio gamble cannot erase growth 92
+PASS: bio gamble cannot erase growth 93
+PASS: bio gamble cannot erase growth 94
+PASS: bio gamble cannot erase growth 95
+PASS: bio gamble cannot erase growth 96
+PASS: bio gamble cannot erase growth 97
+PASS: bio gamble cannot erase growth 98
+PASS: bio gamble cannot erase growth 99
+PASS: bio gamble can still double growth
+PASS: acquire explosive_blood_cell
+PASS: beam explosion damages adjacent target (93)
+PASS: beam explosion does not double-hit primary (100)
+PASS: acquire beam_organ
+PASS: acquire piercing_mucus
+PASS: acquire reflux_organ
+PASS: acquire vascular_reflection
+PASS: trajectory items improve beam damage (1.24)
+PASS: acquire hypertrophy_cell
+PASS: acquire pulse_bullet
+PASS: beam inherits size effects (1.392)
+PASS: weak infection cannot replace strong poison (10)
+PASS: weak child projectile cannot replace strong bleed (8)
+PASS: weak poison from another item cannot overwrite strong poison (10)
+PASS: strong poison keeps its owning source
+PASS: weaker poison does not stack as a secondary tick
+PASS: weak bleed from another item cannot overwrite strong bleed (8)
+PASS: weaker bleed does not stack as a secondary tick
+PASS: removing weaker source does not cancel stronger effects
+PASS: removing actual source still retires its status effects
+PASS: rapid hits refresh existing acid 0
+PASS: rapid hits refresh existing acid 1
+PASS: rapid hits refresh existing acid 2
+PASS: rapid hits refresh existing acid 3
+PASS: rapid hits refresh existing acid 4
+PASS: rapid hits refresh existing acid 5
+PASS: rapid hits refresh existing acid 6
+PASS: rapid hits refresh existing acid 7
+PASS: rapid hits refresh existing acid 8
+PASS: rapid hits refresh existing acid 9
+PASS: rapid hits refresh existing acid 10
+PASS: rapid hits refresh existing acid 11
+PASS: rapid hits refresh existing acid 12
+PASS: rapid hits refresh existing acid 13
+PASS: rapid hits refresh existing acid 14
+PASS: rapid hits refresh existing acid 15
+PASS: rapid hits refresh existing acid 16
+PASS: rapid hits refresh existing acid 17
+PASS: rapid hits refresh existing acid 18
+PASS: rapid hits refresh existing acid 19
+PASS: acid refresh preserves pending tick (1.022092)
+PASS: third area cannot evict unticked acid
+PASS: main health ledger retains the first half-damage tick (100)
+PASS: acid ticks accumulate through main health accounting (99)
+PASS: companion kill keeps credit without host-chain spawning
+PASS: acquire reflux_organ
+PASS: outbound projectile hits normally (97)
+PASS: return pass cannot re-hit within 0.2 seconds (97)
+PASS: return hit resumes after cooldown using main health accounting (96)

@@ -9,6 +9,12 @@ namespace Necrocis
         private readonly Dictionary<string, Dictionary<string, HealthEffectSource>> itemHealthSources
             = new Dictionary<string, Dictionary<string, HealthEffectSource>>(StringComparer.OrdinalIgnoreCase);
 
+        public void ReflectAppliedDamage(EnemyController enemy, float amount)
+        {
+            if (amount > 0 && enemy != null && !enemy.IsDead && HasReflectiveSkin)
+                enemy.TakeDamage(amount * reflectiveSkinDamageRatio, GetItemHealthEffectSource(ReflectiveSkinId, "reflection"));
+        }
+
         public HealthEffectSource GetItemHealthEffectSource(string itemId, string effectId)
         {
             HealthEffectSource source = BuildItemHealthEffectSource(itemId, effectId);
@@ -55,7 +61,17 @@ namespace Necrocis
                 playerStats?.RuntimeStats.RemoveHealthEffectSource(BuildItemHealthEffectSource(id, "self"));
             if (itemHealthSources.TryGetValue(itemId, out var sources))
             {
-                foreach (HealthEffectSource source in sources.Values) playerStats?.RuntimeStats.RemoveHealthEffectSource(source);
+                foreach (HealthEffectSource source in new List<HealthEffectSource>(sources.Values))
+                {
+                    RetiredItemHealthSources.Add(source); AcidPuddle.RetireSource(source);
+                    using var targets = EnemyHitLife.CaptureOwned(EnemyController.ActiveEnemyControllers);
+                    for (int i = 0; i < targets.Length; i++)
+                    {
+                        var life = targets.Buffer[i];
+                        if (life.IsActiveCandidate) { life.Enemy.GetComponent<EnemyStatusEffectController>()?.RemoveItemSource(source); life.Enemy.Stats?.RemoveHealthEffectSource(source); }
+                    }
+                    playerStats?.RuntimeStats.RemoveHealthEffectSource(source);
+                }
                 itemHealthSources.Remove(itemId);
             }
             itemHealthGenerations.TryGetValue(itemId, out uint generation);

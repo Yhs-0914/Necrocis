@@ -104,6 +104,7 @@ namespace Necrocis
             if (config == null) return;
 
             EnsurePlayerTransform();
+            if (persistentPlayerAggro && !HasLivingPlayerTarget) persistentPlayerAggro = false;
 
             if (aiSuppressed && !IsDead)
             {
@@ -126,6 +127,7 @@ namespace Necrocis
             if (newState == currentState) return;
 
             currentState?.Exit(this);
+            if (newState == EnemyChaseState.Instance && CanKeepPlayerAggro) persistentPlayerAggro = true;
             currentState = newState;
             currentState?.Enter(this);
         }

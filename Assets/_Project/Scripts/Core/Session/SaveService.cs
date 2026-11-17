@@ -299,6 +299,7 @@ namespace Necrocis
         public static void ClearActiveSessionReference()
         {
             activeRun = null;
+            ResetPreviewCurrency();
             ResetLoadedVisit();
             restorePending = false;
         }
@@ -345,6 +346,7 @@ namespace Necrocis
             normal = null;
             hard = null;
             activeRun = null;
+            ResetPreviewCurrency();
             ResetLoadedVisit();
             initialized = false;
             restorePending = false;
@@ -354,8 +356,10 @@ namespace Necrocis
         private static void ActivateRun(RunSaveData run)
         {
             activeRun = run;
+            ResetPreviewCurrency();
             ResetLoadedVisit(true);
             restorePending = true;
+            runtimePort?.Prepare(run);
         }
 
         private static RunSaveData CreateNewRun(GameDifficulty difficulty)

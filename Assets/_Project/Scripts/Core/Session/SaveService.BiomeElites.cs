@@ -15,6 +15,7 @@ namespace Necrocis
 
         public static bool TryRewardRegionBoss(BiomeType biome, int experience)
         {
+            if (biome < BiomeType.Intestine || biome > BiomeType.Lung || HasPendingTerminalOperation) return false;
             if (HasActiveSession)
             {
                 activeRun.world.rewardedRegionBosses ??= new List<BiomeType>();
@@ -22,7 +23,9 @@ namespace Necrocis
                     || activeRun.bosses.IsDefeated(biome)) return false;
                 activeRun.world.rewardedRegionBosses.Add(biome);
             }
+            else if (!previewCurrencyBosses.Add(biome)) return false;
             RegionBossRewardGranted?.Invoke(experience);
+            CreditCurrency(CurrencyEconomy.RegionBossClear);
             if (BalanceMetrics != null)
             {
                 BalanceMetrics.Region(biome).bossClears++;

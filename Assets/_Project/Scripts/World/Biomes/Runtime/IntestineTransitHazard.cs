@@ -208,7 +208,7 @@ namespace Necrocis
             if (!OverlapsLane(bounds, left, right)) return;
             nextHit = Time.time + hitCooldown;
             player.TakeDamage(new EnemyDamageRequest(Mathf.Max(0f, damage * DifficultyBalanceService.GetIncomingDamageMultiplier(null)),
-                null, HealthEffectSource.ForOwner(this, "convoy")));
+                null, HealthEffectSource.ForOwner(this, "convoy")).AsTerrain());
             if (player.IsDead) return;
             PlayerStatusEffectController status = player.GetComponent<PlayerStatusEffectController>();
             if (status == null) status = player.gameObject.AddComponent<PlayerStatusEffectController>();

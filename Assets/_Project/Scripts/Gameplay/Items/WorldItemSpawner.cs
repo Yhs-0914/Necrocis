@@ -14,13 +14,14 @@ namespace Necrocis
         [SerializeField] private float itemGroundOffset = 0.15f;
 
         [Header("Visual")]
-        [SerializeField] private Sprite fallbackWorldItemSprite;
         [SerializeField] private Sprite itemBoxClosedSprite;
         [SerializeField] private Sprite itemBoxOpenSprite;
         [SerializeField, Min(0.1f)] private float itemBoxTargetHeight = 1.35f;
         [SerializeField, Min(0.1f)] private float itemBoxTriggerWidth = 1.25f;
         [SerializeField, Min(0.1f)] private float itemBoxTriggerHeight = 1.35f;
         [SerializeField] private int sortingOrder = 250;
+
+        [SerializeField] private ItemDropScenario dropScenario = ItemDropScenario.ReviewMemo;
 
         [Header("Runtime")]
         [SerializeField] private bool autoSpawnOnStart = true;
@@ -145,22 +146,24 @@ namespace Necrocis
 
         private WorldItemBoxPickup SpawnItemObject(PlayerItemManager.PlayerItemEntry entry, Vector3 worldPosition)
         {
-            Sprite itemSprite = entry.Icon != null ? entry.Icon : fallbackWorldItemSprite;
             Sprite closedSprite = ResolveItemBoxClosedSprite();
             Sprite openSprite = ResolveItemBoxOpenSprite();
 
             GameObject itemObject = new GameObject($"ItemBox_{entry.ItemId}");
             itemObject.transform.SetParent(transform, true);
             itemObject.transform.position = worldPosition;
-            itemObject.transform.localScale = Vector3.one * ResolveItemBoxScale(closedSprite);
 
             if (closedSprite != null)
             {
-                SpriteRenderer renderer = itemObject.AddComponent<SpriteRenderer>();
+                // Billboard transforms belong to the artwork; keep the pickup trigger upright on the ground.
+                GameObject visual = new GameObject("BoxVisual");
+                visual.transform.SetParent(itemObject.transform, false);
+                visual.transform.localScale = Vector3.one * ResolveItemBoxScale(closedSprite);
+                SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
                 renderer.sprite = closedSprite;
                 renderer.sortingOrder = sortingOrder;
 
-                Billboard billboard = itemObject.AddComponent<Billboard>();
+                Billboard billboard = visual.AddComponent<Billboard>();
                 billboard.SetUpdateMode(Billboard.UpdateMode.Once);
             }
             else
@@ -185,12 +188,11 @@ namespace Necrocis
 
             BoxCollider collider = itemObject.AddComponent<BoxCollider>();
             collider.isTrigger = true;
-            float itemBoxScale = Mathf.Max(0.001f, itemObject.transform.localScale.x);
-            collider.size = new Vector3(itemBoxTriggerWidth / itemBoxScale, itemBoxTriggerHeight / itemBoxScale, itemBoxTriggerWidth / itemBoxScale);
-            collider.center = new Vector3(0f, (itemBoxTriggerHeight * 0.5f) / itemBoxScale, 0f);
+            collider.size = new Vector3(itemBoxTriggerWidth, itemBoxTriggerHeight, itemBoxTriggerWidth);
+            collider.center = new Vector3(0f, itemBoxTriggerHeight * 0.5f, 0f);
 
             WorldItemBoxPickup pickup = itemObject.AddComponent<WorldItemBoxPickup>();
-            pickup.Initialize(entry.ItemId, entry.DisplayName, closedSprite, openSprite, itemSprite, sortingOrder);
+            pickup.Initialize(entry.ItemId, closedSprite, openSprite, sortingOrder);
             return pickup;
         }
 

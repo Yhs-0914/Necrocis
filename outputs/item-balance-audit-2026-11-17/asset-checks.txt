@@ -1,0 +1,1 @@
+PASS: 688 serialized asset assertions, including all 24 region orders.

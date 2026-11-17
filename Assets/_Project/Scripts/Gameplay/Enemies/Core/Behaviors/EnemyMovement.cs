@@ -5,14 +5,23 @@ namespace Necrocis
 {
     public partial class EnemyController
     {
+        private bool persistentPlayerAggro;
+        private bool CanKeepPlayerAggro => config != null && !IsStationary && !IsBossEncounter
+            && (Balance != null ? Balance.Current.Tier == MonsterTier.Normal
+                : !config.isElite && (config.monsterDefinition == null || config.monsterDefinition.tier == MonsterTier.Normal));
+        public bool HasLivingPlayerTarget => playerTransform != null && PlayerController.Instance != null
+            && !PlayerController.Instance.IsDead;
+        public bool HasPersistentPlayerAggro => persistentPlayerAggro && CanKeepPlayerAggro && !IsDead && HasLivingPlayerTarget;
 
         public bool IsPlayerInChaseRange()
         {
-            if (playerTransform == null) return false;
+            if (!HasLivingPlayerTarget) return false;
             if (!ignoreMidBossArenaRestriction && (WorldQueries != null && WorldQueries.IsPlayerInsideLockedEncounter(playerTransform.position)))
             {
                 return false;
             }
+
+            if (HasPersistentPlayerAggro) return true;
 
             float chaseRadius = config.chaseRadius;
             if (chaseRadius < 0f
@@ -30,7 +39,7 @@ namespace Necrocis
 
         public bool IsPlayerInAttackRange()
         {
-            if (playerTransform == null) return false;
+            if (!HasLivingPlayerTarget) return false;
             if (!ignoreMidBossArenaRestriction && (WorldQueries != null && WorldQueries.IsPlayerInsideLockedEncounter(playerTransform.position)))
             {
                 return false;
@@ -45,6 +54,7 @@ namespace Necrocis
 
         public bool IsOutOfLeash()
         {
+            if (HasPersistentPlayerAggro) return false;
             float leashRadius = config.leashRadius;
             return leashRadius < 0f
                 || GetPlanarDistanceSqr(GetCurrentPosition(), anchorPosition) > leashRadius * leashRadius;

@@ -34,6 +34,7 @@ namespace Necrocis
             normal = repository.LoadRun(NormalFileName, GameDifficulty.Normal, out _);
             hard = repository.LoadRun(HardFileName, GameDifficulty.Hard, out _);
             activeRun = null;
+            ResetPreviewCurrency();
             ResetLoadedVisit();
             restorePending = false;
             initialized = true;
@@ -169,11 +170,13 @@ namespace Necrocis
                     break;
                 case "hard-death":
                     activeRun = null;
+                    ResetPreviewCurrency();
                     ResetLoadedVisit();
                     restorePending = false;
                     break;
                 case "normal-death":
                     activeRun = run;
+                    NotifyCurrencyChanged();
                     restorePending = true;
                     break;
                 default:

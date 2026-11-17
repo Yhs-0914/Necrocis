@@ -26,6 +26,7 @@ namespace Necrocis
         public bool isActive;
         public bool campaignStarted;
         public bool campaignCompleted;
+        public long currency;
         public PlayerProgressSaveData player = new PlayerProgressSaveData();
         public BossProgressSaveData bosses = new BossProgressSaveData();
         public ResumeCheckpointSaveData checkpoint = new ResumeCheckpointSaveData();
@@ -128,9 +129,29 @@ namespace Necrocis
     }
 
     [Serializable]
+    public sealed class MerchantShopSaveData
+    {
+        public BiomeType biome;
+        public int mapSeed;
+        public List<string> itemIds = new List<string>();
+        public List<string> purchasedItemIds = new List<string>();
+    }
+
+    [Serializable]
+    public sealed class WorldMerchantSaveData
+    {
+        public BiomeType biome;
+        public int mapSeed;
+        public int x;
+        public int y;
+    }
+
+    [Serializable]
     public sealed class WorldRunSaveData
     {
         public MonsterVisitSaveData monsterVisit;
+        public List<WorldMerchantSaveData> merchants = new List<WorldMerchantSaveData>();
+        public List<MerchantShopSaveData> merchantShops = new List<MerchantShopSaveData>();
         public List<BiomeElitePlan> biomeElitePlans = new List<BiomeElitePlan>();
         public List<string> defeatedBiomeEliteIds = new List<string>();
         public List<BiomeType> rewardedRegionBosses = new List<BiomeType>();

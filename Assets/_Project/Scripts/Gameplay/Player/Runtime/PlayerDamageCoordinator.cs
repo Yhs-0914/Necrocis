@@ -64,9 +64,13 @@ namespace Necrocis
             Vector3 sourcePosition = attacker != null ? attacker.transform.position : transform.position - Vector3.forward;
             float amount = effects != null ? effects.ProcessIncomingDamage(request.Amount, attacker) : request.Amount;
             if (amount <= 0f) return new DamageResult(true, 0f, DamageBlockReason.Absorbed);
-            // Reflection can synchronously change health or the attacker's generation.
-            if (stats.IsDead || deathNotified) return new DamageResult(true, 0f, DamageBlockReason.Invalid, died: true);
-            return ApplyFinalDamage(amount, request.EffectSource, sourcePosition, true);
+            uint attackerGeneration = attacker != null ? attacker.SpawnGeneration : 0;
+            DamageResult result = ApplyFinalDamage(amount, request.EffectSource, sourcePosition, true);
+            if (request.IsCombatDamage && result.HpApplied > 0)
+            {
+                if (attacker != null && attacker.SpawnGeneration == attackerGeneration) effects?.ReflectAppliedDamage(attacker, result.HpApplied);
+            }
+            return result;
         }
 
         public DamageResult ApplyBypassDamage(float amount, HealthEffectSource source)
@@ -80,6 +84,7 @@ namespace Necrocis
             HealthDeltaPreview preview = stats.PreviewDamage(amount, source);
             float? revivalHealth = null;
             if (preview.WholeUnits >= stats.CurrentHealth && effects != null
+                && !revivalHealth.HasValue
                 && effects.TryConsumeSplitRegeneration(stats.CurrentHealth, stats.MaxHealth, out float reviveHealth))
                 revivalHealth = reviveHealth;
             if (showHit && preview.WholeUnits >= 1f && !revivalHealth.HasValue)
