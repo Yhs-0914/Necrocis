@@ -73,8 +73,7 @@ namespace Necrocis
                 return;
             }
 
-            // Random map caches have been replaced by enemy drops. Restore only
-            // rewards already saved, including unopened caches from older runs.
+            // Restore saved pickups before the first update places any missing field box.
             spawned = true;
             RestorePendingRewards(biome.BiomeType);
         }

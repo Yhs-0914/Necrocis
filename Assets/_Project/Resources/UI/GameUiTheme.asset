@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: GameUiTheme
   m_EditorClassIdentifier: Assembly-CSharp::Necrocis.GameUiTheme
   menuFont: {fileID: 12800000, guid: d193baab8f495254cb8a890dcd6d949c, type: 3}
+  statChoicePanel: {fileID: 21300000, guid: 0674a24dc4f755846b029eb747fa9a94, type: 3}

@@ -163,7 +163,9 @@ namespace Necrocis
                 }
                 if (existingCycle == null) gameObject.AddComponent<StomachAcidCycle>();
             }
-            WorldMerchantSpawner.Ensure(this);
+            var merchantSpawner = WorldMerchantSpawner.Ensure(this);
+            merchantSpawner?.SpawnNow();
+            WorldRecoveryPlacement.SpawnForBiome(this, mapGenerator, merchantSpawner);
             context.MarkEncounterPrepared();
         }
 

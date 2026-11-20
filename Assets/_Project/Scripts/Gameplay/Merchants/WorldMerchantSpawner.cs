@@ -43,7 +43,6 @@ namespace Necrocis
                 || (terrain != null && terrain.IsCellReservedForBossArena(cell.x, cell.y));
             bool Walkable(Vector2Int cell) => biome.IsValidPosition(cell.x, cell.y)
                 && biome.IsWalkable(cell.x, cell.y) && (terrain == null || !terrain.Data.GetCell(cell.x, cell.y).Occupied);
-            bool CanMove(Vector2Int a, Vector2Int b) => biome.CanMove(biome.GridToWorld(a.x, a.y), biome.GridToWorld(b.x, b.y));
             var saved = SaveService.FindWorldMerchant(biome.BiomeType, biome.Seed);
             Vector2Int selected;
             int randomSeed = unchecked(biome.Seed * 397 ^ (int)biome.BiomeType * 7919 ^ 0x4D4552);
@@ -51,7 +50,7 @@ namespace Necrocis
             {
                 // Preview near the player without overwriting the normal saved placement.
                 if (!MerchantPlacement.TryChoose(biome.MapWidth, biome.MapHeight, randomSeed, entrance, BossArea,
-                    Walkable, CanMove, Excluded, out selected, out bool preferred, nearEntrance: true))
+                    Walkable, biome.CanStepBetweenHeights, Excluded, out selected, out bool preferred, nearEntrance: true))
                 { Debug.LogWarning("[Merchant] 입구 근처에 안전한 테스트 상인 위치가 없습니다."); return; }
                 UsedPreferredDistances = preferred;
             }
@@ -66,7 +65,7 @@ namespace Necrocis
             else
             {
                 if (!MerchantPlacement.TryChoose(biome.MapWidth, biome.MapHeight, randomSeed, entrance, BossArea,
-                    Walkable, CanMove, Excluded, out selected, out bool preferred))
+                    Walkable, biome.CanStepBetweenHeights, Excluded, out selected, out bool preferred))
                 { Debug.LogWarning("[Merchant] 이동 가능한 상인 배치 위치가 없습니다."); return; }
                 UsedPreferredDistances = preferred;
                 if (!SaveService.TryStoreWorldMerchant(new WorldMerchantSaveData

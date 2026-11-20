@@ -8,10 +8,13 @@ namespace Necrocis
     {
         private readonly HashSet<string> activeRewardIds = new HashSet<string>();
         private bool starterRewardHandled;
+        private bool fieldBoxHandled;
 
         private void Update()
         {
-            if (!spawned || starterRewardHandled || SaveService.IsRestorePending) return;
+            if (!spawned || SaveService.IsRestorePending) return;
+            if (!fieldBoxHandled) PlaceFieldBox();
+            if (starterRewardHandled) return;
             const string rewardId = CampaignRewardRules.StarterRewardId;
             if (SaveService.FindWorldReward(rewardId) != null)
             {
@@ -39,6 +42,51 @@ namespace Necrocis
                 x = position.x, y = position.y, z = position.z, itemChoices = offers
             });
             starterRewardHandled = SpawnStoredReward(reward);
+        }
+
+        private void PlaceFieldBox()
+        {
+            var biome = BiomeManager.Active;
+            if (biome == null || biome.gameObject != gameObject || biome.BiomeType == BiomeType.None
+                || PlayerItemManager.Instance == null) return;
+            string id = $"region.{biome.BiomeType}.field-box";
+            var existing = SaveService.FindWorldReward(id);
+            if (existing != null && existing.collected)
+            {
+                fieldBoxHandled = true;
+                return;
+            }
+            var terrain = GetComponent<ProceduralMap.MapGenerator>();
+            if (terrain != null && !terrain.IsReady) return;
+            var merchant = GetComponent<WorldMerchantSpawner>();
+            var entrance = biome.WorldToGrid(biome.GetPlayerSpawnPosition());
+            var recoveryCells = SaveService.WorldRewards.Where(r => r.biome == biome.BiomeType && r.recoveryOrgan)
+                .Select(r => biome.WorldToGrid(new Vector3(r.x, r.y, r.z))).ToArray();
+            bool Walkable(Vector2Int cell) => biome.IsWalkable(cell.x, cell.y)
+                && (terrain == null || !terrain.Data.GetCell(cell.x, cell.y).Occupied);
+            bool Excluded(Vector2Int cell) => (terrain != null && (terrain.IsCellReservedForBossArena(cell.x, cell.y)
+                || terrain.Data.GetCell(cell.x, cell.y).HasLava))
+                || (merchant != null && merchant.Merchant != null && (merchant.Merchant.Cell - cell).sqrMagnitude < 36)
+                || System.Array.Exists(recoveryCells, other => (other - cell).sqrMagnitude < 36);
+            var target = entrance + Vector2Int.right * 10;
+            var candidates = MerchantPlacement.FindCandidates(biome.MapWidth, biome.MapHeight, entrance,
+                merchant?.BossArea, Walkable, biome.CanStepBetweenHeights, Excluded);
+            if (candidates.Count == 0)
+            {
+                Debug.LogWarning($"No reachable field box location in {biome.BiomeType}.");
+                fieldBoxHandled = true;
+                return;
+            }
+            var spot = candidates.OrderBy(candidate => (candidate.Cell - target).sqrMagnitude).First().Cell;
+            var position = biome.GridToWorldWithHeight(spot.x, spot.y, itemGroundOffset);
+            var reward = existing ?? PrepareReward(id, null, position);
+            if (existing != null)
+            {
+                existing.x = position.x;
+                existing.y = position.y;
+                existing.z = position.z;
+            }
+            fieldBoxHandled = SpawnStoredReward(reward);
         }
 
         private WorldRewardSaveData PrepareReward(string id, PlayerItemManager.PlayerItemEntry preferred, Vector3 position)
@@ -107,9 +155,9 @@ namespace Necrocis
         {
             foreach (var reward in SaveService.WorldRewards)
             {
-                if (reward.biome != biome || reward.collected) continue;
+                if (reward.biome != biome || reward.collected || reward.recoveryOrgan) continue;
                 if (reward.recovery) WorldRecoveryPickup.Spawn(reward);
-                else SpawnStoredReward(reward);
+                else if (reward.id != $"region.{biome}.field-box") SpawnStoredReward(reward);
             }
             if (SaveService.HasActiveSession && SaveService.IsBossDefeated(biome)
                 && SaveService.FindWorldReward("region." + biome + ".boss") == null && PlayerController.Instance != null)

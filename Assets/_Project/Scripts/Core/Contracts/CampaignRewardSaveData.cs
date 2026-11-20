@@ -9,6 +9,7 @@ namespace Necrocis
         public BiomeType biome;
         public float x, y, z;
         public bool recovery;
+        public bool recoveryOrgan;
         public bool collected;
         public List<string> itemChoices = new List<string>();
     }

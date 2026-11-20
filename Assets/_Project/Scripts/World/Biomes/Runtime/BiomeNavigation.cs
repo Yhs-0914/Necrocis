@@ -78,8 +78,13 @@ namespace Necrocis
             if (!IsValidPosition(targetGrid.x, targetGrid.y)) return false;
             if (!IsWalkable(targetGrid.x, targetGrid.y)) return false;
 
-            int currentLevel = GetHeightLevel(currentGrid.x, currentGrid.y);
-            int targetLevel = GetHeightLevel(targetGrid.x, targetGrid.y);
+            return CanStepBetweenHeights(currentGrid, targetGrid);
+        }
+
+        internal bool CanStepBetweenHeights(Vector2Int from, Vector2Int to)
+        {
+            int currentLevel = GetHeightLevel(from.x, from.y);
+            int targetLevel = GetHeightLevel(to.x, to.y);
             int diff = Mathf.Abs(targetLevel - currentLevel);
             return diff <= maxStepHeight;
         }

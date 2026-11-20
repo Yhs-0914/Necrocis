@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Necrocis
@@ -8,10 +9,12 @@ namespace Necrocis
     {
         public const string IdleResourcePath = "Merchants/CellMerchantIdle";
         private static Sprite[] cachedFrames;
+        private static readonly List<WorldMerchantNpc> activeMerchants = new List<WorldMerchantNpc>();
         private static readonly float[] FrameDurations = { .9f, .18f, .12f, .25f };
         private SpriteRenderer visual;
         private int frame;
         private float elapsed;
+        internal static IReadOnlyList<WorldMerchantNpc> ActiveMerchants => activeMerchants;
         public Vector2Int Cell { get; private set; }
         public int FrameIndex => frame;
         public bool IsVisible => visual != null && visual.enabled;
@@ -42,6 +45,9 @@ namespace Necrocis
         }
 
         public void SetVisible(bool visible) { if (visual != null) visual.enabled = visible; }
+
+        private void OnEnable() => activeMerchants.Add(this);
+        private void OnDisable() => activeMerchants.Remove(this);
 
         private void Update()
         {

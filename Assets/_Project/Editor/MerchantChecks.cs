@@ -212,6 +212,18 @@ namespace NecrocisEditor
                     name + " live test merchant spawns near player entrance");
                 Require(UnityEngine.Object.FindObjectsByType<WorldMerchantNpc>(FindObjectsSortMode.None).Length == 1,
                     name + " live scene contains exactly one merchant");
+                var organs = owner.GetComponentsInChildren<WorldRecoveryPickup>().Where(pickup =>
+                    pickup.GetComponentInChildren<SpriteRenderer>()?.sprite?.name == "RecoveryOrgan").ToArray();
+                Require(organs.Length == 2, name + " spawns two visible recovery organ sprites");
+                var terrain = owner.GetComponent<MapGenerator>();
+                var cells = organs.Select(pickup => owner.WorldToGrid(pickup.transform.position)).ToArray();
+                Require(cells.All(cell => owner.IsWalkable(cell.x, cell.y)
+                    && !terrain.Data.GetCell(cell.x, cell.y).Occupied && !terrain.Data.GetCell(cell.x, cell.y).HasLava
+                    && !terrain.IsCellReservedForBossArena(cell.x, cell.y)
+                    && Vector2Int.Distance(cell, spawner.Merchant.Cell) >= 18f), name + " recovery organs occupy safe ground away from merchant");
+                Require(Vector2Int.Distance(cells[0], cells[1]) >= 24f, name + " recovery organs are separated");
+                Require(spawner.BossArea.HasValue && cells.Any(cell => MerchantPlacement.DistanceToArea(cell, spawner.BossArea.Value) <= 25f),
+                    name + " one recovery organ serves the boss approach");
                 Debug.Log("MERCHANT_RUNTIME " + name + " cell=" + spawner.Merchant.Cell);
             }
         }

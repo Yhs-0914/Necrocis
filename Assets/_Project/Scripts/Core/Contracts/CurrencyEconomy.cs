@@ -5,6 +5,7 @@ namespace Necrocis
         public const int NormalKill = 1;
         public const int EliteKill = 10;
         public const int RegionBossClear = 50;
+        public const int BasicStatItemPrice = 50;
         public const int TierOneItemPrice = 50;
         public const int TierTwoItemPrice = 100;
         public const int TierThreeItemPrice = 150;

@@ -5,7 +5,9 @@ namespace Necrocis
 {
     public sealed class WorldRecoveryPickup : MonoBehaviour
     {
+        public const string OrganSpritePath = "RecoveryOrgan";
         private static readonly HashSet<WorldRewardSaveData> active = new HashSet<WorldRewardSaveData>();
+        private static Sprite cachedOrganSprite;
         private WorldRewardSaveData reward;
 
         public static void Spawn(WorldRewardSaveData state)
@@ -13,10 +15,20 @@ namespace Necrocis
             if (state == null || state.collected || active.Contains(state)) return;
             var biome = BiomeManager.Active;
             if (biome == null || biome.BiomeType != state.biome) return;
+            if (state.recoveryOrgan && cachedOrganSprite == null)
+            {
+                cachedOrganSprite = Resources.Load<Sprite>(OrganSpritePath);
+                if (cachedOrganSprite == null)
+                {
+                    Debug.LogError("[RecoveryOrgan] 회복 기관 스프라이트가 없습니다.");
+                    return;
+                }
+            }
             Vector2Int grid = biome.WorldToGrid(new Vector3(state.x, state.y, state.z));
             bool valid = biome.IsValidPosition(grid.x, grid.y) && biome.IsWalkable(grid.x, grid.y);
             if (!valid)
             {
+                if (state.recoveryOrgan) return;
                 for (int radius = 1; radius <= 4 && !valid; radius++)
                     for (int x = -radius; x <= radius && !valid; x++)
                         for (int y = -radius; y <= radius && !valid; y++)
@@ -40,8 +52,19 @@ namespace Necrocis
             trigger.isTrigger = true;
             trigger.radius = .8f;
             trigger.center = Vector3.up * .55f;
-            var visual = new GameObject("Heart");
+            var visual = new GameObject(state.recoveryOrgan ? "RecoveryOrgan" : "Heart");
             visual.transform.SetParent(go.transform, false);
+            if (state.recoveryOrgan)
+            {
+                var organRenderer = visual.AddComponent<SpriteRenderer>();
+                organRenderer.sprite = cachedOrganSprite;
+                organRenderer.sortingOrder = 255;
+                var billboard = visual.AddComponent<Billboard>();
+                billboard.ResetBaseLocalPosition(Vector3.down * .5f);
+                billboard.SetUpdateMode(Billboard.UpdateMode.Once);
+                trigger.radius = 1.15f;
+                return;
+            }
             visual.transform.localPosition = Vector3.up * .65f;
             var renderer = visual.AddComponent<SpriteRenderer>();
             var hud = FindFirstObjectByType<PlayerHeartUI>();
@@ -54,6 +77,7 @@ namespace Necrocis
 
         private void OnTriggerStay(Collider other)
         {
+            if (reward == null || reward.collected) return;
             var player = other.GetComponentInParent<PlayerController>();
             TryCollect(player);
         }

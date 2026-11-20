@@ -66,8 +66,16 @@ namespace Necrocis
         private static int PriceForLevel(int level) => level == 1 ? CurrencyEconomy.TierOneItemPrice
             : level == 3 ? CurrencyEconomy.TierThreeItemPrice : CurrencyEconomy.TierTwoItemPrice;
 
+        private static readonly HashSet<string> basicStatItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "dense_muscle", "vital_cell", "elastic_fiber"
+        };
+
         public static int GetListPrice(string itemId)
-            => TryGetTier(itemId, out var tier) ? PriceForLevel(tier.Level) : CurrencyEconomy.ItemPrice;
+        {
+            if (basicStatItems.Contains(itemId)) return CurrencyEconomy.BasicStatItemPrice;
+            return TryGetTier(itemId, out var tier) ? PriceForLevel(tier.Level) : CurrencyEconomy.ItemPrice;
+        }
 
         public static bool IsLowerTier(string ownedId, string incomingId)
             => TryGetTier(ownedId, out var owned) && TryGetTier(incomingId, out var incoming)

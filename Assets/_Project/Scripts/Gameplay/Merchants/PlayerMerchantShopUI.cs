@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,6 +12,8 @@ namespace Necrocis
         private static readonly Color Gold = new Color(1, .84f, .48f);
         private static readonly Color Ink = new Color(.94f, .85f, .80f);
         private static readonly Color Muted = new Color(.72f, .60f, .61f);
+        private static readonly Color PanelTrim = new Color(.15f, .065f, .10f);
+        private static readonly Color CardTint = new Color(.14f, .06f, .09f, .84f);
         private PlayerController player;
         private PlayerItemManager inventory;
         private WorldMerchantNpc nearby, merchant;
@@ -26,55 +27,94 @@ namespace Necrocis
         private readonly Text[] names = new Text[3];
         private readonly Text[] descriptions = new Text[3];
         private readonly Image[] icons = new Image[3];
+        private readonly int[] offerPrices = new int[3];
         private ModalInputScope inputScope;
         private float nextScan;
+        private long displayedBalance = -1;
+        private bool offersDirty;
         public bool IsOpen => merchant != null && overlay != null && overlay.activeSelf;
         public WorldMerchantNpc NearbyMerchant => nearby;
         public bool IsInteractionPromptVisible => prompt != null && prompt.gameObject.activeSelf;
 
         private void Awake() { player = GetComponent<PlayerController>(); inventory = GetComponent<PlayerItemManager>(); }
-        private void OnEnable() { SaveService.CurrencyChanged += OnBalanceChanged; SceneManager.activeSceneChanged += OnSceneChanged; }
-        private void OnDisable() { Close(); SaveService.CurrencyChanged -= OnBalanceChanged; SceneManager.activeSceneChanged -= OnSceneChanged; if (prompt != null) prompt.gameObject.SetActive(false); }
+        private void OnEnable()
+        {
+            SaveService.CurrencyChanged += OnBalanceChanged;
+            SceneManager.activeSceneChanged += OnSceneChanged;
+            if (inventory != null)
+            {
+                inventory.ItemAcquired += OnInventoryChanged;
+                inventory.ItemRemoved += OnInventoryChanged;
+            }
+        }
+        private void OnDisable()
+        {
+            Close();
+            SaveService.CurrencyChanged -= OnBalanceChanged;
+            SceneManager.activeSceneChanged -= OnSceneChanged;
+            if (inventory != null)
+            {
+                inventory.ItemAcquired -= OnInventoryChanged;
+                inventory.ItemRemoved -= OnInventoryChanged;
+            }
+            if (prompt != null) prompt.gameObject.SetActive(false);
+        }
         private void OnDestroy() { Close(); if (canvasObject != null) Destroy(canvasObject); }
         private void OnSceneChanged(Scene previous, Scene next) { Close(); nearby = null; nextScan = 0; }
-        private void OnBalanceChanged(long value) { if (IsOpen) Refresh(); }
+        private void OnBalanceChanged(long value) { if (IsOpen) RefreshBalance(value); }
+        private void OnInventoryChanged(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem __) => offersDirty = true;
 
         private void Update()
         {
             var input = InputManager.Instance;
+            bool interacted = input.InteractAction.WasPressedThisFrame();
             if (IsOpen)
             {
                 if (!WorldMerchantShop.IsInReach(merchant, player)) { Close(); return; }
-                if (inputScope?.CanInteract == true && input.InteractAction.WasPressedThisFrame()) Close();
+                if (interacted && inputScope?.CanInteract == true) Close();
                 return;
             }
             // A destroyed or unloaded NPC also releases the modal pause.
             if (inputScope != null) Close();
-            if (Time.unscaledTime >= nextScan || input.InteractAction.WasPressedThisFrame())
+            if (Time.unscaledTime >= nextScan || interacted)
             {
                 nextScan = Time.unscaledTime + .2f;
                 nearby = null;
                 float best = float.MaxValue;
-                foreach (var candidate in FindObjectsByType<WorldMerchantNpc>(FindObjectsSortMode.None))
+                var candidates = WorldMerchantNpc.ActiveMerchants;
+                for (int i = 0; i < candidates.Count; i++)
                 {
+                    var candidate = candidates[i];
                     if (!WorldMerchantShop.IsInReach(candidate, player)) continue;
                     float distance = (candidate.transform.position - player.transform.position).sqrMagnitude;
                     if (distance < best) { nearby = candidate; best = distance; }
                 }
             }
-            bool available = WorldMerchantShop.IsInReach(nearby, player) && input.Gameplay.CanReadGameplay && input.Contexts.CanOpenAuxiliary;
-            if (available) BuildUi();
-            if (prompt != null) prompt.gameObject.SetActive(available && TryPositionPrompt());
-            if (available && input.InteractAction.WasPressedThisFrame()) TryOpen(nearby);
+            if (IsInteractionPromptVisible && (!WorldMerchantShop.IsInReach(nearby, player)
+                || !input.Gameplay.CanReadGameplay || !input.Contexts.CanOpenAuxiliary))
+                prompt.gameObject.SetActive(false);
+            if (interacted && nearby != null) TryOpen(nearby);
         }
 
         private void LateUpdate()
         {
-            // Follow the billboard after camera movement and other menus' Update callbacks.
-            if (!IsInteractionPromptVisible) return;
+            if (IsOpen)
+            {
+                if (offersDirty) RefreshOffers();
+                RefreshRecoveryAvailability(SaveService.CurrencyBalance);
+                return;
+            }
+
+            // Position once, after camera movement and other menus' Update callbacks.
             var input = InputManager.Instance;
-            if (!WorldMerchantShop.IsInReach(nearby, player) || !input.Gameplay.CanReadGameplay
-                || !input.Contexts.CanOpenAuxiliary || !TryPositionPrompt()) prompt.gameObject.SetActive(false);
+            bool available = WorldMerchantShop.IsInReach(nearby, player)
+                && input.Gameplay.CanReadGameplay && input.Contexts.CanOpenAuxiliary;
+            if (available) BuildUi();
+            if (prompt != null)
+            {
+                bool visible = available && TryPositionPrompt();
+                if (prompt.gameObject.activeSelf != visible) prompt.gameObject.SetActive(visible);
+            }
         }
 
         private bool TryPositionPrompt()
@@ -103,7 +143,7 @@ namespace Necrocis
             BuildUi(); prompt.gameObject.SetActive(false); overlay.SetActive(true);
             status.text = "필요한 물건을 골라보세요.";
             inputScope = new ModalInputScope(this, overlay, true, Close, allowAuxiliary: false);
-            Refresh();
+            RefreshOffers();
             return true;
         }
 
@@ -118,20 +158,21 @@ namespace Necrocis
         {
             if (!IsOpen || inputScope?.CanInteract != true || index >= stock.itemIds.Count) return;
             WorldMerchantShop.TryBuyItem(merchant, player, stock.itemIds[index], out string message);
-            status.text = message; Refresh();
+            status.text = message; RefreshOffers();
         }
         private void BuyRecovery()
         {
             if (!IsOpen || inputScope?.CanInteract != true) return;
             WorldMerchantShop.TryBuyRecovery(merchant, player, out string message);
-            status.text = message; Refresh();
+            status.text = message;
+            if (IsOpen) RefreshRecoveryAvailability(SaveService.CurrencyBalance);
         }
 
-        private void Refresh()
+        private void RefreshOffers()
         {
             if (stock == null || balance == null) return;
-            balance.text = SaveService.CurrencyBalance.ToString("N0", CultureInfo.InvariantCulture);
-            var ownedIds = inventory.AcquiredItems.Select(item => item.ItemId).ToArray();
+            offersDirty = false;
+            var ownedIds = inventory.OwnedItemIds;
             for (int i = 0; i < 3; i++)
             {
                 string id = i < stock.itemIds.Count ? stock.itemIds[i] : null;
@@ -146,15 +187,33 @@ namespace Necrocis
                     descriptions[i].text += "\n" + previous.DisplayName + " 교체 · 정가 " + quote.ListPrice + " / 차액 " + quote.Price;
                 icons[i].sprite = entry?.Icon; icons[i].enabled = entry?.Icon != null;
                 buyLabels[i].text = sold ? "품절" : owned ? "보유 단계" : (quote.IsUpgrade ? "교체  " : "구매  ") + quote.Price;
-                buyButtons[i].interactable = !sold && !owned && entry != null && SaveService.CurrencyBalance >= quote.Price;
+                offerPrices[i] = !sold && !owned && entry != null ? quote.Price : -1;
             }
+            RefreshBalance(SaveService.CurrencyBalance);
+        }
+
+        private void RefreshBalance(long amount)
+        {
+            if (displayedBalance != amount)
+            {
+                displayedBalance = amount;
+                balance.text = amount.ToString("N0", CultureInfo.InvariantCulture);
+            }
+            for (int i = 0; i < buyButtons.Length; i++)
+                buyButtons[i].interactable = offerPrices[i] >= 0 && amount >= offerPrices[i];
+            RefreshRecoveryAvailability(amount);
+        }
+
+        private void RefreshRecoveryAvailability(long amount)
+        {
             recovery.interactable = !player.IsDead && player.CurrentHealth < player.MaxHealth - .0001f
-                && SaveService.CurrencyBalance >= CurrencyEconomy.RecoveryPrice;
+                && amount >= CurrencyEconomy.RecoveryPrice;
         }
 
         private void BuildUi()
         {
             if (canvasObject != null) return;
+            displayedBalance = -1;
             RuntimeUiFactory.EnsureEventSystem();
             canvasObject = new GameObject("MerchantShopCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             // Player art uses a scaled root. Keep screen-space UI independent of that scale.
@@ -170,39 +229,47 @@ namespace Necrocis
             prompt.gameObject.SetActive(false);
             var shade = RuntimeUiFactory.CreateImage("MerchantShopOverlay", canvasObject.transform, new Color(.02f, .005f, .01f, .84f));
             overlay = shade.gameObject; RuntimeUiFactory.Stretch(shade.rectTransform);
-            var panel = RuntimeUiFactory.CreateImage("MerchantPanel", overlay.transform, new Color(.16f, .055f, .08f));
-            Rect(panel.rectTransform, new Vector2(1200, 730), Vector2.zero);
-            var line = RuntimeUiFactory.CreateImage("GoldRule", panel.transform, new Color(.7f, .43f, .18f));
-            Rect(line.rectTransform, new Vector2(1100, 2), new Vector2(0, 226));
-            Text("Title", panel.transform, "세포 상인", 46, Gold, new Vector2(-365, 302), new Vector2(380, 65));
-            Text("Subtitle", panel.transform, "살아 돌아갈 준비는 되었나?", 22, Muted, new Vector2(-335, 254), new Vector2(440, 35));
+            var panelSprite = GameUiTheme.LoadStatChoicePanel();
+            var panel = RuntimeUiFactory.CreateImage("MerchantPanel", overlay.transform, panelSprite, panelSprite != null ? Color.white : PanelTrim);
+            panel.preserveAspect = true;
+            panel.raycastTarget = false;
+            Rect(panel.rectTransform, new Vector2(1560, 680), Vector2.zero);
+
+            // The title and footer cover the stat panel's baked-in labels.
+            var title = RuntimeUiFactory.CreateImage("TitlePlaque", panel.transform, PanelTrim);
+            Rect(title.rectTransform, new Vector2(276, 68), new Vector2(0, 247));
+            Text("Title", title.transform, "세포 상인", 46, Gold, Vector2.zero, new Vector2(252, 60));
+            Text("Subtitle", panel.transform, "살아 돌아갈 준비는 되었나?", 22, Ink, new Vector2(-400, 247), new Vector2(380, 44));
             var coin = RuntimeUiFactory.CreateImage("WalletCoin", panel.transform, Resources.Load<Sprite>(PlayerCurrencyUI.CoinResourcePath), Color.white);
-            coin.preserveAspect = true; Rect(coin.rectTransform, new Vector2(44, 44), new Vector2(280, 285));
-            balance = Text("Balance", panel.transform, "0", 32, Gold, new Vector2(398, 285), new Vector2(180, 48));
+            coin.preserveAspect = true; Rect(coin.rectTransform, new Vector2(44, 44), new Vector2(330, 247));
+            balance = Text("Balance", panel.transform, "0", 32, Gold, new Vector2(475, 247), new Vector2(230, 48));
             balance.alignment = TextAnchor.MiddleLeft;
-            Button("Close", panel.transform, "닫기  [ESC / F]", new Vector2(425, -302), new Vector2(230, 50), Close);
+            balance.resizeTextForBestFit = true; balance.resizeTextMinSize = 16; balance.resizeTextMaxSize = 32;
             for (int i = 0; i < 3; i++)
             {
                 int index = i;
-                var card = RuntimeUiFactory.CreateImage("ItemCard" + i, panel.transform, new Color(.24f, .095f, .12f));
-                Rect(card.rectTransform, new Vector2(346, 360), new Vector2(-370 + 370 * i, 19));
+                var card = RuntimeUiFactory.CreateImage("ItemCard" + i, panel.transform, CardTint);
+                Rect(card.rectTransform, new Vector2(380, 336), new Vector2(-400 + 400 * i, 35));
                 icons[i] = RuntimeUiFactory.CreateImage("Icon", card.transform, Color.white); icons[i].preserveAspect = true;
-                Rect(icons[i].rectTransform, new Vector2(88, 88), new Vector2(0, 115));
-                names[i] = Text("Name", card.transform, "", 29, Ink, new Vector2(0, 44), new Vector2(308, 46));
+                Rect(icons[i].rectTransform, new Vector2(88, 88), new Vector2(0, 110));
+                names[i] = Text("Name", card.transform, "", 29, Ink, new Vector2(0, 42), new Vector2(348, 44));
                 names[i].resizeTextForBestFit = true; names[i].resizeTextMinSize = 20; names[i].resizeTextMaxSize = 29;
-                descriptions[i] = Text("Description", card.transform, "", 21, Muted, new Vector2(0, -34), new Vector2(302, 106));
+                descriptions[i] = Text("Description", card.transform, "", 21, Muted, new Vector2(0, -35), new Vector2(342, 106));
                 descriptions[i].horizontalOverflow = HorizontalWrapMode.Wrap; descriptions[i].verticalOverflow = VerticalWrapMode.Truncate;
                 descriptions[i].resizeTextForBestFit = true; descriptions[i].resizeTextMinSize = 16; descriptions[i].resizeTextMaxSize = 21;
-                buyButtons[i] = Button("BuyItem" + i, card.transform, "구매", new Vector2(0, -135), new Vector2(298, 56), () => BuyItem(index));
+                buyButtons[i] = Button("BuyItem" + i, card.transform, "구매", new Vector2(0, -129), new Vector2(340, 52), () => BuyItem(index));
                 buyLabels[i] = buyButtons[i].GetComponentInChildren<Text>();
             }
-            var recoveryRow = RuntimeUiFactory.CreateImage("RecoveryRow", panel.transform, new Color(.23f, .085f, .10f));
-            Rect(recoveryRow.rectTransform, new Vector2(1086, 88), new Vector2(0, -225));
-            Text("RecoveryTitle", recoveryRow.transform, "체력 회복 물약", 28, Ink, new Vector2(-337, 0), new Vector2(330, 44));
+            var recoveryRow = RuntimeUiFactory.CreateImage("RecoveryRow", panel.transform, CardTint);
+            Rect(recoveryRow.rectTransform, new Vector2(1180, 62), new Vector2(0, -173));
+            Text("RecoveryTitle", recoveryRow.transform, "체력 회복 물약", 28, Ink, new Vector2(-390, 0), new Vector2(330, 44));
             Text("RecoveryDetail", recoveryRow.transform, "즉시 2HP 회복 · 반복 구매 가능", 21, Muted, new Vector2(20, 0), new Vector2(410, 44));
-            recovery = Button("BuyRecovery", recoveryRow.transform, "회복  " + CurrencyEconomy.RecoveryPrice, new Vector2(405, 0), new Vector2(220, 56), BuyRecovery);
-            status = Text("Status", panel.transform, "", 21, Muted, new Vector2(-135, -302), new Vector2(820, 60));
+            recovery = Button("BuyRecovery", recoveryRow.transform, "회복  " + CurrencyEconomy.RecoveryPrice, new Vector2(455, 0), new Vector2(230, 46), BuyRecovery);
+            var footer = RuntimeUiFactory.CreateImage("ShopFooter", panel.transform, PanelTrim);
+            Rect(footer.rectTransform, new Vector2(1180, 54), new Vector2(0, -237));
+            status = Text("Status", footer.transform, "", 21, Ink, new Vector2(-115, 0), new Vector2(840, 50));
             status.alignment = TextAnchor.MiddleLeft; status.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Button("Close", footer.transform, "닫기  [ESC / F]", new Vector2(455, 0), new Vector2(230, 44), Close);
             overlay.SetActive(false);
         }
 

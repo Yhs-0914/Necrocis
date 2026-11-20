@@ -8,8 +8,15 @@ namespace Necrocis
         private const string ResourcePath = "UI/GameUiTheme";
 
         [SerializeField] private Font menuFont;
+        [SerializeField] private Sprite statChoicePanel;
 
         private static Font cachedFont;
+
+        public static Sprite LoadStatChoicePanel()
+        {
+            GameUiTheme theme = Resources.Load<GameUiTheme>(ResourcePath);
+            return theme != null ? theme.statChoicePanel : null;
+        }
 
         public static Font LoadFont()
         {

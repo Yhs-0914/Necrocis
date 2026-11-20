@@ -14,10 +14,10 @@ namespace Necrocis
         private const float GapBelowHearts = 12f;
         [SerializeField] private long amount;
         private PlayerHeartUI hearts;
+        private RectTransform layoutHeart;
         private RectTransform badge;
         private Text amountText;
         private Image coin;
-        private readonly Vector3[] heartCorners = new Vector3[4];
         private long displayedAmount = -1;
         public long Amount => amount;
         public RectTransform Badge => badge;
@@ -29,12 +29,16 @@ namespace Necrocis
             hearts = GetComponent<PlayerHeartUI>();
             SaveService.CurrencyChanged += SetAmount;
             SceneManager.sceneLoaded += OnSceneLoaded;
-            EnsureDisplay(); SetAmount(SaveService.CurrencyBalance); UpdateLayout();
+            SceneManager.activeSceneChanged += OnActiveSceneChanged;
+            EnsureDisplay();
+            SetAmount(SaveService.CurrencyBalance);
+            UpdateLayout();
         }
 
         private void OnDisable()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
             SaveService.CurrencyChanged -= SetAmount;
             if (badge != null) badge.gameObject.SetActive(false);
         }
@@ -44,7 +48,7 @@ namespace Necrocis
         public void SetAmount(long value)
         {
             amount = System.Math.Max(0L, value);
-            RefreshAmount(); UpdateLayout();
+            if (RefreshAmount()) UpdateLayout();
         }
 
         private void OnValidate()
@@ -55,12 +59,23 @@ namespace Necrocis
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            EnsureDisplay(); SetAmount(SaveService.CurrencyBalance); UpdateLayout();
+            EnsureDisplay();
+            SetAmount(SaveService.CurrencyBalance);
+            UpdateLayout();
         }
+
+        private void OnActiveSceneChanged(Scene previous, Scene next) => UpdateVisibility();
 
         private void LateUpdate()
         {
-            EnsureDisplay(); RefreshAmount(); UpdateLayout();
+            var heartRect = hearts != null ? hearts.HeartContainer : null;
+            if (heartRect == null) return;
+            if (badge == null || layoutHeart != heartRect || !heartRect.IsChildOf(badge.parent))
+            {
+                EnsureDisplay();
+                RefreshAmount();
+            }
+            UpdateLayout();
         }
 
         private void EnsureDisplay()
@@ -69,10 +84,11 @@ namespace Necrocis
             var heartRect = hearts != null ? hearts.HeartContainer : null;
             var canvas = heartRect != null ? heartRect.GetComponentInParent<Canvas>() : null;
             if (canvas == null) return;
+            layoutHeart = heartRect;
             if (badge != null)
             {
                 if (badge.parent != canvas.transform) badge.SetParent(canvas.transform, false);
-                badge.gameObject.SetActive(SceneManager.GetActiveScene().name != SceneNames.MainMenu);
+                UpdateVisibility();
                 return;
             }
             Image background = RuntimeUiFactory.CreateImage("CurrencyBadge", canvas.transform,
@@ -103,28 +119,36 @@ namespace Necrocis
             amountText.rectTransform.offsetMin = new Vector2(62, 0);
             amountText.rectTransform.offsetMax = new Vector2(-14, 0);
             displayedAmount = -1;
-            badge.gameObject.SetActive(SceneManager.GetActiveScene().name != SceneNames.MainMenu);
+            UpdateVisibility();
         }
 
-        private void RefreshAmount()
+        private void UpdateVisibility()
         {
-            if (amountText == null || displayedAmount == amount) return;
+            if (badge != null)
+                badge.gameObject.SetActive(SceneManager.GetActiveScene().name != SceneNames.MainMenu);
+        }
+
+        private bool RefreshAmount()
+        {
+            if (amountText == null || displayedAmount == amount) return false;
             displayedAmount = amount;
             amountText.text = amount.ToString("N0", CultureInfo.InvariantCulture);
             badge.sizeDelta = new Vector2(Mathf.Clamp(amountText.preferredWidth + 80, 156, 320), BadgeHeight);
+            return true;
         }
 
         private void UpdateLayout()
         {
-            if (badge == null || hearts == null || hearts.HeartContainer == null) return;
+            if (badge == null || layoutHeart == null || !badge.gameObject.activeSelf) return;
             var canvasRect = badge.parent as RectTransform;
             if (canvasRect == null) return;
-            hearts.HeartContainer.GetWorldCorners(heartCorners);
-            Vector3 bottomLeft = canvasRect.InverseTransformPoint(heartCorners[0]);
-            float x = Mathf.Clamp(bottomLeft.x - canvasRect.rect.xMin, 24,
-                Mathf.Max(24, canvasRect.rect.width - badge.sizeDelta.x - 24));
-            float y = Mathf.Min(-24, bottomLeft.y - canvasRect.rect.yMax - GapBelowHearts);
-            badge.anchoredPosition = new Vector2(x, y);
+            Vector3 bottomLeft = canvasRect.InverseTransformPoint(layoutHeart.TransformPoint(layoutHeart.rect.min));
+            Rect canvasBounds = canvasRect.rect;
+            float x = Mathf.Clamp(bottomLeft.x - canvasBounds.xMin, 24,
+                Mathf.Max(24, canvasBounds.width - badge.sizeDelta.x - 24));
+            float y = Mathf.Min(-24, bottomLeft.y - canvasBounds.yMax - GapBelowHearts);
+            var position = new Vector2(x, y);
+            if (badge.anchoredPosition != position) badge.anchoredPosition = position;
         }
     }
 }

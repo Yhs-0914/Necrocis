@@ -251,6 +251,7 @@ namespace Necrocis
         [SerializeField] private bool enablePickupNotification = true;
 
         private readonly List<AcquiredPlayerItem> acquiredItems = new List<AcquiredPlayerItem>();
+        private readonly Dictionary<string, int> ownedItemCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, PlayerItemEntry> entryMap = new Dictionary<string, PlayerItemEntry>(StringComparer.OrdinalIgnoreCase);
         private IItemStatRecipient playerStats;
         private IItemEffectLifecycle combatEffects;
@@ -265,6 +266,7 @@ namespace Necrocis
         public bool IsFull => false;
         public IReadOnlyList<PlayerItemEntry> ItemEntries => itemEntries;
         public IReadOnlyList<AcquiredPlayerItem> AcquiredItems => acquiredItems;
+        internal IEnumerable<string> OwnedItemIds => ownedItemCounts.Keys;
         public bool IsRestoringSavedItems => isRestoringSavedItems;
         public bool PickupNotificationsEnabled => enablePickupNotification;
 
@@ -681,6 +683,8 @@ namespace Necrocis
 
             AcquiredPlayerItem acquiredItem = new AcquiredPlayerItem(entry);
             acquiredItems.Add(acquiredItem);
+            ownedItemCounts.TryGetValue(acquiredItem.ItemId, out int count);
+            ownedItemCounts[acquiredItem.ItemId] = count + 1;
             ApplyStatItem(acquiredItem);
 
             if (acquiredItem.Implementation != null)
@@ -719,6 +723,8 @@ namespace Necrocis
             combatEffects?.RetireItemHealthSources(previous.ItemId);
             var replacement = new AcquiredPlayerItem(entry);
             acquiredItems[index] = replacement;
+            RemoveFromOwnershipIndex(previous.ItemId);
+            ownedItemCounts.Add(replacement.ItemId, 1);
             ApplyStatItem(replacement);
             if (replacement.Implementation != null) ItemInventoryBindings.ApplyImplementation(replacement.Implementation, playerStats);
             EnsureCombatEffectsForInventoryChange();
@@ -750,6 +756,7 @@ namespace Necrocis
                 }
 
                 acquiredItems.RemoveAt(i);
+                RemoveFromOwnershipIndex(acquiredItem.ItemId);
                 playerStats?.RemoveModifiersFromSource(acquiredItem);
                 combatEffects?.RetireItemHealthSources(acquiredItem.ItemId);
                 ItemRemoved?.Invoke(this, acquiredItem);
@@ -778,6 +785,7 @@ namespace Necrocis
             }
 
             acquiredItems.Clear();
+            ownedItemCounts.Clear();
 
             for (int i = 0; i < removedItems.Count; i++)
             {
@@ -839,23 +847,14 @@ namespace Necrocis
             }
         }
 
-        public bool ContainsItem(string itemId)
+        private void RemoveFromOwnershipIndex(string itemId)
         {
-            if (string.IsNullOrWhiteSpace(itemId))
-            {
-                return false;
-            }
-
-            for (int i = 0; i < acquiredItems.Count; i++)
-            {
-                if (string.Equals(acquiredItems[i].ItemId, itemId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            int count = ownedItemCounts[itemId] - 1;
+            if (count == 0) ownedItemCounts.Remove(itemId);
+            else ownedItemCounts[itemId] = count;
         }
+
+        public bool ContainsItem(string itemId) => !string.IsNullOrWhiteSpace(itemId) && ownedItemCounts.ContainsKey(itemId);
 
         public bool TryGetItemEntry(string itemId, out PlayerItemEntry entry)
         {

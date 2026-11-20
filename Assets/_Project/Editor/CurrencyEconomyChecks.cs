@@ -82,7 +82,27 @@ namespace NecrocisEditor
             player.GetComponent<Rigidbody>().isKinematic = true;
             foreach (var enemy in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None)) enemy.SetAiSuppressed(true);
             foreach (var source in UnityEngine.Object.FindObjectsByType<EnemySpawner>(FindObjectsSortMode.None)) source.enabled = false;
+            var organReward = SaveService.WorldRewards.First(reward => reward.recoveryOrgan && reward.biome == BiomeType.Intestine);
+            var organ = GameObject.Find("Recovery_" + organReward.id).GetComponent<WorldRecoveryPickup>();
+            var touch = typeof(WorldRecoveryPickup).GetMethod("OnTriggerStay", BindingFlags.Instance | BindingFlags.NonPublic);
+            var playerCollider = player.GetComponentInChildren<Collider>();
+            player.RuntimeStats.SetCurrentHealth(player.MaxHealth);
+            touch.Invoke(organ, new object[] { playerCollider });
+            Require(!organReward.collected, "full health preserves the recovery organ");
+            player.RuntimeStats.SetCurrentHealth(player.MaxHealth - 3f);
+            touch.Invoke(organ, new object[] { playerCollider });
+            Require(organReward.collected && Mathf.Approximately(player.CurrentHealth, player.MaxHealth - 1f),
+                "touching a recovery organ heals 2 HP and consumes it");
+            touch.Invoke(organ, new object[] { playerCollider });
+            Require(Mathf.Approximately(player.CurrentHealth, player.MaxHealth - 1f), "a consumed recovery organ cannot heal twice");
             inventory.ClearAllItems();
+            const string repeatable = "dense_muscle";
+            Require(inventory.TryAcquireItem(repeatable, out _) && inventory.TryAcquireItem(repeatable.ToUpperInvariant(), out _),
+                "repeatable items can be acquired using either casing");
+            Require(inventory.RemoveItem(repeatable) && inventory.ContainsItem(repeatable.ToUpperInvariant()),
+                "removing one copy preserves ownership until the last copy is removed");
+            Require(inventory.RemoveItem(repeatable) && !inventory.ContainsItem(repeatable),
+                "removing the last copy clears ownership");
             CheckTierPrices();
             CheckTierPurchases(merchant, player, inventory, ui);
             Kill(player, false, EnemyEncounterRole.Field, false, 1);
@@ -118,17 +138,28 @@ namespace NecrocisEditor
             Require(ui.TryOpen(merchant) && ui.IsOpen && Time.timeScale == 0 && InputManager.Instance.Contexts.BlocksGameplay,
                 "opening actual shop pauses and blocks gameplay");
             Require(!ui.IsInteractionPromptVisible, "open shop hides merchant interaction prompt");
-            var button = UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None).First(value => value.name == "BuyItem0");
+            int budgetSlot = stock.itemIds.FindIndex(id => MerchantItemPricing.GetListPrice(id) == 50);
+            string first = stock.itemIds[budgetSlot];
+            string second = stock.itemIds.First(id => MerchantItemPricing.GetListPrice(id) == 100);
+            string third = stock.itemIds.Single(id => id != first && id != second);
+            var button = UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None).First(value => value.name == "BuyItem" + budgetSlot);
             button.onClick.Invoke();
-            string first = stock.itemIds[0];
-            Require(inventory.ContainsItem(first) && stock.purchasedItemIds.Contains(first) && SaveService.CurrencyBalance == 61, "UI purchase grants one item and charges 100");
+            Require(inventory.ContainsItem(first) && stock.purchasedItemIds.Contains(first) && SaveService.CurrencyBalance == 111, "UI purchase grants budget item and charges 50");
             Require(!button.interactable && button.GetComponentInChildren<Text>().text == "품절", "bought item becomes sold out");
             int count = inventory.ItemCount;
             Require(!WorldMerchantShop.TryBuyItem(merchant, player, first, out _) && inventory.ItemCount == count
-                && SaveService.CurrencyBalance == 61, "duplicate purchase cannot grant or charge");
-            Require(!WorldMerchantShop.TryBuyItem(merchant, player, stock.itemIds[1], out _) && SaveService.CurrencyBalance == 61, "insufficient funds cannot grant or charge");
+                && SaveService.CurrencyBalance == 111, "duplicate purchase cannot grant or charge");
+            int standardSlot = stock.itemIds.IndexOf(second);
+            var standardButton = UnityEngine.Object.FindObjectsByType<Button>(FindObjectsSortMode.None)
+                .First(value => value.name == "BuyItem" + standardSlot);
+            Require(standardButton.interactable, "standard item is affordable at 111");
+            Require(SaveService.TrySpendCurrency(50), "fixture sets balance below standard item price");
+            Require(!standardButton.interactable && standardButton.GetComponentInChildren<Text>().text == "구매  100",
+                "balance change updates affordability without changing the displayed price");
+            Require(!WorldMerchantShop.TryBuyItem(merchant, player, second, out _) && SaveService.CurrencyBalance == 61, "insufficient funds cannot grant or charge");
             Require(!WorldMerchantShop.TryBuyItem(merchant, player, "removed_item", out _), "unstocked item cannot be bought");
             SaveService.CreditCurrency(200);
+            Require(standardButton.interactable, "crediting currency re-enables the standard offer");
             RenderPreview("MerchantShop-1920x1080", 1920, 1080);
             RenderPreview("MerchantShop-1280x720", 1280, 720);
             Require(InputManager.Instance.Contexts.DispatchEscape(Time.frameCount), "Escape routed to shop modal");
@@ -143,17 +174,17 @@ namespace NecrocisEditor
                 if (!injected && file == "normal.json" && point == "write") { injected = true; throw new IOException("economy check simulated save failure"); }
             }))
             {
-                Require(WorldMerchantShop.TryBuyItem(merchant, player, stock.itemIds[1], out string message) && injected
+                Require(WorldMerchantShop.TryBuyItem(merchant, player, second, out string message) && injected
                     && message.Contains("저장 재시도"), "completed purchase reports a retryable save failure");
             }
-            Require(SaveService.CurrencyBalance == 161 && inventory.ContainsItem(stock.itemIds[1]) && stock.purchasedItemIds.Count == 2,
+            Require(SaveService.CurrencyBalance == 161 && inventory.ContainsItem(second) && stock.purchasedItemIds.Count == 2,
                 "failed save retains charged wallet, granted item and sold stock together");
             Require(SaveService.TrySaveActiveRun(out var saveError), "retry purchase save: " + saveError);
             var disk = JsonUtility.FromJson<RunSaveData>(File.ReadAllText(Path.Combine(storage, "Saves", "normal.json")));
             Require(disk.currency == 161 && disk.player.items.Count == 2 && disk.world.merchantShops.Single().purchasedItemIds.Count == 2,
                 "disk commits wallet, inventory and stock together");
             merchant.SetVisible(false);
-            Require(!ui.TryOpen(merchant) && !WorldMerchantShop.TryBuyItem(merchant, player, stock.itemIds[2], out _), "invisible merchant cannot interact");
+            Require(!ui.TryOpen(merchant) && !WorldMerchantShop.TryBuyItem(merchant, player, third, out _), "invisible merchant cannot interact");
             merchant.SetVisible(true); player.transform.position += Vector3.right * 10;
             Require(!ui.TryOpen(merchant) && !WorldMerchantShop.TryBuyRecovery(merchant, player, out _), "distant merchant cannot interact");
             player.transform.position = merchant.transform.position + Vector3.right;
@@ -165,10 +196,14 @@ namespace NecrocisEditor
             long balance = SaveService.CurrencyBalance;
             SaveService.ClearActiveSessionReference(); SaveService.UseStorageRootForTests(storage);
             Require(SaveService.TryContinue(GameDifficulty.Normal, out var continueError), "continue economy run: " + continueError);
+            var restoredOrgan = SaveService.FindWorldReward(organReward.id);
+            Require(restoredOrgan != null && restoredOrgan.collected && restoredOrgan.x == organReward.x && restoredOrgan.z == organReward.z,
+                "continue preserves a spent recovery organ and its fixed position");
             Require(SaveService.CurrencyBalance == balance && hud.Amount == balance, "continue restores wallet and HUD");
             var restored = SaveService.FindMerchantShop(stock.biome, stock.mapSeed);
             Require(restored != null && restored.purchasedItemIds.Count == 2 && string.Join(",", restored.itemIds) == choices,
                 "continue restores exact stock and sold entries");
+            Require(SaveService.IsFirstMerchantShop(restored), "continue preserves the first visited shop");
             Require(!SaveService.TryRewardRegionBoss(BiomeType.Lung, 0) && SaveService.CurrencyBalance == balance, "regional clear cannot pay again after continue");
             Require(SaveService.TryBeginNewGame(GameDifficulty.Normal, out var newError), "fresh run: " + newError);
             Require(SaveService.CurrencyBalance == 0 && SaveService.FindMerchantShop(stock.biome, stock.mapSeed) == null, "new run resets money and merchandise");
@@ -181,6 +216,12 @@ namespace NecrocisEditor
             Kill(player, false, EnemyEncounterRole.Field, false, 0);
             Require(SaveService.CurrencyBalance == 0, "final boss summoned field mobs award no currency");
             SaveService.ClearActiveSessionReference(); SaveService.CreditCurrency(long.MaxValue); SaveService.CreditCurrency(1);
+            var firstShop = SaveService.RememberMerchantShop(new MerchantShopSaveData { biome = BiomeType.Lung, mapSeed = 1 });
+            var laterShop = SaveService.RememberMerchantShop(new MerchantShopSaveData { biome = BiomeType.Intestine, mapSeed = 2 });
+            Require(SaveService.IsFirstMerchantShop(firstShop) && !SaveService.IsFirstMerchantShop(laterShop),
+                "budget offer follows the first opened shop, regardless of region");
+            var reseededShop = SaveService.RememberMerchantShop(new MerchantShopSaveData { biome = BiomeType.Lung, mapSeed = 3 });
+            Require(SaveService.IsFirstMerchantShop(reseededShop), "a replacement map seed preserves shop visit order");
             Require(SaveService.CurrencyBalance == long.MaxValue, "wallet overflow saturates safely");
             Require(!SaveService.TrySpendCurrency(-1) && SaveService.TrySpendCurrency(long.MaxValue), "negative spend rejected and full balance spend allowed");
             Require(SaveService.CurrencyBalance == 0, "wallet cannot go below zero");
@@ -231,6 +272,13 @@ namespace NecrocisEditor
             }
             Require(MerchantItemPricing.TryQuote("swift_cell", new[] { "piercing_mucus" }, out var independent)
                 && independent.Price == 100 && !independent.IsUpgrade, "independent items keep price 100 without unrelated discounts");
+            foreach (var (basic, stronger) in new[] { ("dense_muscle", "hardened_muscle"), ("vital_cell", "vital_organ"), ("elastic_fiber", "active_fiber") })
+            {
+                Require(MerchantItemPricing.TryQuote(basic.ToUpperInvariant(), new[] { stronger }, out var budget)
+                    && budget.Price == 50 && !budget.IsUpgrade, basic + " costs 50 even when the stronger stat item is owned");
+                Require(MerchantItemPricing.TryQuote(stronger, new[] { basic }, out var standard)
+                    && standard.Price == 100 && !standard.IsUpgrade, stronger + " costs 100 and can coexist with basic stat item");
+            }
             Require(!MerchantItemPricing.TryQuote(null, null, out _) && !MerchantItemPricing.TryQuote(" ", null, out _), "invalid price requests rejected");
         }
 
@@ -339,6 +387,8 @@ namespace NecrocisEditor
             Require(inventory.TryAcquireItem(owned[0], out _) && inventory.TryAcquireItem(owned[1], out _), "fixture owns basic and special items");
             var stock = WorldMerchantShop.EnsureStock(merchant, inventory);
             Require(stock.itemIds.Count == 3 && !stock.itemIds.Intersect(owned).Any(), "actual first merchant stock excludes inventory");
+            bool IsBudgetItem(string id) => MerchantItemPricing.GetListPrice(id) == 50;
+            Require(stock.itemIds.Any(IsBudgetItem), "first merchant reserves one eligible 50 gold offer");
             string retained = stock.itemIds[2];
             stock.itemIds = new System.Collections.Generic.List<string> { owned[0], owned[1], retained };
             WorldMerchantShop.EnsureStock(merchant, inventory);
@@ -364,6 +414,22 @@ namespace NecrocisEditor
             Require(!WorldMerchantShop.TryBuyItem(merchant, player, owned[0], out _) && SaveService.CurrencyBalance == funds,
                 "already owned repeatable basic cannot be purchased again");
             stock.purchasedItemIds.Clear(); inventory.ClearAllItems(); player.RuntimeStats.SetCurrentHealth(player.MaxHealth);
+            var legacyOffers = catalog.Where(id => MerchantItemPricing.GetListPrice(id) == 100).Take(3).ToList();
+            stock.itemIds = legacyOffers.ToList();
+            stock.purchasedItemIds.Add(legacyOffers[2]);
+            WorldMerchantShop.EnsureStock(merchant, inventory);
+            Require(stock.itemIds[0] == legacyOffers[0] && IsBudgetItem(stock.itemIds[1]) && stock.itemIds[2] == legacyOffers[2]
+                && stock.purchasedItemIds.SequenceEqual(new[] { legacyOffers[2] }), "existing full shop replaces only one unsold slot with a budget item");
+
+            var budgetItems = catalog.Where(IsBudgetItem).ToArray();
+            foreach (string id in budgetItems) Require(inventory.TryAcquireItem(id, out _), "fixture owns budget item " + id);
+            WorldMerchantShop.EnsureStock(merchant, inventory);
+            Require(stock.itemIds.Count == 3 && !stock.itemIds.Any(IsBudgetItem), "merchant fills all slots when no budget item is eligible");
+
+            inventory.ClearAllItems();
+            stock.purchasedItemIds.Clear();
+            stock.itemIds = legacyOffers;
+            WorldMerchantShop.EnsureStock(merchant, inventory);
             Require(SaveService.TrySaveActiveRun(out var error), "reset selection fixture: " + error);
         }
 

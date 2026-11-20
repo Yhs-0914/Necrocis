@@ -34,20 +34,46 @@ namespace Necrocis
             });
             stock.itemIds ??= new List<string>(); stock.purchasedItemIds ??= new List<string>();
             var catalog = new HashSet<string>(inventory.ItemEntries.Where(item => item != null).Select(item => item.ItemId), StringComparer.OrdinalIgnoreCase);
-            var owned = new HashSet<string>(inventory.AcquiredItems.Select(item => item.ItemId), StringComparer.OrdinalIgnoreCase);
+            var owned = inventory.OwnedItemIds;
             var purchased = new HashSet<string>(stock.purchasedItemIds, StringComparer.OrdinalIgnoreCase);
-            var eligible = new HashSet<string>(catalog.Where(id => MerchantItemPricing.TryQuote(id, owned, out _)), StringComparer.OrdinalIgnoreCase);
-            // Keep valid offers and sold-out slots. Only replace unsold items acquired elsewhere.
+            bool IsEligible(string id) => inventory.CanAcquireItem(id) && MerchantItemPricing.TryQuote(id, owned, out _);
+            // Keep valid saved offers and sold-out slots when refreshing stock.
             var offers = stock.itemIds.Where(id => !string.IsNullOrWhiteSpace(id) && catalog.Contains(id)
-                    && (purchased.Contains(id) || eligible.Contains(id)))
+                    && (purchased.Contains(id) || IsEligible(id)))
                 .Distinct(StringComparer.OrdinalIgnoreCase).Take(3).ToList();
-            offers.AddRange(CampaignRewardRules.ChooseMerchantOffers(eligible, owned.Concat(offers).Concat(purchased), seed).Take(3 - offers.Count));
+            // A purchased budget item uses this shop's reserved offer even after the player discards it.
+            bool needsBudgetOffer = SaveService.IsFirstMerchantShop(stock) && !offers.Any(IsBudgetItem) && !purchased.Any(IsBudgetItem);
+            if (needsBudgetOffer || offers.Count < 3)
+            {
+                var eligible = catalog.Where(IsEligible).ToList();
+                if (needsBudgetOffer) ReserveBudgetOffer(offers, eligible, purchased, seed);
+                if (offers.Count < 3)
+                    offers.AddRange(CampaignRewardRules.ChooseMerchantOffers(eligible, offers.Concat(purchased), seed).Take(3 - offers.Count));
+            }
             bool changed = created || !stock.itemIds.SequenceEqual(offers, StringComparer.OrdinalIgnoreCase);
             if (!changed) return stock;
             stock.itemIds = offers;
             if (SaveService.HasActiveSession && !SaveService.TrySaveActiveRun(out string error))
                 Debug.LogWarning("[Merchant] 상품 목록 저장 재시도 필요: " + error);
             return stock;
+        }
+
+        private static bool IsBudgetItem(string id) => MerchantItemPricing.GetListPrice(id) == CurrencyEconomy.BasicStatItemPrice;
+
+        private static void ReserveBudgetOffer(List<string> offers, List<string> eligible, HashSet<string> purchased, int seed)
+        {
+            string budgetOffer = CampaignRewardRules.ChooseMerchantOffers(eligible.Where(IsBudgetItem), purchased, seed).FirstOrDefault();
+            if (budgetOffer == null) return;
+
+            if (offers.Count < 3)
+            {
+                offers.Add(budgetOffer);
+                return;
+            }
+
+            // Older saves can already have all three slots filled. Preserve completed purchases.
+            int lastUnsold = offers.FindLastIndex(id => !purchased.Contains(id));
+            if (lastUnsold >= 0) offers[lastUnsold] = budgetOffer;
         }
 
         public static bool TryBuyItem(WorldMerchantNpc merchant, PlayerController player, string itemId, out string message)
@@ -62,7 +88,7 @@ namespace Necrocis
                 if (stock == null || string.IsNullOrEmpty(itemId) || !stock.itemIds.Contains(itemId)) return false;
                 stock.purchasedItemIds ??= new List<string>();
                 if (stock.purchasedItemIds.Contains(itemId)) { message = "이미 판매된 상품입니다."; return false; }
-                var owned = inventory.AcquiredItems.Select(item => item.ItemId).ToArray();
+                var owned = inventory.OwnedItemIds.ToArray();
                 if (!MerchantItemPricing.TryQuote(itemId, owned, out var quote) || !inventory.CanAcquireItem(itemId))
                 { message = "이미 같은 아이템이나 상위 단계를 보유하고 있습니다."; return false; }
                 if (!SaveService.PrepareMerchantPurchase(out message)) return false;
@@ -71,8 +97,9 @@ namespace Necrocis
                 if (!granted)
                 { SaveService.CreditCurrency(quote.Price); message = "아이템을 획득할 수 없습니다."; return false; }
                 if (quote.IsUpgrade)
-                    foreach (string previous in owned.Where(id => MerchantItemPricing.IsLowerTier(id, itemId)).Distinct(StringComparer.OrdinalIgnoreCase))
-                        while (inventory.ContainsItem(previous) && inventory.RemoveItem(previous)) { }
+                    foreach (string previous in owned)
+                        if (MerchantItemPricing.IsLowerTier(previous, itemId))
+                            while (inventory.RemoveItem(previous)) { }
                 stock.purchasedItemIds.Add(itemId);
                 inventory.TryGetItemEntry(itemId, out var entry);
                 SavePurchase((entry?.DisplayName ?? itemId) + (quote.IsUpgrade ? " 교체 완료" : " 구매 완료") + " · " + quote.Price + "골드", out message);

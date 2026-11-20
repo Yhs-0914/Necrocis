@@ -48,6 +48,7 @@ namespace Necrocis
         private Button closeButton;
         private Text inventoryHint;
         private bool requiresRewardSelection;
+        private bool inventoryDirty;
 
         public bool CanRequestReward => isActiveAndEnabled && !isOpen && itemManager != null && Time.timeScale > 0f
             && InputManager.Instance?.Contexts.CanOpenAuxiliary == true;
@@ -202,10 +203,12 @@ namespace Necrocis
 
         private void HandleInventoryChanged(PlayerItemManager _, PlayerItemManager.AcquiredPlayerItem __)
         {
-            if (isOpen)
-            {
-                Refresh();
-            }
+            inventoryDirty = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (isOpen && inventoryDirty) Refresh();
         }
 
         private void DiscardItem(string itemId)
@@ -356,6 +359,7 @@ namespace Necrocis
 
         private void Refresh()
         {
+            inventoryDirty = false;
             if (itemManager == null || cardContainer == null)
             {
                 return;
@@ -368,7 +372,6 @@ namespace Necrocis
             if (rewardOptions != null) replacementHint.text = requiresRewardSelection
                 ? $"시작 아이템 선택\n아이템 {rewardOptions.Count}개 중 1개를 선택하고 모험을 시작하세요."
                 : $"아이템 {rewardOptions.Count}개 중 1개를 선택하세요.\nI 키로 닫으면 상자에 다시 접근해 선택할 수 있습니다.";
-            else if (string.IsNullOrEmpty(replacementItemId)) replacementHint.text = $"보유 아이템 {itemManager.ItemCount}개 · 개수 제한 없음";
             closeButton.gameObject.SetActive(!requiresRewardSelection);
             inventoryHint.text = requiresRewardSelection
                 ? "선택한 아이템을 즉시 획득합니다. · 이번 모험에서 1회만 선택할 수 있습니다."
